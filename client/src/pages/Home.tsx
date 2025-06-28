@@ -2,6 +2,10 @@ import { useState } from "react";
 import Navigation from "@/components/Navigation";
 import HeroSection from "@/components/HeroSection";
 import FeaturesSection from "@/components/FeaturesSection";
+import AboutSection from "@/components/AboutSection";
+import TestimonialsSection from "@/components/TestimonialsSection";
+import PricingSection from "@/components/PricingSection";
+import CTASection from "@/components/CTASection";
 import PurchaseModal from "@/components/PurchaseModal";
 import MerchantDashboard from "@/components/MerchantDashboard";
 import { Gift, Shield, Smartphone, TrendingUp } from "lucide-react";
@@ -21,6 +25,14 @@ export default function Home() {
       <HeroSection onOpenPurchaseModal={() => setIsPurchaseModalOpen(true)} />
       
       <FeaturesSection />
+      
+      <AboutSection />
+      
+      <TestimonialsSection />
+      
+      <PricingSection />
+      
+      <CTASection onOpenPurchaseModal={() => setIsPurchaseModalOpen(true)} />
       
       {/* Footer */}
       <footer className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-900 text-white">

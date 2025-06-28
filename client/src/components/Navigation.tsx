@@ -23,8 +23,9 @@ export default function Navigation({ onOpenPurchaseModal, onOpenDashboard }: Nav
           </div>
           
           <div className="hidden md:flex items-center space-x-8">
-            <a href="#" className="text-slate-700 hover:text-blue-600 transition-colors font-medium">How it Works</a>
-            <a href="#" className="text-slate-700 hover:text-blue-600 transition-colors font-medium">For Business</a>
+            <a href="#features" className="text-slate-700 hover:text-blue-600 transition-colors font-medium">Features</a>
+            <a href="#pricing" className="text-slate-700 hover:text-blue-600 transition-colors font-medium">Pricing</a>
+            <a href="/about" className="text-slate-700 hover:text-blue-600 transition-colors font-medium">About</a>
             <a href="#" className="text-slate-700 hover:text-blue-600 transition-colors font-medium">Support</a>
             <Button 
               onClick={onOpenDashboard}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Gift, Menu, X, Sparkles, Zap, Star, Shield, ChevronDown, ArrowRight, ShoppingBag } from "lucide-react";
+import { Gift, Menu, X, Sparkles, Zap, Star, Shield, ChevronDown, ArrowRight, ShoppingBag, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
@@ -31,6 +31,13 @@ export default function Navigation({ onOpenPurchaseModal, onOpenDashboard }: Nav
       icon: ShoppingBag,
       description: 'Buy gift cards',
       color: 'from-emerald-400 to-green-500'
+    },
+    { 
+      label: 'Check Balance', 
+      href: '/check-balance',
+      icon: CreditCard,
+      description: 'Check gift card balance',
+      color: 'from-orange-400 to-red-500'
     },
     { 
       label: 'Features', 

@@ -18,13 +18,13 @@ class SquarePaymentService {
   private async initializeClient() {
     try {
       const squareModule = await import('squareup');
-      const { Client, Environment } = squareModule.default || squareModule;
+      const Square = squareModule.default || squareModule;
       
       const environment = process.env.SQUARE_ENVIRONMENT === 'production' 
-        ? Environment.Production 
-        : Environment.Sandbox;
+        ? Square.Environment.Production 
+        : Square.Environment.Sandbox;
 
-      this.client = new Client({
+      this.client = new Square.Client({
         accessToken: process.env.SQUARE_ACCESS_TOKEN,
         environment: environment,
       });
@@ -55,6 +55,7 @@ class SquarePaymentService {
     paymentId: string;
   }> {
     try {
+      await this.ensureInitialized();
       const idempotencyKey = crypto.randomUUID();
       
       const request: any = {

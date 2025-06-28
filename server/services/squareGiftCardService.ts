@@ -18,16 +18,10 @@ class SquareGiftCardService {
   private async initializeClient() {
     try {
       const squareModule = await import('squareup');
-      const { Client, Environment } = squareModule.default || squareModule;
+      const SquareUp = squareModule.default || squareModule;
       
-      const environment = process.env.SQUARE_ENVIRONMENT === 'production' 
-        ? Environment.Production 
-        : Environment.Sandbox;
-
-      this.client = new Client({
-        accessToken: process.env.SQUARE_ACCESS_TOKEN,
-        environment: environment,
-      });
+      // Initialize with access token
+      this.client = SquareUp(process.env.SQUARE_ACCESS_TOKEN);
       
       this.isInitialized = true;
     } catch (error) {
@@ -46,13 +40,14 @@ class SquareGiftCardService {
    * Create a new gift card with Square
    */
   async createGiftCard(amountMoney: number, recipientEmail?: string): Promise<{
-    giftCard: GiftCard;
+    giftCard: any;
     gan: string;
   }> {
     try {
+      await this.ensureInitialized();
       const idempotencyKey = crypto.randomUUID();
       
-      const request: CreateGiftCardRequest = {
+      const request: any = {
         idempotencyKey,
         locationId: this.locationId,
         giftCard: {

@@ -12,14 +12,40 @@ export default function Navigation({ onOpenPurchaseModal, onOpenDashboard }: Nav
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-white/20">
+    <nav className="fixed top-0 left-0 right-0 z-50 glass-premium border-b border-white/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
-              <Gift className="text-white" size={20} />
+          <div className="flex items-center space-x-4">
+            <motion.div
+              whileHover={{ 
+                scale: 1.1,
+                rotateY: 180,
+                transition: { duration: 0.6 }
+              }}
+              className="relative w-12 h-12 gradient-premium rounded-2xl flex items-center justify-center shadow-2xl animate-glow-pulse"
+              style={{ transformStyle: "preserve-3d" }}
+            >
+              <motion.div
+                animate={{
+                  rotateZ: [0, 360],
+                }}
+                transition={{
+                  duration: 8,
+                  repeat: Infinity,
+                  ease: "linear"
+                }}
+                className="absolute inset-1 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl opacity-30"
+              />
+              <Gift className="text-white relative z-10 drop-shadow-sm" size={24} />
+            </motion.div>
+            <div className="flex flex-col">
+              <span className="font-display text-2xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent shimmer">
+                SiZu
+              </span>
+              <span className="font-mono text-xs text-gray-400 tracking-wider -mt-1">
+                GIFTCARD
+              </span>
             </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">SiZu GiftCard</span>
           </div>
           
           <div className="hidden md:flex items-center space-x-8">

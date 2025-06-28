@@ -6,7 +6,7 @@ import { insertMerchantSchema, insertGiftCardSchema, insertGiftCardActivitySchem
 import { squareService } from "./services/squareService";
 import { squareAPIService } from './services/squareAPIService';
 import { enhancedSquareAPIService } from './services/enhancedSquareAPIService';
-import { qrCodeService } from './services/qrCodeService';
+import { simpleQRService } from './services/simpleQRService';
 import { emailService } from './services/emailService';
 import { squareWebhookHandler } from './webhooks/squareWebhookHandler';
 import { requireAdmin } from './middleware/authMiddleware';
@@ -297,7 +297,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const squareGiftCard = await squareAPIService.createGiftCard(amount, recipientEmail);
 
       // Generate QR code
-      const qrCodeData = await qrCodeService.generateGiftCardQR(
+      const qrCodeData = await simpleQRService.generateGiftCardQR(
         squareGiftCard.gan,
         merchantId,
         amount
@@ -379,7 +379,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Generate fresh QR code
-      const qrCodeData = await qrCodeService.generateGiftCardQR(
+      const qrCodeData = await simpleQRService.generateGiftCardQR(
         gan,
         giftCard.merchantId,
         giftCard.amount
@@ -514,7 +514,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (format === 'mobile') {
-        const mobileQR = await qrCodeService.generateMobileQR(gan, giftCard.merchantId);
+        const mobileQR = await simpleQRService.generateGiftCardQR(gan, giftCard.merchantId, giftCard.amount);
         res.json({
           success: true,
           qrCode: mobileQR,
@@ -790,7 +790,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (localGiftCard) {
         // Generate QR code for display
-        const qrResult = await qrCodeService.generateGiftCardQR(
+        const qrResult = await simpleQRService.generateGiftCardQR(
           gan,
           localGiftCard.merchantId,
           localGiftCard.amount
@@ -815,7 +815,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const validation = await enhancedSquareAPIService.validateGiftCard(gan);
         
         if (validation.isValid) {
-          const qrResult = await qrCodeService.generateGiftCardQR(
+          const qrResult = await simpleQRService.generateGiftCardQR(
             gan,
             process.env.SQUARE_APPLICATION_ID!,
             validation.balance

@@ -1,24 +1,27 @@
 import crypto from 'crypto';
+import * as Square from 'square';
 
 /**
- * Real Square API integration using official Square API endpoints
+ * Real Square API integration using official Square SDK
  * Based on: https://developer.squareup.com/reference/square/gift-cards-api
  */
 class RealSquareService {
-  private accessToken: string;
+  private client: any;
   private locationId: string;
   private environment: string;
-  private baseUrl: string;
 
   constructor() {
-    this.accessToken = process.env.SQUARE_ACCESS_TOKEN!;
     this.locationId = process.env.SQUARE_LOCATION_ID!;
     this.environment = process.env.SQUARE_ENVIRONMENT || 'sandbox';
-    this.baseUrl = this.environment === 'production' 
-      ? 'https://connect.squareup.com' 
-      : 'https://connect.squareupsandbox.com';
+    
+    const accessToken = process.env.SQUARE_ACCESS_TOKEN!;
+    
+    this.client = new Square.Client({
+      accessToken,
+      environment: this.environment === 'production' ? Square.Environment.Production : Square.Environment.Sandbox,
+    });
 
-    if (!this.accessToken || !this.locationId) {
+    if (!accessToken || !this.locationId) {
       throw new Error('Square API credentials not configured');
     }
   }

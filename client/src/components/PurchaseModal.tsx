@@ -30,7 +30,7 @@ export default function PurchaseModal({ isOpen, onClose }: PurchaseModalProps) {
       initializeSquarePayment();
     }
     return () => {
-      squarePaymentClient.destroy();
+      squareSDK.destroy();
     };
   }, [isOpen]);
 
@@ -58,7 +58,7 @@ export default function PurchaseModal({ isOpen, onClose }: PurchaseModalProps) {
       setIsProcessingPayment(true);
       
       try {
-        const result = await squarePaymentClient.processGiftCardPayment(data);
+        const result = await squareSDK.processGiftCardPayment(data);
         
         if (!result.success) {
           throw new Error(result.error || 'Payment failed');

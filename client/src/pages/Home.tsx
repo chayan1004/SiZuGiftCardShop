@@ -8,12 +8,14 @@ import PricingSection from "@/components/PricingSection";
 import CTASection from "@/components/CTASection";
 import PurchaseModal from "@/components/PurchaseModal";
 import MerchantDashboard from "@/components/MerchantDashboard";
+import AdminDashboard from "@/pages/AdminDashboard";
 import { Gift, Shield, Smartphone, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function Home() {
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
+  const [isAdminDashboardOpen, setIsAdminDashboardOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900">

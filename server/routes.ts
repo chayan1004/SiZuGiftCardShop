@@ -557,7 +557,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       for (const merchant of merchants) {
-        const stats = await storage.getMerchantStats(merchant.squareMerchantId);
+        const stats = await storage.getMerchantStats(merchant.merchantId);
         totalStats.totalSales += stats.totalSales;
         totalStats.activeCards += stats.activeCards;
         totalStats.redemptions += stats.redemptions;
@@ -642,10 +642,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Log email activity
         await storage.createGiftCardActivity({
           giftCardId: giftCard.id,
-          activityType: 'email_sent',
+          type: 'email_sent',
           amount: 0,
-          details: `Email sent to ${email}`,
-          metadata: { messageId: emailResult.messageId }
+          squareActivityId: `email_${Date.now()}`
         });
       }
 

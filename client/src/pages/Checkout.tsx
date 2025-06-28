@@ -28,6 +28,13 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
+// Square Web SDK types
+declare global {
+  interface Window {
+    Square: any;
+  }
+}
+
 const checkoutSchema = z.object({
   amount: z.number().min(10, "Minimum amount is $10").max(1000, "Maximum amount is $1,000"),
   recipientName: z.string().min(2, "Recipient name is required"),
@@ -67,6 +74,44 @@ export default function Checkout() {
     }
   });
 
+  // Load Square Web SDK
+  useEffect(() => {
+    if (!squareConfig || squareLoaded) return;
+
+    const script = document.createElement('script');
+    script.src = 'https://sandbox.web.squarecdn.com/v1/square.js';
+    script.async = true;
+    script.onload = () => {
+      if (window.Square) {
+        initializeSquare();
+      }
+    };
+    document.head.appendChild(script);
+
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, [squareConfig]);
+
+  const initializeSquare = async () => {
+    if (!window.Square || !squareConfig) return;
+
+    try {
+      const payments = window.Square.payments(squareConfig.applicationId, squareConfig.locationId);
+      const card = await payments.card();
+      await card.attach('#card-container');
+      setPaymentForm({ payments, card });
+      setSquareLoaded(true);
+    } catch (error) {
+      console.error('Square initialization error:', error);
+      toast({
+        title: "Payment system error",
+        description: "Unable to load payment form. Please refresh the page.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const form = useForm<CheckoutForm>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
@@ -101,7 +146,7 @@ export default function Checkout() {
     },
     onSuccess: (result) => {
       setPurchaseResult(result);
-      setStep(3);
+      setStep(4);
       toast({
         title: "Gift card created successfully!",
         description: "The recipient will receive their gift card via email."
@@ -116,9 +161,47 @@ export default function Checkout() {
     }
   });
 
-  const onSubmit = (data: CheckoutForm) => {
-    setStep(2);
-    purchaseMutation.mutate(data);
+  const onSubmit = async (data: CheckoutForm) => {
+    if (step === 1) {
+      setStep(2);
+    } else if (step === 2) {
+      await handlePayment(data);
+    }
+  };
+
+  const handlePayment = async (data: CheckoutForm) => {
+    if (!paymentForm || !paymentForm.card) {
+      toast({
+        title: "Payment system not ready",
+        description: "Please wait for the payment form to load.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const result = await paymentForm.card.tokenize();
+      
+      if (result.status === 'OK') {
+        purchaseMutation.mutate({
+          ...data,
+          sourceId: result.token
+        });
+      } else {
+        toast({
+          title: "Payment error",
+          description: result.errors?.[0]?.message || "Payment processing failed.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Payment tokenization error:', error);
+      toast({
+        title: "Payment error", 
+        description: "Unable to process payment. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -349,10 +432,9 @@ export default function Checkout() {
                         <Button
                           type="submit"
                           className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white py-3 text-lg font-semibold"
-                          disabled={purchaseMutation.isPending}
                         >
-                          <CreditCard className="w-5 h-5 mr-2" />
-                          Complete Purchase
+                          Continue to Payment
+                          <CreditCard className="w-5 h-5 ml-2" />
                         </Button>
                       </form>
                     </CardContent>
@@ -397,8 +479,130 @@ export default function Checkout() {
               </motion.div>
             )}
 
-            {/* Step 2: Processing */}
+            {/* Step 2: Payment */}
             {step === 2 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="grid lg:grid-cols-2 gap-8"
+              >
+                {/* Payment Form */}
+                <div>
+                  <Card className="glass-premium border-white/10">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center gap-2">
+                        <Shield className="w-5 h-5" />
+                        Secure Payment
+                      </CardTitle>
+                      <p className="text-gray-300">
+                        Enter your payment information to complete the purchase
+                      </p>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      {/* Square Payment Form Container */}
+                      <div className="space-y-4">
+                        <Label className="text-white">Card Information</Label>
+                        <div 
+                          id="card-container" 
+                          className="min-h-[120px] p-4 rounded-lg border border-white/20 bg-white/5"
+                        >
+                          {!squareLoaded && (
+                            <div className="flex items-center justify-center h-20">
+                              <Loader2 className="w-6 h-6 animate-spin text-cyan-300" />
+                              <span className="ml-2 text-gray-300">Loading payment form...</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex gap-4">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setStep(1)}
+                          className="flex-1 border-white/20 text-white hover:bg-white/10"
+                        >
+                          Back
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            const formData = form.getValues();
+                            handlePayment(formData);
+                          }}
+                          disabled={!squareLoaded || purchaseMutation.isPending}
+                          className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white"
+                        >
+                          {purchaseMutation.isPending ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              Complete Purchase
+                              <CreditCard className="w-4 h-4 ml-2" />
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Order Summary */}
+                <div>
+                  <Card className="glass-premium border-white/10 sticky top-8">
+                    <CardHeader>
+                      <CardTitle className="text-white">Order Summary</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">Recipient</span>
+                          <span className="text-white">{form.getValues().recipientName}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">Email</span>
+                          <span className="text-white text-sm">{form.getValues().recipientEmail}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">From</span>
+                          <span className="text-white">{form.getValues().senderName}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="border-t border-white/10 pt-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-300">Gift Card Amount</span>
+                          <span className="text-2xl font-bold text-cyan-300">
+                            ${form.getValues().amount}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2 text-sm pt-4 border-t border-white/10">
+                        <div className="flex items-center gap-2 text-gray-300">
+                          <CheckCircle className="w-4 h-4 text-green-400" />
+                          Secure payment processing
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-300">
+                          <CheckCircle className="w-4 h-4 text-green-400" />
+                          Instant delivery
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-300">
+                          <CheckCircle className="w-4 h-4 text-green-400" />
+                          QR code included
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Step 3: Processing */}
+            {step === 3 && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}

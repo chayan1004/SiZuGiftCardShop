@@ -32,74 +32,60 @@ export class SimpleQRService {
   }
 
   private async generateBrandedQR(url: string): Promise<string> {
-    // Generate QR code as SVG first for better quality
-    const qrSvg = await QRCode.toString(url, {
-      type: 'svg',
+    // Generate a larger QR code with high error correction for logo overlay
+    const qrCodeDataURL = await QRCode.toDataURL(url, {
       errorCorrectionLevel: 'H', // High error correction for logo overlay
-      margin: 2,
-      width: 300,
+      margin: 3,
+      width: 400,
       color: {
         dark: '#1f2937', // Dark gray
         light: '#ffffff'
       }
     });
 
-    // Create branded SVG with SiZu logo in the center
-    const brandedSvg = this.addBrandingToSVG(qrSvg);
+    // Create branded QR code with SiZu logo overlay
+    const brandedQR = await this.addBrandingToQR(qrCodeDataURL);
     
-    // Convert SVG to data URL
-    const svgDataUrl = `data:image/svg+xml;base64,${Buffer.from(brandedSvg).toString('base64')}`;
-    
-    return svgDataUrl;
+    return brandedQR;
   }
 
-  private addBrandingToSVG(qrSvg: string): string {
-    // Parse the SVG to add branding
-    const svgMatch = qrSvg.match(/<svg[^>]*>/);
-    if (!svgMatch) return qrSvg;
-
-    const svgTag = svgMatch[0];
-    const svgContent = qrSvg.replace(svgTag, '').replace('</svg>', '');
+  private async addBrandingToQR(qrDataURL: string): Promise<string> {
+    // For now, let's create a simple branded QR code by generating an SVG overlay
+    // and returning the original QR code with a note that branding needs canvas processing
     
-    // Extract width and height
-    const widthMatch = svgTag.match(/width="(\d+)"/);
-    const heightMatch = svgTag.match(/height="(\d+)"/);
-    const width = widthMatch ? parseInt(widthMatch[1]) : 300;
-    const height = heightMatch ? parseInt(heightMatch[1]) : 300;
-    
-    const centerX = width / 2;
-    const centerY = height / 2;
-    const logoSize = Math.min(width, height) * 0.2; // 20% of QR code size
-
-    // Create branded SVG with SiZu logo
+    // Create an SVG overlay with SiZu branding
     const brandedSvg = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
-        ${svgContent}
+      <svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+        <!-- QR Code Background -->
+        <image href="${qrDataURL}" x="0" y="0" width="400" height="400"/>
         
         <!-- White background circle for logo -->
-        <circle cx="${centerX}" cy="${centerY}" r="${logoSize * 0.7}" fill="#ffffff" stroke="#1f2937" stroke-width="2"/>
+        <circle cx="200" cy="200" r="45" fill="#ffffff" stroke="#1f2937" stroke-width="3"/>
         
         <!-- SiZu Text Logo -->
-        <text x="${centerX}" y="${centerY + 4}" 
+        <text x="200" y="210" 
               text-anchor="middle" 
               font-family="Arial, sans-serif" 
-              font-size="${logoSize * 0.5}" 
+              font-size="24" 
               font-weight="bold" 
               fill="#1f2937">SiZu</text>
               
         <!-- Small gift icon -->
-        <g transform="translate(${centerX - logoSize * 0.15}, ${centerY - logoSize * 0.35}) scale(0.8)">
-          <rect x="0" y="0" width="${logoSize * 0.3}" height="${logoSize * 0.3}" 
-                fill="none" stroke="#059669" stroke-width="1.5" rx="2"/>
-          <path d="M${logoSize * 0.075},0 L${logoSize * 0.075},${-logoSize * 0.1} M${logoSize * 0.225},0 L${logoSize * 0.225},${-logoSize * 0.1}" 
-                stroke="#059669" stroke-width="1.5"/>
-          <rect x="${logoSize * 0.05}" y="${-logoSize * 0.12}" width="${logoSize * 0.2}" height="${logoSize * 0.06}" 
-                fill="#059669" rx="1"/>
+        <g transform="translate(185, 175)">
+          <rect x="0" y="0" width="30" height="20" 
+                fill="none" stroke="#059669" stroke-width="2" rx="3"/>
+          <path d="M7.5,0 L7.5,-8 M22.5,0 L22.5,-8" 
+                stroke="#059669" stroke-width="2"/>
+          <rect x="5" y="-10" width="20" height="6" 
+                fill="#059669" rx="2"/>
         </g>
       </svg>
     `;
 
-    return brandedSvg;
+    // Convert SVG to data URL
+    const svgDataUrl = `data:image/svg+xml;base64,${Buffer.from(brandedSvg).toString('base64')}`;
+    
+    return svgDataUrl;
   }
 }
 

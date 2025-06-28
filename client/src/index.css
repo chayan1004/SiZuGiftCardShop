@@ -123,6 +123,20 @@
   background: linear-gradient(135deg, hsl(200, 88%, 60%) 0%, hsl(240, 78%, 58%) 100%);
 }
 
+.glass-premium-button {
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  transition: all 0.3s ease;
+}
+
+.glass-premium-button:hover {
+  background: rgba(15, 23, 42, 0.85);
+  border-color: rgba(6, 182, 212, 0.5);
+  box-shadow: 0 8px 32px rgba(6, 182, 212, 0.15);
+}
+
 @keyframes float-3d {
   0%, 100% { 
     transform: translateY(0) rotateX(0deg) rotateY(0deg);

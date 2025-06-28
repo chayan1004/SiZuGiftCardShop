@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Lock, CreditCard } from "lucide-react";
+import { X, Lock, CreditCard, Sparkles, Star, Gift, Shield, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -93,11 +93,36 @@ export default function PurchaseModal({ isOpen, onClose }: PurchaseModalProps) {
     });
   };
 
+  const amountOptions = [
+    { value: 25, label: "$25", popular: false, icon: Gift },
+    { value: 50, label: "$50", popular: true, icon: Star },
+    { value: 100, label: "$100", popular: false, icon: Sparkles },
+    { value: 200, label: "$200", popular: false, icon: Zap },
+  ];
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-slate-800">Buy Gift Card</DialogTitle>
+      <DialogContent className="max-w-2xl glass-premium border-cyan-400/20 shadow-2xl">
+        {/* Enhanced Modal Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-indigo-900/20 rounded-lg" />
+        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-purple-500/5 rounded-lg" />
+        
+        <DialogHeader className="relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center space-x-4 mb-6"
+          >
+            <div className="w-16 h-16 gradient-premium-3 rounded-3xl flex items-center justify-center shadow-2xl">
+              <Gift className="text-white" size={24} />
+            </div>
+            <div>
+              <DialogTitle className="font-display text-3xl font-bold text-white">
+                Purchase Gift Card
+              </DialogTitle>
+              <p className="text-cyan-300 text-lg">Choose your perfect gift amount</p>
+            </div>
+          </motion.div>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">

@@ -806,7 +806,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             recipientName: localGiftCard.recipientName,
             senderName: localGiftCard.senderName,
             personalMessage: localGiftCard.personalMessage,
-            qrCodeUrl: qrResult.success ? qrResult.qrCodeUrl : null,
+            qrCodeUrl: qrResult.qrCodeDataURL,
             createdAt: localGiftCard.createdAt
           }
         });
@@ -828,7 +828,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               amount: validation.balance,
               balance: validation.balance,
               status: validation.status,
-              qrCodeUrl: qrResult.success ? qrResult.qrCodeUrl : null
+              qrCodeUrl: qrResult.qrCodeDataURL
             }
           });
         } else {

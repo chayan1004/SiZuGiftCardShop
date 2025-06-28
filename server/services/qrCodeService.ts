@@ -38,8 +38,6 @@ class QRCodeService {
       // Generate QR code as Data URL (base64 PNG)
       const qrCodeDataURL = await QRCode.toDataURL(redemptionUrl, {
         errorCorrectionLevel: 'M',
-        type: 'image/png',
-        quality: 0.92,
         margin: 1,
         color: {
           dark: '#000000',

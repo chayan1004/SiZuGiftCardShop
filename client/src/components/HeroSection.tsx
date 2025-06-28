@@ -2,6 +2,7 @@ import { Gift, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import GiftCardGrid from "./GiftCardGrid";
+import FloatingElements from "./FloatingElements";
 
 interface HeroSectionProps {
   onOpenPurchaseModal: () => void;

@@ -56,8 +56,9 @@ export default function Navigation({ onOpenPurchaseModal, onOpenDashboard }: Nav
             className="md:hidden bg-white/90 backdrop-blur-md border-b border-white/20"
           >
             <div className="px-4 py-4 space-y-4">
-              <a href="#" className="block text-slate-700 hover:text-blue-600 transition-colors font-medium">How it Works</a>
-              <a href="#" className="block text-slate-700 hover:text-blue-600 transition-colors font-medium">For Business</a>
+              <a href="#features" className="block text-slate-700 hover:text-blue-600 transition-colors font-medium">Features</a>
+              <a href="#pricing" className="block text-slate-700 hover:text-blue-600 transition-colors font-medium">Pricing</a>
+              <a href="/about" className="block text-slate-700 hover:text-blue-600 transition-colors font-medium">About</a>
               <a href="#" className="block text-slate-700 hover:text-blue-600 transition-colors font-medium">Support</a>
               <Button 
                 onClick={() => {

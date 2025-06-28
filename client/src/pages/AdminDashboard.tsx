@@ -15,10 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 
-interface AdminDashboardProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
+interface AdminDashboardProps {}
 
 interface DashboardMetrics {
   totalGiftCards: number;
@@ -47,7 +44,7 @@ interface WeeklyRevenue {
   giftCardsSold: number;
 }
 
-export default function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
+export default function AdminDashboard() {
   const [adminToken, setAdminToken] = useState<string>("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { toast } = useToast();
@@ -95,15 +92,12 @@ export default function AdminDashboard({ isOpen, onClose }: AdminDashboardProps)
   // Chart colors
   const COLORS = ['#3b82f6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444'];
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900">
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-7xl max-h-[90vh] overflow-hidden"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full"
       >
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
@@ -123,18 +117,18 @@ export default function AdminDashboard({ isOpen, onClose }: AdminDashboardProps)
                 Refresh
               </Button>
               <Button
-                onClick={onClose}
+                onClick={() => window.location.href = '/'}
                 variant="outline"
                 size="sm"
                 className="text-white border-white/20 hover:bg-white/10"
               >
-                Close
+                Home
               </Button>
             </div>
           </div>
         </div>
 
-        <div className="overflow-y-auto max-h-[calc(90vh-120px)]">
+        <div className="p-6">
           {!isAuthenticated ? (
             <div className="p-8 text-center">
               <div className="max-w-md mx-auto">

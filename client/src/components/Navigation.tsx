@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { Gift, Menu, X, Sparkles, Zap, Star, Shield, ChevronDown, ArrowRight } from "lucide-react";
+import { Gift, Menu, X, Sparkles, Zap, Star, Shield, ChevronDown, ArrowRight, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "wouter";
 
 interface NavigationProps {
   onOpenPurchaseModal: () => void;
@@ -24,6 +25,13 @@ export default function Navigation({ onOpenPurchaseModal, onOpenDashboard }: Nav
   }, []);
 
   const navItems = [
+    { 
+      label: 'Store', 
+      href: '/store',
+      icon: ShoppingBag,
+      description: 'Buy gift cards',
+      color: 'from-emerald-400 to-green-500'
+    },
     { 
       label: 'Features', 
       href: '#features',
@@ -231,40 +239,63 @@ export default function Navigation({ onOpenPurchaseModal, onOpenDashboard }: Nav
                   onMouseEnter={() => setHoveredItem(item.label)}
                   onMouseLeave={() => setHoveredItem('')}
                 >
-                  <motion.a
-                    href={item.href}
-                    className="relative px-6 py-3 rounded-2xl text-gray-300 hover:text-white transition-all duration-300 font-semibold text-lg group flex items-center space-x-2"
-                    whileHover={{ scale: 1.05, y: -2 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    {/* Dynamic background */}
-                    <motion.div
-                      className={`absolute inset-0 rounded-2xl bg-gradient-to-r ${item.color} opacity-0 group-hover:opacity-20 transition-opacity duration-300`}
-                    />
-                    
-                    {/* Glow effect */}
-                    <motion.div
-                      className={`absolute inset-0 rounded-2xl bg-gradient-to-r ${item.color} opacity-0 group-hover:opacity-10 blur-lg transition-opacity duration-300`}
-                    />
-                    
-                    <item.icon size={18} className="relative z-10" />
-                    <span className="relative z-10">{item.label}</span>
-                    
-                    {/* Hover tooltip */}
-                    <AnimatePresence>
-                      {hoveredItem === item.label && (
+                  {item.href.startsWith('/') ? (
+                    <Link href={item.href}>
+                      <motion.div
+                        className="relative px-6 py-3 rounded-2xl text-gray-300 hover:text-white transition-all duration-300 font-semibold text-lg group flex items-center space-x-2 cursor-pointer"
+                        whileHover={{ scale: 1.05, y: -2 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        {/* Dynamic background */}
                         <motion.div
-                          initial={{ opacity: 0, y: 10, scale: 0.8 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 10, scale: 0.8 }}
-                          className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 bg-slate-800/95 backdrop-blur-sm text-cyan-300 px-3 py-1 rounded-lg text-sm whitespace-nowrap border border-cyan-400/20"
-                        >
-                          {item.description}
-                          <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-slate-800 rotate-45 border-t border-l border-cyan-400/20"></div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </motion.a>
+                          className={`absolute inset-0 rounded-2xl bg-gradient-to-r ${item.color} opacity-0 group-hover:opacity-20 transition-opacity duration-300`}
+                        />
+                        
+                        {/* Glow effect */}
+                        <motion.div
+                          className={`absolute inset-0 rounded-2xl bg-gradient-to-r ${item.color} opacity-0 group-hover:opacity-10 blur-lg transition-opacity duration-300`}
+                        />
+                        
+                        <item.icon size={18} className="relative z-10" />
+                        <span className="relative z-10">{item.label}</span>
+                      </motion.div>
+                    </Link>
+                  ) : (
+                    <motion.a
+                      href={item.href}
+                      className="relative px-6 py-3 rounded-2xl text-gray-300 hover:text-white transition-all duration-300 font-semibold text-lg group flex items-center space-x-2"
+                      whileHover={{ scale: 1.05, y: -2 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      {/* Dynamic background */}
+                      <motion.div
+                        className={`absolute inset-0 rounded-2xl bg-gradient-to-r ${item.color} opacity-0 group-hover:opacity-20 transition-opacity duration-300`}
+                      />
+                      
+                      {/* Glow effect */}
+                      <motion.div
+                        className={`absolute inset-0 rounded-2xl bg-gradient-to-r ${item.color} opacity-0 group-hover:opacity-10 blur-lg transition-opacity duration-300`}
+                      />
+                      
+                      <item.icon size={18} className="relative z-10" />
+                      <span className="relative z-10">{item.label}</span>
+                    </motion.a>
+                  )}
+                  
+                  {/* Hover tooltip */}
+                  <AnimatePresence>
+                    {hoveredItem === item.label && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.8 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.8 }}
+                        className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 bg-slate-800/95 backdrop-blur-sm text-cyan-300 px-3 py-1 rounded-lg text-sm whitespace-nowrap border border-cyan-400/20"
+                      >
+                        {item.description}
+                        <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-slate-800 rotate-45 border-t border-l border-cyan-400/20"></div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </motion.div>
               ))}
               

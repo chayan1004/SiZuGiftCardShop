@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { 
   Gift, 
   Calendar, 
@@ -45,6 +45,8 @@ export default function Checkout() {
   const [location] = useLocation();
   const [step, setStep] = useState(1);
   const [purchaseResult, setPurchaseResult] = useState<any>(null);
+  const [paymentForm, setPaymentForm] = useState<any>(null);
+  const [squareLoaded, setSquareLoaded] = useState(false);
   const { toast } = useToast();
 
   // Parse URL parameters
@@ -52,6 +54,18 @@ export default function Checkout() {
   const presetAmount = urlParams.get('amount');
   const isCustom = urlParams.get('custom') === 'true';
   const cardType = urlParams.get('type');
+
+  // Fetch Square configuration
+  const { data: squareConfig } = useQuery({
+    queryKey: ['/api/config/square'],
+    queryFn: async () => {
+      const response = await fetch('/api/config/square');
+      if (!response.ok) {
+        throw new Error('Failed to fetch Square configuration');
+      }
+      return response.json();
+    }
+  });
 
   const form = useForm<CheckoutForm>({
     resolver: zodResolver(checkoutSchema),
@@ -63,26 +77,24 @@ export default function Checkout() {
   });
 
   const purchaseMutation = useMutation({
-    mutationFn: async (data: CheckoutForm) => {
-      const response = await fetch('/api/giftcards/purchase', {
+    mutationFn: async (data: CheckoutForm & { sourceId: string }) => {
+      const response = await fetch('/api/giftcards/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           amount: data.amount * 100, // Convert to cents
-          recipientName: data.recipientName,
           recipientEmail: data.recipientEmail,
-          senderName: data.senderName,
           personalMessage: data.personalMessage,
-          deliveryTime: data.deliveryTime,
-          scheduledDate: data.scheduledDate,
-          scheduledTime: data.scheduledTime
+          merchantId: 'main', // Default merchant ID
+          sourceId: data.sourceId // Payment token from Square
         })
       });
       
       if (!response.ok) {
-        throw new Error('Failed to process purchase');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to process purchase');
       }
       
       return response.json();

@@ -7,6 +7,7 @@ import { squareService } from "./services/squareService";
 import { squareAPIService } from './services/squareAPIService';
 import { enhancedSquareAPIService } from './services/enhancedSquareAPIService';
 import { squareGiftCardService } from './services/squareGiftCardService';
+import { squarePaymentService } from './services/squarePaymentService';
 import { simpleQRService } from './services/simpleQRService';
 import { emailService } from './services/emailService';
 import { pdfReceiptService } from './services/pdfReceiptService';
@@ -37,11 +38,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Square configuration endpoint
   app.get("/api/config/square", async (req, res) => {
     try {
-      res.json({
-        applicationId: process.env.SQUARE_APPLICATION_ID,
-        environment: process.env.SQUARE_ENVIRONMENT || 'sandbox',
-        locationId: process.env.SQUARE_LOCATION_ID,
-      });
+      const config = squarePaymentService.getWebSDKConfig();
+      res.json(config);
     } catch (error) {
       console.error('Square config error:', error);
       res.status(500).json({ message: "Failed to get Square configuration" });
@@ -288,12 +286,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = createGiftCardSchema.parse(req.body);
       const { amount, recipientEmail, personalMessage, merchantId, sourceId } = validatedData;
 
-      // Process payment first using existing payment service
-      const paymentResult = await squareAPIService.processPayment(
+      // Process payment first using Square payment service
+      const paymentResult = await squarePaymentService.processPayment({
         sourceId,
         amount,
-        recipientEmail
-      );
+        customerEmail: recipientEmail,
+        note: `Gift card purchase - $${(amount / 100).toFixed(2)}`
+      });
 
       if (!paymentResult.success) {
         return res.status(400).json({

@@ -1,6 +1,7 @@
-import { Gift, Play } from "lucide-react";
+import { Gift, Play, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { Link } from "wouter";
 import GiftCardGrid from "./GiftCardGrid";
 import FloatingElements from "./FloatingElements";
 
@@ -144,6 +145,38 @@ export default function HeroSection({ onOpenPurchaseModal }: HeroSectionProps) {
                 />
               ))}
             </motion.div>
+            
+            <Link href="/store">
+              <motion.div
+                whileHover={{ scale: 1.05, rotateY: 5 }}
+                whileTap={{ scale: 0.95 }}
+                className="relative"
+              >
+                <Button 
+                  variant="default" 
+                  size="lg"
+                  className="relative px-16 py-8 bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:from-cyan-400 hover:to-blue-500 font-display font-semibold text-2xl rounded-3xl shadow-2xl transition-all duration-500 group"
+                >
+                  {/* Shimmer effect */}
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100"
+                    animate={{
+                      x: ['-100%', '100%'],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      repeatDelay: 2
+                    }}
+                  />
+                  
+                  <span className="relative z-10 flex items-center space-x-4">
+                    <ShoppingBag size={28} />
+                    <span>Browse Store</span>
+                  </span>
+                </Button>
+              </motion.div>
+            </Link>
             
             <motion.div
               whileHover={{ scale: 1.05, rotateY: -5 }}

@@ -12,7 +12,7 @@ export default function Home() {
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-indigo-50">
       <Navigation 
         onOpenPurchaseModal={() => setIsPurchaseModalOpen(true)}
         onOpenDashboard={() => setIsDashboardOpen(true)}
@@ -23,7 +23,7 @@ export default function Home() {
       <FeaturesSection />
       
       {/* Footer */}
-      <footer className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-800 text-white">
+      <footer className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-900 text-white">
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-4 gap-8">
             <div>

@@ -52,8 +52,8 @@ export default function FeaturesSection() {
               >
                 <feature.icon className="text-white" size={24} />
               </motion.div>
-              <h3 className="text-xl font-semibold text-slate-800 mb-3">{feature.title}</h3>
-              <p className="text-slate-600">{feature.description}</p>
+              <h3 className="text-xl font-semibold text-slate-900 mb-3">{feature.title}</h3>
+              <p className="text-slate-700">{feature.description}</p>
             </motion.div>
           ))}
         </div>

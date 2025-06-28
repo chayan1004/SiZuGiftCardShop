@@ -62,7 +62,7 @@ export default function GiftCardGrid() {
                 <QrCode className="text-slate-500" size={24} />
               </div>
             </div>
-            <p className="text-xs text-slate-500">{card.gan}</p>
+            <p className="text-xs text-slate-700 font-medium">{card.gan}</p>
           </div>
         </motion.div>
       ))}

@@ -49,16 +49,18 @@ export default function Navigation({ onOpenPurchaseModal, onOpenDashboard }: Nav
           </div>
           
           <div className="hidden md:flex items-center space-x-8">
-            <a href="#features" className="text-slate-700 hover:text-blue-600 transition-colors font-medium">Features</a>
-            <a href="#pricing" className="text-slate-700 hover:text-blue-600 transition-colors font-medium">Pricing</a>
-            <a href="/about" className="text-slate-700 hover:text-blue-600 transition-colors font-medium">About</a>
-            <a href="#" className="text-slate-700 hover:text-blue-600 transition-colors font-medium">Support</a>
-            <Button 
-              onClick={onOpenDashboard}
-              className="bg-square-blue text-white hover:bg-square-blue-dark"
-            >
-              Merchant Login
-            </Button>
+            <a href="#features" className="text-gray-300 hover:text-indigo-400 transition-colors font-medium tracking-wide">Features</a>
+            <a href="#pricing" className="text-gray-300 hover:text-purple-400 transition-colors font-medium tracking-wide">Pricing</a>
+            <a href="/about" className="text-gray-300 hover:text-pink-400 transition-colors font-medium tracking-wide">About</a>
+            <a href="#" className="text-gray-300 hover:text-cyan-400 transition-colors font-medium tracking-wide">Support</a>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button 
+                onClick={onOpenDashboard}
+                className="gradient-premium text-white font-semibold px-6 py-2 rounded-xl border-none shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                Merchant Login
+              </Button>
+            </motion.div>
           </div>
           
           <Button

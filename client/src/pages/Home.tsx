@@ -16,7 +16,7 @@ export default function Home() {
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900">
       <Navigation 
         onOpenPurchaseModal={() => setIsPurchaseModalOpen(true)}
         onOpenDashboard={() => setIsDashboardOpen(true)}

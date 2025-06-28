@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertMerchantSchema, insertGiftCardSchema, insertGiftCardActivitySchema } from "@shared/schema";
 import { squareService } from "./services/squareService";
-import { realSquareService } from './services/realSquareService';
+import { squareAPIService } from './services/squareAPIService';
 import { qrCodeService } from './services/qrCodeService';
 import { z } from "zod";
 

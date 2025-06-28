@@ -4,10 +4,10 @@ export interface SquarePaymentForm {
 
 export interface Payments {
   card: () => Promise<Card>;
-  applePay: (options: any) => Promise<ApplePay>;
-  googlePay: (options: any) => Promise<GooglePay>;
-  ach: (options: any) => Promise<ACH>;
-  giftCard: () => Promise<GiftCard>;
+  applePay: (options: any) => Promise<any>;
+  googlePay: (options: any) => Promise<any>;
+  ach: (options: any) => Promise<any>;
+  giftCard: () => Promise<any>;
 }
 
 export interface Card {
@@ -73,9 +73,14 @@ class SquarePaymentClient {
         throw new Error('Square SDK not loaded');
       }
 
-      // Get configuration from environment
-      const applicationId = import.meta.env.VITE_SQUARE_APPLICATION_ID;
-      const locationId = import.meta.env.VITE_SQUARE_LOCATION_ID;
+      // Get configuration from backend API
+      const configResponse = await fetch('/api/config/square');
+      if (!configResponse.ok) {
+        throw new Error('Failed to fetch Square configuration');
+      }
+      
+      const config = await configResponse.json();
+      const { applicationId, locationId } = config;
 
       if (!applicationId || !locationId) {
         throw new Error('Square configuration missing');

@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMutation } from "@tanstack/react-query";
-import { squarePaymentClient } from "@/lib/squarePaymentClient";
+import { squareSDK } from "@/lib/squareSDK";
 import { useToast } from "@/hooks/use-toast";
 
 interface PurchaseModalProps {
@@ -36,7 +36,7 @@ export default function PurchaseModal({ isOpen, onClose }: PurchaseModalProps) {
 
   const initializeSquarePayment = async () => {
     try {
-      await squarePaymentClient.createCardPayment('square-card-container');
+      await squareSDK.createCardForm('square-card-container');
       setIsPaymentReady(true);
     } catch (error) {
       console.error('Failed to initialize Square payment:', error);

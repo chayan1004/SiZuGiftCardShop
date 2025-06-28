@@ -9,6 +9,20 @@ import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
+  // Square configuration endpoint
+  app.get("/api/config/square", async (req, res) => {
+    try {
+      res.json({
+        applicationId: process.env.SQUARE_APPLICATION_ID,
+        environment: process.env.SQUARE_ENVIRONMENT || 'sandbox',
+        locationId: process.env.SQUARE_LOCATION_ID,
+      });
+    } catch (error) {
+      console.error('Square config error:', error);
+      res.status(500).json({ message: "Failed to get Square configuration" });
+    }
+  });
+
   // Square OAuth routes
   app.get("/api/auth/square", async (req, res) => {
     try {
@@ -410,7 +424,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           giftCardId: giftCard.id,
           type: 'REDEEM',
           amount: -amount,
-          description: `Redeemed $${(amount / 100).toFixed(2)}`,
+
           squareActivityId: redemptionActivity.id || 'redemption',
         });
       }

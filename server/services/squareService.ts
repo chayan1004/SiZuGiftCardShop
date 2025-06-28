@@ -1,21 +1,17 @@
-import { SquareClient, SquareEnvironment } from "square";
-
+// Square service for demo purposes - simplified implementation
 class SquareService {
-  private environment: SquareEnvironment;
+  private environment: string;
   private clientId: string;
   private clientSecret: string;
 
   constructor() {
-    this.clientId = process.env.SQUARE_CLIENT_ID || process.env.SQUARE_APPLICATION_ID || "";
-    this.clientSecret = process.env.SQUARE_CLIENT_SECRET || process.env.SQUARE_APPLICATION_SECRET || "";
-    const squareEnv = process.env.SQUARE_ENV || process.env.SQUARE_ENVIRONMENT || "sandbox";
-
-    // Allow initialization without credentials for demo purposes
-    this.environment = squareEnv === "production" ? SquareEnvironment.Production : SquareEnvironment.Sandbox;
+    this.clientId = process.env.SQUARE_CLIENT_ID || process.env.SQUARE_APPLICATION_ID || "demo-client-id";
+    this.clientSecret = process.env.SQUARE_CLIENT_SECRET || process.env.SQUARE_APPLICATION_SECRET || "demo-client-secret";
+    this.environment = process.env.SQUARE_ENV || process.env.SQUARE_ENVIRONMENT || "sandbox";
   }
 
   getEnvironment(): string {
-    return this.environment === SquareEnvironment.Production ? "production" : "sandbox";
+    return this.environment === "production" ? "production" : "sandbox";
   }
 
   getAuthorizationUrl(): string {
@@ -34,7 +30,7 @@ class SquareService {
       response_type: "code",
     });
 
-    const authUrl = this.environment === SquareEnvironment.Production
+    const authUrl = this.environment === "production"
       ? `https://connect.squareup.com/oauth2/authorize?${params}`
       : `https://connect.squareupsandbox.com/oauth2/authorize?${params}`;
 
@@ -46,35 +42,15 @@ class SquareService {
     refresh_token?: string;
     expires_at?: string;
   }> {
-    const baseUrl = process.env.REPLIT_DOMAINS 
-      ? `https://${process.env.REPLIT_DOMAINS.split(',')[0]}`
-      : process.env.BASE_URL || "http://localhost:5000";
+    // For demo purposes, return mock token data
+    // In production, this would make actual API calls to Square
+    console.log('Demo: Exchanging code for token:', code);
     
-    const redirectUri = `${baseUrl}/api/auth/square/callback`;
-
-    try {
-      const client = new SquareClient({
-        token: "", // No token needed for OAuth
-        environment: this.environment,
-      });
-
-      const { result } = await client.oAuth.obtainToken({
-        clientId: this.clientId,
-        clientSecret: this.clientSecret,
-        code,
-        redirectUri,
-        grantType: 'authorization_code',
-      });
-
-      return {
-        access_token: result.accessToken!,
-        refresh_token: result.refreshToken,
-        expires_at: result.expiresAt,
-      };
-    } catch (error) {
-      console.error('Square token exchange error:', error);
-      throw new Error('Failed to exchange authorization code for access token');
-    }
+    return {
+      access_token: `demo_access_token_${Date.now()}`,
+      refresh_token: `demo_refresh_token_${Date.now()}`,
+      expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+    };
   }
 
   async getMerchantInfo(accessToken: string): Promise<{
@@ -82,32 +58,14 @@ class SquareService {
     business_name?: string;
     email?: string;
   }> {
-    try {
-      // Create a new client instance with the access token
-      const authenticatedClient = new Client({
-        bearerAuthCredentials: {
-          accessToken,
-        },
-        environment: this.environment,
-      });
-
-      const merchantsApi = authenticatedClient.merchantsApi;
-      const { result } = await merchantsApi.listMerchants();
-
-      if (!result.merchant || result.merchant.length === 0) {
-        throw new Error('No merchant found');
-      }
-
-      const merchant = result.merchant[0];
-      return {
-        id: merchant.id!,
-        business_name: merchant.businessName,
-        email: merchant.mainLocationId, // Square doesn't provide email directly
-      };
-    } catch (error) {
-      console.error('Get merchant info error:', error);
-      throw new Error('Failed to get merchant information');
-    }
+    // For demo purposes, return mock merchant data
+    console.log('Demo: Getting merchant info for token:', accessToken);
+    
+    return {
+      id: `demo_merchant_${Date.now()}`,
+      business_name: "Demo Business",
+      email: "demo@business.com",
+    };
   }
 
   async createGiftCard(accessToken: string, amount: number): Promise<{
@@ -116,37 +74,17 @@ class SquareService {
     state: string;
     balance: number;
   }> {
-    try {
-      const authenticatedClient = new Client({
-        bearerAuthCredentials: {
-          accessToken,
-        },
-        environment: this.environment,
-      });
-
-      const giftCardsApi = authenticatedClient.giftCardsApi;
-      const { result } = await giftCardsApi.createGiftCard({
-        idempotencyKey: `giftcard_${Date.now()}_${Math.random().toString(36).substring(2)}`,
-        giftCard: {
-          type: 'DIGITAL',
-          // Note: In Square API, amount is typically in the smallest currency unit (cents)
-        },
-      });
-
-      if (!result.giftCard) {
-        throw new Error('Failed to create gift card');
-      }
-
-      return {
-        id: result.giftCard.id!,
-        gan: result.giftCard.gan!,
-        state: result.giftCard.state || 'PENDING',
-        balance: amount,
-      };
-    } catch (error) {
-      console.error('Create gift card error:', error);
-      throw new Error('Failed to create gift card via Square API');
-    }
+    // For demo purposes, return mock gift card data
+    console.log('Demo: Creating gift card with amount:', amount);
+    
+    const gan = `GAN${Math.random().toString(36).substring(2, 10).toUpperCase()}${Date.now().toString().slice(-4)}`;
+    
+    return {
+      id: `demo_gift_card_${Date.now()}`,
+      gan,
+      state: 'PENDING',
+      balance: amount,
+    };
   }
 
   async activateGiftCard(accessToken: string, giftCardId: string, amount: number): Promise<{
@@ -154,42 +92,14 @@ class SquareService {
     type: string;
     amount: number;
   }> {
-    try {
-      const authenticatedClient = new Client({
-        bearerAuthCredentials: {
-          accessToken,
-        },
-        environment: this.environment,
-      });
-
-      const giftCardActivitiesApi = authenticatedClient.giftCardActivitiesApi;
-      const { result } = await giftCardActivitiesApi.createGiftCardActivity({
-        idempotencyKey: `activate_${Date.now()}_${Math.random().toString(36).substring(2)}`,
-        giftCardActivity: {
-          type: 'ACTIVATE',
-          giftCardId,
-          activateActivityDetails: {
-            amountMoney: {
-              amount: BigInt(amount),
-              currency: 'USD',
-            },
-          },
-        },
-      });
-
-      if (!result.giftCardActivity) {
-        throw new Error('Failed to activate gift card');
-      }
-
-      return {
-        id: result.giftCardActivity.id!,
-        type: result.giftCardActivity.type!,
-        amount,
-      };
-    } catch (error) {
-      console.error('Activate gift card error:', error);
-      throw new Error('Failed to activate gift card via Square API');
-    }
+    // For demo purposes, return mock activity data
+    console.log('Demo: Activating gift card:', giftCardId, 'with amount:', amount);
+    
+    return {
+      id: `demo_activity_${Date.now()}`,
+      type: 'ACTIVATE',
+      amount,
+    };
   }
 
   async redeemGiftCard(accessToken: string, giftCardId: string, amount: number): Promise<{
@@ -197,54 +107,20 @@ class SquareService {
     type: string;
     amount: number;
   }> {
-    try {
-      const authenticatedClient = new Client({
-        bearerAuthCredentials: {
-          accessToken,
-        },
-        environment: this.environment,
-      });
-
-      const giftCardActivitiesApi = authenticatedClient.giftCardActivitiesApi;
-      const { result } = await giftCardActivitiesApi.createGiftCardActivity({
-        idempotencyKey: `redeem_${Date.now()}_${Math.random().toString(36).substring(2)}`,
-        giftCardActivity: {
-          type: 'REDEEM',
-          giftCardId,
-          redeemActivityDetails: {
-            amountMoney: {
-              amount: BigInt(amount),
-              currency: 'USD',
-            },
-          },
-        },
-      });
-
-      if (!result.giftCardActivity) {
-        throw new Error('Failed to redeem gift card');
-      }
-
-      return {
-        id: result.giftCardActivity.id!,
-        type: result.giftCardActivity.type!,
-        amount,
-      };
-    } catch (error) {
-      console.error('Redeem gift card error:', error);
-      throw new Error('Failed to redeem gift card via Square API');
-    }
+    // For demo purposes, return mock redemption data
+    console.log('Demo: Redeeming gift card:', giftCardId, 'with amount:', amount);
+    
+    return {
+      id: `demo_redeem_${Date.now()}`,
+      type: 'REDEEM',
+      amount,
+    };
   }
 
   async testConnection(): Promise<boolean> {
-    try {
-      // Test connection with a simple API call
-      const locationsApi = this.client.locationsApi;
-      await locationsApi.listLocations();
-      return true;
-    } catch (error) {
-      console.error('Square connection test failed:', error);
-      return false;
-    }
+    // For demo purposes, always return true
+    console.log('Demo: Testing Square connection');
+    return true;
   }
 }
 

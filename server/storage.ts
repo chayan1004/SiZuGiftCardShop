@@ -96,7 +96,8 @@ export class MemStorage implements IStorage {
       ...insertMerchant, 
       id, 
       isActive: true,
-      createdAt: new Date() 
+      createdAt: new Date(),
+      refreshToken: insertMerchant.refreshToken || null
     };
     this.merchants.set(id, merchant);
     return merchant;
@@ -128,7 +129,10 @@ export class MemStorage implements IStorage {
     const giftCard: GiftCard = { 
       ...insertGiftCard, 
       id, 
-      createdAt: new Date() 
+      createdAt: new Date(),
+      customerId: insertGiftCard.customerId || null,
+      recipientEmail: insertGiftCard.recipientEmail || null,
+      personalMessage: insertGiftCard.personalMessage || null
     };
     this.giftCards.set(id, giftCard);
     return giftCard;
@@ -216,7 +220,7 @@ export class MemStorage implements IStorage {
       transactions.push({
         type: 'PURCHASE',
         amount: card.amount,
-        email: card.recipientEmail,
+        email: card.recipientEmail ? card.recipientEmail : undefined,
         gan: card.gan,
         createdAt: card.createdAt || new Date()
       });

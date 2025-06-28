@@ -31,7 +31,9 @@ import { apiRequest } from "@/lib/queryClient";
 // Square Web SDK types
 declare global {
   interface Window {
-    Square: any;
+    Square?: {
+      payments: (applicationId: string, locationId: string) => Promise<any>;
+    };
   }
 }
 
@@ -97,7 +99,7 @@ export default function Checkout() {
     if (!window.Square || !squareConfig) return;
 
     try {
-      const payments = window.Square.payments(squareConfig.applicationId, squareConfig.locationId);
+      const payments = await window.Square.payments(squareConfig.applicationId, squareConfig.locationId);
       const card = await payments.card();
       await card.attach('#card-container');
       setPaymentForm({ payments, card });

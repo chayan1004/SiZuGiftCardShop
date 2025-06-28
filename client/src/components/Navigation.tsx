@@ -19,13 +19,13 @@ export default function Navigation({ onOpenPurchaseModal, onOpenDashboard }: Nav
             <div className="w-8 h-8 bg-gradient-to-br from-square-blue to-square-blue-dark rounded-lg flex items-center justify-center">
               <Gift className="text-white" size={16} />
             </div>
-            <span className="text-xl font-bold text-slate-800">SiZu GiftCard</span>
+            <span className="text-xl font-bold text-slate-900">SiZu GiftCard</span>
           </div>
           
           <div className="hidden md:flex items-center space-x-8">
-            <a href="#" className="text-slate-600 hover:text-square-blue transition-colors">How it Works</a>
-            <a href="#" className="text-slate-600 hover:text-square-blue transition-colors">For Business</a>
-            <a href="#" className="text-slate-600 hover:text-square-blue transition-colors">Support</a>
+            <a href="#" className="text-slate-700 hover:text-blue-600 transition-colors font-medium">How it Works</a>
+            <a href="#" className="text-slate-700 hover:text-blue-600 transition-colors font-medium">For Business</a>
+            <a href="#" className="text-slate-700 hover:text-blue-600 transition-colors font-medium">Support</a>
             <Button 
               onClick={onOpenDashboard}
               className="bg-square-blue text-white hover:bg-square-blue-dark"
@@ -37,7 +37,7 @@ export default function Navigation({ onOpenPurchaseModal, onOpenDashboard }: Nav
           <Button
             variant="ghost"
             size="sm"
-            className="md:hidden text-slate-600"
+            className="md:hidden text-slate-800 hover:text-slate-900"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
@@ -55,9 +55,9 @@ export default function Navigation({ onOpenPurchaseModal, onOpenDashboard }: Nav
             className="md:hidden bg-white/90 backdrop-blur-md border-b border-white/20"
           >
             <div className="px-4 py-4 space-y-4">
-              <a href="#" className="block text-slate-600 hover:text-square-blue transition-colors">How it Works</a>
-              <a href="#" className="block text-slate-600 hover:text-square-blue transition-colors">For Business</a>
-              <a href="#" className="block text-slate-600 hover:text-square-blue transition-colors">Support</a>
+              <a href="#" className="block text-slate-700 hover:text-blue-600 transition-colors font-medium">How it Works</a>
+              <a href="#" className="block text-slate-700 hover:text-blue-600 transition-colors font-medium">For Business</a>
+              <a href="#" className="block text-slate-700 hover:text-blue-600 transition-colors font-medium">Support</a>
               <Button 
                 onClick={() => {
                   onOpenDashboard();

@@ -25,8 +25,8 @@
   --radius: 0.5rem;
   
   /* Custom Square colors */
-  --square-blue: hsl(207, 100%, 50%);
-  --square-blue-dark: hsl(207, 100%, 45%);
+  --square-blue: hsl(207, 90%, 54%);
+  --square-blue-dark: hsl(207, 90%, 48%);
   --glass: hsla(0, 0%, 100%, 0.1);
   --glass-border: hsla(0, 0%, 100%, 0.2);
 }

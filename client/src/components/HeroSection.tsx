@@ -17,13 +17,13 @@ export default function HeroSection({ onOpenPurchaseModal }: HeroSectionProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <h1 className="text-5xl md:text-6xl font-bold text-slate-800 mb-6 leading-tight">
+          <h1 className="text-5xl md:text-6xl font-bold text-slate-900 mb-6 leading-tight">
             Gift Cards Made{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-square-blue to-indigo-600">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-700">
               Simple
             </span>
           </h1>
-          <p className="text-xl text-slate-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl text-slate-700 mb-8 max-w-3xl mx-auto leading-relaxed">
             Create, send, and manage gift cards powered by Square. Perfect for any business, 
             built for the modern world.
           </p>

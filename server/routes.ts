@@ -413,6 +413,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Download PDF receipt for gift card
+  app.get("/api/giftcards/:gan/receipt", async (req: Request, res: Response) => {
+    try {
+      const { gan } = req.params;
+      
+      const giftCard = await storage.getGiftCardByGan(gan);
+      if (!giftCard) {
+        return res.status(404).json({ success: false, error: "Gift card not found" });
+      }
+
+      // Get QR code for receipt
+      const qrResult = await simpleQRService.generateGiftCardQR(gan, giftCard.merchantId, giftCard.amount);
+      
+      // Prepare receipt data
+      const receiptData = {
+        gan: giftCard.gan,
+        amount: giftCard.amount,
+        balance: giftCard.balance,
+        recipientName: giftCard.recipientName || undefined,
+        senderName: giftCard.senderName || undefined,
+        personalMessage: giftCard.personalMessage || undefined,
+        createdAt: giftCard.createdAt || new Date(),
+        status: giftCard.status
+      };
+
+      // Generate PDF receipt
+      const pdfBuffer = await pdfReceiptService.generateReceipt(receiptData, qrResult.qrCodeDataURL);
+      
+      // Set response headers for PDF download
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="SiZu-GiftCard-${gan}-Receipt.pdf"`);
+      res.setHeader('Content-Length', pdfBuffer.length);
+      
+      res.send(pdfBuffer);
+    } catch (error) {
+      console.error("Error generating PDF receipt:", error);
+      res.status(500).json({ success: false, error: "Failed to generate receipt" });
+    }
+  });
+
   // Redeem gift card with Square integration
   app.post('/api/giftcards/redeem', async (req, res) => {
     try {

@@ -364,6 +364,14 @@ export default function PublicGiftCard({ gan }: PublicGiftCardProps) {
                     )}
                     
                     <Button
+                      onClick={() => window.open(`/api/giftcards/${gan}/receipt`, '_blank')}
+                      className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold border-0 shadow-lg"
+                    >
+                      <Download className="w-4 h-4 mr-2 text-white" />
+                      <span className="text-white">Download PDF Receipt</span>
+                    </Button>
+                    
+                    <Button
                       onClick={() => copyToClipboard(gan, "Gift Card Number")}
                       variant="outline"
                       className="w-full border-2 border-white/30 text-white hover:bg-white/10 hover:border-white/50 bg-transparent font-semibold"

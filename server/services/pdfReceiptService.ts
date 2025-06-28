@@ -1,5 +1,13 @@
 import jsPDF from 'jspdf';
 
+// Type fix for jsPDF text alignment
+declare module 'jspdf' {
+  interface jsPDF {
+    text(text: string, x: number, y: number, options?: { align?: string }): jsPDF;
+    text(text: string[], x: number, y: number): jsPDF;
+  }
+}
+
 export interface ReceiptData {
   gan: string;
   amount: number;
@@ -121,7 +129,7 @@ export class PDFReceiptService {
       
       // Wrap long messages
       const splitMessage = doc.splitTextToSize(data.personalMessage, pageWidth - 60);
-      doc.text(splitMessage, 30, yPos + 10);
+      doc.text(splitMessage as string[], 30, yPos + 10);
       yPos += splitMessage.length * 5 + 10;
     }
 
@@ -135,7 +143,11 @@ export class PDFReceiptService {
     doc.setFont('helvetica', 'bold');
     doc.text('Status:', pageWidth / 2, yPos);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(data.status === 'ACTIVE' ? 34, 197, 94 : 239, 68, 68);
+    if (data.status === 'ACTIVE') {
+      doc.setTextColor(34, 197, 94);
+    } else {
+      doc.setTextColor(239, 68, 68);
+    }
     doc.text(data.status, pageWidth / 2, yPos + 10);
 
     return yPos + 30;

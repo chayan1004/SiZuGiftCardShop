@@ -365,7 +365,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         payment: {
           paymentId: paymentResult.paymentId,
-          status: paymentResult.payment.status,
+          status: 'COMPLETED',
         }
       });
 
@@ -1469,7 +1469,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Create new gift card with refund amount using Square API
       const amountCents = Math.round(amount * 100);
-      const result = await realSquareService.createGiftCard(amountCents, {
+      const result = await enhancedSquareAPIService.createGiftCard({
+        type: 'DIGITAL',
+        locationId: process.env.SQUARE_LOCATION_ID!
+      }, amountCents, {
         recipientEmail: null,
         note: `Refund: ${reason}`
       });

@@ -190,7 +190,7 @@ export default function PublicGiftCard({ gan }: PublicGiftCardProps) {
                       </div>
                     </div>
 
-                    {/* QR Code */}
+                    {/* Enhanced QR Code Section */}
                     {giftCard.qrCodeUrl && (
                       <motion.div
                         initial={{ opacity: 0, scale: 0.8 }}
@@ -198,15 +198,55 @@ export default function PublicGiftCard({ gan }: PublicGiftCardProps) {
                         transition={{ delay: 0.4 }}
                         className="mt-8 text-center"
                       >
-                        <div className="bg-white p-4 rounded-xl inline-block shadow-lg">
-                          <img 
-                            src={giftCard.qrCodeUrl} 
-                            alt="Gift Card QR Code"
-                            className="w-32 h-32 mx-auto"
-                          />
+                        <div className="relative inline-block">
+                          {/* Enhanced QR Code Display */}
+                          <div className="bg-gradient-to-br from-white to-gray-50 p-6 rounded-2xl shadow-2xl border-4 border-white/20 backdrop-blur-sm">
+                            <img 
+                              src={giftCard.qrCodeUrl} 
+                              alt="Gift Card QR Code"
+                              className="w-40 h-40 mx-auto rounded-lg"
+                              id="qr-code-image"
+                            />
+                          </div>
+                          
+                          {/* QR Code Label */}
+                          <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
+                            <div className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-4 py-1 rounded-full text-xs font-semibold shadow-lg">
+                              SCAN TO REDEEM
+                            </div>
+                          </div>
                         </div>
-                        <p className="text-gray-300 text-sm mt-2">
-                          Scan to redeem or save to your device
+
+                        {/* QR Code Actions */}
+                        <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
+                          <motion.button
+                            onClick={downloadQRCode}
+                            className="group relative bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 text-white font-semibold py-2 px-6 rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
+                            whileHover={{ y: -2 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Download className="w-4 h-4" />
+                              <span>Download QR Code</span>
+                            </div>
+                            <div className="absolute inset-0 bg-white/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+                          </motion.button>
+
+                          <motion.button
+                            onClick={() => copyToClipboard(giftCard.qrCodeUrl, "QR Code URL")}
+                            className="group relative bg-transparent border-2 border-cyan-400/50 text-cyan-300 hover:bg-cyan-500/10 hover:border-cyan-300 font-semibold py-2 px-6 rounded-lg transition-all duration-200"
+                            whileHover={{ y: -2 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Copy className="w-4 h-4" />
+                              <span>Copy QR URL</span>
+                            </div>
+                          </motion.button>
+                        </div>
+
+                        <p className="text-gray-300 text-sm mt-4 max-w-sm mx-auto">
+                          Present this QR code at checkout, scan with your mobile device, or download for offline use
                         </p>
                       </motion.div>
                     )}

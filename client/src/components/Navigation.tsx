@@ -39,10 +39,23 @@ export default function Navigation({ onOpenPurchaseModal, onOpenDashboard }: Nav
               <Gift className="text-white relative z-10 drop-shadow-sm" size={24} />
             </motion.div>
             <div className="flex flex-col">
-              <span className="font-display text-2xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent shimmer">
+              <motion.span 
+                className="font-display text-3xl font-bold bg-gradient-to-r from-cyan-300 via-blue-400 to-purple-500 bg-clip-text text-transparent"
+                animate={{
+                  backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+                }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                style={{
+                  backgroundSize: "200% 200%"
+                }}
+              >
                 SiZu
-              </span>
-              <span className="font-mono text-xs text-gray-400 tracking-wider -mt-1">
+              </motion.span>
+              <span className="font-mono text-xs text-cyan-300 tracking-[0.3em] -mt-1 font-semibold">
                 GIFTCARD
               </span>
             </div>

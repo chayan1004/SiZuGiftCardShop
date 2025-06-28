@@ -28,30 +28,33 @@ export default function AboutSection() {
   ];
 
   return (
-    <section className="py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 opacity-50" />
-      <div className="absolute top-20 left-20 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse" />
-      <div className="absolute bottom-20 right-20 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse" style={{ animationDelay: "2s" }} />
+    <section className="py-32 px-4 sm:px-6 lg:px-8 relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
+      {/* Enhanced Background Effects */}
+      <div className="absolute inset-0">
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-500/10 via-purple-500/5 to-indigo-500/10" />
+        <div className="absolute top-32 right-32 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-32 left-32 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }} />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-radial from-cyan-500/10 to-transparent rounded-full" />
+      </div>
 
       <div className="max-w-7xl mx-auto relative z-10">
-        <div className="text-center mb-16">
+        <div className="text-center mb-20">
           <motion.h2 
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-5xl font-bold text-slate-900 mb-6"
+            className="font-display text-6xl font-bold text-white mb-8"
           >
-            Why Choose <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">SiZu GiftCard</span>?
+            Why Choose <span className="bg-gradient-to-r from-cyan-300 via-blue-400 to-purple-400 bg-clip-text text-transparent">SiZu GiftCard</span>?
           </motion.h2>
           <motion.p 
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-xl text-slate-700 max-w-3xl mx-auto leading-relaxed"
+            className="text-2xl text-gray-200 max-w-4xl mx-auto leading-relaxed"
           >
             We're revolutionizing the gift card industry with cutting-edge technology, 
-            unmatched security, and an exceptional user experience.
+            unmatched security, and exceptional user experiences that drive business growth.
           </motion.p>
         </div>
 
@@ -73,16 +76,16 @@ export default function AboutSection() {
                 rotateY: 10,
                 transition: { duration: 0.2 }
               }}
-              className="text-center bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300"
+              className="text-center glass-card rounded-3xl p-8 shadow-2xl hover:shadow-cyan-500/20 transition-all duration-500"
               style={{
                 transformStyle: "preserve-3d"
               }}
             >
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <stat.icon className="text-white" size={28} />
+              <div className="w-20 h-20 gradient-premium-3 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
+                <stat.icon className="text-white drop-shadow-lg" size={32} />
               </div>
-              <div className="text-3xl font-bold text-slate-900 mb-2">{stat.value}</div>
-              <div className="text-slate-600 font-medium">{stat.label}</div>
+              <div className="text-4xl font-display font-bold text-white mb-3">{stat.value}</div>
+              <div className="text-cyan-300 font-semibold text-lg">{stat.label}</div>
             </motion.div>
           ))}
         </div>

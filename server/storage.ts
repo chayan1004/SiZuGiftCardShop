@@ -106,7 +106,7 @@ export class MemStorage implements IStorage {
     const merchant = this.merchants.get(id);
     if (!merchant) return undefined;
     
-    const updated = { ...merchant, accessToken, refreshToken };
+    const updated = { ...merchant, accessToken, refreshToken: refreshToken || null };
     this.merchants.set(id, updated);
     return updated;
   }

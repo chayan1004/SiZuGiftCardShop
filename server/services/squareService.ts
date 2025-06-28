@@ -1,34 +1,24 @@
-import { Client, Environment } from "squareupsdk";
+import { SquareClient, SquareEnvironment } from "square";
 
 class SquareService {
-  private client: Client;
-  private environment: Environment;
+  private environment: SquareEnvironment;
+  private clientId: string;
+  private clientSecret: string;
 
   constructor() {
-    const clientId = process.env.SQUARE_CLIENT_ID || process.env.SQUARE_APPLICATION_ID;
-    const clientSecret = process.env.SQUARE_CLIENT_SECRET || process.env.SQUARE_APPLICATION_SECRET;
+    this.clientId = process.env.SQUARE_CLIENT_ID || process.env.SQUARE_APPLICATION_ID || "";
+    this.clientSecret = process.env.SQUARE_CLIENT_SECRET || process.env.SQUARE_APPLICATION_SECRET || "";
     const squareEnv = process.env.SQUARE_ENV || process.env.SQUARE_ENVIRONMENT || "sandbox";
 
-    if (!clientId || !clientSecret) {
-      throw new Error("Square API credentials not configured. Please set SQUARE_CLIENT_ID and SQUARE_CLIENT_SECRET environment variables.");
-    }
-
-    this.environment = squareEnv === "production" ? Environment.Production : Environment.Sandbox;
-    
-    this.client = new Client({
-      bearerAuthCredentials: {
-        accessToken: "", // Will be set per request
-      },
-      environment: this.environment,
-    });
+    // Allow initialization without credentials for demo purposes
+    this.environment = squareEnv === "production" ? SquareEnvironment.Production : SquareEnvironment.Sandbox;
   }
 
   getEnvironment(): string {
-    return this.environment === Environment.Production ? "production" : "sandbox";
+    return this.environment === SquareEnvironment.Production ? "production" : "sandbox";
   }
 
   getAuthorizationUrl(): string {
-    const clientId = process.env.SQUARE_CLIENT_ID || process.env.SQUARE_APPLICATION_ID;
     const baseUrl = process.env.REPLIT_DOMAINS 
       ? `https://${process.env.REPLIT_DOMAINS.split(',')[0]}`
       : process.env.BASE_URL || "http://localhost:5000";
@@ -37,14 +27,14 @@ class SquareService {
     const state = Math.random().toString(36).substring(2, 15);
     
     const params = new URLSearchParams({
-      client_id: clientId!,
+      client_id: this.clientId,
       scope: "PAYMENTS_READ PAYMENTS_WRITE ORDERS_READ ORDERS_WRITE GIFTCARDS_READ GIFTCARDS_WRITE",
       redirect_uri: redirectUri,
       state,
       response_type: "code",
     });
 
-    const authUrl = this.environment === Environment.Production
+    const authUrl = this.environment === SquareEnvironment.Production
       ? `https://connect.squareup.com/oauth2/authorize?${params}`
       : `https://connect.squareupsandbox.com/oauth2/authorize?${params}`;
 
@@ -56,8 +46,6 @@ class SquareService {
     refresh_token?: string;
     expires_at?: string;
   }> {
-    const clientId = process.env.SQUARE_CLIENT_ID || process.env.SQUARE_APPLICATION_ID;
-    const clientSecret = process.env.SQUARE_CLIENT_SECRET || process.env.SQUARE_APPLICATION_SECRET;
     const baseUrl = process.env.REPLIT_DOMAINS 
       ? `https://${process.env.REPLIT_DOMAINS.split(',')[0]}`
       : process.env.BASE_URL || "http://localhost:5000";
@@ -65,10 +53,14 @@ class SquareService {
     const redirectUri = `${baseUrl}/api/auth/square/callback`;
 
     try {
-      const oAuthApi = this.client.oAuthApi;
-      const { result } = await oAuthApi.obtainToken({
-        clientId: clientId!,
-        clientSecret: clientSecret!,
+      const client = new SquareClient({
+        token: "", // No token needed for OAuth
+        environment: this.environment,
+      });
+
+      const { result } = await client.oAuth.obtainToken({
+        clientId: this.clientId,
+        clientSecret: this.clientSecret,
         code,
         redirectUri,
         grantType: 'authorization_code',

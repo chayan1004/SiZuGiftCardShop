@@ -133,7 +133,21 @@ class EnhancedSquareAPIService {
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
         const response = await fetch(url, options);
-        const data = await response.json();
+        
+        // Handle empty responses
+        const contentType = response.headers.get('content-type');
+        let data;
+        
+        if (contentType && contentType.includes('application/json')) {
+          const textResponse = await response.text();
+          if (textResponse.trim()) {
+            data = JSON.parse(textResponse);
+          } else {
+            data = {};
+          }
+        } else {
+          data = {};
+        }
 
         if (!response.ok) {
           // Handle specific Square API errors

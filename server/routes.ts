@@ -3,6 +3,9 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertMerchantSchema, insertGiftCardSchema, insertGiftCardActivitySchema } from "@shared/schema";
 import { squareService } from "./services/squareService";
+import { squareGiftCardService } from './services/squareGiftCardService';
+import { squarePaymentService } from './services/squarePaymentService';
+import { qrCodeService } from './services/qrCodeService';
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -223,6 +226,286 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Get dashboard transactions error:', error);
       res.status(500).json({ message: "Failed to fetch transactions" });
+    }
+  });
+
+  // Production Square Gift Card API endpoints
+  const createGiftCardSchema = z.object({
+    amount: z.number().min(100, 'Minimum amount is $1.00'),
+    recipientEmail: z.string().email().optional(),
+    personalMessage: z.string().max(500).optional(),
+    merchantId: z.string().min(1, 'Merchant ID is required'),
+    sourceId: z.string().min(1, 'Payment source ID is required'),
+  });
+
+  const redeemGiftCardSchema = z.object({
+    gan: z.string().min(1, 'Gift card number is required'),
+    amount: z.number().min(1, 'Redemption amount must be positive'),
+    merchantId: z.string().min(1, 'Merchant ID is required'),
+  });
+
+  // Create and purchase gift card with real Square integration
+  app.post('/api/giftcards/create', async (req, res) => {
+    try {
+      const validatedData = createGiftCardSchema.parse(req.body);
+      const { amount, recipientEmail, personalMessage, merchantId, sourceId } = validatedData;
+
+      // Process payment first
+      const paymentResult = await squarePaymentService.processGiftCardPayment(
+        sourceId,
+        amount,
+        recipientEmail,
+        personalMessage ? `Gift Card: ${personalMessage}` : 'Gift Card Purchase'
+      );
+
+      // Create gift card in Square
+      const squareGiftCard = await squareGiftCardService.createGiftCard(amount, recipientEmail);
+
+      // Generate QR code
+      const qrCodeData = await qrCodeService.generateGiftCardQR(
+        squareGiftCard.gan,
+        merchantId,
+        amount
+      );
+
+      // Store in database
+      const giftCard = await storage.createGiftCard({
+        merchantId,
+        squareGiftCardId: squareGiftCard.giftCard.id!,
+        gan: squareGiftCard.gan,
+        amount,
+        balance: amount,
+        status: 'ACTIVE',
+        recipientEmail: recipientEmail || null,
+        personalMessage: personalMessage || null,
+        qrCodeData: qrCodeData.redemptionUrl,
+        squareState: squareGiftCard.giftCard.state || 'ACTIVE',
+      });
+
+      // Log creation activity
+      await storage.createGiftCardActivity({
+        giftCardId: giftCard.id,
+        type: 'ACTIVATE',
+        amount,
+        description: 'Gift card created and activated',
+        squareActivityId: 'creation',
+      });
+
+      res.status(201).json({
+        success: true,
+        giftCard: {
+          id: giftCard.id,
+          gan: giftCard.gan,
+          amount: giftCard.amount,
+          balance: giftCard.balance,
+          status: giftCard.status,
+          recipientEmail: giftCard.recipientEmail,
+          personalMessage: giftCard.personalMessage,
+          qrCodeDataURL: qrCodeData.qrCodeDataURL,
+          qrCodeSVG: qrCodeData.qrCodeSVG,
+          redemptionUrl: qrCodeData.redemptionUrl,
+          createdAt: giftCard.createdAt,
+        },
+        payment: {
+          paymentId: paymentResult.paymentId,
+          status: paymentResult.payment.status,
+        }
+      });
+
+    } catch (error) {
+      console.error('Error creating gift card:', error);
+      res.status(400).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to create gift card'
+      });
+    }
+  });
+
+  // Get gift card details with real-time Square data
+  app.get('/api/giftcards/:gan', async (req, res) => {
+    try {
+      const { gan } = req.params;
+
+      const giftCard = await storage.getGiftCardByGan(gan);
+      if (!giftCard) {
+        return res.status(404).json({
+          success: false,
+          error: 'Gift card not found'
+        });
+      }
+
+      // Get real-time data from Square
+      const squareGiftCard = await squareGiftCardService.getGiftCard(gan);
+      const currentBalance = Number(squareGiftCard.balanceMoney?.amount || 0);
+
+      // Update balance if different
+      if (currentBalance !== giftCard.balance) {
+        await storage.updateGiftCardBalance(giftCard.id, currentBalance);
+      }
+
+      // Generate fresh QR code
+      const qrCodeData = await qrCodeService.generateGiftCardQR(
+        gan,
+        giftCard.merchantId,
+        giftCard.amount
+      );
+
+      res.json({
+        success: true,
+        giftCard: {
+          id: giftCard.id,
+          gan: giftCard.gan,
+          amount: giftCard.amount,
+          balance: currentBalance,
+          status: squareGiftCard.state,
+          recipientEmail: giftCard.recipientEmail,
+          personalMessage: giftCard.personalMessage,
+          qrCodeDataURL: qrCodeData.qrCodeDataURL,
+          qrCodeSVG: qrCodeData.qrCodeSVG,
+          redemptionUrl: qrCodeData.redemptionUrl,
+          createdAt: giftCard.createdAt,
+          updatedAt: giftCard.updatedAt,
+        }
+      });
+
+    } catch (error) {
+      console.error('Error retrieving gift card:', error);
+      res.status(400).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to retrieve gift card'
+      });
+    }
+  });
+
+  // Redeem gift card with Square integration
+  app.post('/api/giftcards/redeem', async (req, res) => {
+    try {
+      const validatedData = redeemGiftCardSchema.parse(req.body);
+      const { gan, amount, merchantId } = validatedData;
+
+      // Validate gift card
+      const validation = await squareGiftCardService.validateGiftCard(gan);
+      if (!validation.isValid) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid or inactive gift card'
+        });
+      }
+
+      if (validation.balance < amount) {
+        return res.status(400).json({
+          success: false,
+          error: 'Insufficient gift card balance'
+        });
+      }
+
+      // Process redemption in Square
+      const redemptionActivity = await squareGiftCardService.redeemGiftCard(gan, amount);
+
+      // Update database
+      const giftCard = await storage.getGiftCardByGan(gan);
+      if (giftCard) {
+        const newBalance = validation.balance - amount;
+        await storage.updateGiftCardBalance(giftCard.id, newBalance);
+
+        await storage.createGiftCardActivity({
+          giftCardId: giftCard.id,
+          type: 'REDEEM',
+          amount: -amount,
+          description: `Redeemed $${(amount / 100).toFixed(2)}`,
+          squareActivityId: redemptionActivity.id || 'redemption',
+        });
+      }
+
+      res.json({
+        success: true,
+        redemption: {
+          gan,
+          amountRedeemed: amount,
+          remainingBalance: validation.balance - amount,
+          activityId: redemptionActivity.id,
+          timestamp: new Date().toISOString(),
+        }
+      });
+
+    } catch (error) {
+      console.error('Error redeeming gift card:', error);
+      res.status(400).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to redeem gift card'
+      });
+    }
+  });
+
+  // Validate gift card status
+  app.get('/api/giftcards/:gan/validate', async (req, res) => {
+    try {
+      const { gan } = req.params;
+
+      const validation = await squareGiftCardService.validateGiftCard(gan);
+
+      res.json({
+        success: true,
+        validation: {
+          gan,
+          isValid: validation.isValid,
+          balance: validation.balance,
+          status: validation.status,
+          balanceFormatted: `$${(validation.balance / 100).toFixed(2)}`,
+        }
+      });
+
+    } catch (error) {
+      console.error('Error validating gift card:', error);
+      res.status(400).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to validate gift card'
+      });
+    }
+  });
+
+  // Generate QR code for existing gift card
+  app.get('/api/giftcards/:gan/qr', async (req, res) => {
+    try {
+      const { gan } = req.params;
+      const { format = 'png' } = req.query;
+
+      const giftCard = await storage.getGiftCardByGan(gan);
+      if (!giftCard) {
+        return res.status(404).json({
+          success: false,
+          error: 'Gift card not found'
+        });
+      }
+
+      if (format === 'mobile') {
+        const mobileQR = await qrCodeService.generateMobileQR(gan, giftCard.merchantId);
+        res.json({
+          success: true,
+          qrCode: mobileQR,
+          format: 'mobile'
+        });
+      } else {
+        const qrCodeData = await qrCodeService.generateGiftCardQR(
+          gan,
+          giftCard.merchantId,
+          giftCard.amount
+        );
+
+        res.json({
+          success: true,
+          qrCode: format === 'svg' ? qrCodeData.qrCodeSVG : qrCodeData.qrCodeDataURL,
+          redemptionUrl: qrCodeData.redemptionUrl,
+          format
+        });
+      }
+
+    } catch (error) {
+      console.error('Error generating QR code:', error);
+      res.status(400).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to generate QR code'
+      });
     }
   });
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Lock, CreditCard, Sparkles, Star, Gift, Shield, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { squarePaymentClient } from "@/lib/squarePaymentClient";
 import { useToast } from "@/hooks/use-toast";
 
 interface PurchaseModalProps {
@@ -22,6 +22,32 @@ export default function PurchaseModal({ isOpen, onClose }: PurchaseModalProps) {
   const [personalMessage, setPersonalMessage] = useState("");
   const { toast } = useToast();
 
+  const [isPaymentReady, setIsPaymentReady] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      initializeSquarePayment();
+    }
+    return () => {
+      squarePaymentClient.destroy();
+    };
+  }, [isOpen]);
+
+  const initializeSquarePayment = async () => {
+    try {
+      await squarePaymentClient.createCardPayment('square-card-container');
+      setIsPaymentReady(true);
+    } catch (error) {
+      console.error('Failed to initialize Square payment:', error);
+      toast({
+        title: "Payment System Error",
+        description: "Unable to initialize payment system. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const createGiftCardMutation = useMutation({
     mutationFn: async (data: {
       merchantId: string;
@@ -29,21 +55,32 @@ export default function PurchaseModal({ isOpen, onClose }: PurchaseModalProps) {
       recipientEmail?: string;
       personalMessage?: string;
     }) => {
-      const response = await apiRequest("POST", "/api/giftcards/create", data);
-      return response.json();
+      setIsProcessingPayment(true);
+      
+      try {
+        const result = await squarePaymentClient.processGiftCardPayment(data);
+        
+        if (!result.success) {
+          throw new Error(result.error || 'Payment failed');
+        }
+        
+        return result;
+      } finally {
+        setIsProcessingPayment(false);
+      }
     },
     onSuccess: (data) => {
       toast({
-        title: "Gift Card Created!",
-        description: `Successfully created gift card for $${(data.giftCard.amount / 100).toFixed(2)}`,
+        title: "Gift Card Created Successfully!",
+        description: `Gift card for $${(data.giftCard.amount / 100).toFixed(2)} has been created and activated.`,
       });
       onClose();
       resetForm();
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: "Failed to create gift card. Please try again.",
+        title: "Payment Failed",
+        description: error instanceof Error ? error.message : "Failed to process payment. Please try again.",
         variant: "destructive",
       });
     },

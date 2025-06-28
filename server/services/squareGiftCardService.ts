@@ -1,8 +1,8 @@
-import { Client, Environment, GiftCardActivity, GiftCard, CreateGiftCardRequest, CreateGiftCardActivityRequest } from 'squareup';
+const { Client, Environment } = require('squareup');
 import crypto from 'crypto';
 
 class SquareGiftCardService {
-  private client: Client;
+  private client: any;
   private locationId: string;
 
   constructor() {

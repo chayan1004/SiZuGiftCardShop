@@ -27,14 +27,24 @@ export class SquarePaymentService {
   private environment: string;
 
   constructor() {
-    this.baseUrl = process.env.SQUARE_ENVIRONMENT === 'production' 
-      ? 'https://connect.squareup.com' 
-      : 'https://connect.squareupsandbox.com';
-    
     this.accessToken = process.env.SQUARE_ACCESS_TOKEN!;
     this.locationId = process.env.SQUARE_LOCATION_ID!;
     this.applicationId = process.env.SQUARE_APPLICATION_ID!;
-    this.environment = process.env.SQUARE_ENVIRONMENT || 'sandbox';
+    
+    // Determine environment based on application ID prefix
+    if (this.applicationId?.startsWith('sq0idp-')) {
+      this.environment = 'sandbox';
+      this.baseUrl = 'https://connect.squareupsandbox.com';
+    } else if (this.applicationId?.startsWith('sq0app-')) {
+      this.environment = 'production';
+      this.baseUrl = 'https://connect.squareup.com';
+    } else {
+      // Fallback to environment variable
+      this.environment = process.env.SQUARE_ENVIRONMENT || 'sandbox';
+      this.baseUrl = this.environment === 'production' 
+        ? 'https://connect.squareup.com' 
+        : 'https://connect.squareupsandbox.com';
+    }
 
     if (!this.accessToken || !this.locationId || !this.applicationId) {
       throw new Error('Square payment configuration missing. Please check your environment variables.');

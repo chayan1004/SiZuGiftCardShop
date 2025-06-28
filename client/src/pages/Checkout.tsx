@@ -80,35 +80,97 @@ export default function Checkout() {
   useEffect(() => {
     if (!squareConfig || squareLoaded) return;
 
+    // Remove any existing Square scripts first
+    const existingScripts = document.querySelectorAll('script[src*="square"]');
+    existingScripts.forEach(script => script.remove());
+
     const script = document.createElement('script');
+    // Always use sandbox for development
     script.src = 'https://sandbox.web.squarecdn.com/v1/square.js';
     script.async = true;
     script.onload = () => {
       if (window.Square) {
-        initializeSquare();
+        setTimeout(() => initializeSquare(), 500); // Longer delay for proper initialization
       }
+    };
+    script.onerror = () => {
+      console.error('Failed to load Square SDK');
+      toast({
+        title: "Payment system error",
+        description: "Failed to load Square payment system. Please refresh the page.",
+        variant: "destructive"
+      });
     };
     document.head.appendChild(script);
 
     return () => {
-      document.head.removeChild(script);
+      try {
+        document.head.removeChild(script);
+      } catch (e) {
+        // Script may have already been removed
+      }
     };
   }, [squareConfig]);
 
   const initializeSquare = async () => {
-    if (!window.Square || !squareConfig) return;
+    if (!window.Square || !squareConfig) {
+      console.log('Square not available or config missing:', { Square: !!window.Square, config: squareConfig });
+      return;
+    }
+
+    console.log('Initializing Square with config:', squareConfig);
 
     try {
       const payments = await window.Square.payments(squareConfig.applicationId, squareConfig.locationId);
-      const card = await payments.card();
+      console.log('Square payments initialized');
+      
+      const card = await payments.card({
+        style: {
+          input: {
+            fontSize: '16px',
+            fontFamily: 'Arial, sans-serif',
+            color: '#ffffff',
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            borderColor: 'rgba(255, 255, 255, 0.2)',
+            borderRadius: '8px'
+          },
+          '.input-container': {
+            borderColor: 'rgba(255, 255, 255, 0.2)',
+            borderRadius: '8px'
+          },
+          '.input-container.is-focus': {
+            borderColor: '#06b6d4'
+          },
+          '.input-container.is-error': {
+            borderColor: '#ef4444'
+          }
+        }
+      });
+      console.log('Square card initialized');
+      
       await card.attach('#card-container');
+      console.log('Square card attached to container');
+      
       setPaymentForm({ payments, card });
       setSquareLoaded(true);
+      
+      toast({
+        title: "Payment form ready",
+        description: "You can now enter your card details."
+      });
     } catch (error) {
       console.error('Square initialization error:', error);
+      
+      let errorMessage = "Unable to load payment form. Please refresh the page.";
+      if (error && typeof error === 'object' && 'name' in error) {
+        if (error.name === 'ApplicationIdEnvironmentMismatchError') {
+          errorMessage = "Payment system configuration error. Please contact support.";
+        }
+      }
+      
       toast({
         title: "Payment system error",
-        description: "Unable to load payment form. Please refresh the page.",
+        description: errorMessage,
         variant: "destructive"
       });
     }

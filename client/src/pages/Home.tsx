@@ -34,29 +34,44 @@ export default function Home() {
       
       <CTASection onOpenPurchaseModal={() => setIsPurchaseModalOpen(true)} />
       
-      {/* Footer */}
-      <footer className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-900 text-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center space-x-2 mb-6">
-                <div className="w-8 h-8 bg-gradient-to-br from-square-blue to-square-blue-dark rounded-lg flex items-center justify-center">
-                  <Gift className="text-white" size={16} />
+      {/* Enhanced Footer */}
+      <footer className="py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-900 to-purple-900">
+        {/* Rich Background Effects */}
+        <div className="absolute inset-0">
+          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-500/5 via-purple-500/3 to-indigo-500/5" />
+          <div className="absolute top-20 right-20 w-96 h-96 bg-cyan-400/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-20 left-20 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }} />
+        </div>
+        
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="grid md:grid-cols-4 gap-12">
+            <div className="md:col-span-2">
+              <div className="flex items-center space-x-4 mb-8">
+                <div className="w-16 h-16 gradient-premium rounded-2xl flex items-center justify-center shadow-2xl">
+                  <Gift className="text-white" size={24} />
                 </div>
-                <span className="text-xl font-bold">SiZu GiftCard</span>
+                <div>
+                  <span className="font-display text-3xl font-bold bg-gradient-to-r from-cyan-300 via-blue-400 to-purple-400 bg-clip-text text-transparent">
+                    SiZu
+                  </span>
+                  <div className="font-mono text-xs text-cyan-300 tracking-[0.3em] font-semibold">
+                    GIFTCARD
+                  </div>
+                </div>
               </div>
-              <p className="text-slate-400 mb-4">
-                Simple, secure gift cards powered by Square's trusted payment platform.
+              <p className="text-xl text-gray-200 leading-relaxed mb-8 max-w-lg">
+                The future of digital gift cards. Powered by Square's enterprise platform, 
+                trusted by thousands of businesses worldwide.
               </p>
               <div className="flex space-x-4">
-                <a href="#" className="text-slate-400 hover:text-white transition-colors">
-                  <i className="fab fa-twitter"></i>
+                <a href="#" className="w-12 h-12 glass-premium rounded-xl flex items-center justify-center text-gray-300 hover:text-cyan-300 transition-colors duration-300">
+                  <span className="text-sm font-semibold">T</span>
                 </a>
-                <a href="#" className="text-slate-400 hover:text-white transition-colors">
-                  <i className="fab fa-facebook"></i>
+                <a href="#" className="w-12 h-12 glass-premium rounded-xl flex items-center justify-center text-gray-300 hover:text-cyan-300 transition-colors duration-300">
+                  <span className="text-sm font-semibold">L</span>
                 </a>
-                <a href="#" className="text-slate-400 hover:text-white transition-colors">
-                  <i className="fab fa-instagram"></i>
+                <a href="#" className="w-12 h-12 glass-premium rounded-xl flex items-center justify-center text-gray-300 hover:text-cyan-300 transition-colors duration-300">
+                  <span className="text-sm font-semibold">G</span>
                 </a>
               </div>
             </div>

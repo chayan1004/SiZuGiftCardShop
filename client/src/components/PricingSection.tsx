@@ -60,28 +60,32 @@ export default function PricingSection() {
   ];
 
   return (
-    <section id="pricing" className="py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50">
-      {/* Background Effects */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{ animationDelay: "3s" }} />
+    <section id="pricing" className="py-32 px-4 sm:px-6 lg:px-8 relative overflow-hidden bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900">
+      {/* Enhanced Background Effects */}
+      <div className="absolute inset-0">
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-purple-500/10 via-blue-500/5 to-indigo-500/10" />
+        <div className="absolute top-20 left-20 w-[500px] h-[500px] bg-purple-400/15 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-20 right-20 w-[500px] h-[500px] bg-blue-400/15 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "3s" }} />
+        <div className="absolute top-1/3 right-1/3 w-[300px] h-[300px] bg-indigo-400/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1.5s" }} />
+      </div>
 
       <div className="max-w-7xl mx-auto relative z-10">
-        <div className="text-center mb-16">
+        <div className="text-center mb-20">
           <motion.h2 
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-5xl font-bold text-slate-900 mb-6"
+            className="font-display text-6xl font-bold text-white mb-8"
           >
-            Simple, <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Transparent</span> Pricing
+            Simple, <span className="bg-gradient-to-r from-cyan-300 via-blue-400 to-purple-400 bg-clip-text text-transparent">Transparent</span> Pricing
           </motion.h2>
           <motion.p 
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-xl text-slate-700 max-w-3xl mx-auto"
+            className="text-2xl text-gray-200 max-w-4xl mx-auto leading-relaxed"
           >
-            Choose the perfect plan for your business. Upgrade or downgrade at any time.
+            Choose the perfect plan for your business. Scale seamlessly with enterprise-grade features.
           </motion.p>
         </div>
 
@@ -104,10 +108,10 @@ export default function PricingSection() {
                 scale: 1.02,
                 transition: { duration: 0.3 }
               }}
-              className={`relative bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border transition-all duration-500 group ${
+              className={`relative glass-card rounded-3xl p-10 shadow-2xl transition-all duration-500 group cursor-pointer ${
                 plan.popular 
-                  ? 'border-purple-300 shadow-purple-200/50 hover:shadow-purple-300/60' 
-                  : 'border-white/30 hover:shadow-2xl'
+                  ? 'border-cyan-300/30 shadow-cyan-500/20 hover:shadow-cyan-500/40' 
+                  : 'hover:shadow-purple-500/20'
               }`}
               style={{
                 transformStyle: "preserve-3d"
@@ -141,12 +145,12 @@ export default function PricingSection() {
               </motion.div>
 
               {/* Plan Details */}
-              <div className="mb-8">
-                <h3 className="text-2xl font-bold text-slate-900 mb-2">{plan.name}</h3>
-                <p className="text-slate-600 mb-4">{plan.description}</p>
-                <div className="flex items-baseline mb-6">
-                  <span className="text-4xl font-bold text-slate-900">{plan.price}</span>
-                  {plan.period && <span className="text-slate-600 ml-1">{plan.period}</span>}
+              <div className="mb-10">
+                <h3 className="font-display text-3xl font-bold text-white mb-3">{plan.name}</h3>
+                <p className="text-gray-300 text-lg mb-6">{plan.description}</p>
+                <div className="flex items-baseline mb-8">
+                  <span className="font-display text-5xl font-bold text-white">{plan.price}</span>
+                  {plan.period && <span className="text-cyan-300 ml-2 text-xl font-semibold">{plan.period}</span>}
                 </div>
               </div>
 

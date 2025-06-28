@@ -10,8 +10,9 @@ interface HeroSectionProps {
 
 export default function HeroSection({ onOpenPurchaseModal }: HeroSectionProps) {
   return (
-    <section className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
+    <section className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      <FloatingElements />
+      <div className="max-w-7xl mx-auto relative z-10">
         <motion.div 
           className="text-center mb-16"
           initial={{ opacity: 0, y: 30 }}

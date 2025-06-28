@@ -4,6 +4,73 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Enhanced responsive breakpoints and mobile-first design */
+@layer base {
+  html {
+    font-size: 16px;
+  }
+  
+  /* Mobile optimizations */
+  @media (max-width: 640px) {
+    html {
+      font-size: 14px;
+    }
+  }
+  
+  /* Tablet optimizations */
+  @media (min-width: 641px) and (max-width: 1024px) {
+    html {
+      font-size: 15px;
+    }
+  }
+  
+  /* Desktop optimizations */
+  @media (min-width: 1025px) {
+    html {
+      font-size: 16px;
+    }
+  }
+}
+
+@layer components {
+  /* Responsive glass morphism effect */
+  .glass-premium {
+    @apply backdrop-blur-xl bg-white/5 border border-white/10;
+  }
+  
+  /* Mobile-optimized cards */
+  .card-mobile {
+    @apply p-4 sm:p-6 lg:p-8;
+  }
+  
+  /* Responsive text scaling */
+  .text-responsive-xl {
+    @apply text-lg sm:text-xl lg:text-2xl;
+  }
+  
+  .text-responsive-lg {
+    @apply text-base sm:text-lg lg:text-xl;
+  }
+  
+  .text-responsive-base {
+    @apply text-sm sm:text-base lg:text-lg;
+  }
+  
+  /* Mobile-first button sizing */
+  .btn-responsive {
+    @apply px-4 py-2 sm:px-6 sm:py-3 lg:px-8 lg:py-4;
+  }
+  
+  /* Responsive spacing utilities */
+  .space-responsive {
+    @apply space-y-4 sm:space-y-6 lg:space-y-8;
+  }
+  
+  .gap-responsive {
+    @apply gap-3 sm:gap-4 lg:gap-6;
+  }
+}
+
 :root {
   --background: hsl(0, 0%, 100%);
   --foreground: hsl(20, 14.3%, 4.1%);

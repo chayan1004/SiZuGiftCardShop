@@ -39,7 +39,7 @@ export class PDFReceiptService {
     doc.setFontSize(24);
     doc.setTextColor(124, 58, 237); // Purple brand color
     const centerX = pageWidth / 2;
-    doc.text('Gift Card Receipt', centerX, 60, { align: 'center' } as any);
+    doc.text('Gift Card Receipt', centerX, 60, { align: 'center' });
 
     // Receipt details
     let yPosition = 80;
@@ -159,7 +159,7 @@ export class PDFReceiptService {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(14);
     const centerX = pageWidth / 2;
-    doc.text('Scan to Redeem:', centerX, startY, { align: 'center' } as any);
+    doc.text('Scan to Redeem:', centerX, startY, { align: 'center' });
 
     // Add QR code image
     const qrSize = 60;
@@ -172,7 +172,7 @@ export class PDFReceiptService {
       // Fallback text if QR code fails
       doc.setFontSize(10);
       const centerX = pageWidth / 2;
-      doc.text('QR Code unavailable', centerX, startY + 40, { align: 'center' } as any);
+      doc.text('QR Code unavailable', centerX, startY + 40, { align: 'center' });
     }
 
     return startY + qrSize + 20;
@@ -189,8 +189,8 @@ export class PDFReceiptService {
     doc.setFontSize(10);
     doc.setTextColor(107, 114, 128);
     const centerX = pageWidth / 2;
-    doc.text('Thank you for choosing SiZu Gift Cards!', centerX, footerY, { align: 'center' } as any);
-    doc.text('Visit https://SiZu-GiftCardShop.replit.app for more information', centerX, footerY + 10, { align: 'center' } as any);
+    doc.text('Thank you for choosing SiZu Gift Cards!', centerX, footerY, { align: 'center' });
+    doc.text('Visit https://SiZu-GiftCardShop.replit.app for more information', centerX, footerY + 10, { align: 'center' });
   }
 }
 

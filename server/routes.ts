@@ -431,15 +431,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         gan: giftCard.gan,
         amount: giftCard.amount,
         balance: giftCard.balance,
-        recipientName: giftCard.recipientName || undefined,
-        senderName: giftCard.senderName || undefined,
-        personalMessage: giftCard.personalMessage || undefined,
+        recipientName: giftCard.recipientName ?? undefined,
+        senderName: giftCard.senderName ?? undefined,
+        personalMessage: giftCard.personalMessage ?? undefined,
         createdAt: giftCard.createdAt || new Date(),
         status: giftCard.status
       };
 
       // Generate PDF receipt
-      const pdfBuffer = await pdfReceiptService.generateReceipt(receiptData, qrResult.qrCodeDataURL);
+      const pdfBuffer = await pdfReceiptService.generateReceipt(receiptData, qrResult.qrCodeDataURL ?? undefined);
       
       // Set response headers for PDF download
       res.setHeader('Content-Type', 'application/pdf');

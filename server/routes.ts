@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertMerchantSchema, insertGiftCardSchema, insertGiftCardActivitySchema } from "@shared/schema";
 import { squareService } from "./services/squareService";
-import { mockSquareService } from './services/mockSquareService';
+import { realSquareService } from './services/realSquareService';
 import { qrCodeService } from './services/qrCodeService';
 import { z } from "zod";
 
@@ -250,14 +250,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { amount, recipientEmail, personalMessage, merchantId, sourceId } = validatedData;
 
       // Process payment first
-      const paymentResult = await mockSquareService.processPayment(
+      const paymentResult = await realSquareService.processPayment(
         sourceId,
         amount,
         recipientEmail
       );
 
       // Create gift card in Square
-      const squareGiftCard = await mockSquareService.createGiftCard(amount, recipientEmail);
+      const squareGiftCard = await realSquareService.createGiftCard(amount, recipientEmail);
 
       // Generate QR code
       const qrCodeData = await qrCodeService.generateGiftCardQR(
@@ -285,7 +285,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         giftCardId: giftCard.id,
         type: 'ACTIVATE',
         amount,
-        description: 'Gift card created and activated',
+
         squareActivityId: 'creation',
       });
 
@@ -333,7 +333,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Get real-time data from Square
-      const squareGiftCard = await squareGiftCardService.getGiftCard(gan);
+      const squareGiftCard = await realSquareService.getGiftCard(gan);
       const currentBalance = Number(squareGiftCard.balanceMoney?.amount || 0);
 
       // Update balance if different
@@ -382,7 +382,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { gan, amount, merchantId } = validatedData;
 
       // Validate gift card
-      const validation = await squareGiftCardService.validateGiftCard(gan);
+      const validation = await realSquareService.validateGiftCard(gan);
       if (!validation.isValid) {
         return res.status(400).json({
           success: false,
@@ -398,7 +398,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Process redemption in Square
-      const redemptionActivity = await squareGiftCardService.redeemGiftCard(gan, amount);
+      const redemptionActivity = await realSquareService.redeemGiftCard(gan, amount);
 
       // Update database
       const giftCard = await storage.getGiftCardByGan(gan);
@@ -440,7 +440,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { gan } = req.params;
 
-      const validation = await squareGiftCardService.validateGiftCard(gan);
+      const validation = await realSquareService.validateGiftCard(gan);
 
       res.json({
         success: true,

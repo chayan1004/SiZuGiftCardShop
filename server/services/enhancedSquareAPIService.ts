@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { storage } from '../storage';
-import { SquareClient } from 'square';
+import { Client as SquareClient, Environment } from 'square';
 
 /**
  * Enhanced Square API Service - Production Ready Implementation
@@ -101,8 +101,8 @@ class EnhancedSquareAPIService {
 
     // Initialize Square SDK client
     this.client = new SquareClient({
-      token: this.accessToken,
-      environment: this.environment === 'production' ? 'production' : 'sandbox'
+      accessToken: this.accessToken,
+      environment: this.environment === 'production' ? Environment.Production : Environment.Sandbox
     });
   }
 

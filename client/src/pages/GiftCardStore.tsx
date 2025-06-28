@@ -5,6 +5,7 @@ import { Gift, Sparkles, Star, Heart, Coffee, ShoppingBag, Award } from "lucide-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import Navigation from "@/components/Navigation";
 
 interface GiftCardOption {
   id: string;
@@ -67,9 +68,25 @@ export default function GiftCardStore() {
     setLocation(`/checkout?amount=${card.amount}&type=${card.id}`);
   };
 
+  // Navigation handlers
+  const handleOpenPurchaseModal = () => {
+    // Already on store page, scroll to gift card options
+    document.querySelector('.max-w-6xl')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleOpenDashboard = () => {
+    // Navigate to admin page
+    setLocation('/admin');
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900">
-      {/* Hero Section */}
+    <>
+      <Navigation 
+        onOpenPurchaseModal={handleOpenPurchaseModal}
+        onOpenDashboard={handleOpenDashboard}
+      />
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900">
+        {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0">
           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-500/5 via-purple-500/3 to-indigo-500/5" />
@@ -295,6 +312,7 @@ export default function GiftCardStore() {
           </motion.div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

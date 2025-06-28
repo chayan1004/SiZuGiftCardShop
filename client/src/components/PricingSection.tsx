@@ -201,7 +201,7 @@ export default function PricingSection() {
           transition={{ duration: 0.8, delay: 0.8 }}
           className="text-center mt-16"
         >
-          <p className="text-slate-600 mb-4">
+          <p className="mb-4 text-[#dde8fd]">
             All plans include 14-day free trial • No setup fees • Cancel anytime
           </p>
           <p className="text-sm text-[#f8faff]">

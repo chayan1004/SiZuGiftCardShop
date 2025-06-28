@@ -264,14 +264,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { amount, recipientEmail, personalMessage, merchantId, sourceId } = validatedData;
 
       // Process payment first
-      const paymentResult = await realSquareService.processPayment(
+      const paymentResult = await squareAPIService.processPayment(
         sourceId,
         amount,
         recipientEmail
       );
 
       // Create gift card in Square
-      const squareGiftCard = await realSquareService.createGiftCard(amount, recipientEmail);
+      const squareGiftCard = await squareAPIService.createGiftCard(amount, recipientEmail);
 
       // Generate QR code
       const qrCodeData = await qrCodeService.generateGiftCardQR(
@@ -347,7 +347,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Get real-time data from Square
-      const squareGiftCard = await realSquareService.getGiftCard(gan);
+      const squareGiftCard = await squareAPIService.getGiftCard(gan);
       const currentBalance = Number(squareGiftCard.balanceMoney?.amount || 0);
 
       // Update balance if different
@@ -396,7 +396,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { gan, amount, merchantId } = validatedData;
 
       // Validate gift card
-      const validation = await realSquareService.validateGiftCard(gan);
+      const validation = await squareAPIService.validateGiftCard(gan);
       if (!validation.isValid) {
         return res.status(400).json({
           success: false,
@@ -412,7 +412,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Process redemption in Square
-      const redemptionActivity = await realSquareService.redeemGiftCard(gan, amount);
+      const redemptionActivity = await squareAPIService.redeemGiftCard(gan, amount);
 
       // Update database
       const giftCard = await storage.getGiftCardByGan(gan);
@@ -454,7 +454,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { gan } = req.params;
 
-      const validation = await realSquareService.validateGiftCard(gan);
+      const validation = await squareAPIService.validateGiftCard(gan);
 
       res.json({
         success: true,

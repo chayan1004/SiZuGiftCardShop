@@ -161,7 +161,7 @@ export default function PricingSection() {
                     initial={{ opacity: 0, x: -20 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.2 + featureIndex * 0.1 }}
-                    className="flex items-center text-slate-700"
+                    className="flex items-center text-[#e1e5e9] bg-[#0000]"
                   >
                     <motion.div
                       whileHover={{ scale: 1.2, rotateZ: 360 }}

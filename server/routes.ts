@@ -1222,6 +1222,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     squareWebhookHandler.getWebhookHistory(req, res);
   });
 
+  // Square configuration endpoint for Web SDK
+  app.get("/api/config/square", (req, res) => {
+    try {
+      const applicationId = process.env.SQUARE_APPLICATION_ID;
+      const locationId = process.env.SQUARE_LOCATION_ID;
+      
+      // Determine environment based on application ID prefix
+      let environment = 'sandbox';
+      if (applicationId?.startsWith('sq0app-')) {
+        environment = 'production';
+      } else if (applicationId?.startsWith('sq0idp-')) {
+        environment = 'sandbox';
+      } else {
+        environment = process.env.SQUARE_ENVIRONMENT || 'sandbox';
+      }
+
+      if (!applicationId || !locationId) {
+        return res.status(500).json({
+          error: 'Square configuration missing'
+        });
+      }
+
+      res.json({
+        applicationId,
+        locationId,
+        environment
+      });
+    } catch (error) {
+      console.error('Square config error:', error);
+      res.status(500).json({ error: 'Failed to get Square configuration' });
+    }
+  });
+
   // Test Square connection
   app.get("/api/test-square", async (req, res) => {
     try {

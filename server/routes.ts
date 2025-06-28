@@ -521,7 +521,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           format: 'mobile'
         });
       } else {
-        const qrCodeData = await qrCodeService.generateGiftCardQR(
+        const qrCodeData = await simpleQRService.generateGiftCardQR(
           gan,
           giftCard.merchantId,
           giftCard.amount

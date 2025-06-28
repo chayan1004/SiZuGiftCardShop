@@ -4,10 +4,8 @@ export class SimpleQRService {
   private baseUrl: string;
 
   constructor() {
-    // Use Replit's dynamic URL or fallback to production URL
-    this.baseUrl = process.env.REPL_SLUG 
-      ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER || 'replit'}.repl.co`
-      : process.env.PRODUCTION_URL || 'https://sizu-giftcard.replit.app';
+    // Use production URL for QR codes so they work on mobile devices
+    this.baseUrl = 'https://SiZu-GiftCardShop.replit.app';
   }
 
   async generateGiftCardQR(gan: string, merchantId: string, amount: number) {

@@ -8,6 +8,7 @@ import { squareAPIService } from './services/squareAPIService';
 import { enhancedSquareAPIService } from './services/enhancedSquareAPIService';
 import { simpleQRService } from './services/simpleQRService';
 import { emailService } from './services/emailService';
+import { pdfReceiptService } from './services/pdfReceiptService';
 import { squareWebhookHandler } from './webhooks/squareWebhookHandler';
 import { requireAdmin } from './middleware/authMiddleware';
 import { generateGiftCardQR, generateGiftCardBarcode } from '../utils/qrGenerator';

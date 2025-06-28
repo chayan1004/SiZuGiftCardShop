@@ -4,9 +4,10 @@ export class SimpleQRService {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = process.env.NODE_ENV === 'production' 
-      ? process.env.PRODUCTION_URL || 'https://sizu-giftcard.replit.app'
-      : 'http://localhost:5000';
+    // Use Replit's dynamic URL or fallback to production URL
+    this.baseUrl = process.env.REPL_SLUG 
+      ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER || 'replit'}.repl.co`
+      : process.env.PRODUCTION_URL || 'https://sizu-giftcard.replit.app';
   }
 
   async generateGiftCardQR(gan: string, merchantId: string, amount: number) {

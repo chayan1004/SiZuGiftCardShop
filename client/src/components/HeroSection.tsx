@@ -37,22 +37,22 @@ export default function HeroSection({ onOpenPurchaseModal }: HeroSectionProps) {
               <Button 
                 onClick={onOpenPurchaseModal}
                 size="lg"
-                className="bg-square-blue text-white px-8 py-4 text-lg font-semibold hover:bg-square-blue-dark animate-pulse-glow"
+                className="gradient-premium text-white px-12 py-6 text-xl font-display font-bold rounded-2xl shadow-2xl hover:shadow-purple-500/25 transition-all duration-500 border-none"
               >
-                <Gift className="mr-2" size={20} />
-                Buy a Gift Card
+                <Gift className="mr-3" size={24} />
+                Experience SiZu
               </Button>
             </motion.div>
             <motion.div
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.05, rotateY: -5 }}
               whileTap={{ scale: 0.95 }}
             >
               <Button 
                 variant="outline" 
                 size="lg"
-                className="border-2 border-slate-300 text-slate-700 px-8 py-4 text-lg font-semibold hover:border-square-blue hover:text-square-blue"
+                className="glass-premium border-2 border-white/20 text-white hover:bg-white/10 px-12 py-6 text-xl font-display font-semibold rounded-2xl backdrop-blur-md transition-all duration-500"
               >
-                <Play className="mr-2" size={20} />
+                <Play className="mr-3" size={24} />
                 Watch Demo
               </Button>
             </motion.div>

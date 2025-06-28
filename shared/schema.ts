@@ -49,6 +49,27 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
 });
 
+export const promoCodes = pgTable("promo_codes", {
+  id: serial("id").primaryKey(),
+  code: text("code").unique().notNull(),
+  type: text("type").notNull(), // "percent" | "fixed"
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  active: boolean("active").default(true).notNull(),
+  usageCount: integer("usage_count").default(0).notNull(),
+  maxUsage: integer("max_usage"), // null for unlimited
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const promoUsage = pgTable("promo_usage", {
+  id: serial("id").primaryKey(),
+  promoCodeId: integer("promo_code_id").references(() => promoCodes.id).notNull(),
+  giftCardId: integer("gift_card_id").references(() => giftCards.id).notNull(),
+  discountAmount: decimal("discount_amount", { precision: 10, scale: 2 }).notNull(),
+  purchaserEmail: text("purchaser_email"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const insertMerchantSchema = createInsertSchema(merchants).omit({
   id: true,
   createdAt: true,
@@ -68,6 +89,18 @@ export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
 });
 
+export const insertPromoCodeSchema = createInsertSchema(promoCodes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  usageCount: true,
+});
+
+export const insertPromoUsageSchema = createInsertSchema(promoUsage).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type Merchant = typeof merchants.$inferSelect;
 export type InsertMerchant = z.infer<typeof insertMerchantSchema>;
 export type GiftCard = typeof giftCards.$inferSelect;
@@ -76,3 +109,7 @@ export type GiftCardActivity = typeof giftCardActivities.$inferSelect;
 export type InsertGiftCardActivity = z.infer<typeof insertGiftCardActivitySchema>;
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type PromoCode = typeof promoCodes.$inferSelect;
+export type InsertPromoCode = z.infer<typeof insertPromoCodeSchema>;
+export type PromoUsage = typeof promoUsage.$inferSelect;
+export type InsertPromoUsage = z.infer<typeof insertPromoUsageSchema>;

@@ -1,12 +1,14 @@
 import { 
-  users, merchants, giftCards, giftCardActivities,
+  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage,
   type User, type InsertUser,
   type Merchant, type InsertMerchant, 
   type GiftCard, type InsertGiftCard,
-  type GiftCardActivity, type InsertGiftCardActivity
+  type GiftCardActivity, type InsertGiftCardActivity,
+  type PromoCode, type InsertPromoCode,
+  type PromoUsage, type InsertPromoUsage
 } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, desc, sql, count, sum, and } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -61,6 +63,15 @@ export interface IStorage {
     revenue: number;
     giftCardsSold: number;
   }>>;
+
+  // Promo Code methods
+  getPromoCode(code: string): Promise<PromoCode | undefined>;
+  getPromoCodeById(id: number): Promise<PromoCode | undefined>;
+  getAllPromoCodes(): Promise<PromoCode[]>;
+  createPromoCode(promoCode: InsertPromoCode): Promise<PromoCode>;
+  updatePromoCodeUsage(id: number, increment: number): Promise<PromoCode | undefined>;
+  recordPromoUsage(usage: InsertPromoUsage): Promise<PromoUsage>;
+  getPromoUsageByCode(promoCodeId: number): Promise<PromoUsage[]>;
 }
 
 export class DatabaseStorage implements IStorage {

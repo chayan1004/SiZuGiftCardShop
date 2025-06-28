@@ -73,8 +73,8 @@ export async function generateGiftCardBarcode(
 
   try {
     // Generate barcode as PNG buffer then convert to data URL
-    const png = bwipjs.toBuffer(barcodeOptions);
-    const base64 = Buffer.from(png).toString('base64');
+    const png = await bwipjs.toBuffer(barcodeOptions);
+    const base64 = png.toString('base64');
     return `data:image/png;base64,${base64}`;
   } catch (error) {
     console.error('Barcode generation failed:', error);

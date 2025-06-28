@@ -5,7 +5,27 @@ import { insertMerchantSchema, insertGiftCardSchema, insertGiftCardActivitySchem
 import { squareService } from "./services/squareService";
 import { squareAPIService } from './services/squareAPIService';
 import { qrCodeService } from './services/qrCodeService';
+import { emailService } from './services/emailService';
+import { requireAdmin } from './middleware/authMiddleware';
+import { generateGiftCardQR, generateGiftCardBarcode } from '../utils/qrGenerator';
 import { z } from "zod";
+
+// Helper function for time formatting
+function getTimeAgo(date: Date): string {
+  const now = new Date();
+  const diffInMs = now.getTime() - date.getTime();
+  const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+  const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+  if (diffInMinutes < 60) {
+    return `${diffInMinutes}m ago`;
+  } else if (diffInHours < 24) {
+    return `${diffInHours}h ago`;
+  } else {
+    return `${diffInDays}d ago`;
+  }
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
@@ -517,6 +537,164 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({
         success: false,
         error: error instanceof Error ? error.message : 'Failed to generate QR code'
+      });
+    }
+  });
+
+  // Admin Dashboard API - Comprehensive Metrics and Analytics
+  app.get("/api/admin/metrics", requireAdmin, async (req, res) => {
+    try {
+      console.log('Admin: Fetching comprehensive dashboard metrics');
+      
+      // Get merchant stats for all merchants
+      const merchants = await storage.getAllMerchants();
+      let totalStats = {
+        totalSales: 0,
+        activeCards: 0,
+        redemptions: 0,
+        customers: 0,
+        totalValue: 0
+      };
+
+      for (const merchant of merchants) {
+        const stats = await storage.getMerchantStats(merchant.squareMerchantId);
+        totalStats.totalSales += stats.totalSales;
+        totalStats.activeCards += stats.activeCards;
+        totalStats.redemptions += stats.redemptions;
+        totalStats.customers += stats.customers;
+      }
+
+      // Get recent activity across all merchants
+      const recentActivity = await storage.getRecentTransactions('all', 15);
+      
+      // Get weekly revenue data for graphs
+      const weeklyRevenue = await storage.getWeeklyRevenue();
+
+      // Calculate total gift card value from database
+      const giftCardSummary = await storage.getGiftCardSummary();
+      
+      res.json({
+        success: true,
+        metrics: {
+          totalGiftCards: giftCardSummary.total,
+          activeCards: giftCardSummary.active,
+          redeemedCards: giftCardSummary.redeemed,
+          totalValue: giftCardSummary.totalValue,
+          averageValue: giftCardSummary.averageValue,
+          totalSales: totalStats.totalSales,
+          redemptions: totalStats.redemptions,
+          customers: totalStats.customers,
+          conversionRate: totalStats.activeCards > 0 ? (totalStats.redemptions / totalStats.activeCards * 100).toFixed(1) : 0
+        },
+        recentActivity: recentActivity.map(activity => ({
+          type: activity.type,
+          amount: activity.amount,
+          email: activity.email,
+          gan: activity.gan,
+          createdAt: activity.createdAt,
+          timeAgo: getTimeAgo(activity.createdAt)
+        })),
+        weeklyRevenue,
+        timestamp: new Date().toISOString()
+      });
+
+    } catch (error) {
+      console.error('Admin metrics error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch admin metrics'
+      });
+    }
+  });
+
+  // Email delivery endpoint for gift cards
+  app.post("/api/giftcards/email", async (req, res) => {
+    try {
+      const { email, gan, message, senderName, recipientName } = req.body;
+
+      if (!email || !gan) {
+        return res.status(400).json({
+          success: false,
+          error: 'Email and GAN are required'
+        });
+      }
+
+      // Get gift card details
+      const giftCard = await storage.getGiftCardByGan(gan);
+      if (!giftCard) {
+        return res.status(404).json({
+          success: false,
+          error: 'Gift card not found'
+        });
+      }
+
+      // Send email using email service
+      const emailResult = await emailService.sendGiftCardEmail({
+        to: email,
+        gan,
+        amount: giftCard.amount / 100, // Convert from cents
+        message,
+        senderName,
+        recipientName
+      });
+
+      if (emailResult.success) {
+        // Log email activity
+        await storage.createGiftCardActivity({
+          giftCardId: giftCard.id,
+          activityType: 'email_sent',
+          amount: 0,
+          details: `Email sent to ${email}`,
+          metadata: { messageId: emailResult.messageId }
+        });
+      }
+
+      res.json(emailResult);
+
+    } catch (error) {
+      console.error('Email delivery error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to send email'
+      });
+    }
+  });
+
+  // Generate QR and barcode for gift card
+  app.get("/api/giftcards/:gan/codes", async (req, res) => {
+    try {
+      const { gan } = req.params;
+      const { format = 'both' } = req.query;
+
+      const giftCard = await storage.getGiftCardByGan(gan);
+      if (!giftCard) {
+        return res.status(404).json({
+          success: false,
+          error: 'Gift card not found'
+        });
+      }
+
+      const amount = giftCard.amount / 100; // Convert from cents
+
+      if (format === 'qr') {
+        const qrCode = await generateGiftCardQR(gan, amount);
+        res.json({ success: true, qrCode });
+      } else if (format === 'barcode') {
+        const barcode = await generateGiftCardBarcode(gan);
+        res.json({ success: true, barcode });
+      } else {
+        const [qrCode, barcode] = await Promise.all([
+          generateGiftCardQR(gan, amount),
+          generateGiftCardBarcode(gan)
+        ]);
+        res.json({ success: true, qrCode, barcode });
+      }
+
+    } catch (error) {
+      console.error('Code generation error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to generate codes'
       });
     }
   });

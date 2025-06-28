@@ -17,6 +17,7 @@ export interface IStorage {
   // Merchant methods
   getMerchant(id: number): Promise<Merchant | undefined>;
   getMerchantBySquareId(merchantId: string): Promise<Merchant | undefined>;
+  getAllMerchants(): Promise<Merchant[]>;
   createMerchant(merchant: InsertMerchant): Promise<Merchant>;
   updateMerchantTokens(id: number, accessToken: string, refreshToken?: string): Promise<Merchant | undefined>;
   
@@ -45,6 +46,20 @@ export interface IStorage {
     email?: string;
     gan?: string;
     createdAt: Date;
+  }>>;
+  
+  // Admin dashboard analytics
+  getGiftCardSummary(): Promise<{
+    total: number;
+    active: number;
+    redeemed: number;
+    totalValue: number;
+    averageValue: number;
+  }>;
+  getWeeklyRevenue(): Promise<Array<{
+    week: string;
+    revenue: number;
+    giftCardsSold: number;
   }>>;
 }
 
@@ -224,6 +239,75 @@ export class DatabaseStorage implements IStorage {
     return transactions
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
       .slice(0, limit);
+  }
+
+  async getAllMerchants(): Promise<Merchant[]> {
+    return await db.select().from(merchants);
+  }
+
+  async getGiftCardSummary(): Promise<{
+    total: number;
+    active: number;
+    redeemed: number;
+    totalValue: number;
+    averageValue: number;
+  }> {
+    const allCards = await db.select().from(giftCards);
+    const allActivities = await db.select().from(giftCardActivities);
+
+    const total = allCards.length;
+    const totalValue = allCards.reduce((sum, card) => sum + card.amount, 0);
+    const averageValue = total > 0 ? totalValue / total : 0;
+
+    // Count redeemed cards (cards with redemption activities)
+    const redeemedCardIds = new Set(
+      allActivities
+        .filter(activity => activity.type === 'REDEEM')
+        .map(activity => activity.giftCardId)
+    );
+    const redeemed = redeemedCardIds.size;
+    const active = total - redeemed;
+
+    return {
+      total,
+      active,
+      redeemed,
+      totalValue: totalValue / 100, // Convert from cents to dollars
+      averageValue: averageValue / 100 // Convert from cents to dollars
+    };
+  }
+
+  async getWeeklyRevenue(): Promise<Array<{
+    week: string;
+    revenue: number;
+    giftCardsSold: number;
+  }>> {
+    const allCards = await db.select().from(giftCards);
+    
+    // Group by week
+    const weeklyData = new Map<string, { revenue: number; count: number }>();
+    
+    allCards.forEach(card => {
+      const date = card.createdAt || new Date();
+      const weekStart = new Date(date);
+      weekStart.setDate(date.getDate() - date.getDay()); // Start of week (Sunday)
+      const weekKey = weekStart.toISOString().split('T')[0];
+      
+      const existing = weeklyData.get(weekKey) || { revenue: 0, count: 0 };
+      existing.revenue += card.amount / 100; // Convert from cents
+      existing.count += 1;
+      weeklyData.set(weekKey, existing);
+    });
+
+    // Convert to array and sort by week
+    return Array.from(weeklyData.entries())
+      .map(([week, data]) => ({
+        week,
+        revenue: data.revenue,
+        giftCardsSold: data.count
+      }))
+      .sort((a, b) => new Date(a.week).getTime() - new Date(b.week).getTime())
+      .slice(-8); // Last 8 weeks
   }
 }
 

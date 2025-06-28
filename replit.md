@@ -110,6 +110,7 @@ This is a full-stack gift card management application built with a modern tech s
 ## Changelog
 
 - June 28, 2025. Initial setup
+- June 28, 2025. Added PostgreSQL database integration with Drizzle ORM
 
 ## User Preferences
 

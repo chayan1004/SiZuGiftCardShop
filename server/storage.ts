@@ -5,6 +5,8 @@ import {
   type GiftCard, type InsertGiftCard,
   type GiftCardActivity, type InsertGiftCardActivity
 } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -46,128 +48,103 @@ export interface IStorage {
   }>>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private merchants: Map<number, Merchant>;
-  private giftCards: Map<number, GiftCard>;
-  private giftCardActivities: Map<number, GiftCardActivity>;
-  private currentUserId: number;
-  private currentMerchantId: number;
-  private currentGiftCardId: number;
-  private currentActivityId: number;
-
-  constructor() {
-    this.users = new Map();
-    this.merchants = new Map();
-    this.giftCards = new Map();
-    this.giftCardActivities = new Map();
-    this.currentUserId = 1;
-    this.currentMerchantId = 1;
-    this.currentGiftCardId = 1;
-    this.currentActivityId = 1;
-  }
-
+export class DatabaseStorage implements IStorage {
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(user => user.username === username);
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentUserId++;
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
     return user;
   }
 
   async getMerchant(id: number): Promise<Merchant | undefined> {
-    return this.merchants.get(id);
+    const [merchant] = await db.select().from(merchants).where(eq(merchants.id, id));
+    return merchant || undefined;
   }
 
   async getMerchantBySquareId(merchantId: string): Promise<Merchant | undefined> {
-    return Array.from(this.merchants.values()).find(merchant => merchant.merchantId === merchantId);
+    const [merchant] = await db.select().from(merchants).where(eq(merchants.merchantId, merchantId));
+    return merchant || undefined;
   }
 
   async createMerchant(insertMerchant: InsertMerchant): Promise<Merchant> {
-    const id = this.currentMerchantId++;
-    const merchant: Merchant = { 
-      ...insertMerchant, 
-      id, 
-      isActive: true,
-      createdAt: new Date(),
-      refreshToken: insertMerchant.refreshToken || null
-    };
-    this.merchants.set(id, merchant);
+    const [merchant] = await db
+      .insert(merchants)
+      .values(insertMerchant)
+      .returning();
     return merchant;
   }
 
   async updateMerchantTokens(id: number, accessToken: string, refreshToken?: string): Promise<Merchant | undefined> {
-    const merchant = this.merchants.get(id);
-    if (!merchant) return undefined;
-    
-    const updated = { ...merchant, accessToken, refreshToken: refreshToken || null };
-    this.merchants.set(id, updated);
-    return updated;
+    const [merchant] = await db
+      .update(merchants)
+      .set({ accessToken, refreshToken: refreshToken || null })
+      .where(eq(merchants.id, id))
+      .returning();
+    return merchant || undefined;
   }
 
   async getGiftCard(id: number): Promise<GiftCard | undefined> {
-    return this.giftCards.get(id);
+    const [giftCard] = await db.select().from(giftCards).where(eq(giftCards.id, id));
+    return giftCard || undefined;
   }
 
   async getGiftCardByGan(gan: string): Promise<GiftCard | undefined> {
-    return Array.from(this.giftCards.values()).find(card => card.gan === gan);
+    const [giftCard] = await db.select().from(giftCards).where(eq(giftCards.gan, gan));
+    return giftCard || undefined;
   }
 
   async getGiftCardsByMerchant(merchantId: string): Promise<GiftCard[]> {
-    return Array.from(this.giftCards.values()).filter(card => card.merchantId === merchantId);
+    const cards = await db.select().from(giftCards).where(eq(giftCards.merchantId, merchantId));
+    return cards;
   }
 
   async createGiftCard(insertGiftCard: InsertGiftCard): Promise<GiftCard> {
-    const id = this.currentGiftCardId++;
-    const giftCard: GiftCard = { 
-      ...insertGiftCard, 
-      id, 
-      createdAt: new Date(),
-      customerId: insertGiftCard.customerId || null,
-      recipientEmail: insertGiftCard.recipientEmail || null,
-      personalMessage: insertGiftCard.personalMessage || null
-    };
-    this.giftCards.set(id, giftCard);
+    const [giftCard] = await db
+      .insert(giftCards)
+      .values(insertGiftCard)
+      .returning();
     return giftCard;
   }
 
   async updateGiftCardBalance(id: number, balance: number): Promise<GiftCard | undefined> {
-    const giftCard = this.giftCards.get(id);
-    if (!giftCard) return undefined;
-    
-    const updated = { ...giftCard, balance };
-    this.giftCards.set(id, updated);
-    return updated;
+    const [giftCard] = await db
+      .update(giftCards)
+      .set({ balance })
+      .where(eq(giftCards.id, id))
+      .returning();
+    return giftCard || undefined;
   }
 
   async updateGiftCardStatus(id: number, status: string): Promise<GiftCard | undefined> {
-    const giftCard = this.giftCards.get(id);
-    if (!giftCard) return undefined;
-    
-    const updated = { ...giftCard, status };
-    this.giftCards.set(id, updated);
-    return updated;
+    const [giftCard] = await db
+      .update(giftCards)
+      .set({ status })
+      .where(eq(giftCards.id, id))
+      .returning();
+    return giftCard || undefined;
   }
 
   async getGiftCardActivities(giftCardId: number): Promise<GiftCardActivity[]> {
-    return Array.from(this.giftCardActivities.values()).filter(activity => activity.giftCardId === giftCardId);
+    const activities = await db.select().from(giftCardActivities).where(eq(giftCardActivities.giftCardId, giftCardId));
+    return activities;
   }
 
   async createGiftCardActivity(insertActivity: InsertGiftCardActivity): Promise<GiftCardActivity> {
-    const id = this.currentActivityId++;
-    const activity: GiftCardActivity = { 
-      ...insertActivity, 
-      id, 
-      createdAt: new Date() 
-    };
-    this.giftCardActivities.set(id, activity);
+    const [activity] = await db
+      .insert(giftCardActivities)
+      .values(insertActivity)
+      .returning();
     return activity;
   }
 
@@ -181,11 +158,15 @@ export class MemStorage implements IStorage {
     const totalSales = merchantCards.reduce((sum, card) => sum + card.amount, 0);
     const activeCards = merchantCards.filter(card => card.status === 'ACTIVE').length;
     
-    const allActivities = Array.from(this.giftCardActivities.values());
-    const merchantActivities = allActivities.filter(activity => {
-      const card = this.giftCards.get(activity.giftCardId);
-      return card && card.merchantId === merchantId;
-    });
+    const allActivities = await db.select().from(giftCardActivities);
+    const merchantActivities = [];
+    
+    for (const activity of allActivities) {
+      const card = merchantCards.find(c => c.id === activity.giftCardId);
+      if (card) {
+        merchantActivities.push(activity);
+      }
+    }
     
     const redemptions = merchantActivities.filter(activity => activity.type === 'REDEEM').length;
     const uniqueEmails = new Set(merchantCards.filter(card => card.recipientEmail).map(card => card.recipientEmail));
@@ -227,10 +208,10 @@ export class MemStorage implements IStorage {
     });
 
     // Add redemptions
-    const allActivities = Array.from(this.giftCardActivities.values());
+    const allActivities = await db.select().from(giftCardActivities);
     allActivities.forEach(activity => {
-      const card = this.giftCards.get(activity.giftCardId);
-      if (card && card.merchantId === merchantId && activity.type === 'REDEEM') {
+      const card = merchantCards.find(c => c.id === activity.giftCardId);
+      if (card && activity.type === 'REDEEM') {
         transactions.push({
           type: 'REDEEM',
           amount: activity.amount,
@@ -246,4 +227,4 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

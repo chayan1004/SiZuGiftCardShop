@@ -118,6 +118,14 @@ This is a full-stack gift card management application built with a modern tech s
 
 ## Recent Production Enhancements
 
+### Phase III: Public Storefront (June 28, 2025)
+- **Customer-Facing Store**: Branded animated interface at /store with gift card options ($25-$250, custom amounts)
+- **Complete Checkout Flow**: /checkout with recipient details, personal messages, delivery scheduling
+- **Public Gift Display**: /gift/:gan pages with QR codes, download options, and sharing capabilities
+- **Square Integration**: Real gift card creation and activation through Square API
+- **Database Enhancement**: Added recipient/sender name fields with proper schema migration
+- **React Architecture**: Proper hook implementation following React Rules of Hooks
+
 ### Enhanced Square Gift Cards API Integration
 - **Complete API Coverage**: Implemented all Square Gift Cards API endpoints with comprehensive error handling
 - **Webhook Integration**: Real-time event processing for gift_card.created, gift_card.updated, gift_card_activity.created
@@ -127,7 +135,7 @@ This is a full-stack gift card management application built with a modern tech s
 - **Retry Logic**: Exponential backoff and rate limiting handling for robust API interactions
 
 ### Admin Dashboard & Analytics
-- **Real-time Metrics**: Live dashboard with comprehensive gift card analytics
+- **Real-time Metrics**: Live dashboard with comprehensive gift card analytics at /admin
 - **Revenue Tracking**: Weekly revenue graphs and conversion rate monitoring
 - **Activity Logging**: Complete audit trail of all gift card transactions
 - **Secure Access**: Token-based admin authentication with middleware protection

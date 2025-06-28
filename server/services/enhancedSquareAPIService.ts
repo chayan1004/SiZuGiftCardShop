@@ -188,9 +188,13 @@ class EnhancedSquareAPIService {
    * POST /v2/gift-cards
    */
   async createGiftCard(
-    type: 'DIGITAL' | 'PHYSICAL' = 'DIGITAL',
-    orderId?: string,
-    lineItemUid?: string
+    amountMoney: number,
+    locationId: string,
+    options?: {
+      type?: 'DIGITAL' | 'PHYSICAL';
+      orderId?: string;
+      lineItemUid?: string;
+    }
   ): Promise<{
     success: boolean;
     giftCard?: any;
@@ -198,20 +202,21 @@ class EnhancedSquareAPIService {
   }> {
     try {
       const idempotencyKey = this.generateIdempotencyKey();
+      const type = options?.type || 'DIGITAL';
       
       const requestBody: any = {
         idempotency_key: idempotencyKey,
-        location_id: this.locationId,
+        location_id: locationId,
         gift_card: {
           type: type
         }
       };
 
       // Add order information if provided
-      if (orderId && lineItemUid) {
+      if (options?.orderId && options?.lineItemUid) {
         requestBody.gift_card.order = {
-          order_id: orderId,
-          line_item_uid: lineItemUid
+          order_id: options.orderId,
+          line_item_uid: options.lineItemUid
         };
       }
 

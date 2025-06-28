@@ -3,8 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertMerchantSchema, insertGiftCardSchema, insertGiftCardActivitySchema } from "@shared/schema";
 import { squareService } from "./services/squareService";
-import { squareGiftCardService } from './services/squareGiftCardService';
-import { squarePaymentService } from './services/squarePaymentService';
+import { mockSquareService } from './services/mockSquareService';
 import { qrCodeService } from './services/qrCodeService';
 import { z } from "zod";
 
@@ -251,15 +250,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { amount, recipientEmail, personalMessage, merchantId, sourceId } = validatedData;
 
       // Process payment first
-      const paymentResult = await squarePaymentService.processGiftCardPayment(
+      const paymentResult = await mockSquareService.processPayment(
         sourceId,
         amount,
-        recipientEmail,
-        personalMessage ? `Gift Card: ${personalMessage}` : 'Gift Card Purchase'
+        recipientEmail
       );
 
       // Create gift card in Square
-      const squareGiftCard = await squareGiftCardService.createGiftCard(amount, recipientEmail);
+      const squareGiftCard = await mockSquareService.createGiftCard(amount, recipientEmail);
 
       // Generate QR code
       const qrCodeData = await qrCodeService.generateGiftCardQR(

@@ -20,8 +20,8 @@ class SquareGiftCardService {
       const squareModule = await import('squareup');
       const SquareUp = squareModule.default || squareModule;
       
-      // Initialize with access token
-      this.client = SquareUp(process.env.SQUARE_ACCESS_TOKEN);
+      // Initialize with access token and location
+      this.client = SquareUp(process.env.SQUARE_ACCESS_TOKEN, this.locationId);
       
       this.isInitialized = true;
     } catch (error) {

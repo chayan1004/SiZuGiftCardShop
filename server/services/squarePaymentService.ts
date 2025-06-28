@@ -18,16 +18,10 @@ class SquarePaymentService {
   private async initializeClient() {
     try {
       const squareModule = await import('squareup');
-      const Square = squareModule.default || squareModule;
+      const SquareUp = squareModule.default || squareModule;
       
-      const environment = process.env.SQUARE_ENVIRONMENT === 'production' 
-        ? Square.Environment.Production 
-        : Square.Environment.Sandbox;
-
-      this.client = new Square.Client({
-        accessToken: process.env.SQUARE_ACCESS_TOKEN,
-        environment: environment,
-      });
+      // Initialize with access token and location
+      this.client = SquareUp(process.env.SQUARE_ACCESS_TOKEN, this.locationId);
       
       this.isInitialized = true;
     } catch (error) {

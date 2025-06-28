@@ -6,7 +6,7 @@ export default function GiftCardGrid() {
     {
       amount: 50,
       icon: Gift,
-      gradient: "from-square-blue to-indigo-600",
+      gradient: "from-blue-500 to-blue-600",
       gan: "**** **** **** 1234",
       delay: 0
     },
@@ -31,38 +31,32 @@ export default function GiftCardGrid() {
       {giftCards.map((card) => (
         <motion.div 
           key={card.gan}
-          className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20"
-          style={{ 
-            animationDelay: `${card.delay}s`,
-            animationDuration: "6s",
-            animationIterationCount: "infinite",
-            animationTimingFunction: "ease-in-out"
-          }}
-          animate={{ y: [0, -10, 0] }}
+          className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/30 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ 
-            duration: 6, 
-            repeat: Infinity, 
             delay: card.delay,
-            ease: "easeInOut"
+            duration: 0.6,
+            ease: "easeOut"
           }}
         >
-          <div className={`bg-gradient-to-br ${card.gradient} rounded-xl p-6 text-white mb-4`}>
+          <div className={`bg-gradient-to-br ${card.gradient} rounded-xl p-6 text-white mb-4 shadow-lg`}>
             <div className="flex justify-between items-start mb-8">
               <div>
-                <h3 className="font-semibold text-lg">SiZu GiftCard</h3>
-                <p className="text-white/70 text-sm">Powered by Square</p>
+                <h3 className="font-semibold text-lg drop-shadow-sm">SiZu GiftCard</h3>
+                <p className="text-white/80 text-sm">Powered by Square</p>
               </div>
-              <card.icon size={24} className="opacity-80" />
+              <card.icon size={24} className="opacity-90 drop-shadow-sm" />
             </div>
-            <div className="text-3xl font-bold">${card.amount}</div>
+            <div className="text-3xl font-bold drop-shadow-sm">${card.amount}</div>
           </div>
           <div className="text-center">
-            <div className="bg-slate-100 rounded-lg p-3 mb-2">
-              <div className="w-20 h-20 bg-slate-300 rounded mx-auto flex items-center justify-center">
-                <QrCode className="text-slate-500" size={24} />
+            <div className="bg-slate-50 rounded-lg p-4 mb-3 border border-slate-200">
+              <div className="w-20 h-20 bg-slate-200 rounded-lg mx-auto flex items-center justify-center border">
+                <QrCode className="text-slate-600" size={24} />
               </div>
             </div>
-            <p className="text-xs text-slate-700 font-medium">{card.gan}</p>
+            <p className="text-xs text-slate-700 font-medium tracking-wide">{card.gan}</p>
           </div>
         </motion.div>
       ))}

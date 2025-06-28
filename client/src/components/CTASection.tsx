@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowRight, Sparkles, Rocket } from "lucide-react";
+import { ArrowRight, Sparkles, Rocket, Zap, Star, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface CTASectionProps {
@@ -119,23 +119,72 @@ export default function CTASection({ onOpenPurchaseModal }: CTASectionProps) {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6 }}
-          className="flex flex-col sm:flex-row gap-6 justify-center items-center"
+          className="flex flex-col sm:flex-row gap-8 justify-center items-center"
         >
           <motion.div
             whileHover={{ 
               scale: 1.05,
               rotateY: 5,
-              transition: { duration: 0.2 }
+              transition: { duration: 0.3 }
             }}
             whileTap={{ scale: 0.95 }}
+            className="relative"
           >
             <Button 
               onClick={onOpenPurchaseModal}
-              className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-black font-bold text-lg px-8 py-4 rounded-xl shadow-2xl hover:shadow-yellow-400/25 transition-all duration-300 group"
+              className="relative px-12 py-6 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 text-black font-display font-bold text-xl rounded-3xl shadow-2xl hover:shadow-yellow-400/30 transition-all duration-500 group overflow-hidden"
             >
-              <Rocket className="mr-2 group-hover:animate-bounce" size={20} />
-              Start Free Trial
-              <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" size={20} />
+              {/* Animated shimmer effect */}
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-white/20 via-white/40 to-white/20"
+                animate={{
+                  x: ['-100%', '100%'],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  repeatDelay: 2
+                }}
+              />
+              
+              <span className="relative z-10 flex items-center space-x-3">
+                <motion.div
+                  animate={{ rotate: [0, 360] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                >
+                  <Rocket size={24} />
+                </motion.div>
+                <span>Start Free Trial</span>
+                <motion.div
+                  animate={{ x: [0, 5, 0] }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                >
+                  <ArrowRight size={24} />
+                </motion.div>
+              </span>
+              
+              {/* Floating stars around button */}
+              {[...Array(3)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute w-1 h-1 bg-white rounded-full"
+                  animate={{
+                    x: [0, 30 * Math.cos(i * 2.094), 0],
+                    y: [0, 30 * Math.sin(i * 2.094), 0],
+                    opacity: [0, 1, 0],
+                    scale: [0, 1, 0]
+                  }}
+                  transition={{
+                    duration: 2 + i * 0.5,
+                    repeat: Infinity,
+                    delay: i * 0.3,
+                  }}
+                  style={{
+                    left: '50%',
+                    top: '50%',
+                  }}
+                />
+              ))}
             </Button>
           </motion.div>
 
@@ -143,15 +192,38 @@ export default function CTASection({ onOpenPurchaseModal }: CTASectionProps) {
             whileHover={{ 
               scale: 1.05,
               rotateY: -5,
-              transition: { duration: 0.2 }
+              transition: { duration: 0.3 }
             }}
             whileTap={{ scale: 0.95 }}
+            className="relative"
           >
             <Button 
               variant="outline"
-              className="border-2 border-white/30 text-white hover:bg-white/10 hover:border-white/50 font-semibold text-lg px-8 py-4 rounded-xl backdrop-blur-sm transition-all duration-300"
+              className="relative px-12 py-6 glass-premium-button border-2 border-white/30 text-white hover:border-white/60 font-display font-semibold text-xl rounded-3xl backdrop-blur-md transition-all duration-500 group"
             >
-              Watch Demo
+              {/* Glow effect on hover */}
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-white/5 to-white/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              />
+              
+              <span className="relative z-10 flex items-center space-x-3">
+                <Shield size={24} />
+                <span>Watch Demo</span>
+              </span>
+              
+              {/* Pulsing border effect */}
+              <motion.div
+                className="absolute inset-0 border-2 border-white/20 rounded-3xl"
+                animate={{
+                  opacity: [0.5, 1, 0.5],
+                  scale: [1, 1.02, 1]
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              />
             </Button>
           </motion.div>
         </motion.div>

@@ -68,7 +68,6 @@ export default function PricingSection() {
         <div className="absolute bottom-20 right-20 w-[500px] h-[500px] bg-blue-400/15 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "3s" }} />
         <div className="absolute top-1/3 right-1/3 w-[300px] h-[300px] bg-indigo-400/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1.5s" }} />
       </div>
-
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="text-center mb-20">
           <motion.h2 
@@ -205,7 +204,7 @@ export default function PricingSection() {
           <p className="text-slate-600 mb-4">
             All plans include 14-day free trial • No setup fees • Cancel anytime
           </p>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-[#f8faff]">
             Questions? <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">Contact our sales team</a>
           </p>
         </motion.div>

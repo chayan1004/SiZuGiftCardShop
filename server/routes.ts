@@ -702,6 +702,186 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Enhanced Square Gift Cards API Endpoints - Production Ready
   
+  // Public gift card purchase endpoint
+  app.post("/api/giftcards/purchase", async (req: Request, res: Response) => {
+    try {
+      const {
+        amount,
+        recipientName,
+        recipientEmail,
+        senderName,
+        personalMessage,
+        deliveryTime,
+        scheduledDate,
+        scheduledTime
+      } = req.body;
+
+      // Validate required fields
+      if (!amount || !recipientName || !recipientEmail || !senderName) {
+        return res.status(400).json({
+          success: false,
+          error: "Missing required fields"
+        });
+      }
+
+      // Validate amount (in cents)
+      if (amount < 1000 || amount > 100000) { // $10 to $1,000
+        return res.status(400).json({
+          success: false,
+          error: "Amount must be between $10 and $1,000"
+        });
+      }
+
+      // Create gift card via Enhanced Square API
+      const giftCardResult = await enhancedSquareAPIService.createGiftCard(
+        amount,
+        process.env.SQUARE_LOCATION_ID!,
+        {
+          type: 'DIGITAL'
+        }
+      );
+
+      if (!giftCardResult.success || !giftCardResult.giftCard) {
+        throw new Error(giftCardResult.error || "Failed to create gift card");
+      }
+
+      const giftCard = giftCardResult.giftCard;
+      const gan = giftCard.gan;
+
+      // Activate the gift card
+      const activateResult = await enhancedSquareAPIService.activateGiftCard(gan, amount);
+      
+      if (!activateResult.success) {
+        throw new Error(activateResult.error || "Failed to activate gift card");
+      }
+
+      // Store gift card in database
+      const storedGiftCard = await storage.createGiftCard({
+        merchantId: process.env.SQUARE_APPLICATION_ID!,
+        squareGiftCardId: giftCard.id,
+        gan: gan,
+        amount: amount,
+        balance: amount,
+        status: 'ACTIVE',
+        recipientEmail: recipientEmail,
+        personalMessage: personalMessage || null,
+        recipientName: recipientName,
+        senderName: senderName
+      });
+
+      // Generate QR code for the gift card
+      const qrResult = await qrCodeService.generateGiftCardQR(
+        gan,
+        process.env.SQUARE_APPLICATION_ID!,
+        amount
+      );
+
+      // Send email if delivery is immediate
+      if (deliveryTime === "now") {
+        try {
+          await emailService.sendGiftCardEmail({
+            to: recipientEmail,
+            gan: gan,
+            amount: amount / 100, // Convert back to dollars
+            message: personalMessage,
+            senderName: senderName,
+            recipientName: recipientName
+          });
+        } catch (emailError) {
+          console.error("Email delivery failed:", emailError);
+          // Don't fail the entire purchase if email fails
+        }
+      } else if (deliveryTime === "scheduled" && scheduledDate && scheduledTime) {
+        // Store scheduled delivery info (implement cron job later)
+        console.log(`Scheduled delivery for ${scheduledDate} at ${scheduledTime}`);
+      }
+
+      res.json({
+        success: true,
+        gan: gan,
+        amount: amount,
+        recipientName: recipientName,
+        recipientEmail: recipientEmail,
+        qrCodeUrl: qrResult.success ? qrResult.qrCodeUrl : null,
+        giftCardUrl: `/gift/${gan}`
+      });
+
+    } catch (error: any) {
+      console.error("Gift card purchase error:", error);
+      res.status(500).json({
+        success: false,
+        error: error.message || "Failed to process gift card purchase"
+      });
+    }
+  });
+
+  // Public gift card view endpoint
+  app.get("/api/giftcards/:gan/public", async (req: Request, res: Response) => {
+    try {
+      const { gan } = req.params;
+      
+      // First check local database
+      const localGiftCard = await storage.getGiftCardByGan(gan);
+      
+      if (localGiftCard) {
+        // Generate QR code for display
+        const qrResult = await qrCodeService.generateGiftCardQR(
+          gan,
+          localGiftCard.merchantId,
+          localGiftCard.amount
+        );
+
+        res.json({
+          success: true,
+          giftCard: {
+            gan: localGiftCard.gan,
+            amount: localGiftCard.amount,
+            balance: localGiftCard.balance,
+            status: localGiftCard.status,
+            recipientName: localGiftCard.recipientName,
+            senderName: localGiftCard.senderName,
+            personalMessage: localGiftCard.personalMessage,
+            qrCodeUrl: qrResult.success ? qrResult.qrCodeUrl : null,
+            createdAt: localGiftCard.createdAt
+          }
+        });
+      } else {
+        // Try Square API as fallback
+        const validation = await enhancedSquareAPIService.validateGiftCard(gan);
+        
+        if (validation.isValid) {
+          const qrResult = await qrCodeService.generateGiftCardQR(
+            gan,
+            process.env.SQUARE_APPLICATION_ID!,
+            validation.balance
+          );
+
+          res.json({
+            success: true,
+            giftCard: {
+              gan: gan,
+              amount: validation.balance,
+              balance: validation.balance,
+              status: validation.status,
+              qrCodeUrl: qrResult.success ? qrResult.qrCodeUrl : null
+            }
+          });
+        } else {
+          res.status(404).json({
+            success: false,
+            error: "Gift card not found"
+          });
+        }
+      }
+    } catch (error: any) {
+      console.error("Public gift card view error:", error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to retrieve gift card"
+      });
+    }
+  });
+  
   // Create gift card with enhanced Square API
   app.post("/api/enhanced/giftcards/create", async (req, res) => {
     try {

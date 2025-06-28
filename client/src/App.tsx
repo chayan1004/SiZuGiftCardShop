@@ -5,6 +5,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Home from "@/pages/Home";
 import About from "@/pages/About";
+import GiftCardStore from "@/pages/GiftCardStore";
+import Checkout from "@/pages/Checkout";
+import PublicGiftCard from "@/pages/PublicGiftCard";
+import AdminDashboard from "@/pages/AdminDashboard";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -12,6 +16,12 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/about" component={About} />
+      <Route path="/store" component={GiftCardStore} />
+      <Route path="/checkout" component={Checkout} />
+      <Route path="/gift/:gan">
+        {(params) => <PublicGiftCard gan={params.gan} />}
+      </Route>
+      <Route path="/admin" component={AdminDashboard} />
       <Route component={NotFound} />
     </Switch>
   );

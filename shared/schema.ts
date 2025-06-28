@@ -24,6 +24,8 @@ export const giftCards = pgTable("gift_cards", {
   status: text("status").notNull(), // PENDING, ACTIVE, DEACTIVATED
   customerId: text("customer_id"),
   recipientEmail: text("recipient_email"),
+  recipientName: text("recipient_name"),
+  senderName: text("sender_name"),
   personalMessage: text("personal_message"),
   qrCodeData: text("qr_code_data"), // QR code redemption URL
   squareState: text("square_state"), // Square's internal state

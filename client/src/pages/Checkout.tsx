@@ -15,7 +15,9 @@ import {
   Clock,
   CheckCircle,
   Loader2,
-  CreditCard
+  CreditCard,
+  QrCode,
+  Shield
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -428,59 +430,295 @@ export default function Checkout() {
                   They'll receive a beautifully formatted email with their gift card and QR code.
                 </p>
 
-                <Card className="glass-premium border-white/10 max-w-2xl mx-auto mb-8">
-                  <CardContent className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
-                      <div>
-                        <h4 className="font-semibold text-white mb-2">Gift Card Details</h4>
-                        <div className="space-y-1 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-gray-300">Amount:</span>
-                            <span className="text-cyan-300 font-semibold">
-                              ${(purchaseResult.amount / 100).toFixed(2)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-300">GAN:</span>
-                            <span className="text-white font-mono">
-                              {purchaseResult.gan}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <h4 className="font-semibold text-white mb-2">Delivery Info</h4>
-                        <div className="space-y-1 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-gray-300">Recipient:</span>
-                            <span className="text-white">{purchaseResult.recipientName}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-300">Status:</span>
-                            <span className="text-green-400">Delivered</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                {/* Celebration Particles */}
+                <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                  {[...Array(12)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="absolute w-2 h-2 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full"
+                      initial={{ 
+                        x: "50%", 
+                        y: "50%", 
+                        scale: 0,
+                        opacity: 0
+                      }}
+                      animate={{
+                        x: `${Math.random() * 100}%`,
+                        y: `${Math.random() * 100}%`,
+                        scale: [0, 1, 0],
+                        opacity: [0, 1, 0]
+                      }}
+                      transition={{
+                        duration: 2,
+                        delay: i * 0.1,
+                        repeat: Infinity,
+                        repeatDelay: 3
+                      }}
+                    />
+                  ))}
+                </div>
 
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button
-                    onClick={() => window.open(`/gift/${purchaseResult.gan}`, '_blank')}
-                    className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white"
+                <motion.div 
+                  className="relative max-w-4xl mx-auto mb-8"
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                >
+                  {/* 3D Card Container */}
+                  <div className="relative perspective-1000">
+                    <motion.div
+                      className="transform-gpu preserve-3d"
+                      initial={{ rotateY: -15, rotateX: 5 }}
+                      animate={{ rotateY: 0, rotateX: 0 }}
+                      transition={{ duration: 1, ease: "easeOut" }}
+                      whileHover={{ 
+                        rotateY: 5, 
+                        rotateX: -2,
+                        scale: 1.02,
+                        transition: { duration: 0.3 }
+                      }}
+                    >
+                      <Card className="glass-premium border-white/20 backdrop-blur-xl bg-gradient-to-br from-white/5 via-white/10 to-white/5 shadow-2xl shadow-cyan-500/20">
+                        <CardContent className="p-8">
+                          {/* Animated Background Pattern */}
+                          <div className="absolute inset-0 overflow-hidden rounded-lg">
+                            <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-full blur-3xl animate-pulse" />
+                            <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+                          </div>
+
+                          <div className="relative z-10">
+                            {/* Header with 3D Effect */}
+                            <motion.div 
+                              className="text-center mb-8"
+                              initial={{ y: -20, opacity: 0 }}
+                              animate={{ y: 0, opacity: 1 }}
+                              transition={{ delay: 0.3 }}
+                            >
+                              <div className="inline-flex items-center gap-3 mb-4">
+                                <motion.div
+                                  className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-full flex items-center justify-center shadow-lg shadow-cyan-500/30"
+                                  animate={{ 
+                                    rotate: 360,
+                                    scale: [1, 1.1, 1]
+                                  }}
+                                  transition={{ 
+                                    rotate: { duration: 3, repeat: Infinity, ease: "linear" },
+                                    scale: { duration: 2, repeat: Infinity }
+                                  }}
+                                >
+                                  <Gift className="w-6 h-6 text-white" />
+                                </motion.div>
+                                <h3 className="text-2xl font-bold bg-gradient-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent">
+                                  Gift Card Created Successfully!
+                                </h3>
+                              </div>
+                            </motion.div>
+
+                            {/* 3D Info Grid */}
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
+                              {/* Amount Card */}
+                              <motion.div
+                                className="relative group"
+                                initial={{ x: -50, opacity: 0 }}
+                                animate={{ x: 0, opacity: 1 }}
+                                transition={{ delay: 0.4 }}
+                                whileHover={{ y: -5 }}
+                              >
+                                <div className="glass-premium p-6 rounded-xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 hover:border-cyan-400/40 transition-all duration-300">
+                                  <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-lg flex items-center justify-center">
+                                      <DollarSign className="w-5 h-5 text-white" />
+                                    </div>
+                                    <h4 className="font-bold text-white">Amount</h4>
+                                  </div>
+                                  <motion.div 
+                                    className="text-3xl font-bold bg-gradient-to-r from-green-300 to-emerald-300 bg-clip-text text-transparent"
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    transition={{ delay: 0.6, type: "spring" }}
+                                  >
+                                    ${(purchaseResult.amount / 100).toFixed(2)}
+                                  </motion.div>
+                                  <div className="text-sm text-gray-400 mt-2">Gift Card Value</div>
+                                </div>
+                              </motion.div>
+
+                              {/* GAN Card */}
+                              <motion.div
+                                className="relative group"
+                                initial={{ y: 50, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.5 }}
+                                whileHover={{ y: -5 }}
+                              >
+                                <div className="glass-premium p-6 rounded-xl border border-purple-500/20 bg-gradient-to-br from-purple-500/5 to-pink-500/5 hover:border-purple-400/40 transition-all duration-300">
+                                  <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-500 rounded-lg flex items-center justify-center">
+                                      <CreditCard className="w-5 h-5 text-white" />
+                                    </div>
+                                    <h4 className="font-bold text-white">Gift Account Number</h4>
+                                  </div>
+                                  <div className="text-lg font-mono text-white bg-black/20 rounded-lg p-3 border border-white/10">
+                                    {purchaseResult.gan}
+                                  </div>
+                                  <div className="text-sm text-gray-400 mt-2">Unique Identifier</div>
+                                </div>
+                              </motion.div>
+
+                              {/* Status Card */}
+                              <motion.div
+                                className="relative group"
+                                initial={{ x: 50, opacity: 0 }}
+                                animate={{ x: 0, opacity: 1 }}
+                                transition={{ delay: 0.6 }}
+                                whileHover={{ y: -5 }}
+                              >
+                                <div className="glass-premium p-6 rounded-xl border border-green-500/20 bg-gradient-to-br from-green-500/5 to-teal-500/5 hover:border-green-400/40 transition-all duration-300">
+                                  <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-teal-500 rounded-lg flex items-center justify-center">
+                                      <CheckCircle className="w-5 h-5 text-white" />
+                                    </div>
+                                    <h4 className="font-bold text-white">Delivery Status</h4>
+                                  </div>
+                                  <motion.div 
+                                    className="flex items-center gap-2"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ delay: 0.8 }}
+                                  >
+                                    <motion.div
+                                      className="w-3 h-3 bg-green-400 rounded-full"
+                                      animate={{ scale: [1, 1.2, 1] }}
+                                      transition={{ duration: 1, repeat: Infinity }}
+                                    />
+                                    <span className="text-green-300 font-semibold">Successfully Delivered</span>
+                                  </motion.div>
+                                  <div className="text-sm text-gray-400 mt-2">to {purchaseResult.recipientName}</div>
+                                </div>
+                              </motion.div>
+                            </div>
+
+                            {/* Floating Action Indicators */}
+                            <motion.div 
+                              className="flex justify-center mt-8 gap-4"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              transition={{ delay: 1 }}
+                            >
+                              {[
+                                { icon: Mail, label: "Email Sent", color: "cyan" },
+                                { icon: QrCode, label: "QR Generated", color: "purple" },
+                                { icon: Shield, label: "Secure", color: "green" }
+                              ].map((item, i) => (
+                                <motion.div
+                                  key={i}
+                                  className={`flex items-center gap-2 glass-premium px-4 py-2 rounded-full border border-${item.color}-500/20 bg-${item.color}-500/5`}
+                                  initial={{ scale: 0, y: 20 }}
+                                  animate={{ scale: 1, y: 0 }}
+                                  transition={{ delay: 1.2 + i * 0.1, type: "spring" }}
+                                  whileHover={{ scale: 1.05 }}
+                                >
+                                  <item.icon className={`w-4 h-4 text-${item.color}-400`} />
+                                  <span className="text-sm text-white font-medium">{item.label}</span>
+                                </motion.div>
+                              ))}
+                            </motion.div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  </div>
+                </motion.div>
+
+                {/* Enhanced Action Buttons */}
+                <motion.div 
+                  className="flex flex-col sm:flex-row gap-6 justify-center mt-8"
+                  initial={{ y: 30, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 1.5 }}
+                >
+                  {/* View Gift Card Button */}
+                  <motion.div
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="relative group"
                   >
-                    View Gift Card
-                  </Button>
+                    <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-lg blur opacity-60 group-hover:opacity-100 transition duration-300"></div>
+                    <Button
+                      onClick={() => window.open(`/gift/${purchaseResult.gan}`, '_blank')}
+                      className="relative bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-3 px-8 rounded-lg shadow-xl shadow-cyan-500/25 border-0 transform transition-all duration-200"
+                    >
+                      <div className="flex items-center gap-3">
+                        <motion.div
+                          animate={{ rotate: [0, 10, -10, 0] }}
+                          transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 2 }}
+                        >
+                          <Gift className="w-5 h-5" />
+                        </motion.div>
+                        <span>View Gift Card</span>
+                        <motion.div
+                          className="w-2 h-2 bg-white rounded-full"
+                          animate={{ scale: [1, 1.5, 1], opacity: [0.7, 1, 0.7] }}
+                          transition={{ duration: 1, repeat: Infinity }}
+                        />
+                      </div>
+                    </Button>
+                  </motion.div>
                   
-                  <Button
-                    onClick={() => window.location.href = '/store'}
-                    variant="outline"
-                    className="border-white/20 text-white hover:bg-white/10"
+                  {/* Send Another Button */}
+                  <motion.div
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="relative group"
                   >
-                    Send Another Gift Card
-                  </Button>
+                    <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg blur opacity-40 group-hover:opacity-70 transition duration-300"></div>
+                    <Button
+                      onClick={() => window.location.href = '/store'}
+                      variant="outline"
+                      className="relative glass-premium border-2 border-cyan-400/30 hover:border-cyan-300/50 text-cyan-300 hover:text-white bg-transparent hover:bg-cyan-500/10 font-semibold py-3 px-8 rounded-lg shadow-lg backdrop-blur-sm transition-all duration-300"
+                    >
+                      <div className="flex items-center gap-3">
+                        <motion.div
+                          animate={{ x: [0, 3, 0] }}
+                          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                        >
+                          <Mail className="w-5 h-5" />
+                        </motion.div>
+                        <span>Send Another Gift Card</span>
+                      </div>
+                      {/* Shimmer effect */}
+                      <div className="absolute inset-0 -top-2 -bottom-2 bg-gradient-to-r from-transparent via-white/5 to-transparent transform -skew-x-12 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000 ease-out"></div>
+                    </Button>
+                  </motion.div>
+                </motion.div>
+
+                {/* Success Confetti Effect */}
+                <div className="absolute inset-0 pointer-events-none">
+                  {[...Array(8)].map((_, i) => (
+                    <motion.div
+                      key={`confetti-${i}`}
+                      className="absolute"
+                      style={{
+                        left: `${20 + (i * 10)}%`,
+                        top: '20%'
+                      }}
+                      initial={{ y: -20, opacity: 0, rotate: 0 }}
+                      animate={{
+                        y: [0, -30, 100],
+                        opacity: [0, 1, 0],
+                        rotate: [0, 180, 360],
+                        x: [0, Math.random() * 50 - 25]
+                      }}
+                      transition={{
+                        duration: 2,
+                        delay: 2 + i * 0.1,
+                        repeat: Infinity,
+                        repeatDelay: 4
+                      }}
+                    >
+                      <div className={`w-3 h-3 ${i % 3 === 0 ? 'bg-cyan-400' : i % 3 === 1 ? 'bg-purple-400' : 'bg-pink-400'} rotate-45`} />
+                    </motion.div>
+                  ))}
                 </div>
               </motion.div>
             )}

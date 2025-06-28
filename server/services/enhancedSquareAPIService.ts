@@ -101,7 +101,7 @@ class EnhancedSquareAPIService {
 
     // Initialize Square SDK client
     this.client = new SquareClient({
-      accessToken: this.accessToken,
+      token: this.accessToken,
       environment: this.environment === 'production' ? 'production' : 'sandbox'
     });
   }
@@ -228,15 +228,15 @@ class EnhancedSquareAPIService {
         };
       }
 
-      const { result, statusCode, headers } = await this.client.giftCardsApi.createGiftCard(requestBody);
+      const { result, statusCode, headers } = await this.client.giftCards.createGiftCard(requestBody);
 
-      if (response.gift_card) {
+      if (result.giftCard) {
         // Store gift card in database with comprehensive tracking
-        await this.syncGiftCardToDatabase(response.gift_card);
+        await this.syncGiftCardToDatabase(result.giftCard);
         
         return {
           success: true,
-          giftCard: response.gift_card
+          giftCard: result.giftCard
         };
       }
 

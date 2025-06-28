@@ -320,6 +320,57 @@ export class DatabaseStorage implements IStorage {
       .sort((a, b) => new Date(a.week).getTime() - new Date(b.week).getTime())
       .slice(-8); // Last 8 weeks
   }
+
+  // Promo Code methods
+  async getPromoCode(code: string): Promise<PromoCode | undefined> {
+    const [promoCode] = await db.select().from(promoCodes).where(eq(promoCodes.code, code));
+    return promoCode || undefined;
+  }
+
+  async getPromoCodeById(id: number): Promise<PromoCode | undefined> {
+    const [promoCode] = await db.select().from(promoCodes).where(eq(promoCodes.id, id));
+    return promoCode || undefined;
+  }
+
+  async getAllPromoCodes(): Promise<PromoCode[]> {
+    return await db.select().from(promoCodes).orderBy(desc(promoCodes.createdAt));
+  }
+
+  async createPromoCode(insertPromoCode: InsertPromoCode): Promise<PromoCode> {
+    const [promoCode] = await db
+      .insert(promoCodes)
+      .values(insertPromoCode)
+      .returning();
+    return promoCode;
+  }
+
+  async updatePromoCodeUsage(id: number, increment: number): Promise<PromoCode | undefined> {
+    const [updated] = await db
+      .update(promoCodes)
+      .set({ 
+        usageCount: sql`${promoCodes.usageCount} + ${increment}`,
+        updatedAt: new Date()
+      })
+      .where(eq(promoCodes.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async recordPromoUsage(insertUsage: InsertPromoUsage): Promise<PromoUsage> {
+    const [usage] = await db
+      .insert(promoUsage)
+      .values(insertUsage)
+      .returning();
+    return usage;
+  }
+
+  async getPromoUsageByCode(promoCodeId: number): Promise<PromoUsage[]> {
+    return await db
+      .select()
+      .from(promoUsage)
+      .where(eq(promoUsage.promoCodeId, promoCodeId))
+      .orderBy(desc(promoUsage.createdAt));
+  }
 }
 
 export const storage = new DatabaseStorage();

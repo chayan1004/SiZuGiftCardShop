@@ -25,7 +25,11 @@ export const giftCards = pgTable("gift_cards", {
   customerId: text("customer_id"),
   recipientEmail: text("recipient_email"),
   personalMessage: text("personal_message"),
+  qrCodeData: text("qr_code_data"), // QR code redemption URL
+  squareState: text("square_state"), // Square's internal state
+  expiresAt: timestamp("expires_at"),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const giftCardActivities = pgTable("gift_card_activities", {

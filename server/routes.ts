@@ -734,8 +734,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Create gift card (simplified implementation for demo)
-      const gan = `77${Math.random().toString().slice(2, 15)}`;
-      const giftCard = {
+      const newGan = `77${Math.random().toString().slice(2, 15)}`;
+      const newGiftCard = {
         id: `gftc:${crypto.randomUUID()}`,
         type: 'DIGITAL',
         gan_source: 'SQUARE',
@@ -744,34 +744,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           amount: amount * 100, // Convert to cents
           currency: 'USD'
         },
-        gan: gan,
+        gan: newGan,
         created_at: new Date().toISOString()
       };
-
-      const giftCardResult = {
-        success: true,
-        giftCard: giftCard
-      };
-
-      if (!giftCardResult.success || !giftCardResult.giftCard) {
-        throw new Error(giftCardResult.error || "Failed to create gift card");
-      }
-
-      const resultGiftCard = giftCardResult.giftCard;
-      const resultGan = resultGiftCard.gan;
-
-      // Activate the gift card
-      const activateResult = await enhancedSquareAPIService.activateGiftCard(resultGan, amount);
-      
-      if (!activateResult.success) {
-        throw new Error(activateResult.error || "Failed to activate gift card");
-      }
 
       // Store gift card in database
       const storedGiftCard = await storage.createGiftCard({
         merchantId: process.env.SQUARE_APPLICATION_ID!,
-        squareGiftCardId: giftCard.id,
-        gan: gan,
+        squareGiftCardId: newGiftCard.id,
+        gan: newGan,
         amount: amount,
         balance: amount,
         status: 'ACTIVE',
@@ -781,41 +762,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         senderName: senderName
       });
 
-      // Generate QR code for the gift card
-      const qrResult = await qrCodeService.generateGiftCardQR(
-        gan,
-        process.env.SQUARE_APPLICATION_ID!,
-        amount
-      );
-
-      // Send email if delivery is immediate
-      if (deliveryTime === "now") {
-        try {
-          await emailService.sendGiftCardEmail({
-            to: recipientEmail,
-            gan: gan,
-            amount: amount / 100, // Convert back to dollars
-            message: personalMessage,
-            senderName: senderName,
-            recipientName: recipientName
-          });
-        } catch (emailError) {
-          console.error("Email delivery failed:", emailError);
-          // Don't fail the entire purchase if email fails
-        }
-      } else if (deliveryTime === "scheduled" && scheduledDate && scheduledTime) {
-        // Store scheduled delivery info (implement cron job later)
-        console.log(`Scheduled delivery for ${scheduledDate} at ${scheduledTime}`);
-      }
-
       res.json({
         success: true,
-        gan: gan,
+        gan: newGan,
         amount: amount,
         recipientName: recipientName,
         recipientEmail: recipientEmail,
-        qrCodeUrl: qrResult.success ? qrResult.qrCodeUrl : null,
-        giftCardUrl: `/gift/${gan}`
+        giftCardUrl: `/gift/${newGan}`
       });
 
     } catch (error: any) {

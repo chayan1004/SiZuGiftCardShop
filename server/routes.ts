@@ -725,8 +725,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Validate amount (in dollars)
-      if (amount < 10 || amount > 1000) { // $10 to $1,000
+      // Validate amount (in cents)
+      if (amount < 1000 || amount > 100000) { // $10 to $1,000 in cents
         return res.status(400).json({
           success: false,
           error: "Amount must be between $10 and $1,000"
@@ -741,7 +741,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         gan_source: 'SQUARE',
         state: 'ACTIVE',
         balance_money: {
-          amount: amount * 100, // Convert to cents
+          amount: amount, // Already in cents
           currency: 'USD'
         },
         gan: newGan,

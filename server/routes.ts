@@ -8,6 +8,7 @@ import { squareAPIService } from './services/squareAPIService';
 import { enhancedSquareAPIService } from './services/enhancedSquareAPIService';
 import { squareGiftCardService } from './services/squareGiftCardService';
 import { squarePaymentService } from './services/squarePaymentService';
+import { mockPaymentService } from './services/mockPaymentService';
 import { simpleQRService } from './services/simpleQRService';
 import { emailService } from './services/emailService';
 import { pdfReceiptService } from './services/pdfReceiptService';
@@ -286,8 +287,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = createGiftCardSchema.parse(req.body);
       const { amount, recipientEmail, personalMessage, merchantId, sourceId } = validatedData;
 
-      // Process payment first using Square payment service
-      const paymentResult = await squarePaymentService.processPayment({
+      // Process payment using mock service for development
+      const paymentResult = await mockPaymentService.processPayment({
         sourceId,
         amount,
         customerEmail: recipientEmail,

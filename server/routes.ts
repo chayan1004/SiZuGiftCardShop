@@ -288,19 +288,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = createGiftCardSchema.parse(req.body);
       const { amount, recipientEmail, personalMessage, merchantId, sourceId } = validatedData;
 
-      // Process payment first
+      // Process payment first using existing payment service
       const paymentResult = await squareAPIService.processPayment(
         sourceId,
         amount,
         recipientEmail
       );
 
-      // Create gift card in Square
-      const squareGiftCard = await squareAPIService.createGiftCard(amount, recipientEmail);
+      if (!paymentResult.success) {
+        return res.status(400).json({
+          success: false,
+          error: 'Payment processing failed: ' + paymentResult.error
+        });
+      }
 
+      // Create gift card using production Square API
+      const giftCardResult = await squareGiftCardService.createGiftCard({
+        amount,
+        recipientEmail,
+        personalMessage
+      });
+
+      if (!giftCardResult.success) {
+        return res.status(400).json({
+          success: false,
+          error: 'Gift card creation failed: ' + giftCardResult.error
+        });
+      }
+
+      const gan = giftCardResult.gan!;
+      
       // Generate QR code
       const qrCodeData = await simpleQRService.generateGiftCardQR(
-        squareGiftCard.gan,
+        gan,
         merchantId,
         amount
       );
@@ -308,15 +328,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Store in database
       const giftCard = await storage.createGiftCard({
         merchantId,
-        squareGiftCardId: squareGiftCard.giftCard.id!,
-        gan: squareGiftCard.gan,
+        squareGiftCardId: giftCardResult.giftCard.id!,
+        gan: gan,
         amount,
         balance: amount,
         status: 'ACTIVE',
         recipientEmail: recipientEmail || null,
         personalMessage: personalMessage || null,
         qrCodeData: qrCodeData.redemptionUrl,
-        squareState: squareGiftCard.giftCard.state || 'ACTIVE',
+        squareState: giftCardResult.giftCard.state || 'ACTIVE',
       });
 
       // Log creation activity

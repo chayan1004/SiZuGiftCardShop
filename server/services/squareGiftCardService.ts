@@ -133,17 +133,15 @@ export class SquareGiftCardService {
     error?: string;
   }> {
     try {
-      const { giftCardActivitiesApi } = this.client;
-
       const activateRequest = {
-        idempotencyKey: this.generateIdempotencyKey(),
-        giftCardActivity: {
-          type: 'ACTIVATE' as const,
-          locationId: this.locationId,
-          giftCardGan: gan,
-          activateActivityDetails: {
-            amountMoney: {
-              amount: BigInt(amountCents),
+        idempotency_key: this.generateIdempotencyKey(),
+        gift_card_activity: {
+          type: 'ACTIVATE',
+          location_id: this.locationId,
+          gift_card_gan: gan,
+          activate_activity_details: {
+            amount_money: {
+              amount: amountCents,
               currency: 'USD'
             }
           }
@@ -152,12 +150,29 @@ export class SquareGiftCardService {
 
       console.log('Activating gift card:', { gan, amount: amountCents });
       
-      const response = await giftCardActivitiesApi.createGiftCardActivity(activateRequest);
+      const response = await fetch(`${this.baseUrl}/v2/gift-card-activities`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.accessToken}`,
+          'Content-Type': 'application/json',
+          'Square-Version': '2023-10-18'
+        },
+        body: JSON.stringify(activateRequest)
+      });
+
+      const responseData = await response.json();
       
-      if (response.result.giftCardActivity) {
+      if (!response.ok) {
+        return {
+          success: false,
+          error: `Square API error: ${responseData.errors?.[0]?.detail || 'Gift card activation failed'}`
+        };
+      }
+
+      if (responseData.gift_card_activity) {
         return {
           success: true,
-          activity: response.result.giftCardActivity
+          activity: responseData.gift_card_activity
         };
       }
 
@@ -168,14 +183,6 @@ export class SquareGiftCardService {
 
     } catch (error) {
       console.error('Square gift card activation error:', error);
-      
-      if (error instanceof ApiError) {
-        return {
-          success: false,
-          error: `Square API error: ${error.errors?.[0]?.detail || error.message}`
-        };
-      }
-
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error activating gift card'

@@ -4,8 +4,10 @@ import { storage } from "./storage";
 import { insertMerchantSchema, insertGiftCardSchema, insertGiftCardActivitySchema } from "@shared/schema";
 import { squareService } from "./services/squareService";
 import { squareAPIService } from './services/squareAPIService';
+import { enhancedSquareAPIService } from './services/enhancedSquareAPIService';
 import { qrCodeService } from './services/qrCodeService';
 import { emailService } from './services/emailService';
+import { squareWebhookHandler } from './webhooks/squareWebhookHandler';
 import { requireAdmin } from './middleware/authMiddleware';
 import { generateGiftCardQR, generateGiftCardBarcode } from '../utils/qrGenerator';
 import { z } from "zod";
@@ -698,6 +700,321 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Enhanced Square Gift Cards API Endpoints - Production Ready
+  
+  // Create gift card with enhanced Square API
+  app.post("/api/enhanced/giftcards/create", async (req, res) => {
+    try {
+      const { type = 'DIGITAL', orderId, lineItemUid } = req.body;
+      
+      console.log('Enhanced: Creating gift card with Square API v2');
+      const result = await enhancedSquareAPIService.createGiftCard(type, orderId, lineItemUid);
+      
+      if (result.success) {
+        res.json({
+          success: true,
+          giftCard: result.giftCard,
+          gan: result.giftCard?.gan,
+          balance: result.giftCard?.balance_money?.amount || 0
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: result.error
+        });
+      }
+    } catch (error) {
+      console.error('Enhanced gift card creation error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to create gift card'
+      });
+    }
+  });
+
+  // List gift cards with advanced filtering
+  app.get("/api/enhanced/giftcards", async (req, res) => {
+    try {
+      const { type, state, limit = '50', cursor } = req.query;
+      
+      const result = await enhancedSquareAPIService.listGiftCards(
+        type as any,
+        state as any,
+        parseInt(limit as string),
+        cursor as string
+      );
+      
+      res.json(result);
+    } catch (error) {
+      console.error('Enhanced list gift cards error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to list gift cards'
+      });
+    }
+  });
+
+  // Retrieve gift card by GAN with enhanced features
+  app.get("/api/enhanced/giftcards/gan/:gan", async (req, res) => {
+    try {
+      const { gan } = req.params;
+      
+      const result = await enhancedSquareAPIService.retrieveGiftCardFromGan(gan);
+      
+      if (result.success) {
+        res.json({
+          success: true,
+          giftCard: result.giftCard,
+          balance: result.giftCard?.balance_money?.amount || 0,
+          state: result.giftCard?.state,
+          gan: result.giftCard?.gan
+        });
+      } else {
+        res.status(404).json(result);
+      }
+    } catch (error) {
+      console.error('Enhanced retrieve gift card error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to retrieve gift card'
+      });
+    }
+  });
+
+  // Enhanced gift card validation with comprehensive checks
+  app.get("/api/enhanced/giftcards/:gan/validate", async (req, res) => {
+    try {
+      const { gan } = req.params;
+      
+      const validation = await enhancedSquareAPIService.validateGiftCard(gan);
+      
+      res.json({
+        success: true,
+        validation: {
+          gan,
+          isValid: validation.isValid,
+          balance: validation.balance,
+          status: validation.status,
+          balanceFormatted: `$${(validation.balance / 100).toFixed(2)}`,
+          canRedeem: validation.isValid && validation.balance > 0
+        }
+      });
+    } catch (error) {
+      console.error('Enhanced validation error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to validate gift card'
+      });
+    }
+  });
+
+  // Enhanced gift card activities
+  app.post("/api/enhanced/giftcards/activate", async (req, res) => {
+    try {
+      const { gan, amount } = req.body;
+      
+      if (!gan || !amount || amount <= 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'GAN and positive amount are required'
+        });
+      }
+      
+      const result = await enhancedSquareAPIService.activateGiftCard(gan, amount);
+      res.json(result);
+    } catch (error) {
+      console.error('Enhanced activate error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to activate gift card'
+      });
+    }
+  });
+
+  app.post("/api/enhanced/giftcards/load", async (req, res) => {
+    try {
+      const { gan, amount } = req.body;
+      
+      if (!gan || !amount || amount <= 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'GAN and positive amount are required'
+        });
+      }
+      
+      const result = await enhancedSquareAPIService.loadGiftCard(gan, amount);
+      res.json(result);
+    } catch (error) {
+      console.error('Enhanced load error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to load gift card'
+      });
+    }
+  });
+
+  app.post("/api/enhanced/giftcards/redeem", async (req, res) => {
+    try {
+      const { gan, amount } = req.body;
+      
+      if (!gan || !amount || amount <= 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'GAN and positive amount are required'
+        });
+      }
+      
+      // Validate before redemption
+      const validation = await enhancedSquareAPIService.validateGiftCard(gan);
+      if (!validation.isValid) {
+        return res.status(400).json({
+          success: false,
+          error: 'Gift card is not valid for redemption'
+        });
+      }
+      
+      if (validation.balance < amount) {
+        return res.status(400).json({
+          success: false,
+          error: 'Insufficient balance',
+          availableBalance: validation.balance
+        });
+      }
+      
+      const result = await enhancedSquareAPIService.redeemGiftCard(gan, amount);
+      res.json(result);
+    } catch (error) {
+      console.error('Enhanced redeem error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to redeem gift card'
+      });
+    }
+  });
+
+  // Balance adjustment endpoints
+  app.post("/api/enhanced/giftcards/adjust/increment", async (req, res) => {
+    try {
+      const { gan, amount, reason } = req.body;
+      
+      if (!gan || !amount || amount <= 0 || !reason) {
+        return res.status(400).json({
+          success: false,
+          error: 'GAN, positive amount, and reason are required'
+        });
+      }
+      
+      const result = await enhancedSquareAPIService.adjustGiftCardBalanceUp(gan, amount, reason);
+      res.json(result);
+    } catch (error) {
+      console.error('Enhanced increment error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to increment balance'
+      });
+    }
+  });
+
+  app.post("/api/enhanced/giftcards/adjust/decrement", async (req, res) => {
+    try {
+      const { gan, amount, reason } = req.body;
+      
+      if (!gan || !amount || amount <= 0 || !reason) {
+        return res.status(400).json({
+          success: false,
+          error: 'GAN, positive amount, and reason are required'
+        });
+      }
+      
+      const result = await enhancedSquareAPIService.adjustGiftCardBalanceDown(gan, amount, reason);
+      res.json(result);
+    } catch (error) {
+      console.error('Enhanced decrement error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to decrement balance'
+      });
+    }
+  });
+
+  // Customer linking endpoints
+  app.post("/api/enhanced/giftcards/:giftCardId/link-customer", async (req, res) => {
+    try {
+      const { giftCardId } = req.params;
+      const { customerId } = req.body;
+      
+      if (!customerId) {
+        return res.status(400).json({
+          success: false,
+          error: 'Customer ID is required'
+        });
+      }
+      
+      const result = await enhancedSquareAPIService.linkCustomerToGiftCard(giftCardId, customerId);
+      res.json(result);
+    } catch (error) {
+      console.error('Enhanced link customer error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to link customer'
+      });
+    }
+  });
+
+  app.post("/api/enhanced/giftcards/:giftCardId/unlink-customer", async (req, res) => {
+    try {
+      const { giftCardId } = req.params;
+      
+      const result = await enhancedSquareAPIService.unlinkCustomerFromGiftCard(giftCardId);
+      res.json(result);
+    } catch (error) {
+      console.error('Enhanced unlink customer error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to unlink customer'
+      });
+    }
+  });
+
+  // Gift card activities listing
+  app.get("/api/enhanced/giftcards/:giftCardId/activities", async (req, res) => {
+    try {
+      const { giftCardId } = req.params;
+      const { type, beginTime, endTime, limit = '50', cursor } = req.query;
+      
+      const result = await enhancedSquareAPIService.listGiftCardActivities(
+        giftCardId,
+        type as string,
+        undefined, // locationId - will use default
+        beginTime as string,
+        endTime as string,
+        parseInt(limit as string),
+        cursor as string
+      );
+      
+      res.json(result);
+    } catch (error) {
+      console.error('Enhanced activities error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to list activities'
+      });
+    }
+  });
+
+  // Square Webhook Endpoints - Production Ready
+  app.post("/api/webhooks/square", (req, res) => {
+    squareWebhookHandler.handleWebhook(req, res);
+  });
+
+  app.get("/api/webhooks/square/test", (req, res) => {
+    squareWebhookHandler.handleWebhookTest(req, res);
+  });
+
+  app.get("/api/webhooks/square/history", (req, res) => {
+    squareWebhookHandler.getWebhookHistory(req, res);
+  });
+
   // Test Square connection
   app.get("/api/test-square", async (req, res) => {
     try {
@@ -706,6 +1023,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Test Square connection error:', error);
       res.status(500).json({ message: "Square connection test failed" });
+    }
+  });
+
+  // Enhanced connection test with detailed diagnostics
+  app.get("/api/test-square-enhanced", async (req, res) => {
+    try {
+      // Test basic connection
+      const basicConnected = await squareService.testConnection();
+      
+      // Test enhanced API service
+      const testResult = await enhancedSquareAPIService.listGiftCards(undefined, undefined, 1);
+      
+      res.json({
+        basic_connection: basicConnected,
+        enhanced_api: testResult.success,
+        environment: squareService.getEnvironment(),
+        timestamp: new Date().toISOString(),
+        features: {
+          webhook_handler: true,
+          enhanced_api: true,
+          real_time_sync: true,
+          comprehensive_validation: true
+        }
+      });
+    } catch (error) {
+      console.error('Enhanced connection test error:', error);
+      res.status(500).json({ 
+        error: "Enhanced connection test failed",
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 

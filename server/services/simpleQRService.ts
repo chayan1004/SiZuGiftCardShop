@@ -53,32 +53,50 @@ export class SimpleQRService {
     // For now, let's create a simple branded QR code by generating an SVG overlay
     // and returning the original QR code with a note that branding needs canvas processing
     
-    // Create an SVG overlay with SiZu branding
+    // Create an SVG overlay with SiZu branded logo matching the provided design
     const brandedSvg = `
       <svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+        <defs>
+          <!-- Gradient for SiZu text matching the brand design -->
+          <linearGradient id="sizuGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#06B6D4;stop-opacity:1" />
+            <stop offset="50%" style="stop-color:#3B82F6;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#8B5CF6;stop-opacity:1" />
+          </linearGradient>
+          
+          <!-- Purple background gradient -->
+          <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#7C3AED;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#5B21B6;stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        
         <!-- QR Code Background -->
         <image href="${qrDataURL}" x="0" y="0" width="400" height="400"/>
         
-        <!-- White background circle for logo -->
-        <circle cx="200" cy="200" r="45" fill="#ffffff" stroke="#1f2937" stroke-width="3"/>
+        <!-- Branded logo background with rounded rectangle matching design -->
+        <rect x="140" y="160" width="120" height="80" 
+              fill="url(#bgGradient)" 
+              rx="12" ry="12" 
+              stroke="#ffffff" 
+              stroke-width="2"/>
         
-        <!-- SiZu Text Logo -->
-        <text x="200" y="210" 
+        <!-- SiZu Text Logo with brand styling -->
+        <text x="200" y="195" 
               text-anchor="middle" 
               font-family="Arial, sans-serif" 
-              font-size="24" 
+              font-size="28" 
               font-weight="bold" 
-              fill="#1f2937">SiZu</text>
+              fill="url(#sizuGradient)">SiZu</text>
               
-        <!-- Small gift icon -->
-        <g transform="translate(185, 175)">
-          <rect x="0" y="0" width="30" height="20" 
-                fill="none" stroke="#059669" stroke-width="2" rx="3"/>
-          <path d="M7.5,0 L7.5,-8 M22.5,0 L22.5,-8" 
-                stroke="#059669" stroke-width="2"/>
-          <rect x="5" y="-10" width="20" height="6" 
-                fill="#059669" rx="2"/>
-        </g>
+        <!-- GIFT CARD subtitle -->
+        <text x="200" y="218" 
+              text-anchor="middle" 
+              font-family="Arial, sans-serif" 
+              font-size="10" 
+              font-weight="normal" 
+              letter-spacing="2px"
+              fill="#ffffff">GIFT CARD</text>
       </svg>
     `;
 

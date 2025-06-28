@@ -6,6 +6,7 @@ import { insertMerchantSchema, insertGiftCardSchema, insertGiftCardActivitySchem
 import { squareService } from "./services/squareService";
 import { squareAPIService } from './services/squareAPIService';
 import { enhancedSquareAPIService } from './services/enhancedSquareAPIService';
+import { squareGiftCardService } from './services/squareGiftCardService';
 import { simpleQRService } from './services/simpleQRService';
 import { emailService } from './services/emailService';
 import { pdfReceiptService } from './services/pdfReceiptService';

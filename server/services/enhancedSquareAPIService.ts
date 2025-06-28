@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import { storage } from '../storage';
+import { SquareClient } from 'square';
 
 /**
  * Enhanced Square API Service - Production Ready Implementation
@@ -75,6 +76,7 @@ interface WebhookPayload {
 }
 
 class EnhancedSquareAPIService {
+  private client: SquareClient;
   private accessToken: string;
   private locationId: string;
   private environment: string;
@@ -96,6 +98,12 @@ class EnhancedSquareAPIService {
     if (!this.accessToken || !this.locationId) {
       console.warn('Square API credentials not configured properly');
     }
+
+    // Initialize Square SDK client
+    this.client = new SquareClient({
+      accessToken: this.accessToken,
+      environment: this.environment === 'production' ? 'production' : 'sandbox'
+    });
   }
 
   /**
@@ -184,7 +192,7 @@ class EnhancedSquareAPIService {
   }
 
   /**
-   * Create Gift Card - Enhanced implementation based on Square API docs
+   * Create Gift Card - Enhanced implementation using Square SDK
    * POST /v2/gift-cards
    */
   async createGiftCard(
@@ -205,22 +213,22 @@ class EnhancedSquareAPIService {
       const type = options?.type || 'DIGITAL';
       
       const requestBody: any = {
-        idempotency_key: idempotencyKey,
-        location_id: locationId,
-        gift_card: {
+        idempotencyKey: idempotencyKey,
+        locationId: locationId,
+        giftCard: {
           type: type
         }
       };
 
       // Add order information if provided
       if (options?.orderId && options?.lineItemUid) {
-        requestBody.gift_card.order = {
-          order_id: options.orderId,
-          line_item_uid: options.lineItemUid
+        requestBody.giftCard.order = {
+          orderId: options.orderId,
+          lineItemUid: options.lineItemUid
         };
       }
 
-      const response = await this.makeSquareRequest('/v2/gift-cards', 'POST', requestBody);
+      const { result, statusCode, headers } = await this.client.giftCardsApi.createGiftCard(requestBody);
 
       if (response.gift_card) {
         // Store gift card in database with comprehensive tracking

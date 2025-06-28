@@ -25,20 +25,21 @@ class SquareSDK {
     if (this.isInitialized) return;
 
     try {
-      // Load Square SDK
-      await this.loadSquareScript();
-
-      // Get configuration from backend
+      // Get configuration from backend first
       const configResponse = await fetch('/api/config/square');
       if (!configResponse.ok) {
         throw new Error('Failed to fetch Square configuration');
       }
       
       this.config = await configResponse.json();
+      console.log('Initializing Square with config:', this.config);
 
       if (!this.config?.applicationId || !this.config?.locationId) {
         throw new Error('Square configuration missing');
       }
+
+      // Load Square SDK with correct environment
+      await this.loadSquareScript();
 
       // Initialize Square payments
       if (window.Square) {
@@ -51,7 +52,7 @@ class SquareSDK {
         throw new Error('Square SDK not available');
       }
     } catch (error) {
-      console.error('Square SDK initialization failed:', error);
+      console.error('Square initialization error:', error);
       throw error;
     }
   }
@@ -64,7 +65,12 @@ class SquareSDK {
       }
 
       const script = document.createElement('script');
-      script.src = 'https://sandbox-web.squarecdn.com/v1/square.js';
+      // Use the correct script URL based on environment
+      const scriptUrl = this.config?.environment === 'production' 
+        ? 'https://web.squarecdn.com/v1/square.js'
+        : 'https://sandbox-web.squarecdn.com/v1/square.js';
+      
+      script.src = scriptUrl;
       script.async = true;
       script.onload = () => resolve();
       script.onerror = () => reject(new Error('Failed to load Square SDK'));

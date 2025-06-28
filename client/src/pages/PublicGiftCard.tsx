@@ -316,29 +316,29 @@ export default function PublicGiftCard({ gan }: PublicGiftCardProps) {
                     {giftCard.qrCodeUrl && (
                       <Button
                         onClick={downloadQRCode}
-                        className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white"
+                        className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold border-0 shadow-lg"
                       >
-                        <Download className="w-4 h-4 mr-2" />
-                        Download QR Code
+                        <Download className="w-4 h-4 mr-2 text-white" />
+                        <span className="text-white">Download QR Code</span>
                       </Button>
                     )}
                     
                     <Button
                       onClick={() => copyToClipboard(gan, "Gift Card Number")}
                       variant="outline"
-                      className="w-full border-white/20 text-white hover:bg-white/10"
+                      className="w-full border-2 border-white/30 text-white hover:bg-white/10 hover:border-white/50 bg-transparent font-semibold"
                     >
-                      <Copy className="w-4 h-4 mr-2" />
-                      {copied ? "Copied!" : "Copy Gift Card Number"}
+                      <Copy className="w-4 h-4 mr-2 text-white" />
+                      <span className="text-white">{copied ? "Copied!" : "Copy Gift Card Number"}</span>
                     </Button>
                     
                     <Button
                       onClick={() => copyToClipboard(window.location.href, "Share Link")}
                       variant="outline"
-                      className="w-full border-white/20 text-white hover:bg-white/10"
+                      className="w-full border-2 border-white/30 text-white hover:bg-white/10 hover:border-white/50 bg-transparent font-semibold"
                     >
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Share Gift Card
+                      <ExternalLink className="w-4 h-4 mr-2 text-white" />
+                      <span className="text-white">Share Gift Card</span>
                     </Button>
 
                     <Separator className="bg-white/10" />
@@ -346,10 +346,10 @@ export default function PublicGiftCard({ gan }: PublicGiftCardProps) {
                     <Button
                       onClick={() => window.location.href = '/store'}
                       variant="ghost"
-                      className="w-full text-gray-300 hover:text-white hover:bg-white/5"
+                      className="w-full text-cyan-300 hover:text-white hover:bg-cyan-500/10 bg-transparent font-semibold border border-cyan-400/20 hover:border-cyan-300/40"
                     >
-                      <Gift className="w-4 h-4 mr-2" />
-                      Get Another Gift Card
+                      <Gift className="w-4 h-4 mr-2 text-cyan-300" />
+                      <span className="text-cyan-300 group-hover:text-white">Get Another Gift Card</span>
                     </Button>
                   </CardContent>
                 </Card>

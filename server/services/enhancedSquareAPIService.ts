@@ -228,7 +228,7 @@ class EnhancedSquareAPIService {
         };
       }
 
-      const { result, statusCode, headers } = await this.client.giftCards.createGiftCard(requestBody);
+      const { result, statusCode, headers } = await this.client.giftCards.create(requestBody);
 
       if (result.giftCard) {
         // Store gift card in database with comprehensive tracking

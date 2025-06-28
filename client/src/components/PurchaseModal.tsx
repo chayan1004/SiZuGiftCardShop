@@ -125,89 +125,191 @@ export default function PurchaseModal({ isOpen, onClose }: PurchaseModalProps) {
           </motion.div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-8 relative z-10">
+          {/* Premium Amount Selection */}
           <div>
-            <Label className="text-sm font-medium text-slate-700 mb-2">Amount</Label>
-            <div className="grid grid-cols-3 gap-3 mb-4">
-              {[25, 50, 100].map((amount) => (
-                <Button
-                  key={amount}
-                  type="button"
-                  variant={selectedAmount === amount ? "default" : "outline"}
-                  className={`py-3 ${
-                    selectedAmount === amount 
-                      ? "bg-square-blue text-white hover:bg-square-blue-dark" 
-                      : "bg-slate-100 hover:bg-square-blue hover:text-white"
-                  }`}
-                  onClick={() => handleAmountSelect(amount)}
+            <Label className="text-lg font-semibold text-white mb-6 block">Choose Amount</Label>
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              {amountOptions.map((option, index) => (
+                <motion.div
+                  key={option.value}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  ${amount}
-                </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className={`relative w-full h-20 glass-premium-button rounded-2xl p-4 transition-all duration-300 group ${
+                      selectedAmount === option.value 
+                        ? "border-cyan-400/60 bg-cyan-500/20" 
+                        : "border-cyan-400/20 hover:border-cyan-400/40"
+                    }`}
+                    onClick={() => handleAmountSelect(option.value)}
+                  >
+                    {/* Popular badge */}
+                    {option.popular && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center"
+                      >
+                        <Star size={12} className="text-white" />
+                      </motion.div>
+                    )}
+                    
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                        selectedAmount === option.value 
+                          ? "bg-cyan-500/30" 
+                          : "bg-gray-700/50"
+                      }`}>
+                        <option.icon size={20} className="text-white" />
+                      </div>
+                      <div className="text-left">
+                        <div className="font-display text-xl font-bold text-white">{option.label}</div>
+                        <div className="text-sm text-gray-400">Perfect gift</div>
+                      </div>
+                    </div>
+                    
+                    {/* Selection indicator */}
+                    {selectedAmount === option.value && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="absolute bottom-2 right-2 w-4 h-4 bg-cyan-400 rounded-full"
+                      />
+                    )}
+                  </Button>
+                </motion.div>
               ))}
             </div>
-            <Input
-              type="number"
-              placeholder="Custom amount"
-              value={customAmount}
-              onChange={(e) => {
-                setCustomAmount(e.target.value);
-                setSelectedAmount(null);
-              }}
-              className="w-full"
-            />
+            
+            {/* Custom Amount Input */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <Label className="text-gray-300 mb-2 block">Or enter custom amount</Label>
+              <Input
+                type="number"
+                placeholder="Enter amount ($5 minimum)"
+                value={customAmount}
+                onChange={(e) => {
+                  setCustomAmount(e.target.value);
+                  setSelectedAmount(null);
+                }}
+                className="glass-premium-button text-white placeholder-gray-400 border-cyan-400/30 focus:border-cyan-400/60 rounded-xl h-12"
+              />
+            </motion.div>
           </div>
 
-          <div>
-            <Label htmlFor="recipientEmail" className="text-sm font-medium text-slate-700 mb-2">
+          {/* Recipient Email Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+          >
+            <Label htmlFor="recipientEmail" className="text-lg font-semibold text-white mb-3 block">
               Recipient Email
             </Label>
             <Input
               id="recipientEmail"
               type="email"
-              placeholder="Enter recipient's email"
+              placeholder="Enter recipient's email address"
               value={recipientEmail}
               onChange={(e) => setRecipientEmail(e.target.value)}
               required
+              className="glass-premium-button text-white placeholder-gray-400 border-cyan-400/30 focus:border-cyan-400/60 rounded-xl h-12"
             />
-          </div>
+          </motion.div>
 
-          <div>
-            <Label htmlFor="personalMessage" className="text-sm font-medium text-slate-700 mb-2">
+          {/* Personal Message Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+          >
+            <Label htmlFor="personalMessage" className="text-lg font-semibold text-white mb-3 block">
               Personal Message (Optional)
             </Label>
             <Textarea
               id="personalMessage"
-              placeholder="Add a personal message..."
-              rows={3}
+              placeholder="Add a heartfelt message..."
+              rows={4}
               value={personalMessage}
               onChange={(e) => setPersonalMessage(e.target.value)}
-              className="resize-none"
+              className="glass-premium-button text-white placeholder-gray-400 border-cyan-400/30 focus:border-cyan-400/60 rounded-xl resize-none"
             />
-          </div>
+          </motion.div>
 
-          <div className="bg-slate-50 rounded-lg p-4 mb-6">
-            <div className="flex items-center justify-center text-slate-500">
-              <CreditCard className="mr-2" size={20} />
-              <span>Square Payment Form integration required</span>
-            </div>
-          </div>
-
-          <Button 
-            type="submit" 
-            disabled={createGiftCardMutation.isPending}
-            className="w-full bg-square-blue text-white py-4 font-semibold hover:bg-square-blue-dark"
+          {/* Payment Security Notice */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.8 }}
+            className="glass-card rounded-2xl p-6 border border-cyan-400/20"
           >
-            <Lock className="mr-2" size={16} />
-            {createGiftCardMutation.isPending ? "Processing..." : "Complete Purchase"}
-          </Button>
-        </form>
+            <div className="flex items-center justify-center space-x-3 text-cyan-300">
+              <Shield className="w-6 h-6" />
+              <span className="font-semibold">Secured by Square Payment System</span>
+              <CreditCard className="w-6 h-6" />
+            </div>
+            <p className="text-center text-gray-400 text-sm mt-2">
+              Your payment is encrypted and processed securely through Square's enterprise platform
+            </p>
+          </motion.div>
 
-        <div className="text-center">
-          <p className="text-xs text-slate-500">
-            <Lock className="inline mr-1" size={12} />
-            Secured by Square Payment Processing
-          </p>
-        </div>
+          {/* Submit Button */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.9 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Button 
+              type="submit" 
+              disabled={createGiftCardMutation.isPending}
+              className="relative w-full h-14 gradient-premium-3 text-white font-bold rounded-2xl shadow-2xl hover:shadow-cyan-500/25 transition-all duration-300 group overflow-hidden"
+            >
+              {/* Animated background */}
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-purple-600 via-cyan-500 to-blue-600 opacity-0 group-hover:opacity-100"
+                animate={{
+                  x: ['-100%', '100%'],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  repeatDelay: 1
+                }}
+              />
+              
+              <span className="relative z-10 flex items-center justify-center space-x-3">
+                {createGiftCardMutation.isPending ? (
+                  <>
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                    />
+                    <span>Processing...</span>
+                  </>
+                ) : (
+                  <>
+                    <Lock size={20} />
+                    <span>Purchase Gift Card</span>
+                    <Sparkles size={20} />
+                  </>
+                )}
+              </span>
+            </Button>
+          </motion.div>
+        </form>
       </DialogContent>
     </Dialog>
   );

@@ -84,31 +84,103 @@ export default function HeroSection({ onOpenPurchaseModal }: HeroSectionProps) {
             <span className="text-cyan-300 font-medium"> Square's enterprise platform</span>, 
             real-time analytics, and seamless customer experiences that drive business growth.
           </motion.p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
             <motion.div
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.05, rotateY: 5 }}
               whileTap={{ scale: 0.95 }}
+              className="relative"
             >
               <Button 
                 onClick={onOpenPurchaseModal}
                 size="lg"
-                className="gradient-premium text-white px-12 py-6 text-xl font-display font-bold rounded-2xl shadow-2xl hover:shadow-purple-500/25 transition-all duration-500 border-none"
+                className="relative px-16 py-8 gradient-premium-3 text-white font-display font-bold text-2xl rounded-3xl shadow-2xl hover:shadow-cyan-500/30 transition-all duration-500 border-none group overflow-hidden"
               >
-                <Gift className="mr-3" size={24} />
-                Experience SiZu
+                {/* Animated background shimmer */}
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-purple-600 via-cyan-500 to-blue-600 opacity-0 group-hover:opacity-100"
+                  animate={{
+                    x: ['-100%', '100%'],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    repeatDelay: 1
+                  }}
+                />
+                
+                <span className="relative z-10 flex items-center space-x-4">
+                  <Gift size={28} />
+                  <span>Experience SiZu</span>
+                  <motion.div
+                    animate={{ rotate: [0, 360] }}
+                    transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                    className="w-6 h-6 border-2 border-white border-t-transparent rounded-full"
+                  />
+                </span>
               </Button>
+              
+              {/* Floating particles around button */}
+              {[...Array(4)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute w-2 h-2 bg-cyan-300 rounded-full opacity-60"
+                  animate={{
+                    x: [0, 40 * Math.cos(i * 1.57), 0],
+                    y: [0, 40 * Math.sin(i * 1.57), 0],
+                    opacity: [0.3, 1, 0.3],
+                    scale: [0.5, 1, 0.5]
+                  }}
+                  transition={{
+                    duration: 3 + i * 0.5,
+                    repeat: Infinity,
+                    delay: i * 0.4,
+                  }}
+                  style={{
+                    left: '50%',
+                    top: '50%',
+                    marginLeft: '-4px',
+                    marginTop: '-4px'
+                  }}
+                />
+              ))}
             </motion.div>
+            
             <motion.div
               whileHover={{ scale: 1.05, rotateY: -5 }}
               whileTap={{ scale: 0.95 }}
+              className="relative"
             >
               <Button 
                 variant="outline" 
                 size="lg"
-                className="glass-premium border-2 border-white/20 text-white hover:bg-white/10 px-12 py-6 text-xl font-display font-semibold rounded-2xl backdrop-blur-md transition-all duration-500"
+                className="relative px-16 py-8 glass-premium-button border-2 border-cyan-400/30 text-white hover:border-cyan-400/60 font-display font-semibold text-2xl rounded-3xl backdrop-blur-md transition-all duration-500 group"
               >
-                <Play className="mr-3" size={24} />
-                Watch Demo
+                {/* Glow effect on hover */}
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 to-blue-500/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                />
+                
+                <span className="relative z-10 flex items-center space-x-4">
+                  <Play size={28} />
+                  <span>Watch Demo</span>
+                </span>
+                
+                {/* Border animation */}
+                <motion.div
+                  className="absolute inset-0 border-2 border-transparent bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 rounded-3xl opacity-0 group-hover:opacity-30"
+                  animate={{
+                    rotate: [0, 360]
+                  }}
+                  transition={{
+                    duration: 4,
+                    repeat: Infinity,
+                    ease: "linear"
+                  }}
+                  style={{
+                    mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                    maskComposite: 'subtract'
+                  }}
+                />
               </Button>
             </motion.div>
           </div>

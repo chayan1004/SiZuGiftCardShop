@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
+import Navigation from "@/components/Navigation";
 
 interface GiftCardBalance {
   gan: string;
@@ -21,6 +22,17 @@ interface GiftCardBalance {
 export default function CheckBalance() {
   const [gan, setGan] = useState("");
   const [searchGan, setSearchGan] = useState("");
+
+  // Navigation handlers
+  const handleOpenPurchaseModal = () => {
+    // Navigate to store page
+    window.location.href = '/store';
+  };
+
+  const handleOpenDashboard = () => {
+    // Navigate to admin page
+    window.location.href = '/admin';
+  };
 
   // Query for gift card balance
   const { data: balanceData, isLoading, error, refetch } = useQuery({
@@ -75,7 +87,12 @@ export default function CheckBalance() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900">
+    <>
+      <Navigation 
+        onOpenPurchaseModal={handleOpenPurchaseModal}
+        onOpenDashboard={handleOpenDashboard}
+      />
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900">
       {/* Background Effects */}
       <div className="absolute inset-0">
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-500/5 via-purple-500/3 to-indigo-500/5" />
@@ -261,6 +278,7 @@ export default function CheckBalance() {
           </AnimatePresence>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

@@ -1,24 +1,44 @@
-const { Client, Environment } = require('squareup');
 import crypto from 'crypto';
 
 class SquareGiftCardService {
   private client: any;
   private locationId: string;
+  private isInitialized: boolean = false;
 
   constructor() {
-    const environment = process.env.SQUARE_ENVIRONMENT === 'production' 
-      ? Environment.Production 
-      : Environment.Sandbox;
-    
-    this.client = new Client({
-      accessToken: process.env.SQUARE_ACCESS_TOKEN,
-      environment: environment,
-    });
-
     this.locationId = process.env.SQUARE_LOCATION_ID!;
 
     if (!process.env.SQUARE_ACCESS_TOKEN || !this.locationId) {
       throw new Error('Square credentials not properly configured');
+    }
+    
+    this.initializeClient();
+  }
+
+  private async initializeClient() {
+    try {
+      const squareModule = await import('squareup');
+      const { Client, Environment } = squareModule.default || squareModule;
+      
+      const environment = process.env.SQUARE_ENVIRONMENT === 'production' 
+        ? Environment.Production 
+        : Environment.Sandbox;
+
+      this.client = new Client({
+        accessToken: process.env.SQUARE_ACCESS_TOKEN,
+        environment: environment,
+      });
+      
+      this.isInitialized = true;
+    } catch (error) {
+      console.error('Failed to initialize Square client:', error);
+      throw new Error('Square SDK initialization failed');
+    }
+  }
+
+  private async ensureInitialized() {
+    if (!this.isInitialized) {
+      await this.initializeClient();
     }
   }
 

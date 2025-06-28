@@ -1,24 +1,44 @@
-import { Client, Environment, CreatePaymentRequest, Payment } from 'squareup';
 import crypto from 'crypto';
 
 class SquarePaymentService {
-  private client: Client;
+  private client: any;
   private locationId: string;
+  private isInitialized: boolean = false;
 
   constructor() {
-    const environment = process.env.SQUARE_ENVIRONMENT === 'production' 
-      ? Environment.Production 
-      : Environment.Sandbox;
-    
-    this.client = new Client({
-      accessToken: process.env.SQUARE_ACCESS_TOKEN,
-      environment: environment,
-    });
-
     this.locationId = process.env.SQUARE_LOCATION_ID!;
 
     if (!process.env.SQUARE_ACCESS_TOKEN || !this.locationId) {
       throw new Error('Square credentials not properly configured');
+    }
+    
+    this.initializeClient();
+  }
+
+  private async initializeClient() {
+    try {
+      const squareModule = await import('squareup');
+      const { Client, Environment } = squareModule.default || squareModule;
+      
+      const environment = process.env.SQUARE_ENVIRONMENT === 'production' 
+        ? Environment.Production 
+        : Environment.Sandbox;
+
+      this.client = new Client({
+        accessToken: process.env.SQUARE_ACCESS_TOKEN,
+        environment: environment,
+      });
+      
+      this.isInitialized = true;
+    } catch (error) {
+      console.error('Failed to initialize Square client:', error);
+      throw new Error('Square SDK initialization failed');
+    }
+  }
+
+  private async ensureInitialized() {
+    if (!this.isInitialized) {
+      await this.initializeClient();
     }
   }
 
@@ -31,13 +51,13 @@ class SquarePaymentService {
     recipientEmail?: string,
     note?: string
   ): Promise<{
-    payment: Payment;
+    payment: any;
     paymentId: string;
   }> {
     try {
       const idempotencyKey = crypto.randomUUID();
       
-      const request: CreatePaymentRequest = {
+      const request: any = {
         sourceId,
         idempotencyKey,
         amountMoney: {
@@ -72,7 +92,7 @@ class SquarePaymentService {
   /**
    * Get payment details by ID
    */
-  async getPayment(paymentId: string): Promise<Payment> {
+  async getPayment(paymentId: string): Promise<any> {
     try {
       const response = await this.client.paymentsApi.getPayment(paymentId);
       
@@ -136,7 +156,7 @@ class SquarePaymentService {
       const testAmount = 100; // $1.00 in cents
       const idempotencyKey = crypto.randomUUID();
       
-      const request: CreatePaymentRequest = {
+      const request: any = {
         sourceId,
         idempotencyKey,
         amountMoney: {

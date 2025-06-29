@@ -832,6 +832,289 @@ export default function AdminDashboard() {
                 </div>
               )}
 
+              {activeSection === "settings" && (
+                <div className="space-y-6">
+                  {/* Settings Header */}
+                  <div className="bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-xl p-6">
+                    <h3 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-2">
+                      System Settings
+                    </h3>
+                    <p className="text-gray-300">Configure system preferences and administrative options</p>
+                  </div>
+
+                  {/* Settings Grid */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Security Settings */}
+                    <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
+                      <CardHeader>
+                        <CardTitle className="text-white flex items-center">
+                          <Shield className="w-5 h-5 mr-2 text-blue-400" />
+                          Security Configuration
+                        </CardTitle>
+                        <CardDescription className="text-gray-300">Authentication and access control settings</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+                          <div>
+                            <span className="text-white font-medium">Admin Token Expiry</span>
+                            <p className="text-sm text-gray-400">Current session timeout</p>
+                          </div>
+                          <Badge className="bg-green-500/20 text-green-300 border-green-500/30">24 Hours</Badge>
+                        </div>
+                        
+                        <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+                          <div>
+                            <span className="text-white font-medium">Rate Limiting</span>
+                            <p className="text-sm text-gray-400">API request limits</p>
+                          </div>
+                          <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">Active</Badge>
+                        </div>
+                        
+                        <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+                          <div>
+                            <span className="text-white font-medium">Audit Logging</span>
+                            <p className="text-sm text-gray-400">Security event tracking</p>
+                          </div>
+                          <Badge className="bg-green-500/20 text-green-300 border-green-500/30">Enabled</Badge>
+                        </div>
+                        
+                        <Button className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800">
+                          Reset Admin Password
+                        </Button>
+                      </CardContent>
+                    </Card>
+
+                    {/* Email Configuration */}
+                    <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
+                      <CardHeader>
+                        <CardTitle className="text-white flex items-center">
+                          <Mail className="w-5 h-5 mr-2 text-green-400" />
+                          Email Configuration
+                        </CardTitle>
+                        <CardDescription className="text-gray-300">SMTP and email delivery settings</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+                          <div>
+                            <span className="text-white font-medium">SMTP Provider</span>
+                            <p className="text-sm text-gray-400">Current email service</p>
+                          </div>
+                          <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">Mailgun</Badge>
+                        </div>
+                        
+                        <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+                          <div>
+                            <span className="text-white font-medium">Daily Limit</span>
+                            <p className="text-sm text-gray-400">Maximum emails per day</p>
+                          </div>
+                          <span className="text-white font-mono">1,000</span>
+                        </div>
+                        
+                        <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+                          <div>
+                            <span className="text-white font-medium">Queue Status</span>
+                            <p className="text-sm text-gray-400">Email processing queue</p>
+                          </div>
+                          <Badge className="bg-green-500/20 text-green-300 border-green-500/30">Healthy</Badge>
+                        </div>
+                        
+                        <Button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                          Test Email Delivery
+                        </Button>
+                      </CardContent>
+                    </Card>
+
+                    {/* System Configuration */}
+                    <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
+                      <CardHeader>
+                        <CardTitle className="text-white flex items-center">
+                          <Settings className="w-5 h-5 mr-2 text-purple-400" />
+                          System Configuration
+                        </CardTitle>
+                        <CardDescription className="text-gray-300">General system preferences and limits</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-white">Auto-refresh Dashboard</span>
+                            <div className="flex items-center space-x-2">
+                              <div className="w-10 h-6 bg-blue-600 rounded-full relative cursor-pointer">
+                                <div className="w-4 h-4 bg-white rounded-full absolute top-1 right-1 transition-transform"></div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center justify-between">
+                            <span className="text-white">Enable Notifications</span>
+                            <div className="flex items-center space-x-2">
+                              <div className="w-10 h-6 bg-blue-600 rounded-full relative cursor-pointer">
+                                <div className="w-4 h-4 bg-white rounded-full absolute top-1 right-1 transition-transform"></div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center justify-between">
+                            <span className="text-white">Dark Mode</span>
+                            <div className="flex items-center space-x-2">
+                              <div className="w-10 h-6 bg-blue-600 rounded-full relative cursor-pointer">
+                                <div className="w-4 h-4 bg-white rounded-full absolute top-1 right-1 transition-transform"></div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="pt-4 border-t border-white/10">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-white text-sm">Data Retention</span>
+                            <span className="text-gray-400 text-sm">90 days</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-white text-sm">Session Timeout</span>
+                            <span className="text-gray-400 text-sm">4 hours</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Square API Configuration */}
+                    <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
+                      <CardHeader>
+                        <CardTitle className="text-white flex items-center">
+                          <CreditCard className="w-5 h-5 mr-2 text-orange-400" />
+                          Square API Settings
+                        </CardTitle>
+                        <CardDescription className="text-gray-300">Payment processing and Square integration</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+                          <div>
+                            <span className="text-white font-medium">Environment</span>
+                            <p className="text-sm text-gray-400">Current API mode</p>
+                          </div>
+                          <Badge className="bg-green-500/20 text-green-300 border-green-500/30">Production</Badge>
+                        </div>
+                        
+                        <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+                          <div>
+                            <span className="text-white font-medium">Webhook Status</span>
+                            <p className="text-sm text-gray-400">Event notifications</p>
+                          </div>
+                          <Badge className="bg-green-500/20 text-green-300 border-green-500/30">Active</Badge>
+                        </div>
+                        
+                        <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+                          <div>
+                            <span className="text-white font-medium">API Rate Limit</span>
+                            <p className="text-sm text-gray-400">Requests per second</p>
+                          </div>
+                          <span className="text-white font-mono">10/sec</span>
+                        </div>
+                        
+                        <Button className="w-full bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800">
+                          Test Square Connection
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Database & Backup Settings */}
+                  <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center">
+                        <Activity className="w-5 h-5 mr-2 text-cyan-400" />
+                        Database & Backup
+                      </CardTitle>
+                      <CardDescription className="text-gray-300">Data management and backup configuration</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="text-center p-4 bg-white/5 rounded-lg border border-white/10">
+                          <div className="w-12 h-12 bg-cyan-500/20 rounded-lg flex items-center justify-center mx-auto mb-3">
+                            <Activity className="w-6 h-6 text-cyan-400" />
+                          </div>
+                          <h4 className="text-white font-medium mb-2">Database Health</h4>
+                          <Badge className="bg-green-500/20 text-green-300 border-green-500/30">Optimal</Badge>
+                          <p className="text-xs text-gray-400 mt-2">Last check: 2 mins ago</p>
+                        </div>
+                        
+                        <div className="text-center p-4 bg-white/5 rounded-lg border border-white/10">
+                          <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center mx-auto mb-3">
+                            <Download className="w-6 h-6 text-blue-400" />
+                          </div>
+                          <h4 className="text-white font-medium mb-2">Last Backup</h4>
+                          <p className="text-white text-sm">Dec 29, 8:00 AM</p>
+                          <p className="text-xs text-gray-400 mt-2">Auto-backup enabled</p>
+                        </div>
+                        
+                        <div className="text-center p-4 bg-white/5 rounded-lg border border-white/10">
+                          <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center mx-auto mb-3">
+                            <TrendingUp className="w-6 h-6 text-purple-400" />
+                          </div>
+                          <h4 className="text-white font-medium mb-2">Storage Usage</h4>
+                          <p className="text-white text-sm">234 MB / 2 GB</p>
+                          <p className="text-xs text-gray-400 mt-2">11.7% used</p>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-6 flex gap-4">
+                        <Button className="flex-1 bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800">
+                          Create Backup
+                        </Button>
+                        <Button variant="outline" className="flex-1 border-white/20 text-white hover:bg-white/10">
+                          Download Logs
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Advanced Settings */}
+                  <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center">
+                        <Calendar className="w-5 h-5 mr-2 text-indigo-400" />
+                        Advanced Configuration
+                      </CardTitle>
+                      <CardDescription className="text-gray-300">Developer and maintenance options</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-4">
+                          <h4 className="text-white font-medium">Maintenance Mode</h4>
+                          <p className="text-sm text-gray-400">Temporarily disable public access for system updates</p>
+                          <Button variant="outline" className="w-full border-orange-500/30 text-orange-300 hover:bg-orange-500/10">
+                            Enable Maintenance Mode
+                          </Button>
+                        </div>
+                        
+                        <div className="space-y-4">
+                          <h4 className="text-white font-medium">Cache Management</h4>
+                          <p className="text-sm text-gray-400">Clear system caches to improve performance</p>
+                          <Button variant="outline" className="w-full border-blue-500/30 text-blue-300 hover:bg-blue-500/10">
+                            Clear All Caches
+                          </Button>
+                        </div>
+                        
+                        <div className="space-y-4">
+                          <h4 className="text-white font-medium">API Documentation</h4>
+                          <p className="text-sm text-gray-400">Access comprehensive API documentation</p>
+                          <Button variant="outline" className="w-full border-purple-500/30 text-purple-300 hover:bg-purple-500/10">
+                            View API Docs
+                          </Button>
+                        </div>
+                        
+                        <div className="space-y-4">
+                          <h4 className="text-white font-medium">System Logs</h4>
+                          <p className="text-sm text-gray-400">Monitor system events and error logs</p>
+                          <Button variant="outline" className="w-full border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10">
+                            View System Logs
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
               {activeSection === "analytics" && (
                 <div className="space-y-6">
                   {/* Advanced Analytics Header */}

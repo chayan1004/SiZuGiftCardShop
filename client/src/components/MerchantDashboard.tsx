@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth, logout } from "@/components/ProtectedRoute";
 
 interface MerchantDashboardProps {
   isOpen: boolean;
@@ -32,23 +33,52 @@ interface Transaction {
 export default function MerchantDashboard({ isOpen, onClose }: MerchantDashboardProps) {
   const [activeTab, setActiveTab] = useState("overview");
   const { toast } = useToast();
+  const auth = useAuth();
 
-  // For demo purposes, using a placeholder merchant ID
-  const merchantId = "demo-merchant";
+  // Use authenticated merchant ID
+  const merchantId = auth.merchantId || "";
+
+  // Redirect if not authenticated as merchant
+  useEffect(() => {
+    if (isOpen && (!auth.isAuthenticated || auth.role !== 'merchant')) {
+      toast({
+        title: "Access Denied",
+        description: "Please log in as a merchant to access the dashboard",
+        variant: "destructive"
+      });
+      onClose();
+    }
+  }, [isOpen, auth, onClose, toast]);
 
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats", merchantId],
-    enabled: isOpen,
+    enabled: isOpen && !!merchantId,
+    meta: {
+      headers: {
+        'x-merchant-token': auth.token || ''
+      }
+    }
   });
 
   const { data: transactionsData, isLoading: transactionsLoading } = useQuery<{transactions: Transaction[]}>({
     queryKey: ["/api/dashboard/transactions", merchantId],
-    enabled: isOpen,
+    enabled: isOpen && !!merchantId,
+    meta: {
+      headers: {
+        'x-merchant-token': auth.token || ''
+      }
+    }
   });
 
   const squareOAuthMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("GET", "/api/auth/square");
+      const response = await fetch("/api/auth/square", {
+        method: "GET",
+        headers: {
+          'x-merchant-token': auth.token || '',
+          'Content-Type': 'application/json'
+        }
+      });
       return response.json();
     },
     onSuccess: (data) => {
@@ -64,6 +94,15 @@ export default function MerchantDashboard({ isOpen, onClose }: MerchantDashboard
       });
     }
   });
+
+  const handleLogout = () => {
+    logout();
+    onClose();
+    toast({
+      title: "Logged Out",
+      description: "You have been successfully logged out",
+    });
+  };
 
   const sidebarItems = [
     { id: "overview", label: "Overview", icon: BarChart3 },
@@ -121,14 +160,22 @@ export default function MerchantDashboard({ isOpen, onClose }: MerchantDashboard
             </ul>
           </nav>
 
-          <div className="absolute bottom-4 left-4 right-4">
+          <div className="absolute bottom-4 left-4 right-4 space-y-2">
+            <Button
+              variant="outline"
+              className="w-full text-red-600 hover:bg-red-50 border-red-200"
+              onClick={handleLogout}
+            >
+              <LogOut className="mr-2" size={16} />
+              Logout
+            </Button>
             <Button
               variant="outline"
               className="w-full text-slate-600 hover:bg-slate-200"
               onClick={onClose}
             >
-              <LogOut className="mr-2" size={16} />
-              Close Dashboard
+              <X className="mr-2" size={16} />
+              Close
             </Button>
           </div>
         </motion.div>

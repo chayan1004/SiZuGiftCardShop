@@ -3,6 +3,7 @@ import { Gift, Menu, X, Sparkles, Zap, Star, Shield, ChevronDown, ArrowRight, Sh
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
+import { useAuth, loginAsAdmin, loginAsMerchant } from "@/components/ProtectedRoute";
 
 interface NavigationProps {
   onOpenPurchaseModal: () => void;
@@ -14,6 +15,7 @@ export default function Navigation({ onOpenPurchaseModal, onOpenDashboard }: Nav
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeItem, setActiveItem] = useState('');
   const [hoveredItem, setHoveredItem] = useState('');
+  const auth = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -306,35 +308,55 @@ export default function Navigation({ onOpenPurchaseModal, onOpenDashboard }: Nav
                 </motion.div>
               ))}
               
-              {/* Premium CTA Buttons */}
+              {/* Role-Based Authentication Buttons */}
               <div className="flex items-center space-x-4 ml-8">
-                <motion.div 
-                  whileHover={{ scale: 1.05, rotateY: 5 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Button 
-                    onClick={onOpenDashboard}
-                    className="relative px-8 py-3 glass-premium-button text-white font-bold rounded-2xl border border-cyan-400/30 hover:border-cyan-300/50 transition-all duration-300 group overflow-hidden"
+                {auth.role === 'merchant' ? (
+                  <motion.div 
+                    whileHover={{ scale: 1.05, rotateY: 5 }}
+                    whileTap={{ scale: 0.95 }}
                   >
-                    {/* Button glow effect */}
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 to-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                      animate={{ 
-                        x: ['-100%', '100%'],
-                      }}
-                      transition={{ 
-                        duration: 1.5, 
-                        repeat: Infinity, 
-                        repeatDelay: 3 
-                      }}
-                    />
-                    
-                    <span className="relative z-10 flex items-center space-x-2">
-                      <Shield size={18} />
-                      <span>Merchant Login</span>
-                    </span>
-                  </Button>
-                </motion.div>
+                    <Button 
+                      onClick={onOpenDashboard}
+                      className="relative px-8 py-3 glass-premium-button text-white font-bold rounded-2xl border border-green-400/30 hover:border-green-300/50 transition-all duration-300 group overflow-hidden"
+                    >
+                      <span className="relative z-10 flex items-center space-x-2">
+                        <Shield size={18} />
+                        <span>Merchant Dashboard</span>
+                      </span>
+                    </Button>
+                  </motion.div>
+                ) : auth.role === 'admin' ? (
+                  <motion.div 
+                    whileHover={{ scale: 1.05, rotateY: 5 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Link href="/admin">
+                      <Button 
+                        className="relative px-8 py-3 glass-premium-button text-white font-bold rounded-2xl border border-purple-400/30 hover:border-purple-300/50 transition-all duration-300 group overflow-hidden"
+                      >
+                        <span className="relative z-10 flex items-center space-x-2">
+                          <Shield size={18} />
+                          <span>Admin Panel</span>
+                        </span>
+                      </Button>
+                    </Link>
+                  </motion.div>
+                ) : (
+                  <motion.div className="flex space-x-2">
+                    <Button 
+                      onClick={() => loginAsMerchant('demo-merchant')}
+                      className="relative px-6 py-2 glass-premium-button text-white font-medium rounded-xl border border-cyan-400/30 hover:border-cyan-300/50 transition-all duration-300 text-sm"
+                    >
+                      Merchant Login
+                    </Button>
+                    <Button 
+                      onClick={() => loginAsAdmin()}
+                      className="relative px-6 py-2 glass-premium-button text-white font-medium rounded-xl border border-purple-400/30 hover:border-purple-300/50 transition-all duration-300 text-sm"
+                    >
+                      Admin Login
+                    </Button>
+                  </motion.div>
+                )}
                 
                 <motion.div 
                   whileHover={{ scale: 1.05, rotateY: -5 }}

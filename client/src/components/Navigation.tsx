@@ -343,18 +343,25 @@ export default function Navigation({ onOpenPurchaseModal, onOpenDashboard }: Nav
                   </motion.div>
                 ) : (
                   <motion.div className="flex space-x-2">
+                    <Link href="/merchant-register">
+                      <Button 
+                        className="relative px-6 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-medium rounded-xl hover:from-cyan-600 hover:to-blue-700 transition-all duration-300 text-sm shadow-lg"
+                      >
+                        Sign Up
+                      </Button>
+                    </Link>
                     <Link href="/merchant-login">
                       <Button 
                         className="relative px-6 py-2 glass-premium-button text-white font-medium rounded-xl border border-cyan-400/30 hover:border-cyan-300/50 transition-all duration-300 text-sm"
                       >
-                        Merchant Login
+                        Login
                       </Button>
                     </Link>
                     <Button 
                       onClick={() => loginAsAdmin()}
                       className="relative px-6 py-2 glass-premium-button text-white font-medium rounded-xl border border-purple-400/30 hover:border-purple-300/50 transition-all duration-300 text-sm"
                     >
-                      Admin Login
+                      Admin
                     </Button>
                   </motion.div>
                 )}

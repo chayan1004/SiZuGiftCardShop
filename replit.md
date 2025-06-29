@@ -122,6 +122,7 @@ This is a full-stack gift card management application built with a modern tech s
 - June 29, 2025. Corrected branding consistency to use "SiZu GiftCard" instead of "SiZu Pay" across all email templates
 - June 29, 2025. Implemented 100% production-ready email system with SPF/DKIM/DMARC support, delivery monitoring, and gradual volume scaling
 - June 29, 2025. Enhanced security architecture with role-based authentication system and dedicated merchant login page at /merchant-login
+- June 29, 2025. Implemented complete merchant registration flow with secure onboarding, JWT authentication, and auto-login functionality
 
 ## Recent Production Enhancements
 

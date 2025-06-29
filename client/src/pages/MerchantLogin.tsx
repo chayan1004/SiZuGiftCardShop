@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { loginAsMerchant } from "@/components/ProtectedRoute";
 
 export default function MerchantLogin() {
@@ -222,10 +222,8 @@ export default function MerchantLogin() {
             <div className="text-center">
               <p className="text-sm text-gray-400">
                 Don't have an account?{" "}
-                <Link href="/merchant-register">
-                  <a className="text-cyan-400 hover:text-cyan-300 transition-colors">
-                    Sign up here
-                  </a>
+                <Link href="/merchant-register" className="text-cyan-400 hover:text-cyan-300 transition-colors">
+                  Sign up here
                 </Link>
               </p>
             </div>

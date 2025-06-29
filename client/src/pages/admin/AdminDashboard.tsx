@@ -1006,7 +1006,7 @@ export default function AdminDashboard() {
                 </div>
               )}
               
-              {!["overview", "giftcards", "users", "analytics"].includes(activeSection) && (
+              {!["overview", "giftcards", "users", "email", "analytics"].includes(activeSection) && (
                 <div className="text-center py-16">
                   <h3 className="text-xl font-semibold text-white mb-2 capitalize">
                     {activeSection} Section

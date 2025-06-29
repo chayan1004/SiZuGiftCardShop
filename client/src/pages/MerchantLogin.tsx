@@ -213,7 +213,7 @@ export default function MerchantLogin() {
             <Button
               onClick={handleDemoLogin}
               variant="outline"
-              className="w-full border-white/20 text-white hover:bg-white/10 transition-all duration-300"
+              className="w-full border-white/30 bg-white/5 text-white hover:bg-white/15 hover:border-white/40 transition-all duration-300 backdrop-blur-sm"
             >
               <Gift size={16} className="mr-2" />
               Try Demo Account

@@ -74,6 +74,35 @@ export const promoUsage = pgTable("promo_usage", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const merchantGiftCards = pgTable("merchant_gift_cards", {
+  id: serial("id").primaryKey(),
+  merchantId: text("merchant_id").notNull(),
+  gan: text("gan").notNull().unique(),
+  amount: integer("amount").notNull(), // Amount in cents
+  logoUrl: text("logo_url"),
+  customMessage: text("custom_message"),
+  status: text("status").notNull().default("ACTIVE"), // ACTIVE, REDEEMED, EXPIRED
+  bulkOrderId: text("bulk_order_id"), // Groups cards from same bulk purchase
+  squareGiftCardId: text("square_gift_card_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const merchantBulkOrders = pgTable("merchant_bulk_orders", {
+  id: serial("id").primaryKey(),
+  merchantId: text("merchant_id").notNull(),
+  bulkOrderId: text("bulk_order_id").notNull().unique(),
+  totalAmount: integer("total_amount").notNull(), // Total cost in cents
+  quantity: integer("quantity").notNull(),
+  cardAmount: integer("card_amount").notNull(), // Individual card amount in cents
+  logoUrl: text("logo_url"),
+  customMessage: text("custom_message"),
+  status: text("status").notNull().default("PENDING"), // PENDING, COMPLETED, FAILED
+  squarePaymentId: text("square_payment_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+});
+
 export const insertMerchantSchema = createInsertSchema(merchants).omit({
   id: true,
   createdAt: true,
@@ -105,6 +134,18 @@ export const insertPromoUsageSchema = createInsertSchema(promoUsage).omit({
   createdAt: true,
 });
 
+export const insertMerchantGiftCardSchema = createInsertSchema(merchantGiftCards).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertMerchantBulkOrderSchema = createInsertSchema(merchantBulkOrders).omit({
+  id: true,
+  createdAt: true,
+  completedAt: true,
+});
+
 export type Merchant = typeof merchants.$inferSelect;
 export type InsertMerchant = z.infer<typeof insertMerchantSchema>;
 export type GiftCard = typeof giftCards.$inferSelect;
@@ -117,3 +158,7 @@ export type PromoCode = typeof promoCodes.$inferSelect;
 export type InsertPromoCode = z.infer<typeof insertPromoCodeSchema>;
 export type PromoUsage = typeof promoUsage.$inferSelect;
 export type InsertPromoUsage = z.infer<typeof insertPromoUsageSchema>;
+export type MerchantGiftCard = typeof merchantGiftCards.$inferSelect;
+export type InsertMerchantGiftCard = z.infer<typeof insertMerchantGiftCardSchema>;
+export type MerchantBulkOrder = typeof merchantBulkOrders.$inferSelect;
+export type InsertMerchantBulkOrder = z.infer<typeof insertMerchantBulkOrderSchema>;

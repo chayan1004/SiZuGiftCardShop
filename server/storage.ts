@@ -1,11 +1,13 @@
 import { 
-  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage,
+  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchantBulkOrders,
   type User, type InsertUser,
   type Merchant, type InsertMerchant, 
   type GiftCard, type InsertGiftCard,
   type GiftCardActivity, type InsertGiftCardActivity,
   type PromoCode, type InsertPromoCode,
-  type PromoUsage, type InsertPromoUsage
+  type PromoUsage, type InsertPromoUsage,
+  type MerchantGiftCard, type InsertMerchantGiftCard,
+  type MerchantBulkOrder, type InsertMerchantBulkOrder
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, count, sum, and } from "drizzle-orm";
@@ -26,6 +28,16 @@ export interface IStorage {
   updateMerchantTokens(id: number, accessToken: string, refreshToken?: string): Promise<Merchant | undefined>;
   updateMerchantVerificationToken(id: number, token: string, expiresAt: Date): Promise<Merchant | undefined>;
   markMerchantEmailVerified(id: number): Promise<Merchant | undefined>;
+
+  // Merchant Bulk Purchase methods
+  createMerchantBulkOrder(order: InsertMerchantBulkOrder): Promise<MerchantBulkOrder>;
+  getMerchantBulkOrders(merchantId: string): Promise<MerchantBulkOrder[]>;
+  updateMerchantBulkOrderStatus(bulkOrderId: string, status: string): Promise<MerchantBulkOrder | undefined>;
+  updateMerchantBulkOrderPayment(bulkOrderId: string, paymentId: string): Promise<MerchantBulkOrder | undefined>;
+  
+  createMerchantGiftCard(card: InsertMerchantGiftCard): Promise<MerchantGiftCard>;
+  getMerchantGiftCards(merchantId: string, bulkOrderId?: string): Promise<MerchantGiftCard[]>;
+  getMerchantGiftCardByGan(gan: string): Promise<MerchantGiftCard | undefined>;
   
   // Gift Card methods
   getGiftCard(id: number): Promise<GiftCard | undefined>;

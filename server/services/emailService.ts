@@ -527,14 +527,14 @@ class EmailService {
             font-size: 1rem !important;
             font-weight: 600;
             margin: 0 0 10px 0;
-            color: #2d3748;
+            color: #1a202c;
         }
         
         .message-content {
             font-style: italic;
             font-size: 0.95rem !important;
             line-height: 1.5;
-            color: #4a5568;
+            color: #2d3748;
             margin: 0;
             word-break: break-word;
         }
@@ -585,7 +585,7 @@ class EmailService {
         /* Footer responsive */
         .footer {
             background: #2d3748;
-            color: #a0aec0;
+            color: #e2e8f0;
             padding: 20px !important;
             text-align: center;
         }
@@ -593,7 +593,7 @@ class EmailService {
         .footer-logo {
             font-size: 1.3rem !important;
             font-weight: 700;
-            color: white;
+            color: #ffffff;
             margin: 0 0 12px 0;
         }
         
@@ -602,7 +602,7 @@ class EmailService {
         }
         
         .footer-link {
-            color: #667eea;
+            color: #90cdf4;
             text-decoration: none;
             margin: 0 8px;
             font-size: 0.8rem !important;
@@ -611,6 +611,7 @@ class EmailService {
         }
         
         .footer-text {
+            color: #cbd5e0;
             font-size: 0.75rem !important;
             margin: 8px 0;
             line-height: 1.4;
@@ -870,7 +871,7 @@ class EmailService {
                 For customer support, contact us at support@sizupay.com or call 1-800-SIZU-PAY<br>
                 Business hours: Monday - Friday, 9:00 AM - 6:00 PM EST
             </p>
-            <p class="footer-text" style="margin-top: 20px; font-size: 0.75rem; opacity: 0.7;">
+            <p class="footer-text" style="margin-top: 20px; font-size: 0.75rem; color: #a0aec0;">
                 © ${currentDate.getFullYear()} SiZu GiftCard Technologies, Inc. All rights reserved.<br>
                 Gift cards do not expire and are non-refundable. Terms and conditions apply.
             </p>
@@ -1547,7 +1548,7 @@ Gift card terms and conditions apply. Not redeemable for cash.
         }
         
         .footer-text {
-            color: #4a5568;
+            color: #2d3748;
             font-size: 0.8rem !important;
             margin: 0;
             line-height: 1.4;
@@ -1604,6 +1605,7 @@ Gift card terms and conditions apply. Not redeemable for cash.
             
             .footer-text {
                 font-size: 0.85rem !important;
+                color: #cbd5e0;
             }
         }
         

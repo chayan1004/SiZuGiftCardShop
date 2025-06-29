@@ -30,8 +30,16 @@ function Router() {
       <Route path="/check-balance" component={CheckBalance} />
       <Route path="/merchant-login" component={MerchantLogin} />
       <Route path="/merchant-register" component={MerchantRegister} />
-      <Route path="/merchant-dashboard" component={MerchantDashboard} />
-      <Route path="/merchant-bulk-purchase" component={MerchantBulkPurchase} />
+      <Route path="/merchant-dashboard">
+        <ProtectedRoute role="merchant">
+          <MerchantDashboard />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/merchant-bulk-purchase">
+        <ProtectedRoute role="merchant">
+          <MerchantBulkPurchase />
+        </ProtectedRoute>
+      </Route>
       <Route path="/merchant-verify" component={MerchantVerify} />
       <Route path="/admin-login" component={AdminLogin} />
       <Route path="/test-modal" component={TestModal} />

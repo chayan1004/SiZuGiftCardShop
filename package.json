@@ -45,6 +45,7 @@
     "@types/bwip-js": "^3.2.3",
     "@types/jspdf": "^1.3.3",
     "@types/mailgun-js": "^0.22.18",
+    "@types/node-fetch": "^2.6.12",
     "@types/qrcode": "^1.5.5",
     "bwip-js": "^4.6.0",
     "class-variance-authority": "^0.7.1",

@@ -1,5 +1,5 @@
 // Square production gift card service using HTTP API directly
-import fetch from 'node-fetch';
+import fetch, { RequestInit } from 'node-fetch';
 
 export interface CreateGiftCardRequest {
   amount: number; // in cents
@@ -22,6 +22,43 @@ export interface GiftCardActivity {
   amount: number;
   createdAt: Date;
   description?: string;
+}
+
+export interface SquareGiftCard {
+  id: string;
+  gan: string;
+  state: string;
+  balance_money?: {
+    amount: number;
+    currency: string;
+  };
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SquareGiftCardActivity {
+  id: string;
+  type: string;
+  gift_card_gan: string;
+  created_at: string;
+  activate_activity_details?: {
+    amount_money: {
+      amount: number;
+      currency: string;
+    };
+  };
+  load_activity_details?: {
+    amount_money: {
+      amount: number;
+      currency: string;
+    };
+  };
+  redeem_activity_details?: {
+    amount_money: {
+      amount: number;
+      currency: string;
+    };
+  };
 }
 
 export class SquareGiftCardService {
@@ -51,7 +88,7 @@ export class SquareGiftCardService {
    */
   async createGiftCard(request: CreateGiftCardRequest): Promise<{
     success: boolean;
-    giftCard?: any;
+    giftCard?: SquareGiftCard;
     gan?: string;
     error?: string;
   }> {

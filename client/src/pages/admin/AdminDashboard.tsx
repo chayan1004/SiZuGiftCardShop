@@ -281,24 +281,17 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 overflow-hidden lg:ml-0">
-        {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-4 lg:px-6 py-3 lg:py-4">
+      {/* Premium Main Content */}
+      <div className="flex-1 overflow-hidden lg:ml-0 pt-16 lg:pt-0">
+        {/* Premium Header */}
+        <div className="bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-xl border-b border-white/20 px-4 lg:px-8 py-4 lg:py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              {/* Mobile Menu Button */}
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
+            <div className="flex items-center space-x-4">
               <div className="flex-1">
-                <h2 className="text-lg lg:text-2xl font-bold text-gray-900 capitalize">
+                <h2 className="text-xl lg:text-3xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent capitalize">
                   {activeSection === "overview" ? "Dashboard Overview" : activeSection}
                 </h2>
-                <p className="text-xs lg:text-sm text-gray-500 mt-1 hidden sm:block">
+                <p className="text-sm lg:text-base text-gray-300 mt-2 hidden sm:block font-medium">
                   {activeSection === "overview" && "Monitor your gift card business performance"}
                   {activeSection === "giftcards" && "Manage all gift cards and transactions"}
                   {activeSection === "users" && "View and manage user accounts"}
@@ -308,9 +301,9 @@ export default function AdminDashboard() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center space-x-2 lg:space-x-3">
-              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 hidden sm:flex">
-                <Database className="w-3 h-3 mr-1" />
+            <div className="flex items-center space-x-3 lg:space-x-4">
+              <Badge className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-300 border-green-500/30 hidden sm:flex backdrop-blur-sm">
+                <Database className="w-3 h-3 mr-2" />
                 <span className="hidden lg:inline">Live Data</span>
                 <span className="lg:hidden">Live</span>
               </Badge>

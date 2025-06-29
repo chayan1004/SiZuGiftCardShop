@@ -418,23 +418,36 @@ export default function AdminDashboard() {
                   {/* Charts Grid */}
                   <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
                     {/* Revenue Trend Chart */}
-                    <Card className="col-span-1">
+                    <Card className="col-span-1 bg-white/10 backdrop-blur-xl border border-white/20">
                       <CardHeader className="pb-2 lg:pb-6">
-                        <CardTitle className="text-lg lg:text-xl">Revenue Trend</CardTitle>
-                        <CardDescription className="text-sm">Weekly gift card sales performance</CardDescription>
+                        <CardTitle className="text-lg lg:text-xl text-white flex items-center gap-2">
+                          <TrendingUp className="w-5 h-5 text-blue-400" />
+                          Revenue Trend
+                        </CardTitle>
+                        <CardDescription className="text-sm text-gray-300">Weekly gift card sales performance</CardDescription>
                       </CardHeader>
                       <CardContent className="pt-2 lg:pt-0">
                         <ResponsiveContainer width="100%" height={250} className="lg:!h-[300px]">
                           <LineChart data={weeklyRevenue}>
-                            <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                            <XAxis dataKey="week" className="text-sm" />
-                            <YAxis className="text-sm" />
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                            <XAxis 
+                              dataKey="week" 
+                              className="text-sm" 
+                              tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                              axisLine={{ stroke: 'rgba(255,255,255,0.2)' }}
+                            />
+                            <YAxis 
+                              className="text-sm" 
+                              tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                              axisLine={{ stroke: 'rgba(255,255,255,0.2)' }}
+                            />
                             <Tooltip 
                               contentStyle={{ 
-                                backgroundColor: 'white',
-                                border: '1px solid #e5e7eb',
-                                borderRadius: '8px',
-                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                                backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                                border: '1px solid rgba(255,255,255,0.2)',
+                                borderRadius: '12px',
+                                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
+                                color: '#fff'
                               }}
                               formatter={(value, name) => [
                                 name === 'revenue' ? `$${value}` : value,
@@ -447,7 +460,7 @@ export default function AdminDashboard() {
                               stroke="#3B82F6" 
                               strokeWidth={3}
                               dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
-                              activeDot={{ r: 6, stroke: '#3B82F6', strokeWidth: 2 }}
+                              activeDot={{ r: 6, stroke: '#3B82F6', strokeWidth: 2, fill: '#60A5FA' }}
                             />
                           </LineChart>
                         </ResponsiveContainer>
@@ -455,10 +468,13 @@ export default function AdminDashboard() {
                     </Card>
 
                     {/* Gift Card Status Distribution */}
-                    <Card className="col-span-1">
+                    <Card className="col-span-1 bg-white/10 backdrop-blur-xl border border-white/20">
                       <CardHeader className="pb-2 lg:pb-6">
-                        <CardTitle className="text-lg lg:text-xl">Gift Card Status</CardTitle>
-                        <CardDescription className="text-sm">Distribution of card statuses</CardDescription>
+                        <CardTitle className="text-lg lg:text-xl text-white flex items-center gap-2">
+                          <PieChart className="w-5 h-5 text-green-400" />
+                          Gift Card Status
+                        </CardTitle>
+                        <CardDescription className="text-sm text-gray-300">Distribution of card statuses</CardDescription>
                       </CardHeader>
                       <CardContent className="pt-2 lg:pt-0">
                         <ResponsiveContainer width="100%" height={250} className="lg:!h-[300px]">
@@ -471,25 +487,28 @@ export default function AdminDashboard() {
                               ]}
                               cx="50%"
                               cy="50%"
-                              outerRadius={100}
+                              outerRadius={90}
+                              innerRadius={40}
                               fill="#8884d8"
                               dataKey="value"
-                              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                              label={({ name, percent }) => percent > 0 ? `${name} ${(percent * 100).toFixed(0)}%` : ''}
+                              labelLine={false}
                             >
                               {[
                                 { name: 'Active', value: metrics.activeCards || 0, color: '#10B981' },
                                 { name: 'Redeemed', value: metrics.redeemedCards || 0, color: '#3B82F6' },
                                 { name: 'Expired', value: Math.max(0, (metrics.totalGiftCards || 0) - (metrics.activeCards || 0) - (metrics.redeemedCards || 0)), color: '#F59E0B' }
                               ].map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.color} />
+                                <Cell key={`cell-${index}`} fill={entry.color} stroke="rgba(255,255,255,0.2)" strokeWidth={2} />
                               ))}
                             </Pie>
                             <Tooltip 
                               contentStyle={{ 
-                                backgroundColor: 'white',
-                                border: '1px solid #e5e7eb',
-                                borderRadius: '8px',
-                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                                backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                                border: '1px solid rgba(255,255,255,0.2)',
+                                borderRadius: '12px',
+                                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
+                                color: '#fff'
                               }}
                             />
                           </PieChart>
@@ -499,43 +518,46 @@ export default function AdminDashboard() {
                   </div>
 
                   {/* Recent Activity */}
-                  <Card>
+                  <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
                     <CardHeader className="pb-2 lg:pb-6">
-                      <CardTitle className="text-lg lg:text-xl">Recent Activity</CardTitle>
-                      <CardDescription className="text-sm">Latest gift card transactions and system events</CardDescription>
+                      <CardTitle className="text-lg lg:text-xl text-white flex items-center gap-2">
+                        <Activity className="w-5 h-5 text-purple-400" />
+                        Recent Activity
+                      </CardTitle>
+                      <CardDescription className="text-sm text-gray-300">Latest gift card transactions and system events</CardDescription>
                     </CardHeader>
                     <CardContent className="pt-2 lg:pt-0">
                       <div className="space-y-3 lg:space-y-4">
                         {recentActivity.length > 0 ? (
                           recentActivity.slice(0, 6).map((activity, index) => (
-                            <div key={index} className="flex items-center space-x-3 lg:space-x-4 p-2 lg:p-3 bg-gray-50 rounded-lg">
-                              <div className={`p-1.5 lg:p-2 rounded-full flex-shrink-0 ${
-                                activity.type === 'purchase' ? 'bg-green-100 text-green-600' :
-                                activity.type === 'redemption' ? 'bg-blue-100 text-blue-600' :
-                                'bg-orange-100 text-orange-600'
+                            <div key={index} className="flex items-center space-x-3 lg:space-x-4 p-3 lg:p-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl hover:bg-white/10 transition-all duration-200">
+                              <div className={`p-2 lg:p-2.5 rounded-full flex-shrink-0 ${
+                                activity.type === 'purchase' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
+                                activity.type === 'redemption' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
+                                'bg-orange-500/20 text-orange-400 border border-orange-500/30'
                               }`}>
-                                {activity.type === 'purchase' && <CreditCard className="w-3 h-3 lg:w-4 lg:h-4" />}
-                                {activity.type === 'redemption' && <QrCode className="w-3 h-3 lg:w-4 lg:h-4" />}
-                                {activity.type !== 'purchase' && activity.type !== 'redemption' && <Activity className="w-3 h-3 lg:w-4 lg:h-4" />}
+                                {activity.type === 'purchase' && <CreditCard className="w-4 h-4 lg:w-5 lg:h-5" />}
+                                {activity.type === 'redemption' && <QrCode className="w-4 h-4 lg:w-5 lg:h-5" />}
+                                {activity.type !== 'purchase' && activity.type !== 'redemption' && <Activity className="w-4 h-4 lg:w-5 lg:h-5" />}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm lg:text-base font-medium capitalize truncate">{activity.type}</p>
-                                <div className="text-xs lg:text-sm text-gray-500 space-y-1">
+                                <p className="text-sm lg:text-base font-medium capitalize truncate text-white">{activity.type}</p>
+                                <div className="text-xs lg:text-sm text-gray-400 space-y-1">
                                   {activity.email && <p className="truncate">{activity.email}</p>}
                                   <p className="flex items-center justify-between">
-                                    <span>{activity.gan && `${activity.gan.slice(0, 8)}...`}</span>
-                                    <span className="font-medium">${(activity.amount / 100).toFixed(2)}</span>
+                                    <span className="text-gray-500">{activity.gan && `${activity.gan.slice(0, 8)}...`}</span>
+                                    <span className="font-medium text-white">${(activity.amount / 100).toFixed(2)}</span>
                                   </p>
                                 </div>
                               </div>
-                              <div className="text-xs lg:text-sm text-gray-400 flex-shrink-0">
+                              <div className="text-xs lg:text-sm text-gray-500 flex-shrink-0">
                                 {activity.timeAgo}
                               </div>
                             </div>
                           ))
                         ) : (
-                          <div className="text-center py-6 lg:py-8 text-gray-500">
-                            <Activity className="w-8 h-8 lg:w-12 lg:h-12 mx-auto mb-2 lg:mb-4 opacity-50" />
+                          <div className="text-center py-6 lg:py-8 text-gray-400">
+                            <Activity className="w-8 h-8 lg:w-12 lg:h-12 mx-auto mb-2 lg:mb-4 opacity-30" />
                             <p className="text-sm lg:text-base">No recent activity to display</p>
                           </div>
                         )}

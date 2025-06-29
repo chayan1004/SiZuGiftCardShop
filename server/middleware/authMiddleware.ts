@@ -47,6 +47,13 @@ export const requireMerchant = (req: Request, res: Response, next: NextFunction)
                        req.headers['x-merchant-token'] as string ||
                        req.cookies?.merchantToken;
   
+  console.log('🔍 Auth Debug - Headers:', {
+    authorization: req.headers['authorization'],
+    'x-merchant-token': req.headers['x-merchant-token'],
+    cookies: req.cookies,
+    merchantToken: merchantToken ? 'present' : 'missing'
+  });
+  
   if (!merchantToken) {
     return res.status(401).json({ 
       success: false, 

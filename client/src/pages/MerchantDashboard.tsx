@@ -14,25 +14,23 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
 interface MerchantGiftCard {
-  id: string;
+  id: number;
+  merchantId: string;
   gan: string;
   amount: number;
   status: string;
-  recipientEmail?: string;
-  personalMessage?: string;
+  customMessage?: string;
   createdAt: string;
-  expiresAt?: string;
+  formattedAmount: string;
 }
 
 interface MerchantBulkOrder {
   id: string;
   quantity: number;
-  unitPrice: number;
-  totalPrice: number;
+  unit_price: string;
+  total_price: string;
   status: string;
-  pricingTier: string;
-  createdAt: string;
-  paymentId?: string;
+  created_at: string;
 }
 
 interface MerchantStats {
@@ -119,7 +117,7 @@ export default function MerchantDashboard() {
   const filteredCards = giftCards.filter((card: MerchantGiftCard) => {
     const matchesSearch = searchTerm === "" || 
       card.gan.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (card.recipientEmail && card.recipientEmail.toLowerCase().includes(searchTerm.toLowerCase()));
+      (card.customMessage && card.customMessage.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesStatus = statusFilter === "all" || card.status.toLowerCase() === statusFilter.toLowerCase();
     
@@ -342,14 +340,9 @@ export default function MerchantDashboard() {
                       <div className="text-sm text-gray-300 font-mono">
                         GAN: {card.gan}
                       </div>
-                      {card.recipientEmail && (
-                        <div className="text-sm text-gray-400">
-                          To: {card.recipientEmail}
-                        </div>
-                      )}
-                      {card.personalMessage && (
+                      {card.customMessage && (
                         <div className="text-xs text-gray-500 italic">
-                          "{card.personalMessage}"
+                          "{card.customMessage}"
                         </div>
                       )}
                     </div>
@@ -421,8 +414,8 @@ export default function MerchantDashboard() {
                   <thead>
                     <tr className="border-b border-white/20">
                       <th className="text-left py-3 px-4 text-gray-300">Order ID</th>
-                      <th className="text-left py-3 px-4 text-gray-300">Tier</th>
                       <th className="text-left py-3 px-4 text-gray-300">Quantity</th>
+                      <th className="text-left py-3 px-4 text-gray-300">Unit Price</th>
                       <th className="text-left py-3 px-4 text-gray-300">Total</th>
                       <th className="text-left py-3 px-4 text-gray-300">Status</th>
                       <th className="text-left py-3 px-4 text-gray-300">Date</th>
@@ -434,14 +427,14 @@ export default function MerchantDashboard() {
                         <td className="py-3 px-4 text-white font-mono text-sm">
                           {order.id.slice(-8)}
                         </td>
-                        <td className="py-3 px-4 text-gray-300">
-                          {order.pricingTier}
-                        </td>
                         <td className="py-3 px-4 text-white">
                           {order.quantity}
                         </td>
+                        <td className="py-3 px-4 text-gray-300">
+                          ${parseFloat(order.unit_price).toFixed(2)}
+                        </td>
                         <td className="py-3 px-4 text-white font-semibold">
-                          {formatCurrency(order.totalPrice)}
+                          ${parseFloat(order.total_price).toFixed(2)}
                         </td>
                         <td className="py-3 px-4">
                           <Badge className={getStatusColor(order.status)}>
@@ -449,7 +442,7 @@ export default function MerchantDashboard() {
                           </Badge>
                         </td>
                         <td className="py-3 px-4 text-gray-400">
-                          {formatDate(order.createdAt)}
+                          {formatDate(order.created_at)}
                         </td>
                       </tr>
                     ))}

@@ -9,6 +9,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth, logout } from "@/components/ProtectedRoute";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
 interface MerchantDashboardProps {
   isOpen: boolean;
@@ -50,19 +51,38 @@ export default function MerchantDashboard({ isOpen, onClose }: MerchantDashboard
     }
   }, [isOpen, auth, onClose, toast]);
 
-  const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
-    queryKey: ["/api/dashboard/stats", merchantId],
-    enabled: isOpen && !!merchantId,
-    meta: {
-      headers: {
-        'x-merchant-token': auth.token || ''
-      }
-    }
-  });
-
-  const { data: transactionsData, isLoading: transactionsLoading } = useQuery<{transactions: Transaction[]}>({
-    queryKey: ["/api/dashboard/transactions", merchantId],
-    enabled: isOpen && !!merchantId,
+  const { data: analyticsData, isLoading: analyticsLoading } = useQuery<{
+    success: boolean;
+    data: {
+      totalGiftCards: number;
+      totalRevenue: number;
+      totalRedemptions: number;
+      totalRefunds: number;
+      activeCards: number;
+      averageCardValue: number;
+      customers: number;
+      recentActivity: Array<{
+        type: string;
+        amount: number;
+        email?: string;
+        gan?: string;
+        createdAt: string;
+        timeAgo: string;
+        formattedAmount: string;
+      }>;
+      chartData: Array<{
+        date: string;
+        day: string;
+        purchases: number;
+        redemptions: number;
+        revenue: number;
+      }>;
+      lastUpdated: string;
+    };
+  }>({
+    queryKey: ["/api/dashboard/stats"],
+    enabled: isOpen && auth.isAuthenticated && auth.role === 'merchant',
+    refetchInterval: 30000, // Refresh every 30 seconds for live data
     meta: {
       headers: {
         'x-merchant-token': auth.token || ''
@@ -288,11 +308,11 @@ export default function MerchantDashboard({ isOpen, onClose }: MerchantDashboard
                     <CardContent className="pt-6">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-slate-600 text-sm">Total Sales</p>
+                          <p className="text-slate-600 text-sm">Total Revenue</p>
                           <p className="text-2xl font-bold text-slate-800">
-                            {statsLoading ? "..." : `$${stats?.totalSales?.toLocaleString() || 0}`}
+                            {analyticsLoading ? "..." : `$${(analyticsData?.data?.totalRevenue || 0).toFixed(2)}`}
                           </p>
-                          <p className="text-green-600 text-sm">↗ +12.5% from last month</p>
+                          <p className="text-green-600 text-sm">↗ {analyticsData?.data?.totalGiftCards || 0} gift cards</p>
                         </div>
                         <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                           <DollarSign className="text-green-600" size={24} />
@@ -307,9 +327,9 @@ export default function MerchantDashboard({ isOpen, onClose }: MerchantDashboard
                         <div>
                           <p className="text-slate-600 text-sm">Active Cards</p>
                           <p className="text-2xl font-bold text-slate-800">
-                            {statsLoading ? "..." : stats?.activeCards || 0}
+                            {analyticsLoading ? "..." : analyticsData?.data?.activeCards || 0}
                           </p>
-                          <p className="text-blue-600 text-sm">↗ +8.3% from last month</p>
+                          <p className="text-blue-600 text-sm">Avg: ${(analyticsData?.data?.averageCardValue || 0).toFixed(2)}</p>
                         </div>
                         <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                           <Gift className="text-blue-600" size={24} />

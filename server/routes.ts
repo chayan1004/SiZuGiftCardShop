@@ -1053,6 +1053,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Merchant Dashboard Analytics - Live Stats (Protected by JWT)
+  app.get("/api/dashboard/stats", requireMerchant, async (req, res) => {
+    try {
+      const merchantId = (req as any).merchantId;
+      
+      if (!merchantId) {
+        return res.status(401).json({ 
+          success: false,
+          error: "Merchant authentication required" 
+        });
+      }
+
+      console.log(`Merchant ${merchantId}: Fetching live dashboard analytics`);
+
+      // Get comprehensive merchant analytics
+      const [giftCards, transactions] = await Promise.all([
+        storage.getGiftCardsByMerchant(merchantId),
+        storage.getRecentTransactions(merchantId, 50)
+      ]);
+
+      // Calculate comprehensive metrics
+      const totalGiftCards = giftCards.length;
+      const totalRevenue = giftCards.reduce((sum, card) => sum + (card.amount || 0), 0);
+      const activeCards = giftCards.filter(card => card.status === 'ACTIVE').length;
+      const totalRedemptions = transactions.filter(t => t.type === 'REDEEM').length;
+      const totalRefunds = transactions.filter(t => t.type === 'REFUND').length;
+      const averageCardValue = totalGiftCards > 0 ? totalRevenue / totalGiftCards : 0;
+
+      // Group transactions by date for chart data (last 7 days)
+      const last7Days = Array.from({ length: 7 }, (_, i) => {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        return date.toISOString().split('T')[0];
+      }).reverse();
+
+      const chartData = last7Days.map(date => {
+        const dayTransactions = transactions.filter(t => 
+          new Date(t.createdAt).toISOString().split('T')[0] === date
+        );
+        
+        return {
+          date: date,
+          day: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }),
+          purchases: dayTransactions.filter(t => t.type === 'PURCHASE').length,
+          redemptions: dayTransactions.filter(t => t.type === 'REDEEM').length,
+          revenue: dayTransactions
+            .filter(t => t.type === 'PURCHASE')
+            .reduce((sum, t) => sum + t.amount, 0) / 100
+        };
+      });
+
+      // Get recent activity with formatted timestamps
+      const recentActivity = transactions.slice(0, 10).map(transaction => ({
+        ...transaction,
+        timeAgo: getTimeAgo(transaction.createdAt),
+        formattedAmount: `$${(transaction.amount / 100).toFixed(2)}`
+      }));
+
+      res.json({ 
+        success: true,
+        data: {
+          totalGiftCards,
+          totalRevenue: totalRevenue / 100, // Convert from cents
+          totalRedemptions,
+          totalRefunds,
+          activeCards,
+          averageCardValue: averageCardValue / 100, // Convert from cents
+          customers: new Set(giftCards.map(card => card.recipientEmail).filter(Boolean)).size,
+          recentActivity,
+          chartData,
+          lastUpdated: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      console.error('Merchant dashboard stats error:', error);
+      res.status(500).json({ 
+        success: false,
+        error: "Failed to fetch dashboard analytics" 
+      });
+    }
+  });
+
   // Admin Dashboard API - Comprehensive Metrics and Analytics
   app.get("/api/admin/metrics", requireAdmin, async (req, res) => {
     try {

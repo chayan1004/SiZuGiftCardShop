@@ -1,15 +1,16 @@
-import FormData from 'form-data';
-import Mailgun from 'mailgun.js';
+import nodemailer from 'nodemailer';
 import { generateGiftCardQR } from '../../utils/qrGenerator';
 
 /**
- * Email delivery service for gift cards using Mailgun
- * Sends beautifully formatted gift cards with QR codes
+ * Email delivery service for gift cards using Nodemailer SMTP
+ * Sends beautifully formatted gift cards with QR codes via Mailgun SMTP
  */
 
-interface EmailConfig {
-  apiKey: string;
-  domain: string;
+interface SMTPConfig {
+  host: string;
+  port: number;
+  user: string;
+  pass: string;
   from: string;
 }
 
@@ -23,38 +24,50 @@ interface GiftCardEmailData {
 }
 
 class EmailService {
-  private mg: any = null;
-  private config: EmailConfig | null = null;
+  private transporter: nodemailer.Transporter | null = null;
+  private config: SMTPConfig | null = null;
 
   constructor() {
-    this.initializeMailgun();
+    this.initializeSMTP();
   }
 
-  private initializeMailgun() {
-    const apiKey = process.env.MAILGUN_API_KEY;
-    const domain = process.env.MAILGUN_DOMAIN;
-    const from = process.env.MAIL_FROM || 'noreply@giftcardhq.com';
+  private initializeSMTP() {
+    const host = process.env.SMTP_HOST || 'smtp.mailgun.org';
+    const port = parseInt(process.env.SMTP_PORT || '587');
+    const user = process.env.SMTP_USER || 'SiZuGiftCardReceipt@receipt.sizupay.com';
+    const pass = process.env.SMTP_PASS || 'Chayan38125114@';
+    const from = process.env.MAIL_FROM || 'SiZu GiftCards <SiZuGiftCardReceipt@receipt.sizupay.com>';
 
-    if (!apiKey || !domain) {
-      console.log('Mailgun configuration missing - will attempt to initialize when env vars are available');
-      this.config = { apiKey: '', domain: '', from };
+    if (!user || !pass) {
+      console.log('SMTP configuration missing - will attempt to initialize when env vars are available');
+      this.config = { host: '', port: 587, user: '', pass: '', from };
       return;
     }
 
-    this.config = { apiKey, domain, from };
-    const mailgun = new Mailgun(FormData);
-    this.mg = mailgun.client({
-      username: 'api',
-      key: apiKey
+    this.config = { host, port, user, pass, from };
+    
+    // Initialize Nodemailer SMTP transporter
+    this.transporter = nodemailer.createTransport({
+      host,
+      port,
+      secure: false, // Use TLS
+      auth: {
+        user,
+        pass
+      },
+      tls: {
+        ciphers: 'SSLv3'
+      }
     });
-    console.log('Mailgun initialized successfully for domain:', domain);
+    
+    console.log('SMTP initialized successfully for host:', host);
   }
 
   /**
    * Check if email service is properly configured
    */
   isConfigured(): boolean {
-    return this.mg !== null && this.config !== null;
+    return this.transporter !== null && this.config !== null;
   }
 
   /**
@@ -67,13 +80,13 @@ class EmailService {
   }> {
     // Re-initialize if not configured but env vars now available
     if (!this.isConfigured()) {
-      this.initializeMailgun();
+      this.initializeSMTP();
     }
 
     if (!this.isConfigured()) {
       return {
         success: false,
-        error: 'Email service not configured. Please set MAILGUN_API_KEY and MAILGUN_DOMAIN environment variables.'
+        error: 'Email service not configured. Please set SMTP_USER and SMTP_PASS environment variables.'
       };
     }
 
@@ -81,25 +94,35 @@ class EmailService {
       // Generate QR code for the gift card
       const qrCodeDataUrl = await generateGiftCardQR(data.gan, data.amount);
       
-      // Create email HTML content
+      // Convert data URL to buffer for attachment
+      const qrBuffer = Buffer.from(qrCodeDataUrl.split(',')[1], 'base64');
+      
+      // Create email HTML content with inline QR code
       const htmlContent = this.createGiftCardEmailHTML({
         ...data,
         qrCodeDataUrl
       });
 
-      const emailData = {
+      const mailOptions = {
         from: this.config!.from,
-        to: [data.to],
-        subject: `🎁 You've received a gift card worth $${data.amount}!`,
+        to: data.to,
+        subject: '🎁 Your Gift Card from SiZu Pay',
         html: htmlContent,
-        text: this.createPlainTextEmail(data)
+        text: this.createPlainTextEmail(data),
+        attachments: [
+          {
+            filename: 'gift-card-qr.png',
+            content: qrBuffer,
+            cid: 'qrcode' // Content ID for inline embedding
+          }
+        ]
       };
 
-      const result = await this.mg.messages.create(this.config!.domain, emailData);
+      const result = await this.transporter!.sendMail(mailOptions);
       
       return {
         success: true,
-        messageId: result.id
+        messageId: result.messageId
       };
 
     } catch (error) {
@@ -133,111 +156,124 @@ class EmailService {
         .container {
             max-width: 600px;
             margin: 0 auto;
-            padding: 40px 20px;
-        }
-        .card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            padding: 40px;
-            text-align: center;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin-top: 40px;
+            margin-bottom: 40px;
         }
         .header {
-            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            font-size: 32px;
-            font-weight: bold;
-            margin-bottom: 20px;
+            text-align: center;
+            padding: 30px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px 12px 0 0;
+            color: white;
+            margin: -20px -20px 30px -20px;
+        }
+        .gift-card {
+            background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);
+            border-radius: 12px;
+            padding: 30px;
+            margin: 20px 0;
+            color: white;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
         .amount {
-            font-size: 48px;
+            font-size: 2.5rem;
             font-weight: bold;
-            color: #2d3748;
-            margin: 20px 0;
+            margin: 10px 0;
         }
         .gan {
             font-family: 'Courier New', monospace;
-            font-size: 18px;
-            font-weight: bold;
-            color: #4a5568;
-            background: #f7fafc;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 20px 0;
+            font-size: 1.2rem;
+            background: rgba(255,255,255,0.2);
+            padding: 10px;
+            border-radius: 6px;
+            margin: 15px 0;
             letter-spacing: 2px;
         }
         .qr-code {
+            text-align: center;
             margin: 30px 0;
         }
         .qr-code img {
             max-width: 200px;
-            border-radius: 15px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            border: 4px solid #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
         .message {
-            background: #f8f9ff;
+            background: #f8f9fa;
             border-left: 4px solid #667eea;
             padding: 20px;
             margin: 20px 0;
-            border-radius: 0 10px 10px 0;
-            font-style: italic;
-            color: #4a5568;
+            border-radius: 6px;
         }
         .footer {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
             margin-top: 40px;
             padding-top: 20px;
-            border-top: 1px solid #e2e8f0;
-            color: #718096;
-            font-size: 14px;
+            border-top: 1px solid #eee;
         }
-        .redeem-info {
-            background: #ebf8ff;
-            border: 2px solid #bee3f8;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
+        .brand {
+            font-size: 2rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="card">
-            <div class="header">🎁 Gift Card</div>
-            
+        <div class="header">
+            <div class="brand">SiZu Pay</div>
+            <h1>🎁 Gift Card Delivery</h1>
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+            ${data.recipientName ? `<h2>Hi ${data.recipientName}!</h2>` : '<h2>You\'ve received a gift card!</h2>'}
+            ${data.senderName ? `<p>This gift card is from <strong>${data.senderName}</strong></p>` : ''}
+        </div>
+
+        <div class="gift-card">
+            <h3>Your Gift Card</h3>
             <div class="amount">$${data.amount}</div>
-            
-            ${data.senderName ? `<p>From: <strong>${data.senderName}</strong></p>` : ''}
-            ${data.recipientName ? `<p>To: <strong>${data.recipientName}</strong></p>` : ''}
-            
-            ${data.message ? `
-                <div class="message">
-                    "${data.message}"
-                </div>
-            ` : ''}
-            
-            <div class="gan">
-                Gift Card Number: ${data.gan}
-            </div>
-            
-            <div class="qr-code">
-                <img src="${data.qrCodeDataUrl}" alt="Gift Card QR Code" />
-                <p><strong>Scan this QR code to redeem</strong></p>
-            </div>
-            
-            <div class="redeem-info">
-                <h3>How to Redeem:</h3>
-                <p>1. Show this QR code at checkout</p>
-                <p>2. Or provide the gift card number above</p>
-                <p>3. Use online or in-store</p>
-            </div>
-            
-            <div class="footer">
-                <p>This gift card never expires and can be used for multiple purchases until the balance is zero.</p>
-                <p>Keep this email safe - it contains your gift card information.</p>
-            </div>
+            <div class="gan">${data.gan}</div>
+            <p>Present this code at checkout or scan the QR code below</p>
+        </div>
+
+        ${data.message ? `
+        <div class="message">
+            <h4>Personal Message:</h4>
+            <p style="font-style: italic; font-size: 16px; line-height: 1.5;">"${data.message}"</p>
+        </div>` : ''}
+
+        <div class="qr-code">
+            <h4>Scan to Redeem</h4>
+            <img src="cid:qrcode" alt="Gift Card QR Code" />
+            <p style="color: #666; font-size: 14px;">Scan this QR code with your phone to redeem instantly</p>
+        </div>
+
+        <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 30px 0;">
+            <h4 style="color: #1976d2; margin-top: 0;">How to Use Your Gift Card:</h4>
+            <ol style="color: #333; line-height: 1.6;">
+                <li>Visit any participating SiZu Pay merchant</li>
+                <li>Show this QR code or provide the gift card number</li>
+                <li>Your gift card balance will be applied to your purchase</li>
+                <li>Enjoy your shopping!</li>
+            </ol>
+        </div>
+
+        <div class="footer">
+            <p>This gift card was delivered by <strong>SiZu Pay</strong></p>
+            <p>For support, please contact us at support@sizupay.com</p>
+            <p style="font-size: 12px; color: #999;">Gift card terms and conditions apply. Not redeemable for cash.</p>
         </div>
     </div>
 </body>
@@ -248,24 +284,28 @@ class EmailService {
    * Create plain text version of the email
    */
   private createPlainTextEmail(data: GiftCardEmailData): string {
-    return `
-🎁 You've received a gift card worth $${data.amount}!
+    let text = `
+🎁 Gift Card from SiZu Pay
 
-${data.senderName ? `From: ${data.senderName}` : ''}
-${data.recipientName ? `To: ${data.recipientName}` : ''}
+${data.recipientName ? `Hi ${data.recipientName}!` : 'You\'ve received a gift card!'}
+${data.senderName ? `This gift card is from ${data.senderName}` : ''}
 
-${data.message ? `Message: "${data.message}"` : ''}
+Your Gift Card Details:
+- Amount: $${data.amount}
+- Gift Card Number: ${data.gan}
 
-Gift Card Number: ${data.gan}
+${data.message ? `Personal Message: "${data.message}"` : ''}
 
-How to Redeem:
-1. Show the QR code from the HTML version at checkout
-2. Or provide the gift card number above
-3. Use online or in-store
+To redeem your gift card:
+1. Visit any participating SiZu Pay merchant
+2. Show the QR code in this email or provide the gift card number
+3. Your gift card balance will be applied to your purchase
 
-This gift card never expires and can be used for multiple purchases until the balance is zero.
-Keep this email safe - it contains your gift card information.
+For support, contact us at support@sizupay.com
+
+Gift card terms and conditions apply. Not redeemable for cash.
 `;
+    return text.trim();
   }
 
   /**
@@ -291,11 +331,12 @@ Keep this email safe - it contains your gift card information.
     }
 
     try {
-      const result = await this.mg.messages.create(this.config!.domain, {
+      await this.transporter!.sendMail({
         from: this.config!.from,
-        to: [adminEmail],
+        to: adminEmail,
         subject: `[GiftCard Admin] ${subject}`,
-        text: content
+        text: content,
+        html: `<p>${content.replace(/\n/g, '<br>')}</p>`
       });
 
       return { success: true };

@@ -84,8 +84,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: 'test_complete',
         timestamp: new Date().toISOString(),
         emailResult: result,
-        mailgunConfigured: emailService.isConfigured(),
-        environment: process.env.NODE_ENV || 'development'
+        smtpConfigured: emailService.isConfigured(),
+        environment: process.env.NODE_ENV || 'development',
+        smtpConfig: {
+          host: process.env.SMTP_HOST || 'smtp.mailgun.org',
+          port: process.env.SMTP_PORT || '587',
+          user: process.env.SMTP_USER || 'SiZuGiftCardReceipt@receipt.sizupay.com',
+          hasPassword: !!(process.env.SMTP_PASS || 'Chayan38125114@')
+        }
       });
 
     } catch (error) {

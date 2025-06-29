@@ -203,7 +203,7 @@ export default function MerchantBulkPurchase() {
           </div>
           <div>
             <h1 className="text-lg font-bold text-white">Bulk Purchase</h1>
-            <p className="text-xs text-gray-400">Buy Gift Cards</p>
+            <p className="text-xs text-[#dd4bae]">Buy Gift Cards</p>
           </div>
         </div>
         
@@ -264,7 +264,7 @@ export default function MerchantBulkPurchase() {
         <Button
           variant="outline"
           onClick={() => setLocation('/merchant-dashboard')}
-          className="border-white/20 text-white hover:bg-white/10 hover:text-white hover:border-white/30"
+          className="border-white/20 text-[#613791] hover:bg-white/10 hover:text-[#613791] hover:border-white/30"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Dashboard
@@ -275,7 +275,7 @@ export default function MerchantBulkPurchase() {
         </div>
         <div>
           <h1 className="text-3xl font-bold text-white">Bulk Gift Card Purchase</h1>
-          <p className="text-gray-400">Create gift cards in bulk with volume discounts</p>
+          <p className="text-[#dd4bae]">Create gift cards in bulk with volume discounts</p>
         </div>
       </div>
     </div>
@@ -289,7 +289,7 @@ export default function MerchantBulkPurchase() {
           <TrendingUp className="w-5 h-5" />
           Volume Pricing Tiers
         </CardTitle>
-        <CardDescription className="text-gray-300">
+        <CardDescription className="text-[#dd4bae]">
           Save more with higher quantities
         </CardDescription>
       </CardHeader>
@@ -297,7 +297,7 @@ export default function MerchantBulkPurchase() {
         {tiersLoading ? (
           <div className="text-center py-4">
             <div className="animate-spin w-6 h-6 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-            <p className="text-gray-400 text-sm">Loading pricing...</p>
+            <p className="text-[#dd4bae] text-sm">Loading pricing...</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">

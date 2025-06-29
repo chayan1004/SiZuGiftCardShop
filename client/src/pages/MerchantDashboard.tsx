@@ -648,15 +648,15 @@ export default function MerchantDashboard() {
                       
                       <div className="flex flex-wrap gap-3 lg:gap-6 text-sm">
                         <div>
-                          <span className="text-gray-300">Quantity: </span>
+                          <span className="text-[#dd4bae]">Quantity: </span>
                           <span className="text-white font-medium">{order.quantity}</span>
                         </div>
                         <div>
-                          <span className="text-gray-300">Unit Price: </span>
+                          <span className="text-[#dd4bae]">Unit Price: </span>
                           <span className="text-white">{formatCurrency(order.unit_price)}</span>
                         </div>
                         <div>
-                          <span className="text-gray-300">Total: </span>
+                          <span className="text-[#dd4bae]">Total: </span>
                           <span className="text-white font-semibold">{formatCurrency(order.total_price)}</span>
                         </div>
                       </div>
@@ -690,21 +690,21 @@ export default function MerchantDashboard() {
               <Button
                 variant="ghost"
                 onClick={() => setActiveTab("overview")}
-                className={`rounded-l-lg ${activeTab === "overview" ? "bg-white/20 text-white" : "text-gray-300 hover:bg-white/10"}`}
+                className={`rounded-l-lg ${activeTab === "overview" ? "bg-white/20 text-white" : "text-[#613791] hover:bg-white/10"}`}
               >
                 Overview
               </Button>
               <Button
                 variant="ghost"
                 onClick={() => setActiveTab("giftcards")}
-                className={`rounded-none ${activeTab === "giftcards" ? "bg-white/20 text-white" : "text-gray-300 hover:bg-white/10"}`}
+                className={`rounded-none ${activeTab === "giftcards" ? "bg-white/20 text-white" : "text-[#613791] hover:bg-white/10"}`}
               >
                 Cards
               </Button>
               <Button
                 variant="ghost"
                 onClick={() => setActiveTab("orders")}
-                className={`rounded-r-lg ${activeTab === "orders" ? "bg-white/20 text-white" : "text-gray-300 hover:bg-white/10"}`}
+                className={`rounded-r-lg ${activeTab === "orders" ? "bg-white/20 text-white" : "text-[#613791] hover:bg-white/10"}`}
               >
                 Orders
               </Button>

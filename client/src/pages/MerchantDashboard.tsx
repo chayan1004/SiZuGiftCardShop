@@ -375,7 +375,7 @@ export default function MerchantDashboard() {
           <CardContent className="p-3 lg:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs lg:text-sm font-medium text-green-200">Revenue</p>
+                <p className="text-xs lg:text-sm font-medium text-[#dd4bae]">Revenue</p>
                 <p className="text-lg lg:text-2xl font-bold text-white">
                   {statsLoading ? '...' : formatCurrency(stats?.totalRevenue || 0)}
                 </p>
@@ -397,7 +397,7 @@ export default function MerchantDashboard() {
           <CardContent className="p-3 lg:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs lg:text-sm font-medium text-blue-200">Active</p>
+                <p className="text-xs lg:text-sm font-medium text-[#dd4bae]">Active</p>
                 <p className="text-lg lg:text-2xl font-bold text-white">
                   {statsLoading ? '...' : (stats?.activeCards || 0)}
                 </p>
@@ -419,7 +419,7 @@ export default function MerchantDashboard() {
           <CardContent className="p-3 lg:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs lg:text-sm font-medium text-orange-200">Customers</p>
+                <p className="text-xs lg:text-sm font-medium text-[#dd4bae]">Customers</p>
                 <p className="text-lg lg:text-2xl font-bold text-white">
                   {statsLoading ? '...' : (stats?.customers || 0)}
                 </p>
@@ -444,7 +444,7 @@ export default function MerchantDashboard() {
               <CreditCard className="w-5 h-5" />
               Gift Cards
             </CardTitle>
-            <CardDescription className="text-gray-300">
+            <CardDescription className="text-[#dd4bae]">
               Manage your gift card inventory
             </CardDescription>
           </div>
@@ -455,13 +455,13 @@ export default function MerchantDashboard() {
                 placeholder="Search cards..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="bg-white/5 border-white/20 text-white placeholder-gray-400 text-sm"
+                className="bg-white/5 border-white/20 text-[#613791] placeholder-[#dd4bae] text-sm"
               />
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setStatusFilter(statusFilter === "all" ? "active" : "all")}
-                className="border-white/20 text-white hover:bg-white/10 hover:text-white hover:border-white/30 whitespace-nowrap"
+                className="border-white/20 text-[#613791] hover:bg-white/10 hover:text-[#613791] hover:border-white/30 whitespace-nowrap"
               >
                 <Filter className="w-3 h-3 mr-1" />
                 {statusFilter === "all" ? "All" : "Active"}
@@ -484,12 +484,12 @@ export default function MerchantDashboard() {
         {cardsLoading ? (
           <div className="text-center py-8 lg:py-12">
             <div className="animate-spin w-6 h-6 lg:w-8 lg:h-8 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-            <p className="text-gray-400">Loading gift cards...</p>
+            <p className="text-[#dd4bae]">Loading gift cards...</p>
           </div>
         ) : cardsError ? (
           <div className="text-center py-8 lg:py-12">
             <AlertCircle className="w-8 h-8 lg:w-12 lg:h-12 text-red-400 mx-auto mb-4" />
-            <p className="text-red-400 mb-4">Failed to load gift cards</p>
+            <p className="text-[#dd4bae] mb-4">Failed to load gift cards</p>
             <Button
               onClick={() => refetchCards()}
               variant="outline"
@@ -501,7 +501,7 @@ export default function MerchantDashboard() {
         ) : filteredCards.length === 0 ? (
           <div className="text-center py-8 lg:py-12">
             <CreditCard className="w-8 h-8 lg:w-12 lg:h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-400 mb-4">
+            <p className="text-[#dd4bae] mb-4">
               {giftCards.length === 0 ? "No gift cards found" : "No cards match your filters"}
             </p>
             {giftCards.length === 0 && (
@@ -525,7 +525,7 @@ export default function MerchantDashboard() {
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <p className="text-white font-bold text-lg lg:text-xl">{card.formattedAmount}</p>
-                    <p className="text-gray-300 text-xs lg:text-sm">GAN: {card.gan}</p>
+                    <p className="text-[#dd4bae] text-xs lg:text-sm">GAN: {card.gan}</p>
                   </div>
                   <Badge className={`text-xs ${getStatusColor(card.status)}`}>
                     {card.status}
@@ -580,7 +580,7 @@ export default function MerchantDashboard() {
               <Package className="w-5 h-5" />
               Bulk Orders
             </CardTitle>
-            <CardDescription className="text-gray-300">
+            <CardDescription className="text-[#dd4bae]">
               Track your bulk purchase orders
             </CardDescription>
           </div>

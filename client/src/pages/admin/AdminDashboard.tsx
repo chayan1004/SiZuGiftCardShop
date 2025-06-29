@@ -1350,26 +1350,26 @@ function MetricCard({ title, value, icon, color, subtitle, trend }: MetricCardPr
     blue: {
       card: 'bg-gradient-to-r from-blue-600/20 to-blue-500/20 border-blue-500/30',
       icon: 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25',
-      text: 'text-blue-300',
-      accent: 'text-blue-400'
+      text: 'text-white',
+      accent: 'text-blue-300'
     },
     green: {
       card: 'bg-gradient-to-r from-green-600/20 to-green-500/20 border-green-500/30',
       icon: 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg shadow-green-500/25',
-      text: 'text-green-300',
-      accent: 'text-green-400'
+      text: 'text-white',
+      accent: 'text-green-300'
     },
     purple: {
       card: 'bg-gradient-to-r from-purple-600/20 to-purple-500/20 border-purple-500/30',
       icon: 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/25',
-      text: 'text-purple-300',
-      accent: 'text-purple-400'
+      text: 'text-white',
+      accent: 'text-purple-300'
     },
     orange: {
       card: 'bg-gradient-to-r from-orange-600/20 to-orange-500/20 border-orange-500/30',
       icon: 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/25',
-      text: 'text-orange-300',
-      accent: 'text-orange-400'
+      text: 'text-white',
+      accent: 'text-orange-300'
     },
   };
 

@@ -4,6 +4,7 @@ import { InsertMerchantGiftCard, InsertMerchantBulkOrder } from '@shared/schema'
 interface MockSquareClient {
   paymentsApi: any;
   giftCardsApi: any;
+  giftCardActivitiesApi: any;
 }
 
 interface BulkPurchaseRequest {
@@ -25,10 +26,44 @@ export class MerchantBulkPurchaseService {
   private squareClient: MockSquareClient;
 
   constructor() {
-    this.squareClient = new Client({
-      accessToken: process.env.SQUARE_ACCESS_TOKEN,
-      environment: process.env.SQUARE_ENVIRONMENT === 'production' ? Environment.Production : Environment.Sandbox
-    });
+    // Mock Square client for development - replace with actual Square SDK in production
+    this.squareClient = {
+      paymentsApi: {
+        createPayment: async (data: any) => ({
+          result: {
+            payment: {
+              id: `mock_payment_${Date.now()}`,
+              status: 'COMPLETED',
+              totalMoney: { amount: data.amountMoney.amount, currency: 'USD' }
+            }
+          }
+        })
+      },
+      giftCardsApi: {
+        createGiftCard: async (data: any) => ({
+          result: {
+            giftCard: {
+              id: `mock_gift_card_${Date.now()}`,
+              gan: MerchantBulkPurchaseService.generateMerchantGAN(),
+              type: 'DIGITAL',
+              status: 'ACTIVE',
+              balanceMoney: data.giftCard.balanceMoney
+            }
+          }
+        })
+      },
+      giftCardActivitiesApi: {
+        createGiftCardActivity: async (data: any) => ({
+          result: {
+            giftCardActivity: {
+              id: `mock_activity_${Date.now()}`,
+              type: data.giftCardActivity.type,
+              locationId: data.giftCardActivity.locationId
+            }
+          }
+        })
+      }
+    };
   }
 
   /**

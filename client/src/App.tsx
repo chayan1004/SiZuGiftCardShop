@@ -3,6 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Home from "@/pages/Home";
 import About from "@/pages/About";
 import GiftCardStore from "@/pages/GiftCardStore";
@@ -23,7 +24,11 @@ function Router() {
       <Route path="/gift/:gan">
         {(params) => <PublicGiftCard gan={params.gan} />}
       </Route>
-      <Route path="/admin" component={AdminDashboard} />
+      <Route path="/admin">
+        <ProtectedRoute requiredRole="admin">
+          <AdminDashboard />
+        </ProtectedRoute>
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );

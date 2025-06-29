@@ -15,7 +15,7 @@ import { emailDeliveryMonitor } from './services/emailDeliveryMonitor';
 import { domainAuthentication } from './services/domainAuthentication';
 import { pdfReceiptService } from './services/pdfReceiptService';
 import { squareWebhookHandler } from './webhooks/squareWebhookHandler';
-import { requireAdmin } from './middleware/authMiddleware';
+import { requireAdmin, requireMerchant, checkMerchantStatus } from './middleware/authMiddleware';
 import { generateGiftCardQR, generateGiftCardBarcode } from '../utils/qrGenerator';
 import { z } from "zod";
 
@@ -207,8 +207,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Square OAuth routes
-  app.get("/api/auth/square", async (req, res) => {
+  // Square OAuth routes (Protected)
+  app.get("/api/auth/square", requireMerchant, async (req, res) => {
     try {
       const authUrl = squareService.getAuthorizationUrl();
       res.json({ authUrl });
@@ -218,7 +218,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/auth/square/callback", async (req, res) => {
+  app.post("/api/auth/square/callback", requireMerchant, async (req, res) => {
     try {
       const { code, state } = req.body;
       
@@ -391,7 +391,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/giftcards/merchant/:merchantId", async (req, res) => {
+  app.get("/api/giftcards/merchant/:merchantId", requireMerchant, async (req, res) => {
     try {
       const { merchantId } = req.params;
       const giftCards = await storage.getGiftCardsByMerchant(merchantId);
@@ -402,8 +402,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Merchant dashboard routes
-  app.get("/api/dashboard/stats/:merchantId", async (req, res) => {
+  // Merchant dashboard routes (Protected)
+  app.get("/api/dashboard/stats/:merchantId", requireMerchant, async (req, res) => {
     try {
       const { merchantId } = req.params;
       const stats = await storage.getMerchantStats(merchantId);
@@ -414,7 +414,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/dashboard/transactions/:merchantId", async (req, res) => {
+  app.get("/api/dashboard/transactions/:merchantId", requireMerchant, async (req, res) => {
     try {
       const { merchantId } = req.params;
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;

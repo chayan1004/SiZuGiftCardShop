@@ -151,9 +151,9 @@ export default function AdminDashboard() {
       {/* Sidebar */}
       <div className={`
         fixed lg:relative lg:translate-x-0 transition-all duration-300 ease-in-out z-50
-        w-72 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 shadow-2xl border-r border-slate-700/50
+        w-72 h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 shadow-2xl border-r border-slate-700/50
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:block backdrop-blur-xl
+        lg:block backdrop-blur-xl flex flex-col
       `}>
         {/* Premium Header */}
         <div className="p-6 lg:p-8 border-b border-slate-700/50 bg-gradient-to-r from-blue-600/10 to-purple-600/10">
@@ -243,7 +243,7 @@ export default function AdminDashboard() {
         </nav>
 
         {/* Premium Footer */}
-        <div className="absolute bottom-0 w-72 p-4 lg:p-6 border-t border-slate-700/50 bg-gradient-to-r from-slate-900/90 to-slate-800/90 backdrop-blur-xl">
+        <div className="mt-auto p-4 lg:p-6 border-t border-slate-700/50 bg-gradient-to-r from-slate-900/90 to-slate-800/90 backdrop-blur-xl">
           <div className="space-y-3">
             {/* Premium Admin Profile */}
             <div className="flex items-center space-x-3 p-3 bg-white/5 rounded-lg border border-white/10">

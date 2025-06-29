@@ -13,7 +13,7 @@ import AdminDashboard from "@/pages/admin/AdminDashboard";
 import CheckBalance from "@/pages/CheckBalance";
 import MerchantLogin from "@/pages/MerchantLogin";
 import MerchantRegister from "@/pages/MerchantRegister";
-
+import MerchantDashboard from "@/pages/MerchantDashboard";
 import MerchantVerify from "@/pages/MerchantVerify";
 import AdminLogin from "@/pages/admin/AdminLogin";
 import TestModal from "@/pages/TestModal";
@@ -29,6 +29,7 @@ function Router() {
       <Route path="/check-balance" component={CheckBalance} />
       <Route path="/merchant-login" component={MerchantLogin} />
       <Route path="/merchant-register" component={MerchantRegister} />
+      <Route path="/merchant-dashboard" component={MerchantDashboard} />
       <Route path="/merchant-verify" component={MerchantVerify} />
       <Route path="/admin-login" component={AdminLogin} />
       <Route path="/test-modal" component={TestModal} />

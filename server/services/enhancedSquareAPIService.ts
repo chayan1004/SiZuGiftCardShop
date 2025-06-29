@@ -637,6 +637,7 @@ class EnhancedSquareAPIService {
       } else {
         // Create new card record
         await storage.createGiftCard({
+          squareGiftCardId: giftCard.id,
           gan: giftCard.gan,
           merchantId: giftCard.location_id || this.locationId,
           amount: parseInt(giftCard.balance_money?.amount || '0'),

@@ -48,6 +48,7 @@
     "@types/node-fetch": "^2.6.12",
     "@types/qrcode": "^1.5.5",
     "bwip-js": "^4.6.0",
+    "caniuse-lite": "^1.0.30001726",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",

@@ -344,7 +344,7 @@ export default function AdminDashboard() {
                 onClick={handleRefresh}
                 disabled={refreshing}
                 size="sm"
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-gradient-to-r from-[#fa8d1b] to-[#9c53f0] hover:from-[#9c53f0] hover:to-[#fa8d1b] text-white font-medium shadow-lg transition-all duration-300"
               >
                 <RefreshCw className={`w-3 h-3 lg:w-4 lg:h-4 ${refreshing ? 'animate-spin' : ''} ${refreshing ? '' : 'lg:mr-2'}`} />
                 <span className="hidden lg:inline">Refresh</span>
@@ -369,7 +369,7 @@ export default function AdminDashboard() {
                 <Button 
                   onClick={() => window.location.href = '/admin-login'} 
                   size="sm"
-                  className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
+                  className="bg-gradient-to-r from-[#fa8d1b] to-[#9c53f0] hover:from-[#9c53f0] hover:to-[#fa8d1b] text-white font-medium shadow-lg transition-all duration-300"
                 >
                   Re-authenticate
                 </Button>
@@ -761,7 +761,7 @@ export default function AdminDashboard() {
                           <div className="pt-2">
                             <Button 
                               size="sm" 
-                              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                              className="w-full bg-gradient-to-r from-[#fa8d1b] to-[#9c53f0] hover:from-[#9c53f0] hover:to-[#fa8d1b] text-white font-medium shadow-lg transition-all duration-300"
                               disabled={true}
                             >
                               Scale Up Volume
@@ -1040,7 +1040,7 @@ export default function AdminDashboard() {
                           <span className="text-white font-mono">10/sec</span>
                         </div>
                         
-                        <Button className="w-full bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white font-medium">
+                        <Button className="w-full bg-gradient-to-r from-[#fa8d1b] to-[#9c53f0] hover:from-[#9c53f0] hover:to-[#fa8d1b] text-white font-medium shadow-lg transition-all duration-300">
                           Test Square Connection
                         </Button>
                       </CardContent>
@@ -1396,9 +1396,9 @@ function MetricCard({ title, value, icon, color, subtitle, trend }: MetricCardPr
       <CardContent className="p-4 lg:p-6">
         <div className="flex items-center justify-between">
           <div className="flex-1 min-w-0">
-            <p className="text-xs lg:text-sm font-medium mb-1 truncate text-gray-200">{title}</p>
-            <p className="text-xl lg:text-3xl font-bold text-white mb-1 lg:mb-2">{value}</p>
-            <p className="text-xs text-gray-100 truncate">{subtitle}</p>
+            <p className="text-xs lg:text-sm font-medium mb-1 truncate text-[#51525e]">{title}</p>
+            <p className="text-xl lg:text-3xl font-bold text-[#fa8d1b] mb-1 lg:mb-2">{value}</p>
+            <p className="text-xs text-[#9c53f0] truncate">{subtitle}</p>
           </div>
           <div className={`p-2 lg:p-3 rounded-xl flex-shrink-0 ${colorClass.icon}`}>
             <div className="w-5 h-5 lg:w-6 lg:h-6">
@@ -1409,7 +1409,7 @@ function MetricCard({ title, value, icon, color, subtitle, trend }: MetricCardPr
         {trend && (
           <div className="mt-3 lg:mt-4 flex items-center">
             <TrendingUp className="w-3 h-3 lg:w-4 lg:h-4 mr-1 flex-shrink-0 text-green-400" />
-            <span className="text-xs lg:text-sm font-medium text-green-400">{trend}</span>
+            <span className="text-xs lg:text-sm font-medium text-[#192336]">{trend}</span>
             <span className="text-xs lg:text-sm text-gray-200 ml-1 hidden sm:inline">vs last month</span>
           </div>
         )}

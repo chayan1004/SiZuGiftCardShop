@@ -2218,3 +2218,8 @@ If you have concerns about this message, contact: security@sizupay.com`;
 }
 
 export const emailService = new EmailService();
+
+// Export the sendVerificationEmail function for backwards compatibility
+export const sendVerificationEmail = (data: VerificationEmailData) => {
+  return emailService.sendVerificationEmail(data);
+};

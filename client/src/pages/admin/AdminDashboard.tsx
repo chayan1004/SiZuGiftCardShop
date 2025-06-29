@@ -1347,22 +1347,44 @@ interface MetricCardProps {
 
 function MetricCard({ title, value, icon, color, subtitle, trend }: MetricCardProps) {
   const colorClasses = {
-    blue: 'bg-blue-50 text-blue-600 border-blue-200',
-    green: 'bg-green-50 text-green-600 border-green-200',
-    purple: 'bg-purple-50 text-purple-600 border-purple-200',
-    orange: 'bg-orange-50 text-orange-600 border-orange-200',
+    blue: {
+      card: 'bg-gradient-to-r from-blue-600/20 to-blue-500/20 border-blue-500/30',
+      icon: 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25',
+      text: 'text-blue-300',
+      accent: 'text-blue-400'
+    },
+    green: {
+      card: 'bg-gradient-to-r from-green-600/20 to-green-500/20 border-green-500/30',
+      icon: 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg shadow-green-500/25',
+      text: 'text-green-300',
+      accent: 'text-green-400'
+    },
+    purple: {
+      card: 'bg-gradient-to-r from-purple-600/20 to-purple-500/20 border-purple-500/30',
+      icon: 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/25',
+      text: 'text-purple-300',
+      accent: 'text-purple-400'
+    },
+    orange: {
+      card: 'bg-gradient-to-r from-orange-600/20 to-orange-500/20 border-orange-500/30',
+      icon: 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/25',
+      text: 'text-orange-300',
+      accent: 'text-orange-400'
+    },
   };
 
+  const colorClass = colorClasses[color];
+
   return (
-    <Card className="relative overflow-hidden">
+    <Card className={`relative overflow-hidden backdrop-blur-xl border transition-all duration-300 hover:scale-[1.02] hover:shadow-xl ${colorClass.card}`}>
       <CardContent className="p-4 lg:p-6">
         <div className="flex items-center justify-between">
           <div className="flex-1 min-w-0">
-            <p className="text-xs lg:text-sm font-medium text-gray-600 mb-1 truncate">{title}</p>
-            <p className="text-xl lg:text-3xl font-bold text-gray-900 mb-1 lg:mb-2">{value}</p>
-            <p className="text-xs text-gray-500 truncate">{subtitle}</p>
+            <p className={`text-xs lg:text-sm font-medium mb-1 truncate ${colorClass.text}`}>{title}</p>
+            <p className="text-xl lg:text-3xl font-bold text-white mb-1 lg:mb-2">{value}</p>
+            <p className="text-xs text-gray-300 truncate">{subtitle}</p>
           </div>
-          <div className={`p-2 lg:p-3 rounded-lg flex-shrink-0 ${colorClasses[color]}`}>
+          <div className={`p-2 lg:p-3 rounded-xl flex-shrink-0 ${colorClass.icon}`}>
             <div className="w-5 h-5 lg:w-6 lg:h-6">
               {icon}
             </div>
@@ -1370,9 +1392,9 @@ function MetricCard({ title, value, icon, color, subtitle, trend }: MetricCardPr
         </div>
         {trend && (
           <div className="mt-3 lg:mt-4 flex items-center">
-            <TrendingUp className="w-3 h-3 lg:w-4 lg:h-4 text-green-500 mr-1 flex-shrink-0" />
-            <span className="text-xs lg:text-sm font-medium text-green-600">{trend}</span>
-            <span className="text-xs lg:text-sm text-gray-500 ml-1 hidden sm:inline">vs last month</span>
+            <TrendingUp className={`w-3 h-3 lg:w-4 lg:h-4 mr-1 flex-shrink-0 ${colorClass.accent}`} />
+            <span className={`text-xs lg:text-sm font-medium ${colorClass.accent}`}>{trend}</span>
+            <span className="text-xs lg:text-sm text-gray-400 ml-1 hidden sm:inline">vs last month</span>
           </div>
         )}
       </CardContent>

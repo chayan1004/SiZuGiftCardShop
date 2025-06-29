@@ -135,6 +135,7 @@ This is a full-stack gift card management application built with a modern tech s
 - June 29, 2025. Applied all premium admin dashboard enhancements to merchant dashboard including animated charts, real-time status panels, enhanced metric cards, interactive tooltips, and comprehensive system status bar
 - June 29, 2025. Consolidated admin functionality into single Admin Dashboard at `/admin` - removed all duplicate admin interfaces and made it the only admin entry point
 - June 29, 2025. Enhanced Admin Dashboard with comprehensive business owner functionalities including Revenue Analytics, Customer Insights, Marketing Tools, Operations monitoring, Growth Strategy tracking, Business Intelligence Reports, and System Health monitoring - transformed into complete business management platform
+- June 29, 2025. Permanently removed merchant dashboard files (MerchantDashboard.tsx components and pages) from project per user request - cleaned up all routing and references
 
 ## Recent Production Enhancements
 

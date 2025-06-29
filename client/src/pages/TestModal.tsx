@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import MerchantDashboard from "@/components/MerchantDashboard";
+
 
 export default function TestModal() {
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
@@ -17,10 +17,7 @@ export default function TestModal() {
         </Button>
       </div>
 
-      <MerchantDashboard 
-        isOpen={isDashboardOpen}
-        onClose={() => setIsDashboardOpen(false)}
-      />
+
     </div>
   );
 }

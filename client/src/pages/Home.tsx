@@ -7,14 +7,14 @@ import TestimonialsSection from "@/components/TestimonialsSection";
 import PricingSection from "@/components/PricingSection";
 import CTASection from "@/components/CTASection";
 import PurchaseModal from "@/components/PurchaseModal";
-import MerchantDashboard from "@/components/MerchantDashboard";
+
 import { Gift, Shield, Smartphone, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
 // Authentication utilities removed - using simplified auth system
 
 export default function Home() {
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
-  const [isDashboardOpen, setIsDashboardOpen] = useState(false);
+
   // Check authentication status from localStorage
   const merchantToken = localStorage.getItem('merchantToken');
   const adminToken = localStorage.getItem('adminToken');
@@ -131,10 +131,7 @@ export default function Home() {
         onClose={() => setIsPurchaseModalOpen(false)} 
       />
       
-      <MerchantDashboard 
-        isOpen={isDashboardOpen} 
-        onClose={() => setIsDashboardOpen(false)} 
-      />
+
     </div>
   );
 }

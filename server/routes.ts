@@ -1053,6 +1053,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Merchant Email Verification Routes
+  app.post("/api/merchant/verify-email", async (req: Request, res: Response) => {
+    try {
+      const { token } = req.body;
+      
+      if (!token) {
+        return res.status(400).json({
+          success: false,
+          error: "Verification token is required"
+        });
+      }
+
+      const { EmailVerificationService } = await import('./services/emailVerificationService');
+      const verificationResult = await EmailVerificationService.verifyEmail(token);
+
+      if (!verificationResult.success) {
+        return res.status(400).json({
+          success: false,
+          error: verificationResult.error
+        });
+      }
+
+      console.log(`Email verified for merchant: ${verificationResult.merchant?.email}`);
+      
+      res.json({
+        success: true,
+        message: "Email verified successfully",
+        merchant: verificationResult.merchant
+      });
+
+    } catch (error) {
+      console.error('Email verification error:', error);
+      res.status(500).json({
+        success: false,
+        error: "Email verification failed"
+      });
+    }
+  });
+
+  app.post("/api/merchant/resend-verification", requireMerchant, async (req: Request, res: Response) => {
+    try {
+      const merchantId = (req as any).merchantId;
+      
+      if (!merchantId) {
+        return res.status(401).json({
+          success: false,
+          error: "Merchant authentication required"
+        });
+      }
+
+      const { EmailVerificationService } = await import('./services/emailVerificationService');
+      const emailResult = await EmailVerificationService.resendVerificationEmail(merchantId);
+
+      if (!emailResult.success) {
+        return res.status(400).json({
+          success: false,
+          error: emailResult.error
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "Verification email sent successfully"
+      });
+
+    } catch (error) {
+      console.error('Resend verification error:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to resend verification email"
+      });
+    }
+  });
+
+  app.get("/api/merchant/verification-status", requireMerchant, async (req: Request, res: Response) => {
+    try {
+      const merchantId = (req as any).merchantId;
+      
+      if (!merchantId) {
+        return res.status(401).json({
+          success: false,
+          error: "Merchant authentication required"
+        });
+      }
+
+      const { EmailVerificationService } = await import('./services/emailVerificationService');
+      const isVerified = await EmailVerificationService.isEmailVerified(merchantId);
+
+      res.json({
+        success: true,
+        emailVerified: isVerified
+      });
+
+    } catch (error) {
+      console.error('Verification status check error:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to check verification status"
+      });
+    }
+  });
+
   // Merchant Transaction History (Protected by JWT)
   app.get("/api/dashboard/transactions", requireMerchant, async (req, res) => {
     try {

@@ -44,6 +44,12 @@ interface PromoEmailData {
   promoType?: 'seasonal' | 'welcome' | 'loyalty' | 'referral' | 'flash_sale' | 'birthday';
 }
 
+interface VerificationEmailData {
+  to: string;
+  businessName: string;
+  verificationUrl: string;
+}
+
 interface ReminderEmailData {
   to: string;
   gan: string;

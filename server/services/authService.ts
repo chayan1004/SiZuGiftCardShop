@@ -44,12 +44,30 @@ export class AuthService {
    * Generate a JWT token for a merchant
    */
   static generateMerchantToken(merchant: any): string {
-    const payload: MerchantTokenPayload = {
+    const payload: MerchantTokenPayload & { 
+      id: number;
+      iat: number;
+      exp: number;
+      iss: string;
+      aud: string;
+    } = {
+      id: merchant.id,
       merchantId: merchant.merchantId,
       role: 'merchant',
       email: merchant.email,
-      businessName: merchant.businessName
+      businessName: merchant.businessName,
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60), // 7 days
+      iss: 'sizu-giftcard',
+      aud: 'merchant'
     };
+
+    console.log(`🔐 Generated JWT token for merchant ${merchant.email}:`, {
+      merchantId: payload.merchantId,
+      role: payload.role,
+      businessName: payload.businessName,
+      exp: new Date(payload.exp * 1000).toISOString()
+    });
 
     return jwt.sign(payload, JWT_SECRET, { 
       expiresIn: JWT_EXPIRES_IN,

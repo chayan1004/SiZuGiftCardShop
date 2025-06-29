@@ -47,12 +47,12 @@ export const requireMerchant = (req: Request, res: Response, next: NextFunction)
                        req.headers['x-merchant-token'] as string ||
                        req.cookies?.merchantToken;
   
-
-  
   if (!merchantToken) {
+    console.log('❌ No merchant token provided for route:', req.path);
     return res.status(401).json({ 
       success: false, 
-      error: 'Merchant authentication required. Please log in.' 
+      error: 'Merchant authentication required. Please log in.',
+      redirectTo: '/merchant-login'
     });
   }
 
@@ -61,6 +61,8 @@ export const requireMerchant = (req: Request, res: Response, next: NextFunction)
     const decoded = AuthService.verifyToken(merchantToken);
 
     if (decoded && decoded.role === 'merchant') {
+      console.log(`✅ Valid JWT token for merchant: ${decoded.email} (${decoded.merchantId})`);
+      (req as any).merchant = decoded;
       (req as any).merchantId = decoded.merchantId;
       (req as any).merchantEmail = decoded.email;
       (req as any).isMerchant = true;
@@ -70,6 +72,7 @@ export const requireMerchant = (req: Request, res: Response, next: NextFunction)
     // Fallback to legacy token format for compatibility
     if (merchantToken.startsWith('merchant-')) {
       const merchantId = merchantToken.replace('merchant-', '');
+      console.log(`⚠️ Using legacy token format for merchant: ${merchantId}`);
       
       // Validate merchant ID from token matches route parameter (if exists)
       const routeMerchantId = req.params.merchantId;
@@ -85,16 +88,80 @@ export const requireMerchant = (req: Request, res: Response, next: NextFunction)
       return next();
     }
 
+    console.log('❌ Invalid merchant token format for route:', req.path);
     return res.status(403).json({ 
       success: false, 
-      error: 'Invalid merchant token. Please log in again.' 
+      error: 'Invalid merchant token. Please log in again.',
+      redirectTo: '/merchant-login'
     });
     
   } catch (error) {
-    console.error('Merchant auth error:', error);
+    console.error('❌ Merchant auth error:', error);
     return res.status(403).json({ 
       success: false, 
-      error: 'Authentication failed. Please log in again.' 
+      error: 'Authentication failed. Please log in again.',
+      redirectTo: '/merchant-login'
+    });
+  }
+};
+
+/**
+ * Dedicated middleware for merchant route protection
+ * Redirects to login page for web routes, returns 401 for API routes
+ */
+export const requireMerchantAuth = (req: Request, res: Response, next: NextFunction) => {
+  const merchantToken = req.headers['authorization']?.replace('Bearer ', '') || 
+                       req.headers['x-merchant-token'] as string ||
+                       req.cookies?.merchantToken;
+  
+  if (!merchantToken) {
+    // For web routes, redirect to login
+    if (req.path.startsWith('/merchant-') && !req.path.includes('/api/')) {
+      return res.redirect('/merchant-login');
+    }
+    
+    // For API routes, return 401
+    return res.status(401).json({ 
+      success: false, 
+      error: 'Merchant authentication required. Please log in.',
+      redirectTo: '/merchant-login'
+    });
+  }
+
+  try {
+    const decoded = AuthService.verifyToken(merchantToken);
+
+    if (decoded && decoded.role === 'merchant') {
+      (req as any).merchant = decoded;
+      (req as any).merchantId = decoded.merchantId;
+      (req as any).merchantEmail = decoded.email;
+      (req as any).isMerchant = true;
+      return next();
+    }
+
+    // For web routes, redirect to login
+    if (req.path.startsWith('/merchant-') && !req.path.includes('/api/')) {
+      return res.redirect('/merchant-login');
+    }
+    
+    return res.status(401).json({ 
+      success: false, 
+      error: 'Invalid or expired token. Please log in again.',
+      redirectTo: '/merchant-login'
+    });
+    
+  } catch (error) {
+    console.error('Merchant authentication error:', error);
+    
+    // For web routes, redirect to login
+    if (req.path.startsWith('/merchant-') && !req.path.includes('/api/')) {
+      return res.redirect('/merchant-login');
+    }
+    
+    return res.status(401).json({ 
+      success: false, 
+      error: 'Authentication failed. Please log in again.',
+      redirectTo: '/merchant-login'
     });
   }
 };

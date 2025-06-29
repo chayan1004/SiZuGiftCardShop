@@ -42,8 +42,46 @@ export default function MerchantBulkPurchase() {
   // Check authentication
   const merchantToken = localStorage.getItem('merchantToken');
   
+  useEffect(() => {
+    if (!merchantToken) {
+      console.log('❌ No merchant token found, redirecting to login');
+      window.location.href = '/merchant-login';
+      return;
+    }
+
+    // Validate JWT token
+    if (merchantToken.startsWith('eyJ')) {
+      try {
+        const payload = JSON.parse(atob(merchantToken.split('.')[1]));
+        console.log('🔍 Validating merchant token for bulk purchase:', {
+          role: payload.role,
+          merchantId: payload.merchantId,
+          exp: new Date(payload.exp * 1000).toISOString(),
+          isValid: payload.exp > Date.now() / 1000
+        });
+
+        if (payload.role !== 'merchant' || payload.exp <= Date.now() / 1000) {
+          console.log('❌ Invalid or expired token, clearing storage and redirecting');
+          localStorage.removeItem('merchantToken');
+          localStorage.removeItem('merchantData');
+          window.location.href = '/merchant-login';
+          return;
+        }
+      } catch (error) {
+        console.error('❌ Token validation failed:', error);
+        localStorage.removeItem('merchantToken');
+        localStorage.removeItem('merchantData');
+        window.location.href = '/merchant-login';
+        return;
+      }
+    } else {
+      console.log('❌ Invalid token format, redirecting to login');
+      window.location.href = '/merchant-login';
+      return;
+    }
+  }, [merchantToken]);
+
   if (!merchantToken) {
-    window.location.href = '/merchant-login';
     return null;
   }
 

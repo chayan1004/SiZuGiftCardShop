@@ -18,16 +18,31 @@ export default function MerchantLogin() {
 
   // Check if already logged in and redirect to dashboard
   useEffect(() => {
-    const token = localStorage.getItem('merchantToken') || sessionStorage.getItem('merchantToken');
+    const token = localStorage.getItem('merchantToken');
     if (token && token.startsWith('eyJ')) {
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
+        console.log('🔍 Existing token found:', {
+          role: payload.role,
+          email: payload.email,
+          merchantId: payload.merchantId,
+          exp: new Date(payload.exp * 1000).toISOString(),
+          isValid: payload.exp > Date.now() / 1000
+        });
+        
         if (payload.role === 'merchant' && payload.exp > Date.now() / 1000) {
+          console.log('✅ Valid merchant token found, redirecting to dashboard');
           setLocation("/merchant-dashboard");
           return;
+        } else {
+          console.log('❌ Token expired or invalid, clearing storage');
+          localStorage.removeItem('merchantToken');
+          localStorage.removeItem('merchantData');
         }
       } catch (error) {
-        console.error('Token validation failed:', error);
+        console.error('❌ Token validation failed:', error);
+        localStorage.removeItem('merchantToken');
+        localStorage.removeItem('merchantData');
       }
     }
   }, [setLocation]);
@@ -52,17 +67,49 @@ export default function MerchantLogin() {
       const data = await response.json();
 
       if (data.success) {
-        // Store token in localStorage for client-side auth checks
-        localStorage.setItem('merchantToken', data.token);
-        localStorage.setItem('merchantData', JSON.stringify(data.merchant));
-        
-        toast({
-          title: "Login Successful",
-          description: `Welcome back, ${data.merchant.businessName}!`,
+        console.log('🔐 Login successful, received token:', {
+          tokenLength: data.token?.length,
+          merchantId: data.merchant?.merchantId,
+          businessName: data.merchant?.businessName,
+          email: data.merchant?.email
         });
-        
-        // Redirect to merchant dashboard
-        setLocation("/merchant-dashboard");
+
+        // Validate JWT token structure
+        try {
+          const payload = JSON.parse(atob(data.token.split('.')[1]));
+          console.log('✅ JWT payload decoded:', {
+            role: payload.role,
+            merchantId: payload.merchantId,
+            email: payload.email,
+            businessName: payload.businessName,
+            exp: new Date(payload.exp * 1000).toISOString()
+          });
+
+          // Store token in localStorage for client-side auth checks
+          localStorage.setItem('merchantToken', data.token);
+          localStorage.setItem('merchantData', JSON.stringify(data.merchant));
+          
+          toast({
+            title: "Login Successful",
+            description: `Welcome back, ${data.merchant.businessName}!`,
+          });
+          
+          // Role-based redirect
+          if (payload.role === 'merchant') {
+            console.log('🔄 Redirecting to merchant dashboard');
+            setLocation("/merchant-dashboard");
+          } else {
+            console.log('❌ Invalid role in token:', payload.role);
+            throw new Error('Invalid user role');
+          }
+        } catch (tokenError) {
+          console.error('❌ Token validation failed:', tokenError);
+          toast({
+            title: "Login Error",
+            description: "Invalid token received. Please try again.",
+            variant: "destructive"
+          });
+        }
       } else {
         toast({
           title: "Login Failed",

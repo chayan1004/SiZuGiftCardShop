@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import crypto from 'crypto';
 import { enhancedSquareAPIService } from '../services/enhancedSquareAPIService';
 import { storage } from '../storage';
 
@@ -28,44 +29,168 @@ interface SquareWebhookEvent {
 }
 
 class SquareWebhookHandler {
+  // In-memory cache for replay protection (5-minute TTL)
+  private processedEvents = new Map<string, { timestamp: number }>();
+  private readonly REPLAY_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
+
   /**
-   * Main webhook endpoint handler
+   * Verify webhook signature using Square's signature verification
+   */
+  private verifyWebhookSignature(body: string, signature: string, url: string): boolean {
+    const signatureKey = process.env.SQUARE_WEBHOOK_SIGNATURE_KEY;
+    
+    if (!signatureKey) {
+      console.error('SQUARE_WEBHOOK_SIGNATURE_KEY not configured');
+      return false;
+    }
+
+    if (!signature) {
+      console.error('Missing x-square-signature header');
+      return false;
+    }
+
+    try {
+      // Create HMAC with SHA1 and signature key
+      const hmac = crypto.createHmac('sha1', signatureKey);
+      hmac.update(url + body);
+      const expectedSignature = hmac.digest('base64');
+
+      // Compare signatures securely
+      const isValid = crypto.timingSafeEqual(
+        Buffer.from(signature, 'base64'),
+        Buffer.from(expectedSignature, 'base64')
+      );
+
+      if (!isValid) {
+        console.error('Webhook signature verification failed', {
+          received: signature.substring(0, 10) + '...',
+          expected: expectedSignature.substring(0, 10) + '...',
+          url,
+          bodyLength: body.length
+        });
+      }
+
+      return isValid;
+    } catch (error) {
+      console.error('Error during signature verification:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Check for replay attacks using event_id caching
+   */
+  private isReplayAttack(eventId: string): boolean {
+    const now = Date.now();
+    
+    // Clean up expired entries
+    const entries = Array.from(this.processedEvents.entries());
+    entries.forEach(([id, data]) => {
+      if (now - data.timestamp > this.REPLAY_WINDOW_MS) {
+        this.processedEvents.delete(id);
+      }
+    });
+
+    // Check if event already processed
+    if (this.processedEvents.has(eventId)) {
+      console.warn('Replay attack detected', { eventId, originalTimestamp: this.processedEvents.get(eventId)?.timestamp });
+      return true;
+    }
+
+    // Cache this event
+    this.processedEvents.set(eventId, { timestamp: now });
+    return false;
+  }
+
+  /**
+   * Main webhook endpoint handler with full security verification
    */
   async handleWebhook(req: Request, res: Response): Promise<void> {
+    const startTime = Date.now();
+    let eventId = 'unknown';
+    
     try {
       const signature = req.headers['x-square-signature'] as string;
       const body = JSON.stringify(req.body);
       const url = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+      const event: SquareWebhookEvent = req.body;
+      eventId = event.event_id || 'unknown';
 
-      // Verify webhook signature for security
-      if (!enhancedSquareAPIService.verifyWebhookSignature(body, signature, url)) {
-        console.error('Invalid webhook signature');
+      console.log('Webhook received', {
+        eventId,
+        type: event.type,
+        merchantId: event.merchant_id,
+        timestamp: new Date().toISOString(),
+        bodySize: body.length
+      });
+
+      // Step 1: Verify webhook signature
+      if (!this.verifyWebhookSignature(body, signature, url)) {
+        console.error('Webhook rejected - invalid signature', {
+          eventId,
+          type: event.type,
+          merchantId: event.merchant_id,
+          clientIP: req.ip || req.connection.remoteAddress
+        });
         res.status(401).json({ error: 'Invalid signature' });
         return;
       }
 
-      const event: SquareWebhookEvent = req.body;
-      console.log(`Received webhook: ${event.type} for merchant ${event.merchant_id}`);
+      // Step 2: Check for replay attacks
+      if (this.isReplayAttack(eventId)) {
+        console.error('Webhook rejected - replay attack', {
+          eventId,
+          type: event.type,
+          merchantId: event.merchant_id
+        });
+        res.status(400).json({ error: 'Duplicate event' });
+        return;
+      }
 
-      // Process the webhook event
+      console.log('Webhook authenticated successfully', {
+        eventId,
+        type: event.type,
+        merchantId: event.merchant_id
+      });
+
+      // Step 3: Process the webhook event
       const result = await this.processWebhookEvent(event);
 
       if (result.success) {
+        console.log('Webhook processed successfully', {
+          eventId,
+          type: event.type,
+          processed: result.processed,
+          processingTime: Date.now() - startTime
+        });
+        
         res.status(200).json({ 
           status: 'processed',
-          event_id: event.event_id,
+          event_id: eventId,
           processed: result.processed 
         });
       } else {
-        console.error('Webhook processing failed:', result.error);
+        console.error('Webhook processing failed', {
+          eventId,
+          type: event.type,
+          error: result.error,
+          processingTime: Date.now() - startTime
+        });
+        
         res.status(500).json({ 
           error: 'Processing failed',
-          event_id: event.event_id 
+          event_id: eventId 
         });
       }
 
     } catch (error) {
-      console.error('Webhook handler error:', error);
+      console.error('Webhook handler error', {
+        eventId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        processingTime: Date.now() - startTime
+      });
+      
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -123,6 +248,7 @@ class SquareWebhookHandler {
       if (!existing) {
         // Create new gift card record
         await storage.createGiftCard({
+          squareGiftCardId: giftCard.id,
           gan: giftCard.gan,
           merchantId: event.location_id,
           amount: parseInt(giftCard.balance_money?.amount || '0'),
@@ -277,14 +403,32 @@ class SquareWebhookHandler {
   }
 
   /**
-   * Handle webhook test events
+   * Handle webhook test events with security verification
    */
   async handleWebhookTest(req: Request, res: Response): Promise<void> {
     try {
-      console.log('Webhook test received');
+      const signature = req.headers['x-square-signature'] as string;
+      const body = JSON.stringify(req.body);
+      const url = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+
+      console.log('Webhook test received', {
+        hasSignature: !!signature,
+        bodySize: body.length,
+        timestamp: new Date().toISOString()
+      });
+
+      // Verify signature even for test events
+      if (!this.verifyWebhookSignature(body, signature, url)) {
+        console.error('Webhook test rejected - invalid signature');
+        res.status(401).json({ error: 'Invalid signature' });
+        return;
+      }
+
+      console.log('Webhook test authenticated successfully');
       res.status(200).json({ 
         status: 'test_received',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        security: 'verified'
       });
     } catch (error) {
       console.error('Webhook test error:', error);

@@ -140,6 +140,7 @@ This is a full-stack gift card management application built with a modern tech s
 - June 29, 2025. Phase 3: Implemented MerchantBulkPurchase.tsx with real payment flow - merchants can create bulk orders with volume pricing tiers and live database integration
 - June 29, 2025. Phase 4: Complete Mobile-First Responsive Enhancement - rebuilt entire Merchant Dashboard and Bulk Purchase interfaces with comprehensive mobile optimization for all device sizes
 - June 29, 2025. Phase 5: Enhanced Visual Design Implementation - updated all merchant interface text colors with premium color scheme (#dd4bae for labels/descriptions, #613791 for buttons/inputs) for improved readability and visual hierarchy across dashboard and bulk purchase pages
+- June 29, 2025. Updated merchant dashboard logout button to redirect to website home page (/) instead of merchant login page for better user experience
 
 ## Recent Production Enhancements
 

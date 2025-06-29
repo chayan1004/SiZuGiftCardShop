@@ -157,7 +157,7 @@ export default function MerchantDashboard() {
 
   const handleLogout = () => {
     localStorage.removeItem('merchantToken');
-    window.location.href = '/merchant-login';
+    window.location.href = '/';
   };
 
   const handleRefresh = () => {

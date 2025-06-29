@@ -125,6 +125,7 @@ This is a full-stack gift card management application built with a modern tech s
 - June 29, 2025. Implemented complete merchant registration flow with secure onboarding, JWT authentication, and auto-login functionality
 - June 29, 2025. Added comprehensive live merchant analytics dashboard with real-time KPIs, interactive charts, and 30-second auto-refresh
 - June 29, 2025. Implemented complete merchant transaction history system with search, filtering, and pagination capabilities
+- June 29, 2025. Added comprehensive merchant email verification system with security tokens, automated emails, and verification banner UI
 
 ## Recent Production Enhancements
 

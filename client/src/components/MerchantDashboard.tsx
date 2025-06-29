@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth, logout } from "@/components/ProtectedRoute";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import TransactionHistoryPanel from "./TransactionHistoryPanel";
+import EmailVerificationBanner from "./EmailVerificationBanner";
 
 interface MerchantDashboardProps {
   isOpen: boolean;

@@ -10,14 +10,10 @@ export class MerchantBulkOrderService {
     quantity: number,
     unitPrice: number
   ): Promise<MerchantBulkOrder> {
-    console.log(`Creating bulk order for merchantId: ${merchantId} (type: ${typeof merchantId})`);
-    
     // Get merchant by merchantId to get the database ID
     const merchant = typeof merchantId === 'string' 
       ? await storage.getMerchantBySquareId(merchantId)
       : await storage.getMerchant(merchantId);
-    
-    console.log(`Found merchant:`, merchant);
     
     if (!merchant) {
       throw new Error(`Merchant not found for ID: ${merchantId}`);
@@ -33,8 +29,6 @@ export class MerchantBulkOrderService {
       total_price: totalPrice.toFixed(2),
       status: 'pending'
     };
-
-    console.log(`Creating bulk order with data:`, insertOrder);
 
     return await storage.createMerchantBulkOrder(insertOrder);
   }

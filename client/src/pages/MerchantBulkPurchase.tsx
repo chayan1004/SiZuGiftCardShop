@@ -26,6 +26,7 @@ interface PricingTier {
 interface BulkOrderRequest {
   quantity: number;
   unit_price: number;
+  total_price: number;
 }
 
 export default function MerchantBulkPurchase() {
@@ -144,10 +145,10 @@ export default function MerchantBulkPurchase() {
   });
 
   const handleSubmit = async () => {
-    if (quantity < 1 || unitPrice < 1) {
+    if (quantity < 1 || currentUnitPrice < 1) {
       toast({
         title: "Invalid Input",
-        description: "Please enter valid quantity and unit price",
+        description: "Please enter valid quantity",
         variant: "destructive",
       });
       return;
@@ -158,7 +159,8 @@ export default function MerchantBulkPurchase() {
     try {
       await createBulkOrderMutation.mutateAsync({
         quantity,
-        unit_price: unitPrice
+        unit_price: currentUnitPrice,
+        total_price: totalPrice
       });
     } finally {
       setIsProcessing(false);
@@ -389,8 +391,8 @@ export default function MerchantBulkPurchase() {
                           step="0.01"
                           min="1"
                           max="1000"
-                          value={unitPrice}
-                          onChange={(e) => setUnitPrice(parseFloat(e.target.value) || 0)}
+                          value={currentUnitPrice}
+                          disabled
                           className="pl-10 bg-white/5 border-white/20 text-[#613791] placeholder-[#dd4bae]"
                           placeholder="25.00"
                         />
@@ -438,7 +440,7 @@ export default function MerchantBulkPurchase() {
                     
                     <div className="flex justify-between items-center">
                       <span className="text-[#dd4bae] text-sm">Base price per card:</span>
-                      <span className="text-white">{formatCurrency(unitPrice)}</span>
+                      <span className="text-white">{formatCurrency(currentUnitPrice)}</span>
                     </div>
 
                     {currentTier && currentTier.discountPercentage > 0 && (
@@ -450,7 +452,7 @@ export default function MerchantBulkPurchase() {
                         
                         <div className="flex justify-between items-center">
                           <span className="text-[#dd4bae] text-sm">Discounted price per card:</span>
-                          <span className="text-white">{formatCurrency(calculateDiscountedPrice())}</span>
+                          <span className="text-white">{formatCurrency(currentUnitPrice)}</span>
                         </div>
                       </>
                     )}
@@ -478,7 +480,7 @@ export default function MerchantBulkPurchase() {
 
                   <Button
                     onClick={handleSubmit}
-                    disabled={isProcessing || quantity < 1 || unitPrice < 1}
+                    disabled={isProcessing || quantity < 1 || currentUnitPrice < 1}
                     className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold py-3 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isProcessing ? (

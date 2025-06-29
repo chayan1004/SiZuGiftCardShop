@@ -6,20 +6,35 @@ export class MerchantBulkOrderService {
    * Create a new bulk order for a merchant
    */
   static async createBulkOrder(
-    merchantId: number,
+    merchantId: string | number,
     quantity: number,
     unitPrice: number
   ): Promise<MerchantBulkOrder> {
+    console.log(`Creating bulk order for merchantId: ${merchantId} (type: ${typeof merchantId})`);
+    
+    // Get merchant by merchantId to get the database ID
+    const merchant = typeof merchantId === 'string' 
+      ? await storage.getMerchantBySquareId(merchantId)
+      : await storage.getMerchant(merchantId);
+    
+    console.log(`Found merchant:`, merchant);
+    
+    if (!merchant) {
+      throw new Error(`Merchant not found for ID: ${merchantId}`);
+    }
+
     // Calculate total price server-side
     const totalPrice = quantity * unitPrice;
 
     const insertOrder: InsertMerchantBulkOrder = {
-      merchant_id: merchantId,
+      merchant_id: merchant.id,
       quantity,
       unit_price: unitPrice.toFixed(2),
       total_price: totalPrice.toFixed(2),
       status: 'pending'
     };
+
+    console.log(`Creating bulk order with data:`, insertOrder);
 
     return await storage.createMerchantBulkOrder(insertOrder);
   }
@@ -27,8 +42,17 @@ export class MerchantBulkOrderService {
   /**
    * Get all bulk orders for a specific merchant
    */
-  static async getBulkOrdersByMerchant(merchantId: number): Promise<MerchantBulkOrder[]> {
-    return await storage.getMerchantBulkOrders(merchantId.toString());
+  static async getBulkOrdersByMerchant(merchantId: string | number): Promise<MerchantBulkOrder[]> {
+    // Get merchant by merchantId to get the database ID
+    const merchant = typeof merchantId === 'string' 
+      ? await storage.getMerchantBySquareId(merchantId)
+      : await storage.getMerchant(merchantId);
+    
+    if (!merchant) {
+      throw new Error('Merchant not found');
+    }
+
+    return await storage.getMerchantBulkOrders(merchant.id.toString());
   }
 
   /**

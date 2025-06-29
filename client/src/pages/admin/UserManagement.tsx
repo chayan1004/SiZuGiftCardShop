@@ -57,41 +57,41 @@ export default function MerchantManagement() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <UserPlus className="w-5 h-5 text-blue-600" />
+              <div className="p-2 bg-blue-500/20 rounded-lg border border-blue-400/30">
+                <UserPlus className="w-5 h-5 text-blue-400" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Total Merchants</p>
-                <p className="text-2xl font-bold">{merchants.length}</p>
+                <p className="text-sm text-gray-300">Total Merchants</p>
+                <p className="text-2xl font-bold text-white">{merchants.length}</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Mail className="w-5 h-5 text-green-600" />
+              <div className="p-2 bg-green-500/20 rounded-lg border border-green-400/30">
+                <Mail className="w-5 h-5 text-green-400" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Verified</p>
-                <p className="text-2xl font-bold">{merchants.filter(m => m.isEmailVerified).length}</p>
+                <p className="text-sm text-gray-300">Verified</p>
+                <p className="text-2xl font-bold text-white">{merchants.filter(m => m.isEmailVerified).length}</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <Calendar className="w-5 h-5 text-yellow-600" />
+              <div className="p-2 bg-yellow-500/20 rounded-lg border border-yellow-400/30">
+                <Calendar className="w-5 h-5 text-yellow-400" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Active Today</p>
-                <p className="text-2xl font-bold">{merchants.filter(m => {
+                <p className="text-sm text-gray-300">Active Today</p>
+                <p className="text-2xl font-bold text-white">{merchants.filter(m => {
                   const today = new Date().toDateString();
                   return m.lastLogin && new Date(m.lastLogin).toDateString() === today;
                 }).length}</p>
@@ -99,15 +99,15 @@ export default function MerchantManagement() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <MapPin className="w-5 h-5 text-purple-600" />
+              <div className="p-2 bg-purple-500/20 rounded-lg border border-purple-400/30">
+                <MapPin className="w-5 h-5 text-purple-400" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Total Revenue</p>
-                <p className="text-2xl font-bold">${merchants.reduce((sum, m) => sum + m.totalSales, 0).toFixed(2)}</p>
+                <p className="text-sm text-gray-300">Total Revenue</p>
+                <p className="text-2xl font-bold text-white">${merchants.reduce((sum, m) => sum + m.totalSales, 0).toFixed(2)}</p>
               </div>
             </div>
           </CardContent>
@@ -115,7 +115,7 @@ export default function MerchantManagement() {
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
@@ -124,19 +124,19 @@ export default function MerchantManagement() {
                 placeholder="Search merchants..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:border-blue-400"
               />
             </div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 bg-white/10 border border-white/20 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
             >
-              <option value="all">All Status</option>
-              <option value="verified">Verified</option>
-              <option value="unverified">Unverified</option>
+              <option value="all" className="bg-gray-800 text-white">All Status</option>
+              <option value="verified" className="bg-gray-800 text-white">Verified</option>
+              <option value="unverified" className="bg-gray-800 text-white">Unverified</option>
             </select>
-            <Button variant="outline">
+            <Button variant="outline" className="border-white/30 text-gray-300 hover:bg-white/10 hover:text-white">
               <Filter className="w-4 h-4 mr-2" />
               Advanced Filters
             </Button>

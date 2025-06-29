@@ -59,6 +59,7 @@ export const requireMerchant = (req: Request, res: Response, next: NextFunction)
   try {
     // Try JWT verification first
     const decoded = AuthService.verifyToken(merchantToken);
+
     if (decoded && decoded.role === 'merchant') {
       (req as any).merchantId = decoded.merchantId;
       (req as any).merchantEmail = decoded.email;

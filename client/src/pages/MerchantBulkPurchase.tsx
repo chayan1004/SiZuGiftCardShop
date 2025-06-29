@@ -209,7 +209,7 @@ export default function MerchantBulkPurchase() {
         
         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
+            <Button variant="ghost" size="sm" className="text-[#613791] hover:bg-white/10">
               <Menu className="w-5 h-5" />
             </Button>
           </SheetTrigger>
@@ -217,7 +217,7 @@ export default function MerchantBulkPurchase() {
             <div className="flex flex-col space-y-4 mt-8">
               <Button
                 variant="ghost"
-                className="justify-start text-white hover:bg-white/10"
+                className="justify-start text-[#613791] hover:bg-white/10"
                 onClick={() => {
                   setLocation('/merchant-dashboard');
                   setIsMobileMenuOpen(false);
@@ -229,7 +229,7 @@ export default function MerchantBulkPurchase() {
               
               <Button
                 variant="ghost"
-                className="justify-start text-white hover:bg-white/10"
+                className="justify-start text-[#613791] hover:bg-white/10"
                 onClick={() => {
                   setLocation('/merchant-dashboard');
                   setIsMobileMenuOpen(false);
@@ -241,7 +241,7 @@ export default function MerchantBulkPurchase() {
               
               <Button
                 variant="ghost"
-                className="justify-start text-white hover:bg-white/10"
+                className="justify-start text-[#613791] hover:bg-white/10"
                 onClick={() => {
                   setLocation('/merchant-dashboard');
                   setIsMobileMenuOpen(false);
@@ -460,7 +460,7 @@ export default function MerchantBulkPurchase() {
                         </div>
                         
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-300 text-sm">Discounted price per card:</span>
+                          <span className="text-[#dd4bae] text-sm">Discounted price per card:</span>
                           <span className="text-white">{formatCurrency(calculateDiscountedPrice())}</span>
                         </div>
                       </>
@@ -475,7 +475,7 @@ export default function MerchantBulkPurchase() {
 
                     {savings > 0 && (
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-300 text-sm">You save:</span>
+                        <span className="text-[#dd4bae] text-sm">You save:</span>
                         <span className="text-green-400 font-semibold">{formatCurrency(savings)}</span>
                       </div>
                     )}

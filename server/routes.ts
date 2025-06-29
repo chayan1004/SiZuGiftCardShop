@@ -418,7 +418,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Generate Square OAuth URL with merchant ID in state
       const authUrl = squareService.getAuthorizationUrl(merchantId);
-      res.json({ authUrl });
+      res.json({ 
+        success: true,
+        authUrl 
+      });
     } catch (error) {
       console.error('Square auth URL error:', error);
       res.status(500).json({ 

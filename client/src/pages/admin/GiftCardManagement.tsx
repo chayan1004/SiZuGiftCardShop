@@ -135,13 +135,13 @@ export default function GiftCardManagement() {
                       <TableCell className="text-xs lg:text-sm hidden lg:table-cell text-gray-300">{new Date(card.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-1">
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-white/10 text-gray-300 hover:text-white">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-gradient-to-r hover:from-[#fa8d1b] hover:to-[#9c53f0] text-[#51525e] hover:text-white transition-all duration-300">
                             <Eye className="w-3 h-3 lg:w-4 lg:h-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hidden sm:flex hover:bg-white/10 text-gray-300 hover:text-white">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hidden sm:flex hover:bg-gradient-to-r hover:from-[#fa8d1b] hover:to-[#9c53f0] text-[#51525e] hover:text-white transition-all duration-300">
                             <Edit className="w-3 h-3 lg:w-4 lg:h-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-400 hidden lg:flex hover:bg-red-500/20 hover:text-red-300">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-[#51525e] hidden lg:flex hover:bg-gradient-to-r hover:from-[#fa8d1b] hover:to-[#9c53f0] hover:text-white transition-all duration-300">
                             <Trash2 className="w-3 h-3 lg:w-4 lg:h-4" />
                           </Button>
                         </div>

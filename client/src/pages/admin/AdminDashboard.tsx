@@ -295,7 +295,7 @@ export default function AdminDashboard() {
                 onClick={() => window.location.href = '/'}
                 variant="ghost"
                 size="sm"
-                className="w-full justify-start text-gray-300 hover:text-white hover:bg-white/10 border border-transparent hover:border-white/20 transition-all duration-200"
+                className="w-full justify-start text-[#51525e] hover:text-white hover:bg-gradient-to-r hover:from-[#fa8d1b] hover:to-[#9c53f0] border border-transparent hover:border-[#fa8d1b]/30 transition-all duration-300"
               >
                 <Home className="w-4 h-4 mr-3" />
                 <span className="text-sm font-medium">Back to Site</span>
@@ -304,7 +304,7 @@ export default function AdminDashboard() {
                 onClick={handleLogout}
                 variant="ghost"
                 size="sm"
-                className="w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-transparent hover:border-red-500/30 transition-all duration-200"
+                className="w-full justify-start text-[#51525e] hover:text-white hover:bg-gradient-to-r hover:from-[#fa8d1b] hover:to-[#9c53f0] border border-transparent hover:border-[#fa8d1b]/30 transition-all duration-300"
               >
                 <LogOut className="w-4 h-4 mr-3" />
                 <span className="text-sm font-medium">Logout</span>
@@ -1087,10 +1087,10 @@ export default function AdminDashboard() {
                       </div>
                       
                       <div className="mt-6 flex gap-4">
-                        <Button className="flex-1 bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800 text-white font-medium">
+                        <Button className="flex-1 bg-gradient-to-r from-[#fa8d1b] to-[#9c53f0] hover:from-[#9c53f0] hover:to-[#fa8d1b] text-white font-medium shadow-lg transition-all duration-300">
                           Create Backup
                         </Button>
-                        <Button variant="outline" className="flex-1 border-white/20 text-white hover:bg-white/10 hover:text-white font-medium">
+                        <Button variant="outline" className="flex-1 border-[#fa8d1b] text-[#fa8d1b] hover:bg-gradient-to-r hover:from-[#fa8d1b] hover:to-[#9c53f0] hover:text-white font-medium transition-all duration-300">
                           Download Logs
                         </Button>
                       </div>

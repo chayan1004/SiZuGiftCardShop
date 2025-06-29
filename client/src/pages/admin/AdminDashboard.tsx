@@ -878,7 +878,7 @@ export default function AdminDashboard() {
                           <Badge className="bg-green-500/20 text-green-300 border-green-500/30">Enabled</Badge>
                         </div>
                         
-                        <Button className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800">
+                        <Button className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium">
                           Reset Admin Password
                         </Button>
                       </CardContent>
@@ -918,7 +918,7 @@ export default function AdminDashboard() {
                           <Badge className="bg-green-500/20 text-green-300 border-green-500/30">Healthy</Badge>
                         </div>
                         
-                        <Button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                        <Button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium">
                           Test Email Delivery
                         </Button>
                       </CardContent>
@@ -1010,7 +1010,7 @@ export default function AdminDashboard() {
                           <span className="text-white font-mono">10/sec</span>
                         </div>
                         
-                        <Button className="w-full bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800">
+                        <Button className="w-full bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white font-medium">
                           Test Square Connection
                         </Button>
                       </CardContent>
@@ -1057,10 +1057,10 @@ export default function AdminDashboard() {
                       </div>
                       
                       <div className="mt-6 flex gap-4">
-                        <Button className="flex-1 bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800">
+                        <Button className="flex-1 bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800 text-white font-medium">
                           Create Backup
                         </Button>
-                        <Button variant="outline" className="flex-1 border-white/20 text-white hover:bg-white/10">
+                        <Button variant="outline" className="flex-1 border-white/20 text-white hover:bg-white/10 hover:text-white font-medium">
                           Download Logs
                         </Button>
                       </div>
@@ -1081,7 +1081,7 @@ export default function AdminDashboard() {
                         <div className="space-y-4">
                           <h4 className="text-white font-medium">Maintenance Mode</h4>
                           <p className="text-sm text-gray-400">Temporarily disable public access for system updates</p>
-                          <Button variant="outline" className="w-full border-orange-500/30 text-orange-300 hover:bg-orange-500/10">
+                          <Button variant="outline" className="w-full border-orange-500/30 text-orange-300 hover:bg-orange-500/10 hover:text-orange-200 font-medium">
                             Enable Maintenance Mode
                           </Button>
                         </div>
@@ -1089,7 +1089,7 @@ export default function AdminDashboard() {
                         <div className="space-y-4">
                           <h4 className="text-white font-medium">Cache Management</h4>
                           <p className="text-sm text-gray-400">Clear system caches to improve performance</p>
-                          <Button variant="outline" className="w-full border-blue-500/30 text-blue-300 hover:bg-blue-500/10">
+                          <Button variant="outline" className="w-full border-blue-500/30 text-blue-300 hover:bg-blue-500/10 hover:text-blue-200 font-medium">
                             Clear All Caches
                           </Button>
                         </div>
@@ -1097,7 +1097,7 @@ export default function AdminDashboard() {
                         <div className="space-y-4">
                           <h4 className="text-white font-medium">API Documentation</h4>
                           <p className="text-sm text-gray-400">Access comprehensive API documentation</p>
-                          <Button variant="outline" className="w-full border-purple-500/30 text-purple-300 hover:bg-purple-500/10">
+                          <Button variant="outline" className="w-full border-purple-500/30 text-purple-300 hover:bg-purple-500/10 hover:text-purple-200 font-medium">
                             View API Docs
                           </Button>
                         </div>
@@ -1105,7 +1105,7 @@ export default function AdminDashboard() {
                         <div className="space-y-4">
                           <h4 className="text-white font-medium">System Logs</h4>
                           <p className="text-sm text-gray-400">Monitor system events and error logs</p>
-                          <Button variant="outline" className="w-full border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10">
+                          <Button variant="outline" className="w-full border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10 hover:text-cyan-200 font-medium">
                             View System Logs
                           </Button>
                         </div>

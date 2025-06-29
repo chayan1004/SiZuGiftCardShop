@@ -111,7 +111,7 @@ export default function MerchantDashboard({ isOpen, onClose }: MerchantDashboard
                 <li key={item.id}>
                   <button
                     onClick={() => setActiveTab(item.id)}
-                    className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors hover:text-square-blue hover:bg-slate-50 text-[#a04bec]"
+                    className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors hover:text-square-blue hover:bg-slate-50 text-[#4d1b78]"
                   >
                     <item.icon size={20} />
                     <span className="font-medium text-[#9333ea]">{item.label}</span>

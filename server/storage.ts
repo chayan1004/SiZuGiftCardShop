@@ -1,5 +1,5 @@
 import { 
-  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchantBulkOrders,
+  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders,
   type User, type InsertUser,
   type Merchant, type InsertMerchant, 
   type GiftCard, type InsertGiftCard,
@@ -426,7 +426,7 @@ export class DatabaseStorage implements IStorage {
   // Merchant Bulk Purchase methods
   async createMerchantBulkOrder(insertOrder: InsertMerchantBulkOrder): Promise<MerchantBulkOrder> {
     const [order] = await db
-      .insert(merchantBulkOrders)
+      .insert(merchant_bulk_orders)
       .values(insertOrder)
       .returning();
     return order;
@@ -435,28 +435,25 @@ export class DatabaseStorage implements IStorage {
   async getMerchantBulkOrders(merchantId: string): Promise<MerchantBulkOrder[]> {
     return await db
       .select()
-      .from(merchantBulkOrders)
-      .where(eq(merchantBulkOrders.merchantId, merchantId))
-      .orderBy(desc(merchantBulkOrders.createdAt));
+      .from(merchant_bulk_orders)
+      .where(eq(merchant_bulk_orders.merchant_id, parseInt(merchantId)))
+      .orderBy(desc(merchant_bulk_orders.created_at));
   }
 
   async updateMerchantBulkOrderStatus(bulkOrderId: string, status: string): Promise<MerchantBulkOrder | undefined> {
     const [order] = await db
-      .update(merchantBulkOrders)
-      .set({ 
-        status,
-        completedAt: status === 'COMPLETED' ? new Date() : null
-      })
-      .where(eq(merchantBulkOrders.bulkOrderId, bulkOrderId))
+      .update(merchant_bulk_orders)
+      .set({ status })
+      .where(eq(merchant_bulk_orders.id, bulkOrderId))
       .returning();
     return order || undefined;
   }
 
   async updateMerchantBulkOrderPayment(bulkOrderId: string, paymentId: string): Promise<MerchantBulkOrder | undefined> {
     const [order] = await db
-      .update(merchantBulkOrders)
-      .set({ squarePaymentId: paymentId })
-      .where(eq(merchantBulkOrders.bulkOrderId, bulkOrderId))
+      .update(merchant_bulk_orders)
+      .set({ status: 'fulfilled' })
+      .where(eq(merchant_bulk_orders.id, bulkOrderId))
       .returning();
     return order || undefined;
   }

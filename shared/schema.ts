@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, decimal } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, decimal, uuid, numeric } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -88,19 +88,14 @@ export const merchantGiftCards = pgTable("merchant_gift_cards", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const merchantBulkOrders = pgTable("merchant_bulk_orders", {
-  id: serial("id").primaryKey(),
-  merchantId: text("merchant_id").notNull(),
-  bulkOrderId: text("bulk_order_id").notNull().unique(),
-  totalAmount: integer("total_amount").notNull(), // Total cost in cents
+export const merchant_bulk_orders = pgTable("merchant_bulk_orders", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  merchant_id: integer("merchant_id").notNull().references(() => merchants.id),
   quantity: integer("quantity").notNull(),
-  cardAmount: integer("card_amount").notNull(), // Individual card amount in cents
-  logoUrl: text("logo_url"),
-  customMessage: text("custom_message"),
-  status: text("status").notNull().default("PENDING"), // PENDING, COMPLETED, FAILED
-  squarePaymentId: text("square_payment_id"),
-  createdAt: timestamp("created_at").defaultNow(),
-  completedAt: timestamp("completed_at"),
+  unit_price: numeric("unit_price").notNull(),
+  total_price: numeric("total_price").notNull(),
+  status: text("status").default("pending"), // pending, fulfilled, failed
+  created_at: timestamp("created_at").defaultNow(),
 });
 
 export const insertMerchantSchema = createInsertSchema(merchants).omit({
@@ -140,10 +135,9 @@ export const insertMerchantGiftCardSchema = createInsertSchema(merchantGiftCards
   updatedAt: true,
 });
 
-export const insertMerchantBulkOrderSchema = createInsertSchema(merchantBulkOrders).omit({
+export const merchantBulkOrdersSchema = createInsertSchema(merchant_bulk_orders).omit({
   id: true,
-  createdAt: true,
-  completedAt: true,
+  created_at: true,
 });
 
 export type Merchant = typeof merchants.$inferSelect;
@@ -160,5 +154,5 @@ export type PromoUsage = typeof promoUsage.$inferSelect;
 export type InsertPromoUsage = z.infer<typeof insertPromoUsageSchema>;
 export type MerchantGiftCard = typeof merchantGiftCards.$inferSelect;
 export type InsertMerchantGiftCard = z.infer<typeof insertMerchantGiftCardSchema>;
-export type MerchantBulkOrder = typeof merchantBulkOrders.$inferSelect;
-export type InsertMerchantBulkOrder = z.infer<typeof insertMerchantBulkOrderSchema>;
+export type MerchantBulkOrder = typeof merchant_bulk_orders.$inferSelect;
+export type InsertMerchantBulkOrder = z.infer<typeof merchantBulkOrdersSchema>;

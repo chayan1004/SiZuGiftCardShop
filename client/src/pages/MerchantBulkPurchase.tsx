@@ -164,7 +164,7 @@ export default function MerchantBulkPurchase() {
               onClick={() => setLocation('/merchant-dashboard')}
               variant="outline"
               size="sm"
-              className="border-white/20 text-white hover:bg-white/10"
+              className="border-white/20 text-white hover:bg-white/10 hover:text-white"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Dashboard
@@ -241,8 +241,8 @@ export default function MerchantBulkPurchase() {
                         size="sm"
                         className={
                           quantity === qty
-                            ? "bg-blue-500 hover:bg-blue-600 text-white"
-                            : "border-white/20 text-white hover:bg-white/10"
+                            ? "bg-blue-500 hover:bg-blue-600 text-white border-blue-500"
+                            : "border-white/20 text-white hover:bg-white/10 hover:text-white hover:border-white/30"
                         }
                         onClick={() => setQuantity(qty)}
                       >
@@ -359,7 +359,7 @@ export default function MerchantBulkPurchase() {
               <Button
                 onClick={handleSubmit}
                 disabled={isProcessing || quantity < 1 || unitPrice < 1}
-                className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold py-3"
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold py-3 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isProcessing ? (
                   <>

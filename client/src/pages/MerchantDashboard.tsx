@@ -152,7 +152,7 @@ export default function MerchantDashboard() {
             <Button
               onClick={handleRefresh}
               size="sm"
-              className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+              className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-medium"
             >
               <RefreshCw className="w-4 h-4 mr-2" />
               Refresh
@@ -161,7 +161,7 @@ export default function MerchantDashboard() {
               onClick={handleLogout}
               variant="outline"
               size="sm"
-              className="border-white/20 text-white hover:bg-white/10"
+              className="border-white/20 text-white hover:bg-white/10 hover:text-white hover:border-white/30"
             >
               <LogOut className="w-4 h-4 mr-2" />
               Logout
@@ -255,7 +255,7 @@ export default function MerchantDashboard() {
               </div>
               <Button
                 onClick={() => window.location.href = '/merchant-bulk-purchase'}
-                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-medium"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Buy Gift Cards
@@ -308,8 +308,8 @@ export default function MerchantDashboard() {
                 </p>
                 {giftCards.length === 0 && (
                   <Button
-                    onClick={() => window.location.href = '/merchant/bulk-order'}
-                    className="bg-gradient-to-r from-green-500 to-emerald-500"
+                    onClick={() => window.location.href = '/merchant-bulk-purchase'}
+                    className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-medium"
                   >
                     Create Your First Gift Cards
                   </Button>
@@ -351,7 +351,7 @@ export default function MerchantDashboard() {
                       <Button 
                         size="sm" 
                         variant="outline"
-                        className="flex-1 border-white/20 text-white hover:bg-white/10"
+                        className="flex-1 border-white/20 text-white hover:bg-white/10 hover:text-white hover:border-white/30"
                         onClick={() => window.location.href = `/gift/${card.gan}`}
                       >
                         <Eye className="w-3 h-3 mr-1" />
@@ -360,7 +360,7 @@ export default function MerchantDashboard() {
                       <Button 
                         size="sm" 
                         variant="outline"
-                        className="border-white/20 text-white hover:bg-white/10"
+                        className="border-white/20 text-white hover:bg-white/10 hover:text-white hover:border-white/30"
                       >
                         <Download className="w-3 h-3" />
                       </Button>
@@ -403,7 +403,7 @@ export default function MerchantDashboard() {
                 <p className="text-gray-400 mb-4">No bulk orders found</p>
                 <Button
                   onClick={() => window.location.href = '/merchant-bulk-purchase'}
-                  className="bg-gradient-to-r from-purple-500 to-pink-500"
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium"
                 >
                   Place Your First Bulk Order
                 </Button>

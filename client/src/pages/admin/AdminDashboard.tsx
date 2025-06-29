@@ -582,58 +582,66 @@ export default function AdminDashboard() {
 
                   {/* Email Performance Metrics */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <Card className="bg-gradient-to-r from-green-600/30 to-green-500/20 border border-green-500/40 backdrop-blur-sm">
+                    <Card className="bg-gradient-to-br from-green-600/30 via-emerald-500/25 to-green-500/30 border-green-400/40 shadow-lg shadow-green-500/20 backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl">
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
-                            <p className="text-white text-sm font-medium mb-2 drop-shadow-sm">Delivery Rate</p>
-                            <p className="text-2xl font-bold text-white drop-shadow-sm">
+                            <p className="text-white text-sm font-medium mb-2">Delivery Rate</p>
+                            <p className="text-2xl font-bold text-white">
                               {(emailMetrics as any)?.data?.overview?.deliveryRate || '98.5'}%
                             </p>
                           </div>
-                          <Mail className="text-white/80 flex-shrink-0" size={24} />
+                          <div className="p-3 rounded-xl bg-gradient-to-br from-green-500 via-emerald-400 to-green-600 shadow-xl shadow-green-500/40">
+                            <Mail className="text-white" size={24} />
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
 
-                    <Card className="bg-gradient-to-r from-blue-600/30 to-blue-500/20 border border-blue-500/40 backdrop-blur-sm">
+                    <Card className="bg-gradient-to-br from-blue-600/30 via-cyan-500/25 to-blue-500/30 border-blue-400/40 shadow-lg shadow-blue-500/20 backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl">
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
-                            <p className="text-white text-sm font-medium mb-2 drop-shadow-sm">Bounce Rate</p>
-                            <p className="text-2xl font-bold text-white drop-shadow-sm">
+                            <p className="text-white text-sm font-medium mb-2">Bounce Rate</p>
+                            <p className="text-2xl font-bold text-white">
                               {(emailMetrics as any)?.data?.overview?.bounceRate || '1.2'}%
                             </p>
                           </div>
-                          <Activity className="text-white/80 flex-shrink-0" size={24} />
+                          <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 via-cyan-400 to-blue-600 shadow-xl shadow-blue-500/40">
+                            <Activity className="text-white" size={24} />
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
 
-                    <Card className="bg-gradient-to-r from-purple-600/30 to-purple-500/20 border border-purple-500/40 backdrop-blur-sm">
+                    <Card className="bg-gradient-to-br from-purple-600/30 via-violet-500/25 to-purple-500/30 border-purple-400/40 shadow-lg shadow-purple-500/20 backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl">
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
-                            <p className="text-white text-sm font-medium mb-2 drop-shadow-sm">Daily Sent</p>
-                            <p className="text-2xl font-bold text-white drop-shadow-sm">
+                            <p className="text-white text-sm font-medium mb-2">Daily Sent</p>
+                            <p className="text-2xl font-bold text-white">
                               {(emailMetrics as any)?.data?.volumeStatus?.sentToday || (queueStatus as any)?.data?.sentToday || '239'}
                             </p>
                           </div>
-                          <TrendingUp className="text-white/80 flex-shrink-0" size={24} />
+                          <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 via-violet-400 to-purple-600 shadow-xl shadow-purple-500/40">
+                            <TrendingUp className="text-white" size={24} />
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
 
-                    <Card className="bg-gradient-to-r from-orange-600/30 to-orange-500/20 border border-orange-500/40 backdrop-blur-sm">
+                    <Card className="bg-gradient-to-br from-orange-600/30 via-amber-500/25 to-orange-500/30 border-orange-400/40 shadow-lg shadow-orange-500/20 backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl">
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
-                            <p className="text-white text-sm font-medium mb-2 drop-shadow-sm">Daily Limit</p>
-                            <p className="text-2xl font-bold text-white drop-shadow-sm">
+                            <p className="text-white text-sm font-medium mb-2">Daily Limit</p>
+                            <p className="text-2xl font-bold text-white">
                               {(emailMetrics as any)?.data?.volumeStatus?.dailyLimit || (queueStatus as any)?.data?.dailyLimit || '1,000'}
                             </p>
                           </div>
-                          <Settings className="text-white/80 flex-shrink-0" size={24} />
+                          <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500 via-amber-400 to-orange-600 shadow-xl shadow-orange-500/40">
+                            <Settings className="text-white" size={24} />
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
@@ -1225,50 +1233,58 @@ export default function AdminDashboard() {
 
                   {/* Performance Metrics */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <Card className="bg-gradient-to-r from-blue-600/20 to-blue-500/20 border border-blue-500/30">
+                    <Card className="bg-gradient-to-br from-blue-600/30 via-cyan-500/25 to-blue-500/30 border-blue-400/40 shadow-lg shadow-blue-500/20 backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl">
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-blue-200 text-sm font-medium">Conversion Rate</p>
+                            <p className="text-white text-sm font-medium">Conversion Rate</p>
                             <p className="text-2xl font-bold text-white">{metrics.conversionRate}</p>
                           </div>
-                          <TrendingUp className="text-blue-400" size={24} />
+                          <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 via-cyan-400 to-blue-600 shadow-xl shadow-blue-500/40">
+                            <TrendingUp className="text-white" size={24} />
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
 
-                    <Card className="bg-gradient-to-r from-green-600/20 to-green-500/20 border border-green-500/30">
+                    <Card className="bg-gradient-to-br from-green-600/30 via-emerald-500/25 to-green-500/30 border-green-400/40 shadow-lg shadow-green-500/20 backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl">
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-green-200 text-sm font-medium">Avg. Card Value</p>
+                            <p className="text-white text-sm font-medium">Avg. Card Value</p>
                             <p className="text-2xl font-bold text-white">${(metrics.averageValue / 100).toFixed(2)}</p>
                           </div>
-                          <DollarSign className="text-green-400" size={24} />
+                          <div className="p-3 rounded-xl bg-gradient-to-br from-green-500 via-emerald-400 to-green-600 shadow-xl shadow-green-500/40">
+                            <DollarSign className="text-white" size={24} />
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
 
-                    <Card className="bg-gradient-to-r from-purple-600/20 to-purple-500/20 border border-purple-500/30">
+                    <Card className="bg-gradient-to-br from-purple-600/30 via-violet-500/25 to-purple-500/30 border-purple-400/40 shadow-lg shadow-purple-500/20 backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl">
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-purple-200 text-sm font-medium">Total Customers</p>
+                            <p className="text-white text-sm font-medium">Total Customers</p>
                             <p className="text-2xl font-bold text-white">{metrics.customers}</p>
                           </div>
-                          <Users className="text-purple-400" size={24} />
+                          <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 via-violet-400 to-purple-600 shadow-xl shadow-purple-500/40">
+                            <Users className="text-white" size={24} />
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
 
-                    <Card className="bg-gradient-to-r from-orange-600/20 to-orange-500/20 border border-orange-500/30">
+                    <Card className="bg-gradient-to-br from-orange-600/30 via-amber-500/25 to-orange-500/30 border-orange-400/40 shadow-lg shadow-orange-500/20 backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl">
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-orange-200 text-sm font-medium">Total Redemptions</p>
+                            <p className="text-white text-sm font-medium">Total Redemptions</p>
                             <p className="text-2xl font-bold text-white">{metrics.redemptions}</p>
                           </div>
-                          <Activity className="text-orange-400" size={24} />
+                          <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500 via-amber-400 to-orange-600 shadow-xl shadow-orange-500/40">
+                            <Activity className="text-white" size={24} />
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
@@ -1348,28 +1364,28 @@ interface MetricCardProps {
 function MetricCard({ title, value, icon, color, subtitle, trend }: MetricCardProps) {
   const colorClasses = {
     blue: {
-      card: 'bg-gradient-to-r from-blue-600/20 to-blue-500/20 border-blue-500/30',
-      icon: 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25',
+      card: 'bg-gradient-to-br from-blue-600/30 via-cyan-500/25 to-blue-500/30 border-blue-400/40 shadow-lg shadow-blue-500/20',
+      icon: 'bg-gradient-to-br from-blue-500 via-cyan-400 to-blue-600 text-white shadow-xl shadow-blue-500/40',
       text: 'text-white',
-      accent: 'text-blue-300'
+      accent: 'text-cyan-300'
     },
     green: {
-      card: 'bg-gradient-to-r from-green-600/20 to-green-500/20 border-green-500/30',
-      icon: 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg shadow-green-500/25',
+      card: 'bg-gradient-to-br from-green-600/30 via-emerald-500/25 to-green-500/30 border-green-400/40 shadow-lg shadow-green-500/20',
+      icon: 'bg-gradient-to-br from-green-500 via-emerald-400 to-green-600 text-white shadow-xl shadow-green-500/40',
       text: 'text-white',
-      accent: 'text-green-300'
+      accent: 'text-emerald-300'
     },
     purple: {
-      card: 'bg-gradient-to-r from-purple-600/20 to-purple-500/20 border-purple-500/30',
-      icon: 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/25',
+      card: 'bg-gradient-to-br from-purple-600/30 via-violet-500/25 to-purple-500/30 border-purple-400/40 shadow-lg shadow-purple-500/20',
+      icon: 'bg-gradient-to-br from-purple-500 via-violet-400 to-purple-600 text-white shadow-xl shadow-purple-500/40',
       text: 'text-white',
-      accent: 'text-purple-300'
+      accent: 'text-violet-300'
     },
     orange: {
-      card: 'bg-gradient-to-r from-orange-600/20 to-orange-500/20 border-orange-500/30',
-      icon: 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/25',
+      card: 'bg-gradient-to-br from-orange-600/30 via-amber-500/25 to-orange-500/30 border-orange-400/40 shadow-lg shadow-orange-500/20',
+      icon: 'bg-gradient-to-br from-orange-500 via-amber-400 to-orange-600 text-white shadow-xl shadow-orange-500/40',
       text: 'text-white',
-      accent: 'text-orange-300'
+      accent: 'text-amber-300'
     },
   };
 

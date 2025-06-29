@@ -86,7 +86,7 @@ export default function MerchantDashboard() {
   };
 
   // Show loading while checking authentication or loading data
-  if (!auth.isAuthenticated || auth.role !== 'merchant' || statsLoading) {
+  if (!merchantId || !localStorage.getItem('merchantToken') || statsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900">
         <div className="text-center">
@@ -102,7 +102,7 @@ export default function MerchantDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900">
       {/* Email Verification Banner */}
-      <EmailVerificationBanner merchantEmail={auth.merchantId || ""} />
+      <EmailVerificationBanner merchantEmail={merchantId || ""} />
       
       <div className="p-6">
         {/* Header */}

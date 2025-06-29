@@ -45,22 +45,7 @@ interface WeeklyRevenue {
 }
 
 export default function AdminDashboard() {
-  const [adminToken, setAdminToken] = useState<string>("");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { toast } = useToast();
-
-  // Admin authentication
-  const handleAdminLogin = () => {
-    if (!adminToken.trim()) {
-      toast({
-        title: "Authentication Required",
-        description: "Please enter your admin token",
-        variant: "destructive"
-      });
-      return;
-    }
-    setIsAuthenticated(true);
-  };
 
   // Fetch admin metrics with authentication
   const { 
@@ -71,9 +56,10 @@ export default function AdminDashboard() {
   } = useQuery({
     queryKey: ['/api/admin/metrics'],
     queryFn: async () => {
+      const adminToken = localStorage.getItem('adminToken');
       const response = await fetch('/api/admin/metrics', {
         headers: {
-          'x-admin-token': adminToken
+          'x-admin-token': adminToken || ''
         }
       });
       if (!response.ok) {
@@ -81,7 +67,6 @@ export default function AdminDashboard() {
       }
       return response.json();
     },
-    enabled: isAuthenticated && !!adminToken,
     refetchInterval: 30000, // Refresh every 30 seconds for real-time data
   });
 
@@ -129,32 +114,15 @@ export default function AdminDashboard() {
         </div>
 
         <div className="p-6">
-          {!isAuthenticated ? (
-            <div className="p-8 text-center">
-              <div className="max-w-md mx-auto">
-                <h3 className="text-xl font-semibold mb-4">Admin Authentication Required</h3>
-                <input
-                  type="password"
-                  placeholder="Enter admin token"
-                  value={adminToken}
-                  onChange={(e) => setAdminToken(e.target.value)}
-                  className="w-full p-3 border rounded-lg mb-4"
-                  onKeyPress={(e) => e.key === 'Enter' && handleAdminLogin()}
-                />
-                <Button onClick={handleAdminLogin} className="w-full">
-                  Access Dashboard
-                </Button>
-              </div>
-            </div>
-          ) : metricsLoading ? (
+          {metricsLoading ? (
             <div className="p-8 text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
               <p className="mt-4 text-gray-600">Loading dashboard metrics...</p>
             </div>
           ) : metricsError ? (
             <div className="p-8 text-center">
-              <p className="text-red-600">Failed to load admin metrics. Please check your token and try again.</p>
-              <Button onClick={() => setIsAuthenticated(false)} className="mt-4">
+              <p className="text-red-600">Failed to load admin metrics. Please check your authentication and try again.</p>
+              <Button onClick={() => window.location.href = '/admin-login'} className="mt-4">
                 Re-authenticate
               </Button>
             </div>

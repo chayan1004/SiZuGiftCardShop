@@ -668,40 +668,40 @@ export default function AdminDashboard() {
                           </div>
                           
                           <div className={`flex items-center justify-between p-3 rounded-lg border ${
-                            domainAuth?.data?.authenticationStatus?.dkim ? 
+                            (domainAuth as any)?.data?.authenticationStatus?.dkim ? 
                             'bg-green-500/10 border-green-500/30' : 'bg-orange-500/10 border-orange-500/30'
                           }`}>
                             <div className="flex items-center space-x-3">
                               <div className={`w-3 h-3 rounded-full ${
-                                domainAuth?.data?.authenticationStatus?.dkim ? 'bg-green-400' : 'bg-orange-400'
+                                (domainAuth as any)?.data?.authenticationStatus?.dkim ? 'bg-green-400' : 'bg-orange-400'
                               }`}></div>
                               <span className="text-white font-medium">DKIM Signing</span>
                             </div>
                             <Badge className={`${
-                              domainAuth?.data?.authenticationStatus?.dkim ? 
+                              (domainAuth as any)?.data?.authenticationStatus?.dkim ? 
                               'bg-green-500/20 text-green-300 border-green-500/30' : 
                               'bg-orange-500/20 text-orange-300 border-orange-500/30'
                             }`}>
-                              {domainAuth?.data?.authenticationStatus?.dkim ? 'Active' : 'Setup Required'}
+                              {(domainAuth as any)?.data?.authenticationStatus?.dkim ? 'Active' : 'Setup Required'}
                             </Badge>
                           </div>
                           
                           <div className={`flex items-center justify-between p-3 rounded-lg border ${
-                            domainAuth?.data?.authenticationStatus?.dmarc ? 
+                            (domainAuth as any)?.data?.authenticationStatus?.dmarc ? 
                             'bg-green-500/10 border-green-500/30' : 'bg-orange-500/10 border-orange-500/30'
                           }`}>
                             <div className="flex items-center space-x-3">
                               <div className={`w-3 h-3 rounded-full ${
-                                domainAuth?.data?.authenticationStatus?.dmarc ? 'bg-green-400' : 'bg-orange-400'
+                                (domainAuth as any)?.data?.authenticationStatus?.dmarc ? 'bg-green-400' : 'bg-orange-400'
                               }`}></div>
                               <span className="text-white font-medium">DMARC Policy</span>
                             </div>
                             <Badge className={`${
-                              domainAuth?.data?.authenticationStatus?.dmarc ? 
+                              (domainAuth as any)?.data?.authenticationStatus?.dmarc ? 
                               'bg-green-500/20 text-green-300 border-green-500/30' : 
                               'bg-orange-500/20 text-orange-300 border-orange-500/30'
                             }`}>
-                              {domainAuth?.data?.authenticationStatus?.dmarc ? 'Enforced' : 'Configure'}
+                              {(domainAuth as any)?.data?.authenticationStatus?.dmarc ? 'Enforced' : 'Configure'}
                             </Badge>
                           </div>
                         </div>
@@ -718,18 +718,18 @@ export default function AdminDashboard() {
                           <div className="flex items-center justify-between">
                             <span className="text-gray-300">Warmup Phase</span>
                             <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">
-                              {emailMetrics?.data?.volumeStatus?.warmupPhase || 'Established'}
+                              {(emailMetrics as any)?.data?.volumeStatus?.warmupPhase || 'Established'}
                             </Badge>
                           </div>
                           
                           <div className="flex items-center justify-between">
                             <span className="text-gray-300">Sender Reputation</span>
                             <Badge className={`${
-                              emailMetrics?.data?.overview?.reputation === 'excellent' ?
+                              (emailMetrics as any)?.data?.overview?.reputation === 'excellent' ?
                               'bg-green-500/20 text-green-300 border-green-500/30' :
                               'bg-blue-500/20 text-blue-300 border-blue-500/30'
                             }`}>
-                              {emailMetrics?.data?.overview?.reputation || 'Excellent'}
+                              {(emailMetrics as any)?.data?.overview?.reputation || 'Excellent'}
                             </Badge>
                           </div>
                           
@@ -737,14 +737,14 @@ export default function AdminDashboard() {
                             <div className="flex items-center justify-between text-sm">
                               <span className="text-gray-300">Daily Usage</span>
                               <span className="text-white">
-                                {emailMetrics?.data?.volumeStatus?.sentToday || queueStatus?.data?.sentToday || '239'} / {emailMetrics?.data?.volumeStatus?.dailyLimit || queueStatus?.data?.dailyLimit || '1,000'}
+                                {(emailMetrics as any)?.data?.volumeStatus?.sentToday || (queueStatus as any)?.data?.sentToday || '239'} / {(emailMetrics as any)?.data?.volumeStatus?.dailyLimit || (queueStatus as any)?.data?.dailyLimit || '1,000'}
                               </span>
                             </div>
                             <div className="w-full bg-white/10 rounded-full h-2">
                               <div 
                                 className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full" 
                                 style={{ 
-                                  width: `${Math.min(100, ((emailMetrics?.data?.volumeStatus?.sentToday || queueStatus?.data?.sentToday || 239) / (emailMetrics?.data?.volumeStatus?.dailyLimit || queueStatus?.data?.dailyLimit || 1000)) * 100)}%` 
+                                  width: `${Math.min(100, (((emailMetrics as any)?.data?.volumeStatus?.sentToday || (queueStatus as any)?.data?.sentToday || 239) / ((emailMetrics as any)?.data?.volumeStatus?.dailyLimit || (queueStatus as any)?.data?.dailyLimit || 1000)) * 100)}%` 
                                 }}
                               ></div>
                             </div>
@@ -754,9 +754,9 @@ export default function AdminDashboard() {
                             <Button 
                               size="sm" 
                               className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                              disabled={emailMetrics?.data?.overview?.reputation !== 'excellent'}
+                              disabled={true}
                             >
-                              {emailMetrics?.data?.recommendations?.canScaleUp ? 'Scale Up Volume' : 'Scaling Restricted'}
+                              Scale Up Volume
                             </Button>
                           </div>
                         </div>

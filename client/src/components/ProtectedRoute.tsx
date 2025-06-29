@@ -38,21 +38,43 @@ export function ProtectedRoute({ children, requiredRole, redirectTo = '/' }: Pro
         return;
       }
 
-      // Check for merchant token
+      // Check for merchant token (JWT or legacy format)
       const merchantToken = localStorage.getItem('merchantToken') || 
                            sessionStorage.getItem('merchantToken') ||
                            document.cookie.split(';').find(c => c.trim().startsWith('merchantToken='))?.split('=')[1];
       
-      if (merchantToken && merchantToken.startsWith('merchant-')) {
-        const merchantId = merchantToken.replace('merchant-', '');
-        setAuthState({
-          isAuthenticated: true,
-          role: 'merchant',
-          merchantId,
-          token: merchantToken
-        });
-        setIsLoading(false);
-        return;
+      const merchantData = localStorage.getItem('merchantData');
+      
+      if (merchantToken) {
+        // Try to get merchant data from localStorage
+        if (merchantData) {
+          try {
+            const merchant = JSON.parse(merchantData);
+            setAuthState({
+              isAuthenticated: true,
+              role: 'merchant',
+              merchantId: merchant.merchantId,
+              token: merchantToken
+            });
+            setIsLoading(false);
+            return;
+          } catch (error) {
+            console.error('Failed to parse merchant data:', error);
+          }
+        }
+        
+        // Fallback for legacy token format
+        if (merchantToken.startsWith('merchant-')) {
+          const merchantId = merchantToken.replace('merchant-', '');
+          setAuthState({
+            isAuthenticated: true,
+            role: 'merchant',
+            merchantId,
+            token: merchantToken
+          });
+          setIsLoading(false);
+          return;
+        }
       }
 
       // No valid authentication found
@@ -170,11 +192,27 @@ export const loginAsMerchant = (merchantId: string) => {
   window.location.reload();
 };
 
-export const logout = () => {
+export const logout = async () => {
+  try {
+    // Call backend logout to clear cookies
+    await fetch('/api/merchant/logout', {
+      method: 'POST',
+      credentials: 'include'
+    });
+  } catch (error) {
+    console.error('Logout API error:', error);
+  }
+  
+  // Clear local storage
   localStorage.removeItem('adminToken');
   localStorage.removeItem('merchantToken');
+  localStorage.removeItem('merchantData');
   sessionStorage.removeItem('adminToken');
   sessionStorage.removeItem('merchantToken');
+  sessionStorage.removeItem('merchantData');
+  
+  // Clear cookies manually as fallback
   document.cookie = 'merchantToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+  
   window.location.href = '/';
 };

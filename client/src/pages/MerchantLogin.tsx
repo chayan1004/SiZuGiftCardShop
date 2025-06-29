@@ -21,32 +21,44 @@ export default function MerchantLogin() {
     setIsLoading(true);
 
     try {
-      // Simple validation for demo purposes
-      if (!merchantId.trim()) {
+      const response = await fetch('/api/merchant/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          email: merchantId, // Using merchantId input as email
+          password: password
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Store token in localStorage for client-side auth checks
+        localStorage.setItem('merchantToken', data.token);
+        localStorage.setItem('merchantData', JSON.stringify(data.merchant));
+        
         toast({
-          title: "Error",
-          description: "Please enter your Merchant ID",
+          title: "Login Successful",
+          description: `Welcome back, ${data.merchant.businessName}!`,
+        });
+        
+        // Redirect to home page where they can access the dashboard
+        setLocation("/");
+      } else {
+        toast({
+          title: "Login Failed",
+          description: data.error || "Please check your credentials and try again",
           variant: "destructive"
         });
-        return;
       }
-
-      // For demo purposes, accept any merchant ID
-      // In production, this would validate against your backend
-      loginAsMerchant(merchantId);
-      
-      toast({
-        title: "Login Successful",
-        description: "Welcome to your merchant dashboard!",
-      });
-      
-      // Redirect to home page where they can access the dashboard
-      setLocation("/");
-      
     } catch (error) {
+      console.error('Login error:', error);
       toast({
         title: "Login Failed",
-        description: "Please check your credentials and try again",
+        description: "Network error. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -54,13 +66,47 @@ export default function MerchantLogin() {
     }
   };
 
-  const handleDemoLogin = () => {
-    loginAsMerchant("demo-merchant");
-    toast({
-      title: "Demo Login Successful",
-      description: "Logged in as demo merchant",
-    });
-    setLocation("/");
+  const handleDemoLogin = async () => {
+    setIsLoading(true);
+    
+    try {
+      const response = await fetch('/api/merchant/demo-login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include'
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        localStorage.setItem('merchantToken', data.token);
+        localStorage.setItem('merchantData', JSON.stringify(data.merchant));
+        
+        toast({
+          title: "Demo Login Successful",
+          description: `Welcome to ${data.merchant.businessName}!`,
+        });
+        
+        setLocation("/");
+      } else {
+        toast({
+          title: "Demo Login Failed",
+          description: data.error || "Please try again",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Demo login error:', error);
+      toast({
+        title: "Demo Login Failed",
+        description: "Network error. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -101,11 +147,11 @@ export default function MerchantLogin() {
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300 flex items-center">
                   <User size={16} className="mr-2" />
-                  Merchant ID
+                  Email Address
                 </label>
                 <Input
-                  type="text"
-                  placeholder="Enter your merchant ID"
+                  type="email"
+                  placeholder="Enter your email address"
                   value={merchantId}
                   onChange={(e) => setMerchantId(e.target.value)}
                   className="bg-white/10 border-white/20 text-white placeholder-gray-400 focus:border-cyan-400"

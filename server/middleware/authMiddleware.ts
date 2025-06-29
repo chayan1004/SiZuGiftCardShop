@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { AuthService } from '../services/authService';
 
 /**
  * Admin authentication middleware
@@ -39,7 +40,7 @@ export const checkAdminStatus = (req: Request, res: Response, next: NextFunction
 
 /**
  * Merchant authentication middleware
- * Protects merchant routes with session-based authentication
+ * Protects merchant routes with JWT-based authentication
  */
 export const requireMerchant = (req: Request, res: Response, next: NextFunction) => {
   const merchantToken = req.headers['authorization']?.replace('Bearer ', '') || 
@@ -49,39 +50,48 @@ export const requireMerchant = (req: Request, res: Response, next: NextFunction)
   if (!merchantToken) {
     return res.status(401).json({ 
       success: false, 
-      error: 'Merchant authentication required. Provide authorization header or x-merchant-token.' 
+      error: 'Merchant authentication required. Please log in.' 
     });
   }
 
   try {
-    // For demo purposes, validate simple token format: merchant-{merchantId}
-    if (!merchantToken.startsWith('merchant-')) {
-      return res.status(403).json({ 
-        success: false, 
-        error: 'Invalid merchant token format' 
-      });
+    // Try JWT verification first
+    const decoded = AuthService.verifyToken(merchantToken);
+    if (decoded && decoded.role === 'merchant') {
+      (req as any).merchantId = decoded.merchantId;
+      (req as any).merchantEmail = decoded.email;
+      (req as any).isMerchant = true;
+      return next();
     }
 
-    const merchantId = merchantToken.replace('merchant-', '');
-    
-    // Validate merchant ID from token matches route parameter (if exists)
-    const routeMerchantId = req.params.merchantId;
-    if (routeMerchantId && routeMerchantId !== merchantId) {
-      return res.status(403).json({ 
-        success: false, 
-        error: 'Merchant ID mismatch. Cannot access another merchant\'s data.' 
-      });
+    // Fallback to legacy token format for compatibility
+    if (merchantToken.startsWith('merchant-')) {
+      const merchantId = merchantToken.replace('merchant-', '');
+      
+      // Validate merchant ID from token matches route parameter (if exists)
+      const routeMerchantId = req.params.merchantId;
+      if (routeMerchantId && routeMerchantId !== merchantId) {
+        return res.status(403).json({ 
+          success: false, 
+          error: 'Merchant ID mismatch. Cannot access another merchant\'s data.' 
+        });
+      }
+
+      (req as any).merchantId = merchantId;
+      (req as any).isMerchant = true;
+      return next();
     }
 
-    // Store merchant ID in request for use in route handlers
-    (req as any).merchantId = merchantId;
-    (req as any).isMerchant = true;
-    
-    next();
-  } catch (error) {
     return res.status(403).json({ 
       success: false, 
-      error: 'Invalid merchant token' 
+      error: 'Invalid merchant token. Please log in again.' 
+    });
+    
+  } catch (error) {
+    console.error('Merchant auth error:', error);
+    return res.status(403).json({ 
+      success: false, 
+      error: 'Authentication failed. Please log in again.' 
     });
   }
 };

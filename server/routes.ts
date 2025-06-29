@@ -39,6 +39,122 @@ function getTimeAgo(date: Date): string {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
+  // Merchant Authentication Routes
+  app.post("/api/merchant/login", async (req: Request, res: Response) => {
+    try {
+      const loginSchema = z.object({
+        email: z.string().email('Valid email is required'),
+        password: z.string().min(1, 'Password is required')
+      });
+
+      const { email, password } = loginSchema.parse(req.body);
+      const result = await AuthService.authenticateMerchant(email, password);
+
+      if (result.success) {
+        // Set secure HTTP-only cookie
+        res.cookie('merchantToken', result.token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+
+        res.json({
+          success: true,
+          token: result.token,
+          merchant: result.merchant
+        });
+      } else {
+        res.status(401).json({
+          success: false,
+          error: result.error
+        });
+      }
+    } catch (error) {
+      console.error('Login route error:', error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({
+          success: false,
+          error: 'Invalid input data',
+          details: error.errors
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          error: 'Internal server error'
+        });
+      }
+    }
+  });
+
+  app.post("/api/merchant/demo-login", async (req: Request, res: Response) => {
+    try {
+      const result = await AuthService.createDemoMerchant();
+
+      if (result.success) {
+        res.cookie('merchantToken', result.token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
+        res.json({
+          success: true,
+          token: result.token,
+          merchant: result.merchant
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          error: result.error
+        });
+      }
+    } catch (error) {
+      console.error('Demo login route error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to create demo login'
+      });
+    }
+  });
+
+  app.post("/api/merchant/logout", (req: Request, res: Response) => {
+    res.clearCookie('merchantToken');
+    res.json({ success: true, message: 'Logged out successfully' });
+  });
+
+  app.get("/api/merchant/me", requireMerchant, async (req: Request, res: Response) => {
+    try {
+      const merchantId = (req as any).merchantId;
+      const merchant = await storage.getMerchantBySquareId(merchantId);
+      
+      if (!merchant) {
+        return res.status(404).json({
+          success: false,
+          error: 'Merchant not found'
+        });
+      }
+
+      res.json({
+        success: true,
+        merchant: {
+          id: merchant.id,
+          merchantId: merchant.merchantId,
+          businessName: merchant.businessName,
+          email: merchant.email,
+          isActive: merchant.isActive
+        }
+      });
+    } catch (error) {
+      console.error('Get merchant profile error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get merchant profile'
+      });
+    }
+  });
+
   // Square configuration endpoint
   app.get("/api/config/square", async (req, res) => {
     try {

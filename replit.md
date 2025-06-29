@@ -117,6 +117,7 @@ This is a full-stack gift card management application built with a modern tech s
 - June 28, 2025. Phase III - Completed public-facing gift card storefront with animated UI, checkout flow, and Square integration
 - June 29, 2025. Comprehensive TypeScript fixes and dependency security improvements
 - June 29, 2025. Implemented secure webhook signature verification with crypto HMAC SHA1 and replay protection
+- June 29, 2025. Converted email service to Nodemailer SMTP with Mailgun integration and QR code embedding
 
 ## Recent Production Enhancements
 

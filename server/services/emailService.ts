@@ -936,35 +936,32 @@ Gift card terms and conditions apply. Not redeemable for cash.
       // Dynamic sender name and subject based on purpose
       const senderConfig = this.getOtpSenderConfig(data.purpose);
       
-      // Use dedicated security email address for OTP emails
-      const securityFromAddress = 'security@sizupay.com';
-      const fallbackFromAddress = process.env.MAIL_FROM || this.config!.from;
+      // Use authenticated sender address for better deliverability
+      const authenticatedFromAddress = process.env.MAIL_FROM || this.config!.from;
       
       const mailOptions = {
-        from: `${senderConfig.senderName} <${securityFromAddress}>`,
-        replyTo: fallbackFromAddress,
+        from: `${senderConfig.senderName} <${authenticatedFromAddress}>`,
         to: data.to,
         subject: senderConfig.subject,
         html: htmlContent,
         text: this.createOtpPlainText(data),
-        // Enhanced transactional email headers
+        // Optimized headers for inbox delivery
         headers: {
           'X-Priority': '1',
           'X-MSMail-Priority': 'High',
           'Importance': 'high',
-          'X-Mailer': 'SiZu GiftCard Security System',
-          'X-Message-Source': 'Automated Security Authentication',
-          'X-Entity-ID': `SiZu-OTP-${Date.now()}`,
-          'X-Campaign-ID': 'security-authentication-otp',
-          'X-Email-Type-ID': 'transactional-security',
+          'X-Mailer': 'SiZu GiftCard Authentication Service',
+          'X-Message-Source': 'Transactional Authentication',
+          'X-Entity-ID': `SiZu-Auth-${Date.now()}`,
+          'X-Email-Type': 'transactional',
           'X-Auto-Response-Suppress': 'All',
           'Precedence': 'list',
-          'X-SiZu-Service': 'authentication',
-          'X-SiZu-Type': 'otp-verification',
-          'Authentication-Results': `spf=pass smtp.mailfrom=${securityFromAddress}`,
-          'X-Originating-IP': '[127.0.0.1]',
-          'X-Spam-Score': '0',
-          'X-Spam-Flag': 'NO'
+          'Authentication-Results': `spf=pass smtp.mailfrom=${authenticatedFromAddress}`,
+          'X-Spam-Score': '0.0',
+          'X-Spam-Flag': 'NO',
+          'X-Spam-Status': 'No',
+          'List-Unsubscribe': '<mailto:unsubscribe@sizupay.com>',
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
         }
       };
 

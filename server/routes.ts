@@ -22,6 +22,7 @@ import { z } from "zod";
 import { db } from "./db";
 import { merchants } from "@shared/schema";
 import { eq } from "drizzle-orm";
+import rateLimit from "express-rate-limit";
 
 // Helper function for time formatting
 function getTimeAgo(date: Date): string {
@@ -42,8 +43,46 @@ function getTimeAgo(date: Date): string {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
+  // Rate limiting for authentication endpoints
+  const loginRateLimit = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // Limit each IP to 5 login attempts per windowMs
+    message: {
+      success: false,
+      error: 'Too many login attempts. Please try again in 15 minutes.',
+      retryAfter: 15 * 60 // seconds
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    skipSuccessfulRequests: true // Don't count successful logins
+  });
+
+  const registrationRateLimit = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 3, // Limit each IP to 3 registration attempts per hour
+    message: {
+      success: false,
+      error: 'Too many registration attempts. Please try again in 1 hour.',
+      retryAfter: 60 * 60
+    },
+    standardHeaders: true,
+    legacyHeaders: false
+  });
+
+  const passwordResetRateLimit = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 3, // Limit password reset attempts
+    message: {
+      success: false,
+      error: 'Too many password reset attempts. Please try again in 1 hour.',
+      retryAfter: 60 * 60
+    },
+    standardHeaders: true,
+    legacyHeaders: false
+  });
+  
   // Merchant Authentication Routes
-  app.post("/api/merchant/login", async (req: Request, res: Response) => {
+  app.post("/api/merchant/login", loginRateLimit, async (req: Request, res: Response) => {
     try {
       const loginSchema = z.object({
         email: z.string().email('Valid email is required'),
@@ -54,6 +93,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await AuthService.authenticateMerchant(email, password);
 
       if (result.success) {
+        // Log successful login for security monitoring
+        console.log(`✅ Successful merchant login: ${email} from IP: ${req.ip} at ${new Date().toISOString()}`);
+        
         // Set secure HTTP-only cookie
         res.cookie('merchantToken', result.token, {
           httpOnly: true,
@@ -68,6 +110,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           merchant: result.merchant
         });
       } else {
+        // Log failed login attempt for security monitoring
+        console.warn(`❌ Failed merchant login attempt: ${email} from IP: ${req.ip} at ${new Date().toISOString()} - Reason: ${result.error}`);
+        
         res.status(401).json({
           success: false,
           error: result.error
@@ -90,7 +135,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/merchant/register", async (req: Request, res: Response) => {
+  app.post("/api/merchant/register", registrationRateLimit, async (req: Request, res: Response) => {
     try {
       const registerSchema = z.object({
         businessName: z.string().min(2, 'Business name must be at least 2 characters'),
@@ -291,7 +336,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Password reset for existing merchants (development only)
-  app.post("/api/merchant/reset-password", async (req: Request, res: Response) => {
+  app.post("/api/merchant/reset-password", passwordResetRateLimit, async (req: Request, res: Response) => {
     try {
       const resetSchema = z.object({
         email: z.string().email('Valid email is required'),

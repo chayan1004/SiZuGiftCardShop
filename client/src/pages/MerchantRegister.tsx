@@ -96,8 +96,8 @@ export default function MerchantRegister() {
           description: `Welcome to SiZu GiftCard, ${data.merchant.businessName}!`,
         });
         
-        // Redirect to home where they can access their dashboard
-        setLocation("/");
+        // Redirect to merchant dashboard
+        setLocation("/merchant-dashboard");
       } else {
         if (data.details) {
           // Handle validation errors
@@ -298,10 +298,8 @@ export default function MerchantRegister() {
             <div className="text-center">
               <p className="text-sm text-gray-400">
                 Already have an account?{" "}
-                <Link href="/merchant-login">
-                  <a className="text-cyan-400 hover:text-cyan-300 transition-colors">
-                    Sign in here
-                  </a>
+                <Link href="/merchant-login" className="text-cyan-400 hover:text-cyan-300 transition-colors">
+                  Sign in here
                 </Link>
               </p>
             </div>

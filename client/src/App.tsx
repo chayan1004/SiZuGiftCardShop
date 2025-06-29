@@ -13,6 +13,7 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import CheckBalance from "@/pages/CheckBalance";
 import MerchantLogin from "@/pages/MerchantLogin";
 import MerchantRegister from "@/pages/MerchantRegister";
+import MerchantDashboard from "@/pages/MerchantDashboard";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -25,6 +26,11 @@ function Router() {
       <Route path="/check-balance" component={CheckBalance} />
       <Route path="/merchant-login" component={MerchantLogin} />
       <Route path="/merchant-register" component={MerchantRegister} />
+      <Route path="/merchant-dashboard">
+        <ProtectedRoute requiredRole="merchant" redirectTo="/merchant-login">
+          <MerchantDashboard />
+        </ProtectedRoute>
+      </Route>
       <Route path="/gift/:gan">
         {(params) => <PublicGiftCard gan={params.gan} />}
       </Route>

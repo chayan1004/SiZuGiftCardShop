@@ -45,8 +45,8 @@ export default function MerchantLogin() {
           description: `Welcome back, ${data.merchant.businessName}!`,
         });
         
-        // Redirect to home page where they can access the dashboard
-        setLocation("/");
+        // Redirect to merchant dashboard
+        setLocation("/merchant-dashboard");
       } else {
         toast({
           title: "Login Failed",
@@ -89,8 +89,8 @@ export default function MerchantLogin() {
           description: `Welcome to ${data.merchant.businessName}!`,
         });
         
-        // Trigger a page reload to update authentication state and redirect to home
-        window.location.href = "/";
+        // Redirect to merchant dashboard
+        setLocation("/merchant-dashboard");
       } else {
         toast({
           title: "Demo Login Failed",

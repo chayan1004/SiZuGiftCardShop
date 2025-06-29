@@ -1,0 +1,118 @@
+Got it — you're hitting a post-login redirect failure. That usually happens when:
+
+✅ Auth succeeds, but
+
+❌ Redirect is either:
+
+Pointing to / instead of /merchant-dashboard
+
+Or the ProtectedRoute isn’t detecting the new login token properly
+
+Or the AuthContext isn’t persisting the merchant role or token after sign-up
+
+🧠 Here's how to debug and fix it step by step:
+✅ Step 1: Check Login API Response
+Open client/src/pages/MerchantLogin.tsx and confirm this:
+
+ts
+Copy
+Edit
+const response = await fetch("/api/merchant/login", ...);
+const data = await response.json();
+✅ Check if the response includes the merchant role, or at minimum a token.
+
+You should have:
+
+json
+Copy
+Edit
+{
+  "token": "jwt-token-here",
+  "role": "merchant"
+}
+✅ Step 2: Check AuthContext After Login
+Go to client/src/contexts/AuthContext.tsx and confirm the login handler saves the token and merchant role:
+
+ts
+Copy
+Edit
+localStorage.setItem("token", data.token);
+setUser({ ...decodedToken, role: "merchant" });
+If setUser() isn't triggered or doesn't store the role, the ProtectedRoute may not let them through.
+
+✅ Step 3: Check the ProtectedRoute Redirect Logic
+Go to client/src/components/ProtectedRoute.tsx and verify:
+
+ts
+Copy
+Edit
+if (!user || user.role !== "merchant") {
+  return <Navigate to="/merchant-login" />;
+}
+If this condition fails, you’ll keep bouncing around.
+
+Also check if it mistakenly does this on login:
+
+ts
+Copy
+Edit
+navigate("/");
+❌ If it does, that’s the bug. It should redirect to:
+
+ts
+Copy
+Edit
+navigate("/merchant-dashboard");
+✅ Step 4: Fix the Redirect in MerchantSignup.tsx
+Find the code in client/src/pages/MerchantSignup.tsx that runs after signup:
+
+ts
+Copy
+Edit
+const response = await fetch("/api/merchant/register", ...);
+const data = await response.json();
+navigate("/");
+❌ navigate("/") is WRONG.
+
+✅ Replace with:
+
+ts
+Copy
+Edit
+navigate("/merchant-dashboard");
+✅ Step 5: Re-Verify with Console Logs
+After signup and login, check your browser dev tools:
+
+localStorage → must have a valid token
+
+AuthContext → user must have role = "merchant"
+
+Network tab → /api/merchant/login must return 200 + token
+
+✅ Bonus Fix (If Needed): Add Guard in /merchant-dashboard
+Inside MerchantDashboard.tsx:
+
+ts
+Copy
+Edit
+const { user } = useAuth();
+
+if (!user || user.role !== "merchant") {
+  return <Navigate to="/merchant-login" />;
+}
+Make sure this check exists, and the dashboard doesn’t crash when loaded fresh.
+
+Let Me Know
+Once you fix the redirect path and confirm the context is set properly, you’ll land on the dashboard as expected.
+
+🛠 Want me to drop the exact fixed version of MerchantSignup.tsx and AuthContext.tsx?
+
+
+
+
+
+
+
+
+
+A

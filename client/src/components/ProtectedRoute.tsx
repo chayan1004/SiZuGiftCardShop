@@ -46,7 +46,27 @@ export function ProtectedRoute({ children, requiredRole, redirectTo = '/' }: Pro
       const merchantData = localStorage.getItem('merchantData');
       
       if (merchantToken) {
-        // Try to get merchant data from localStorage
+        // Handle JWT tokens (new format)
+        if (merchantToken.startsWith('eyJ')) {
+          try {
+            // Decode JWT payload (simple base64 decode for client-side check)
+            const payload = JSON.parse(atob(merchantToken.split('.')[1]));
+            if (payload.role === 'merchant' && payload.merchantId) {
+              setAuthState({
+                isAuthenticated: true,
+                role: 'merchant',
+                merchantId: payload.merchantId,
+                token: merchantToken
+              });
+              setIsLoading(false);
+              return;
+            }
+          } catch (error) {
+            console.error('Failed to decode JWT token:', error);
+          }
+        }
+        
+        // Try to get merchant data from localStorage (fallback)
         if (merchantData) {
           try {
             const merchant = JSON.parse(merchantData);
@@ -159,15 +179,36 @@ export function useAuth(): AuthContext {
                          sessionStorage.getItem('merchantToken') ||
                          document.cookie.split(';').find(c => c.trim().startsWith('merchantToken='))?.split('=')[1];
     
-    if (merchantToken && merchantToken.startsWith('merchant-')) {
-      const merchantId = merchantToken.replace('merchant-', '');
-      setAuthState({
-        isAuthenticated: true,
-        role: 'merchant',
-        merchantId,
-        token: merchantToken
-      });
-      return;
+    if (merchantToken) {
+      // Handle JWT tokens (new format)
+      if (merchantToken.startsWith('eyJ')) {
+        try {
+          const payload = JSON.parse(atob(merchantToken.split('.')[1]));
+          if (payload.role === 'merchant' && payload.merchantId) {
+            setAuthState({
+              isAuthenticated: true,
+              role: 'merchant',
+              merchantId: payload.merchantId,
+              token: merchantToken
+            });
+            return;
+          }
+        } catch (error) {
+          console.error('Failed to decode JWT token:', error);
+        }
+      }
+      
+      // Fallback for legacy token format
+      if (merchantToken.startsWith('merchant-')) {
+        const merchantId = merchantToken.replace('merchant-', '');
+        setAuthState({
+          isAuthenticated: true,
+          role: 'merchant',
+          merchantId,
+          token: merchantToken
+        });
+        return;
+      }
     }
 
     // No authentication

@@ -51,8 +51,8 @@ export default function MerchantDashboard() {
   }, [auth, setLocation, toast]);
 
   // Fetch merchant stats with 30-second refresh
-  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useQuery({
-    queryKey: ['/api/merchant/stats'],
+  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useQuery<any>({
+    queryKey: ['/api/dashboard/stats'],
     enabled: !!merchantId && auth.isAuthenticated && auth.role === 'merchant',
     refetchInterval: 30000, // Auto-refresh every 30 seconds
     staleTime: 25000, // Consider data stale after 25 seconds
@@ -103,7 +103,7 @@ export default function MerchantDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900">
       {/* Email Verification Banner */}
-      <EmailVerificationBanner />
+      <EmailVerificationBanner merchantEmail={auth.merchantId || ""} />
       
       <div className="p-6">
         {/* Header */}
@@ -162,7 +162,7 @@ export default function MerchantDashboard() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-gray-400 text-sm font-medium">Total Sales</p>
-                        <p className="text-2xl font-bold text-white">${stats.data?.totalRevenue?.toFixed(2) || '0.00'}</p>
+                        <p className="text-2xl font-bold text-white">${stats?.data?.totalRevenue?.toFixed(2) || '0.00'}</p>
                       </div>
                       <DollarSign className="text-green-400" size={24} />
                     </div>
@@ -174,7 +174,7 @@ export default function MerchantDashboard() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-gray-400 text-sm font-medium">Active Cards</p>
-                        <p className="text-2xl font-bold text-white">{stats.data?.activeCards || 0}</p>
+                        <p className="text-2xl font-bold text-white">{stats?.data?.activeCards || 0}</p>
                       </div>
                       <Gift className="text-blue-400" size={24} />
                     </div>
@@ -186,7 +186,7 @@ export default function MerchantDashboard() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-gray-400 text-sm font-medium">Redemptions</p>
-                        <p className="text-2xl font-bold text-white">{stats.data?.totalRedemptions || 0}</p>
+                        <p className="text-2xl font-bold text-white">{stats?.data?.totalRedemptions || 0}</p>
                       </div>
                       <CreditCard className="text-purple-400" size={24} />
                     </div>
@@ -198,7 +198,7 @@ export default function MerchantDashboard() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-gray-400 text-sm font-medium">Customers</p>
-                        <p className="text-2xl font-bold text-white">{stats.data?.customers || 0}</p>
+                        <p className="text-2xl font-bold text-white">{stats?.data?.customers || 0}</p>
                       </div>
                       <Users className="text-cyan-400" size={24} />
                     </div>
@@ -207,7 +207,7 @@ export default function MerchantDashboard() {
               </div>
 
               {/* Charts */}
-              {stats.data?.chartData && (
+              {stats?.data?.chartData && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <Card className="bg-white/10 backdrop-blur-2xl border border-white/20">
                     <CardHeader>
@@ -215,7 +215,7 @@ export default function MerchantDashboard() {
                     </CardHeader>
                     <CardContent>
                       <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={stats.data.chartData}>
+                        <BarChart data={stats?.data?.chartData || []}>
                           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                           <XAxis dataKey="date" stroke="rgba(255,255,255,0.5)" />
                           <YAxis stroke="rgba(255,255,255,0.5)" />
@@ -239,7 +239,7 @@ export default function MerchantDashboard() {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
-                        {stats.data?.recentActivity?.slice(0, 5).map((activity: any, index: number) => (
+                        {stats?.data?.recentActivity?.slice(0, 5).map((activity: any, index: number) => (
                           <div key={index} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
                             <div className="flex items-center space-x-3">
                               <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
@@ -250,7 +250,7 @@ export default function MerchantDashboard() {
                             </div>
                             <span className="text-green-400 font-medium">{activity.formattedAmount}</span>
                           </div>
-                        ))}
+                        )) || <p className="text-gray-400 text-center">No recent activity</p>}
                       </div>
                     </CardContent>
                   </Card>

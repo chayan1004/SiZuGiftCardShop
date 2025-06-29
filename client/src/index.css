@@ -48,6 +48,33 @@
     @apply text-lg sm:text-xl lg:text-2xl;
   }
   
+  /* Hide scrollbars for mobile navigation */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Mobile touch scrolling */
+  .touch-scroll {
+    -webkit-overflow-scrolling: touch;
+    overflow-x: auto;
+  }
+  
+  /* Prevent mobile zoom on input focus */
+  @media screen and (max-width: 640px) {
+    input[type="email"],
+    input[type="password"],
+    input[type="text"],
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
+  
   .text-responsive-lg {
     @apply text-base sm:text-lg lg:text-xl;
   }

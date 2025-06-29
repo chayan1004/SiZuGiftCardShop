@@ -162,48 +162,59 @@ export default function MerchantDashboard() {
       {/* Email Verification Banner */}
       <EmailVerificationBanner merchantEmail={merchantId || ""} />
       
-      <div className="p-4 lg:p-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 lg:mb-8 space-y-4 sm:space-y-0">
-          <div className="flex-1">
-            <h1 className="text-2xl lg:text-3xl font-bold text-white mb-1 lg:mb-2">Merchant Dashboard</h1>
-            <p className="text-sm lg:text-base text-gray-300">Welcome back! Here's your business overview.</p>
+      {/* Mobile-First Responsive Container */}
+      <div className="px-3 sm:px-4 lg:px-6 py-4 lg:py-6 pb-20">
+        {/* Enhanced Mobile Header */}
+        <div className="flex flex-col space-y-4 mb-6 lg:mb-8">
+          <div className="flex justify-between items-start">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-1 truncate">
+                Merchant Dashboard
+              </h1>
+              <p className="text-sm lg:text-base text-gray-300">
+                Welcome back! Here's your business overview.
+              </p>
+            </div>
+            <Button
+              onClick={handleLogout}
+              variant="outline"
+              size="sm"
+              className="border-red-500/50 text-red-400 hover:bg-red-500/10 hover:border-red-400 flex-shrink-0 ml-3"
+            >
+              <LogOut size={16} className="sm:mr-2" />
+              <span className="hidden sm:inline">Logout</span>
+            </Button>
           </div>
-          <Button
-            onClick={handleLogout}
-            variant="outline"
-            size="sm"
-            className="border-red-500/50 text-red-400 hover:bg-red-500/10 hover:border-red-400 self-start sm:self-auto"
-          >
-            <LogOut size={14} className="lg:mr-2" />
-            <span className="hidden lg:inline">Logout</span>
-          </Button>
         </div>
 
-        {/* Tabs */}
-        <div className="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-1 mb-6 lg:mb-8 bg-white/10 p-1 rounded-xl backdrop-blur-sm border border-white/20">
-          {[
-            { id: "overview", label: "Overview", icon: BarChart3 },
-            { id: "transactions", label: "Transactions", icon: History },
-            { id: "bulk-purchase", label: "Bulk Purchase", icon: Package },
-            { id: "settings", label: "Settings", icon: Settings }
-          ].map((tab) => (
-            <Button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              variant={activeTab === tab.id ? "default" : "ghost"}
-              size="sm"
-              className={`flex-1 text-xs lg:text-sm ${
-                activeTab === tab.id
-                  ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg"
-                  : "text-gray-300 hover:text-white hover:bg-white/10"
-              }`}
-            >
-              <tab.icon size={14} className="mr-1 lg:mr-2" />
-              <span className="hidden sm:inline lg:inline">{tab.label}</span>
-              <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
-            </Button>
-          ))}
+        {/* Enhanced Mobile-First Tab Navigation */}
+        <div className="mb-6 lg:mb-8">
+          {/* Mobile Tab Navigation - Horizontal Scroll */}
+          <div className="overflow-x-auto scrollbar-hide">
+            <div className="flex space-x-2 bg-white/10 p-2 rounded-xl backdrop-blur-sm border border-white/20 min-w-max">
+              {[
+                { id: "overview", label: "Overview", icon: BarChart3 },
+                { id: "transactions", label: "Transactions", icon: History },
+                { id: "bulk-purchase", label: "Bulk Purchase", icon: Package },
+                { id: "settings", label: "Settings", icon: Settings }
+              ].map((tab) => (
+                <Button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  variant={activeTab === tab.id ? "default" : "ghost"}
+                  size="sm"
+                  className={`whitespace-nowrap px-3 py-2 text-xs sm:text-sm ${
+                    activeTab === tab.id
+                      ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg"
+                      : "text-gray-300 hover:text-white hover:bg-white/10"
+                  }`}
+                >
+                  <tab.icon size={16} className="mr-2" />
+                  <span>{tab.label}</span>
+                </Button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Tab Content */}
@@ -342,25 +353,27 @@ export default function MerchantDashboard() {
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
                 {/* Revenue Trend Chart with Premium Enhancements */}
                 <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
-                  <CardHeader className="pb-2 lg:pb-6">
-                    <CardTitle className="text-lg lg:text-xl text-white flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <TrendingUp className="w-5 h-5 text-blue-400" />
-                        Revenue Performance
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        {revenueGrowth !== 0 && (
-                          <Badge className={`text-xs ${revenueGrowth > 0 ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-red-500/20 text-red-400 border-red-500/30'}`}>
-                            {revenueGrowth > 0 ? '↗' : '↘'} {Math.abs(revenueGrowth).toFixed(1)}%
-                          </Badge>
-                        )}
-                        <span className="text-xs text-blue-400 font-medium">${avgTransactionValue.toFixed(0)}/avg</span>
+                  <CardHeader className="pb-2 lg:pb-6 px-3 sm:px-6">
+                    <CardTitle className="text-base sm:text-lg lg:text-xl text-white">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
+                          <span className="truncate">Revenue Performance</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {revenueGrowth !== 0 && (
+                            <Badge className={`text-xs ${revenueGrowth > 0 ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-red-500/20 text-red-400 border-red-500/30'}`}>
+                              {revenueGrowth > 0 ? '↗' : '↘'} {Math.abs(revenueGrowth).toFixed(1)}%
+                            </Badge>
+                          )}
+                          <span className="text-xs text-blue-400 font-medium">${avgTransactionValue.toFixed(0)}/avg</span>
+                        </div>
                       </div>
                     </CardTitle>
-                    <CardDescription className="text-sm text-gray-300">Sales performance with growth indicators and real-time updates</CardDescription>
+                    <CardDescription className="text-xs sm:text-sm text-gray-300">Sales performance with growth indicators and real-time updates</CardDescription>
                   </CardHeader>
-                  <CardContent className="pt-2 lg:pt-0">
-                    <div className="w-full h-[250px] lg:h-[350px] relative">
+                  <CardContent className="pt-2 lg:pt-0 px-3 sm:px-6">
+                    <div className="w-full h-[200px] sm:h-[250px] lg:h-[350px] relative">
                       {statsLoading ? (
                         <div className="flex items-center justify-center h-full">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div>
@@ -369,7 +382,7 @@ export default function MerchantDashboard() {
                         <ResponsiveContainer width="100%" height="100%">
                           <LineChart 
                             data={stats?.data?.chartData || []} 
-                            margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                            margin={{ top: 10, right: 10, left: 5, bottom: 10 }}
                           >
                             <defs>
                               <linearGradient id="merchantRevenueGradient" x1="0" y1="0" x2="0" y2="1">
@@ -634,61 +647,104 @@ export default function MerchantDashboard() {
           )}
         </motion.div>
 
-        {/* Enhanced Merchant System Status Bar */}
+        {/* Enhanced Mobile-Responsive Status Bar */}
         <motion.div 
-          className="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-xl border-t border-white/10 px-6 py-3 z-40"
+          className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-white/10 px-3 sm:px-6 py-2 sm:py-3 z-40"
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.5 }}
         >
-          <div className="flex items-center justify-between max-w-7xl mx-auto">
-            <div className="flex items-center space-x-6">
-              <div className="flex items-center space-x-2">
+          <div className="max-w-7xl mx-auto">
+            {/* Mobile Layout - Stacked */}
+            <div className="sm:hidden flex flex-col space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <motion.div 
+                    className="w-2 h-2 bg-cyan-400 rounded-full"
+                    animate={{ scale: [1, 1.2, 1], opacity: [0.7, 1, 0.7] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  />
+                  <span className="text-xs text-cyan-400 font-medium">Active</span>
+                </div>
                 <motion.div 
-                  className="w-2 h-2 bg-cyan-400 rounded-full"
-                  animate={{ scale: [1, 1.2, 1], opacity: [0.7, 1, 0.7] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
-                <span className="text-xs text-cyan-400 font-medium">Merchant Portal Active</span>
+                  className="text-xs text-gray-500 font-mono"
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                >
+                  10s
+                </motion.div>
               </div>
-              <div className="flex items-center space-x-2 text-xs text-gray-300">
-                <Database className="w-3 h-3" />
-                <span>Connected</span>
-              </div>
-              <div className="flex items-center space-x-2 text-xs text-gray-300">
-                <Activity className="w-3 h-3" />
-                <span>API: {statsLoading ? 'Syncing...' : 'Ready'}</span>
+              <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-1">
+                    <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
+                    <span className="text-cyan-400">{stats?.data?.activeCards || 0}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <DollarSign className="w-3 h-3 text-green-400" />
+                    <span className="text-green-400">${stats?.data?.totalRevenue?.toFixed(2) || '0.00'}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Users className="w-3 h-3 text-purple-400" />
+                    <span className="text-purple-400">{stats?.data?.customers || 0}</span>
+                  </div>
+                </div>
+                <div className="text-gray-400 text-xs">
+                  {formatTimeAgo(lastUpdated)}
+                </div>
               </div>
             </div>
-            
-            <div className="flex items-center space-x-6">
-              <div className="text-xs text-gray-400">
-                Last Update: {formatTimeAgo(lastUpdated)}
-              </div>
-              <div className="flex items-center space-x-2 text-xs">
-                <div className="flex items-center space-x-1">
-                  <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
-                  <span className="text-cyan-400">{stats?.data?.activeCards || 0} Active Cards</span>
+
+            {/* Desktop Layout - Single Row */}
+            <div className="hidden sm:flex items-center justify-between">
+              <div className="flex items-center space-x-4 lg:space-x-6">
+                <div className="flex items-center space-x-2">
+                  <motion.div 
+                    className="w-2 h-2 bg-cyan-400 rounded-full"
+                    animate={{ scale: [1, 1.2, 1], opacity: [0.7, 1, 0.7] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  />
+                  <span className="text-xs text-cyan-400 font-medium">Merchant Portal Active</span>
                 </div>
-                <div className="w-px h-3 bg-white/20"></div>
-                <div className="flex items-center space-x-1">
-                  <DollarSign className="w-3 h-3 text-green-400" />
-                  <span className="text-green-400">${stats?.data?.totalRevenue?.toFixed(2) || '0.00'}</span>
+                <div className="flex items-center space-x-2 text-xs text-gray-300">
+                  <Database className="w-3 h-3" />
+                  <span>Connected</span>
                 </div>
-                <div className="w-px h-3 bg-white/20"></div>
-                <div className="flex items-center space-x-1">
-                  <Users className="w-3 h-3 text-purple-400" />
-                  <span className="text-purple-400">{stats?.data?.customers || 0} Customers</span>
+                <div className="flex items-center space-x-2 text-xs text-gray-300">
+                  <Activity className="w-3 h-3" />
+                  <span>API: {statsLoading ? 'Syncing...' : 'Ready'}</span>
                 </div>
               </div>
               
-              <motion.div 
-                className="text-xs text-gray-500 font-mono"
-                animate={{ opacity: [0.5, 1, 0.5] }}
-                transition={{ duration: 3, repeat: Infinity }}
-              >
-                Auto-refresh: 10s
-              </motion.div>
+              <div className="flex items-center space-x-4 lg:space-x-6">
+                <div className="text-xs text-gray-400">
+                  Last Update: {formatTimeAgo(lastUpdated)}
+                </div>
+                <div className="flex items-center space-x-2 text-xs">
+                  <div className="flex items-center space-x-1">
+                    <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
+                    <span className="text-cyan-400">{stats?.data?.activeCards || 0} Active Cards</span>
+                  </div>
+                  <div className="w-px h-3 bg-white/20"></div>
+                  <div className="flex items-center space-x-1">
+                    <DollarSign className="w-3 h-3 text-green-400" />
+                    <span className="text-green-400">${stats?.data?.totalRevenue?.toFixed(2) || '0.00'}</span>
+                  </div>
+                  <div className="w-px h-3 bg-white/20"></div>
+                  <div className="flex items-center space-x-1">
+                    <Users className="w-3 h-3 text-purple-400" />
+                    <span className="text-purple-400">{stats?.data?.customers || 0} Customers</span>
+                  </div>
+                </div>
+                
+                <motion.div 
+                  className="text-xs text-gray-500 font-mono"
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                >
+                  Auto-refresh: 10s
+                </motion.div>
+              </div>
             </div>
           </div>
         </motion.div>

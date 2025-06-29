@@ -136,6 +136,8 @@ This is a full-stack gift card management application built with a modern tech s
 - June 29, 2025. Consolidated admin functionality into single Admin Dashboard at `/admin` - removed all duplicate admin interfaces and made it the only admin entry point
 - June 29, 2025. Enhanced Admin Dashboard with comprehensive business owner functionalities including Revenue Analytics, Customer Insights, Marketing Tools, Operations monitoring, Growth Strategy tracking, Business Intelligence Reports, and System Health monitoring - transformed into complete business management platform
 - June 29, 2025. Permanently removed merchant dashboard files (MerchantDashboard.tsx components and pages) from project per user request - cleaned up all routing and references
+- June 29, 2025. Phase 2: Recreated MerchantDashboard.tsx with live backend integration - displays real gift card and bulk order data from database
+- June 29, 2025. Phase 3: Implemented MerchantBulkPurchase.tsx with real payment flow - merchants can create bulk orders with volume pricing tiers and live database integration
 
 ## Recent Production Enhancements
 

@@ -19,6 +19,9 @@ import { requireAdmin, requireMerchant, checkMerchantStatus } from './middleware
 import { AuthService } from './services/authService';
 import { generateGiftCardQR, generateGiftCardBarcode } from '../utils/qrGenerator';
 import { z } from "zod";
+import { db } from "./db";
+import { merchants } from "@shared/schema";
+import { eq } from "drizzle-orm";
 
 // Helper function for time formatting
 function getTimeAgo(date: Date): string {
@@ -209,6 +212,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/merchant/logout", (req: Request, res: Response) => {
     res.clearCookie('merchantToken');
     res.json({ success: true, message: 'Logged out successfully' });
+  });
+
+  // Password reset for existing merchants (development only)
+  app.post("/api/merchant/reset-password", async (req: Request, res: Response) => {
+    try {
+      const resetSchema = z.object({
+        email: z.string().email('Valid email is required'),
+        newPassword: z.string()
+          .min(8, 'Password must be at least 8 characters')
+          .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+          .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+          .regex(/\d/, 'Password must contain at least one number'),
+      });
+
+      const { email, newPassword } = resetSchema.parse(req.body);
+
+      // Find merchant by email
+      const merchant = await storage.getMerchantByEmail(email);
+      if (!merchant) {
+        return res.status(404).json({
+          success: false,
+          error: 'No merchant found with this email'
+        });
+      }
+
+      // Hash the new password
+      const newPasswordHash = await AuthService.hashPassword(newPassword);
+
+      // Update the merchant's password in the database
+      await db.update(merchants)
+        .set({ passwordHash: newPasswordHash })
+        .where(eq(merchants.email, email));
+
+      console.log(`✅ Password reset successful for merchant: ${email}`);
+
+      res.json({
+        success: true,
+        message: 'Password reset successfully. You can now log in with your new password.'
+      });
+
+    } catch (error) {
+      console.error('Password reset error:', error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({
+          success: false,
+          error: 'Validation failed',
+          details: error.errors
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          error: 'Password reset failed. Please try again.'
+        });
+      }
+    }
   });
 
   app.get("/api/merchant/me", requireMerchant, async (req: Request, res: Response) => {

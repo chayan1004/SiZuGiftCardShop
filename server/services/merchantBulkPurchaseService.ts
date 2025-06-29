@@ -1,6 +1,6 @@
 import { storage } from '../storage';
 import { InsertMerchantGiftCard, InsertMerchantBulkOrder } from '@shared/schema';
-import { Client, Environment } from 'squareup';
+import { Client, Environment } from 'square';
 
 interface BulkPurchaseRequest {
   amount: number; // Individual card amount in cents

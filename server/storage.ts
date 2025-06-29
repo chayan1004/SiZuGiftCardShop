@@ -422,6 +422,79 @@ export class DatabaseStorage implements IStorage {
       .where(eq(promoUsage.promoCodeId, promoCodeId))
       .orderBy(desc(promoUsage.createdAt));
   }
+
+  // Merchant Bulk Purchase methods
+  async createMerchantBulkOrder(insertOrder: InsertMerchantBulkOrder): Promise<MerchantBulkOrder> {
+    const [order] = await db
+      .insert(merchantBulkOrders)
+      .values(insertOrder)
+      .returning();
+    return order;
+  }
+
+  async getMerchantBulkOrders(merchantId: string): Promise<MerchantBulkOrder[]> {
+    return await db
+      .select()
+      .from(merchantBulkOrders)
+      .where(eq(merchantBulkOrders.merchantId, merchantId))
+      .orderBy(desc(merchantBulkOrders.createdAt));
+  }
+
+  async updateMerchantBulkOrderStatus(bulkOrderId: string, status: string): Promise<MerchantBulkOrder | undefined> {
+    const [order] = await db
+      .update(merchantBulkOrders)
+      .set({ 
+        status,
+        completedAt: status === 'COMPLETED' ? new Date() : null
+      })
+      .where(eq(merchantBulkOrders.bulkOrderId, bulkOrderId))
+      .returning();
+    return order || undefined;
+  }
+
+  async updateMerchantBulkOrderPayment(bulkOrderId: string, paymentId: string): Promise<MerchantBulkOrder | undefined> {
+    const [order] = await db
+      .update(merchantBulkOrders)
+      .set({ squarePaymentId: paymentId })
+      .where(eq(merchantBulkOrders.bulkOrderId, bulkOrderId))
+      .returning();
+    return order || undefined;
+  }
+
+  async createMerchantGiftCard(insertCard: InsertMerchantGiftCard): Promise<MerchantGiftCard> {
+    const [card] = await db
+      .insert(merchantGiftCards)
+      .values(insertCard)
+      .returning();
+    return card;
+  }
+
+  async getMerchantGiftCards(merchantId: string, bulkOrderId?: string): Promise<MerchantGiftCard[]> {
+    if (bulkOrderId) {
+      return await db
+        .select()
+        .from(merchantGiftCards)
+        .where(and(
+          eq(merchantGiftCards.merchantId, merchantId),
+          eq(merchantGiftCards.bulkOrderId, bulkOrderId)
+        ))
+        .orderBy(desc(merchantGiftCards.createdAt));
+    }
+
+    return await db
+      .select()
+      .from(merchantGiftCards)
+      .where(eq(merchantGiftCards.merchantId, merchantId))
+      .orderBy(desc(merchantGiftCards.createdAt));
+  }
+
+  async getMerchantGiftCardByGan(gan: string): Promise<MerchantGiftCard | undefined> {
+    const [card] = await db
+      .select()
+      .from(merchantGiftCards)
+      .where(eq(merchantGiftCards.gan, gan));
+    return card || undefined;
+  }
 }
 
 export const storage = new DatabaseStorage();

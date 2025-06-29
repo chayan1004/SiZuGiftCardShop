@@ -1053,6 +1053,166 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Merchant Bulk Gift Card Purchase
+  app.post("/api/merchant/giftcards/bulk", requireMerchant, async (req: Request, res: Response) => {
+    try {
+      const merchantId = (req as any).merchantId;
+      
+      if (!merchantId) {
+        return res.status(401).json({
+          success: false,
+          error: "Merchant authentication required"
+        });
+      }
+
+      const { amount, quantity, customMessage, logoUrl, sourceId } = req.body;
+
+      // Validate input
+      if (!amount || !quantity || !sourceId) {
+        return res.status(400).json({
+          success: false,
+          error: "Amount, quantity, and payment source are required"
+        });
+      }
+
+      if (amount < 500 || amount > 50000) {
+        return res.status(400).json({
+          success: false,
+          error: "Card amount must be between $5 and $500"
+        });
+      }
+
+      if (quantity < 1 || quantity > 10000) {
+        return res.status(400).json({
+          success: false,
+          error: "Quantity must be between 1 and 10,000"
+        });
+      }
+
+      console.log(`Processing bulk purchase for merchant ${merchantId}: ${quantity} cards @ $${amount/100} each`);
+
+      // Import and process bulk purchase
+      const { MerchantBulkPurchaseService } = await import('./services/merchantBulkPurchaseService');
+      const bulkService = new MerchantBulkPurchaseService();
+      
+      const result = await bulkService.processBulkPurchase(merchantId, {
+        amount,
+        quantity,
+        customMessage,
+        logoUrl,
+        sourceId
+      });
+
+      if (!result.success) {
+        return res.status(400).json({
+          success: false,
+          error: result.error
+        });
+      }
+
+      res.json({
+        success: true,
+        message: `Successfully created ${result.cards?.length || 0} gift cards`,
+        bulkOrderId: result.bulkOrderId,
+        cards: result.cards
+      });
+
+    } catch (error) {
+      console.error('Bulk purchase error:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to process bulk purchase"
+      });
+    }
+  });
+
+  app.get("/api/merchant/giftcards/bulk-orders", requireMerchant, async (req: Request, res: Response) => {
+    try {
+      const merchantId = (req as any).merchantId;
+      
+      if (!merchantId) {
+        return res.status(401).json({
+          success: false,
+          error: "Merchant authentication required"
+        });
+      }
+
+      const { MerchantBulkPurchaseService } = await import('./services/merchantBulkPurchaseService');
+      const bulkService = new MerchantBulkPurchaseService();
+      
+      const orders = await bulkService.getMerchantBulkOrders(merchantId);
+
+      res.json({
+        success: true,
+        orders: orders.map(order => ({
+          ...order,
+          formattedTotal: `$${(order.totalAmount / 100).toFixed(2)}`,
+          formattedCardAmount: `$${(order.cardAmount / 100).toFixed(2)}`
+        }))
+      });
+
+    } catch (error) {
+      console.error('Error fetching bulk orders:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch bulk orders"
+      });
+    }
+  });
+
+  app.get("/api/merchant/giftcards/my-cards", requireMerchant, async (req: Request, res: Response) => {
+    try {
+      const merchantId = (req as any).merchantId;
+      const { bulkOrderId } = req.query;
+      
+      if (!merchantId) {
+        return res.status(401).json({
+          success: false,
+          error: "Merchant authentication required"
+        });
+      }
+
+      const { MerchantBulkPurchaseService } = await import('./services/merchantBulkPurchaseService');
+      const bulkService = new MerchantBulkPurchaseService();
+      
+      const cards = await bulkService.getMerchantGiftCards(merchantId, bulkOrderId as string);
+
+      res.json({
+        success: true,
+        cards: cards.map(card => ({
+          ...card,
+          formattedAmount: `$${(card.amount / 100).toFixed(2)}`
+        }))
+      });
+
+    } catch (error) {
+      console.error('Error fetching merchant gift cards:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch gift cards"
+      });
+    }
+  });
+
+  app.get("/api/merchant/pricing-tiers", requireMerchant, async (req: Request, res: Response) => {
+    try {
+      const { MerchantBulkPurchaseService } = await import('./services/merchantBulkPurchaseService');
+      const tiers = MerchantBulkPurchaseService.getMerchantTiers();
+
+      res.json({
+        success: true,
+        tiers
+      });
+
+    } catch (error) {
+      console.error('Error fetching pricing tiers:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch pricing tiers"
+      });
+    }
+  });
+
   // Merchant Email Verification Routes
   app.post("/api/merchant/verify-email", async (req: Request, res: Response) => {
     try {

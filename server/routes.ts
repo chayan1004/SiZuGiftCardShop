@@ -16,6 +16,7 @@ import { domainAuthentication } from './services/domainAuthentication';
 import { pdfReceiptService } from './services/pdfReceiptService';
 import { squareWebhookHandler } from './webhooks/squareWebhookHandler';
 import { requireAdmin, requireMerchant, checkMerchantStatus } from './middleware/authMiddleware';
+import { AuthService } from './services/authService';
 import { generateGiftCardQR, generateGiftCardBarcode } from '../utils/qrGenerator';
 import { z } from "zod";
 

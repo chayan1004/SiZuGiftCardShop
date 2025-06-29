@@ -9,7 +9,8 @@ export const merchants = pgTable("merchants", {
   refreshToken: text("refresh_token"),
   merchantId: text("merchant_id").notNull().unique(),
   businessName: text("business_name").notNull(),
-  email: text("email").notNull(),
+  email: text("email").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });

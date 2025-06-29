@@ -19,6 +19,7 @@ export interface IStorage {
   // Merchant methods
   getMerchant(id: number): Promise<Merchant | undefined>;
   getMerchantBySquareId(merchantId: string): Promise<Merchant | undefined>;
+  getMerchantByEmail(email: string): Promise<Merchant | undefined>;
   getAllMerchants(): Promise<Merchant[]>;
   createMerchant(merchant: InsertMerchant): Promise<Merchant>;
   updateMerchantTokens(id: number, accessToken: string, refreshToken?: string): Promise<Merchant | undefined>;
@@ -100,6 +101,11 @@ export class DatabaseStorage implements IStorage {
 
   async getMerchantBySquareId(merchantId: string): Promise<Merchant | undefined> {
     const [merchant] = await db.select().from(merchants).where(eq(merchants.merchantId, merchantId));
+    return merchant || undefined;
+  }
+
+  async getMerchantByEmail(email: string): Promise<Merchant | undefined> {
+    const [merchant] = await db.select().from(merchants).where(eq(merchants.email, email));
     return merchant || undefined;
   }
 

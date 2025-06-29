@@ -8,7 +8,7 @@ import {
 import { 
   TrendingUp, CreditCard, Users, DollarSign, Activity, 
   Mail, QrCode, Calendar, Download, RefreshCw, Settings,
-  Home, LogOut, Shield, Database, BarChart3, Gift
+  Home, LogOut, Shield, Database, BarChart3, Gift, Menu, X
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -49,6 +49,7 @@ export default function AdminDashboard() {
   const { toast } = useToast();
   const [refreshing, setRefreshing] = useState(false);
   const [activeSection, setActiveSection] = useState("overview");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Fetch admin metrics with authentication
   const { data: metrics = {} as DashboardMetrics, isLoading: metricsLoading, error: metricsError, refetch: refetchMetrics } = useQuery<DashboardMetrics>({
@@ -113,27 +114,51 @@ export default function AdminDashboard() {
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex relative">
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-lg border-r border-gray-200">
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-600 rounded-lg">
-              <Shield className="w-6 h-6 text-white" />
+      <div className={`
+        fixed lg:relative lg:translate-x-0 transition-transform duration-300 ease-in-out z-50
+        w-64 bg-white shadow-lg border-r border-gray-200
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        lg:block
+      `}>
+        <div className="p-4 lg:p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-blue-600 rounded-lg">
+                <Shield className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-lg lg:text-xl font-bold text-gray-900">Admin Panel</h1>
+                <p className="text-xs lg:text-sm text-gray-500">SiZu GiftCard</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">Admin Panel</h1>
-              <p className="text-sm text-gray-500">SiZu GiftCard</p>
-            </div>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="lg:hidden p-2 rounded-md text-gray-500 hover:text-gray-700"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
         </div>
 
-        <nav className="p-4 space-y-2">
+        <nav className="p-3 lg:p-4 space-y-1 lg:space-y-2 flex-1 overflow-y-auto">
           {sidebarItems.map((item) => (
             <button
               key={item.id}
-              onClick={() => setActiveSection(item.id)}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
+              onClick={() => {
+                setActiveSection(item.id);
+                setSidebarOpen(false); // Close mobile sidebar on selection
+              }}
+              className={`w-full flex items-center space-x-3 px-3 lg:px-4 py-2 lg:py-3 rounded-lg text-left transition-colors text-sm lg:text-base ${
                 activeSection === item.id
                   ? 'bg-blue-50 text-blue-700 border border-blue-200'
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
@@ -145,24 +170,24 @@ export default function AdminDashboard() {
           ))}
         </nav>
 
-        <div className="absolute bottom-0 w-64 p-4 border-t border-gray-200 bg-white">
+        <div className="absolute bottom-0 w-64 p-3 lg:p-4 border-t border-gray-200 bg-white">
           <div className="space-y-2">
             <Button
               onClick={() => window.location.href = '/'}
               variant="outline"
               size="sm"
-              className="w-full justify-start"
+              className="w-full justify-start text-xs lg:text-sm"
             >
-              <Home className="w-4 h-4 mr-2" />
+              <Home className="w-3 h-3 lg:w-4 lg:h-4 mr-2" />
               Back to Site
             </Button>
             <Button
               onClick={handleLogout}
               variant="outline"
               size="sm"
-              className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50"
+              className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50 text-xs lg:text-sm"
             >
-              <LogOut className="w-4 h-4 mr-2" />
+              <LogOut className="w-3 h-3 lg:w-4 lg:h-4 mr-2" />
               Logout
             </Button>
           </div>
@@ -170,27 +195,37 @@ export default function AdminDashboard() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden lg:ml-0">
         {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="bg-white border-b border-gray-200 px-4 lg:px-6 py-3 lg:py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 capitalize">
-                {activeSection === "overview" ? "Dashboard Overview" : activeSection}
-              </h2>
-              <p className="text-gray-500 mt-1">
-                {activeSection === "overview" && "Monitor your gift card business performance"}
-                {activeSection === "giftcards" && "Manage all gift cards and transactions"}
-                {activeSection === "users" && "View and manage user accounts"}
-                {activeSection === "analytics" && "Detailed business analytics and reports"}
-                {activeSection === "email" && "Email delivery and domain authentication"}
-                {activeSection === "settings" && "System configuration and preferences"}
-              </p>
-            </div>
             <div className="flex items-center space-x-3">
-              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="lg:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+              <div className="flex-1">
+                <h2 className="text-lg lg:text-2xl font-bold text-gray-900 capitalize">
+                  {activeSection === "overview" ? "Dashboard Overview" : activeSection}
+                </h2>
+                <p className="text-xs lg:text-sm text-gray-500 mt-1 hidden sm:block">
+                  {activeSection === "overview" && "Monitor your gift card business performance"}
+                  {activeSection === "giftcards" && "Manage all gift cards and transactions"}
+                  {activeSection === "users" && "View and manage user accounts"}
+                  {activeSection === "analytics" && "Detailed business analytics and reports"}
+                  {activeSection === "email" && "Email delivery and domain authentication"}
+                  {activeSection === "settings" && "System configuration and preferences"}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2 lg:space-x-3">
+              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 hidden sm:flex">
                 <Database className="w-3 h-3 mr-1" />
-                Live Data
+                <span className="hidden lg:inline">Live Data</span>
+                <span className="lg:hidden">Live</span>
               </Badge>
               <Button
                 onClick={handleRefresh}
@@ -198,27 +233,27 @@ export default function AdminDashboard() {
                 size="sm"
                 className="bg-blue-600 hover:bg-blue-700"
               >
-                <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-                Refresh
+                <RefreshCw className={`w-3 h-3 lg:w-4 lg:h-4 ${refreshing ? 'animate-spin' : ''} ${refreshing ? '' : 'lg:mr-2'}`} />
+                <span className="hidden lg:inline">Refresh</span>
               </Button>
             </div>
           </div>
         </div>
 
         {/* Content Area */}
-        <div className="p-6 overflow-y-auto h-full">
+        <div className="p-4 lg:p-6 overflow-y-auto h-full">
           {metricsLoading ? (
-            <div className="flex items-center justify-center h-64">
+            <div className="flex items-center justify-center h-32 lg:h-64">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="mt-4 text-gray-600">Loading dashboard data...</p>
+                <div className="animate-spin rounded-full h-8 w-8 lg:h-12 lg:w-12 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-4 text-sm lg:text-base text-gray-600">Loading dashboard data...</p>
               </div>
             </div>
           ) : metricsError ? (
-            <div className="flex items-center justify-center h-64">
+            <div className="flex items-center justify-center h-32 lg:h-64">
               <div className="text-center">
-                <p className="text-red-600 mb-4">Failed to load admin metrics</p>
-                <Button onClick={() => window.location.href = '/admin-login'}>
+                <p className="text-red-600 mb-4 text-sm lg:text-base">Failed to load admin metrics</p>
+                <Button onClick={() => window.location.href = '/admin-login'} size="sm">
                   Re-authenticate
                 </Button>
               </div>
@@ -226,9 +261,9 @@ export default function AdminDashboard() {
           ) : (
             <>
               {activeSection === "overview" && (
-                <div className="space-y-6">
+                <div className="space-y-4 lg:space-y-6">
                   {/* Key Metrics Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
                     <MetricCard
                       title="Total Gift Cards"
                       value={metrics.totalGiftCards?.toString() || "0"}
@@ -264,15 +299,15 @@ export default function AdminDashboard() {
                   </div>
 
                   {/* Charts Grid */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
                     {/* Revenue Trend Chart */}
                     <Card className="col-span-1">
-                      <CardHeader>
-                        <CardTitle>Revenue Trend</CardTitle>
-                        <CardDescription>Weekly gift card sales performance</CardDescription>
+                      <CardHeader className="pb-2 lg:pb-6">
+                        <CardTitle className="text-lg lg:text-xl">Revenue Trend</CardTitle>
+                        <CardDescription className="text-sm">Weekly gift card sales performance</CardDescription>
                       </CardHeader>
-                      <CardContent>
-                        <ResponsiveContainer width="100%" height={300}>
+                      <CardContent className="pt-2 lg:pt-0">
+                        <ResponsiveContainer width="100%" height={250} className="lg:!h-[300px]">
                           <LineChart data={weeklyRevenue}>
                             <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                             <XAxis dataKey="week" className="text-sm" />
@@ -304,12 +339,12 @@ export default function AdminDashboard() {
 
                     {/* Gift Card Status Distribution */}
                     <Card className="col-span-1">
-                      <CardHeader>
-                        <CardTitle>Gift Card Status</CardTitle>
-                        <CardDescription>Distribution of card statuses</CardDescription>
+                      <CardHeader className="pb-2 lg:pb-6">
+                        <CardTitle className="text-lg lg:text-xl">Gift Card Status</CardTitle>
+                        <CardDescription className="text-sm">Distribution of card statuses</CardDescription>
                       </CardHeader>
-                      <CardContent>
-                        <ResponsiveContainer width="100%" height={300}>
+                      <CardContent className="pt-2 lg:pt-0">
+                        <ResponsiveContainer width="100%" height={250} className="lg:!h-[300px]">
                           <PieChart>
                             <Pie
                               data={[

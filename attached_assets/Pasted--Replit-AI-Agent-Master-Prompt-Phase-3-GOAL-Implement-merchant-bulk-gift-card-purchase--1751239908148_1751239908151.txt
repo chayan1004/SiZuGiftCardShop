@@ -1,0 +1,55 @@
+// Replit AI Agent – Master Prompt: Phase 3
+// ⚙️ GOAL: Implement merchant bulk gift card purchase flow with live API and dynamic pricing tiers
+
+/*
+🧱 PRE-CHECKS – DO NOT SKIP:
+- DO NOT recreate the merchant dashboard or routes already in use.
+- Only use the existing `/api/merchant/bulk-orders` backend endpoint.
+- Only use the authenticated merchant JWT already handled by `requireMerchant`.
+- Use Tailwind + shadcn/ui components to match existing project style.
+- Ensure all logic is placed in `client/src/pages/MerchantBulkPurchase.tsx`
+*/
+
+1. ✅ Create or update `client/src/pages/MerchantBulkPurchase.tsx` with:
+   - Input: Quantity (with + / - stepper)
+   - Auto-calculated Unit Price based on tiers:
+     - 1–9: $25.00
+     - 10–49: $22.00
+     - 50–99: $20.00
+     - 100+: $18.00
+   - Display: Total Price = Quantity × Unit Price
+   - Button: “Purchase Gift Cards”
+
+2. 🛠 On submit:
+   - Send `POST` request to `/api/merchant/bulk-orders` with:
+     ```ts
+     {
+       quantity: number,
+       unit_price: number,
+       total_price: number
+     }
+     ```
+   - Include merchant JWT in `Authorization: Bearer <token>` header (use apiRequest utility).
+
+3. 🎉 On success:
+   - Show toast “Order Placed!”
+   - Redirect to `/merchant-dashboard`
+   - (optional) Trigger confirmation email if backend already handles it
+
+4. 📲 Add link to Merchant Dashboard top nav:
+   - Button/link: `Buy More Gift Cards` → `/merchant-bulk-purchase`
+
+5. 🔒 Protect `/merchant-bulk-purchase` using `ProtectedRoute` with role check.
+
+6. ✅ TEST the entire flow:
+   - Log in as a merchant
+   - Visit `/merchant-bulk-purchase`
+   - Select quantity (e.g., 60)
+   - Confirm price updates to $20/unit = $1200
+   - Place order → redirect + dashboard reflects new order
+
+// DO NOT create new files unless required.
+// DO NOT duplicate dashboard layout – reuse existing layout components.
+// DO NOT hardcode merchant ID or JWT – use context/auth hook properly.
+// DO NOT use mock APIs. Only real, integrated backend.
+// Final result must be LIVE-USE ready, mobile-optimized, clean TypeScript.

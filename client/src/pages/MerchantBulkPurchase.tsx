@@ -34,7 +34,6 @@ export default function MerchantBulkPurchase() {
   const [, setLocation] = useLocation();
   
   const [quantity, setQuantity] = useState<number>(25);
-  const [unitPrice, setUnitPrice] = useState<number>(25.00);
   const [customMessage, setCustomMessage] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -85,38 +84,28 @@ export default function MerchantBulkPurchase() {
     return null;
   }
 
-  // Fetch pricing tiers
-  const { data: pricingTiers = [], isLoading: tiersLoading } = useQuery({
-    queryKey: ['pricing-tiers'],
-    queryFn: async () => {
-      const response = await fetch('/api/merchant/pricing-tiers', {
-        headers: {
-          'x-merchant-token': merchantToken
-        }
-      });
-      const data = await response.json();
-      return data.tiers || [];
-    }
-  });
+  // Pricing tiers as specified in requirements
+  const pricingTiers = [
+    { minQuantity: 1, maxQuantity: 9, unitPrice: 25.00, name: "Starter", discountPercentage: 0 },
+    { minQuantity: 10, maxQuantity: 49, unitPrice: 22.00, name: "Small Business", discountPercentage: 12 },
+    { minQuantity: 50, maxQuantity: 99, unitPrice: 20.00, name: "Growing Business", discountPercentage: 20 },
+    { minQuantity: 100, maxQuantity: Infinity, unitPrice: 18.00, name: "Enterprise", discountPercentage: 28 }
+  ];
+  
+  const tiersLoading = false;
 
-  // Calculate pricing based on quantity
-  const getCurrentTier = (): PricingTier | null => {
-    return pricingTiers.find((tier: PricingTier) => 
+  // Calculate pricing based on quantity tiers
+  const getCurrentTier = () => {
+    return pricingTiers.find((tier) => 
       quantity >= tier.minQuantity && quantity <= tier.maxQuantity
-    ) || null;
+    ) || pricingTiers[0];
   };
 
-  const calculateDiscountedPrice = (): number => {
-    const tier = getCurrentTier();
-    if (!tier) return unitPrice;
-    
-    const discount = tier.discountPercentage / 100;
-    return unitPrice * (1 - discount);
-  };
-
-  const totalPrice = quantity * calculateDiscountedPrice();
   const currentTier = getCurrentTier();
-  const savings = quantity * (unitPrice - calculateDiscountedPrice());
+  const currentUnitPrice = currentTier.unitPrice;
+  const totalPrice = quantity * currentUnitPrice;
+  const basePrice = 25.00; // Original price for savings calculation
+  const savings = quantity * (basePrice - currentUnitPrice);
 
   // Create bulk order mutation
   const createBulkOrderMutation = useMutation({

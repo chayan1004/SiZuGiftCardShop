@@ -254,11 +254,11 @@ export default function MerchantDashboard() {
                 </CardDescription>
               </div>
               <Button
-                onClick={() => window.location.href = '/merchant/bulk-order'}
+                onClick={() => window.location.href = '/merchant-bulk-purchase'}
                 className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Buy More Cards
+                Buy Gift Cards
               </Button>
             </div>
           </CardHeader>
@@ -402,7 +402,7 @@ export default function MerchantDashboard() {
                 <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-400 mb-4">No bulk orders found</p>
                 <Button
-                  onClick={() => window.location.href = '/merchant/bulk-order'}
+                  onClick={() => window.location.href = '/merchant-bulk-purchase'}
                   className="bg-gradient-to-r from-purple-500 to-pink-500"
                 >
                   Place Your First Bulk Order

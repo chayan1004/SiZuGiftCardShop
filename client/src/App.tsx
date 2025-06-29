@@ -14,6 +14,7 @@ import CheckBalance from "@/pages/CheckBalance";
 import MerchantLogin from "@/pages/MerchantLogin";
 import MerchantRegister from "@/pages/MerchantRegister";
 import MerchantDashboard from "@/pages/MerchantDashboard";
+import MerchantBulkPurchase from "@/pages/MerchantBulkPurchase";
 import MerchantVerify from "@/pages/MerchantVerify";
 import AdminLogin from "@/pages/admin/AdminLogin";
 import TestModal from "@/pages/TestModal";
@@ -30,6 +31,7 @@ function Router() {
       <Route path="/merchant-login" component={MerchantLogin} />
       <Route path="/merchant-register" component={MerchantRegister} />
       <Route path="/merchant-dashboard" component={MerchantDashboard} />
+      <Route path="/merchant-bulk-purchase" component={MerchantBulkPurchase} />
       <Route path="/merchant-verify" component={MerchantVerify} />
       <Route path="/admin-login" component={AdminLogin} />
       <Route path="/test-modal" component={TestModal} />

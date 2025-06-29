@@ -15,7 +15,9 @@ export default function Navigation({ onOpenPurchaseModal, onOpenDashboard }: Nav
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeItem, setActiveItem] = useState('');
   const [hoveredItem, setHoveredItem] = useState('');
-  const auth = useAuth();
+  // Check authentication status from localStorage
+  const merchantToken = localStorage.getItem('merchantToken');
+  const adminToken = localStorage.getItem('adminToken');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -310,7 +312,7 @@ export default function Navigation({ onOpenPurchaseModal, onOpenDashboard }: Nav
               
               {/* Role-Based Authentication Buttons */}
               <div className="flex items-center space-x-4 ml-8">
-                {auth.role === 'merchant' ? (
+                {merchantToken ? (
                   <motion.div 
                     whileHover={{ scale: 1.05, rotateY: 5 }}
                     whileTap={{ scale: 0.95 }}
@@ -325,7 +327,7 @@ export default function Navigation({ onOpenPurchaseModal, onOpenDashboard }: Nav
                       </span>
                     </Button>
                   </motion.div>
-                ) : auth.role === 'admin' ? (
+                ) : adminToken === 'sizu-admin-2025' ? (
                   <motion.div 
                     whileHover={{ scale: 1.05, rotateY: 5 }}
                     whileTap={{ scale: 0.95 }}
@@ -357,12 +359,13 @@ export default function Navigation({ onOpenPurchaseModal, onOpenDashboard }: Nav
                         Login
                       </Button>
                     </Link>
-                    <Button 
-                      onClick={() => loginAsAdmin()}
-                      className="relative px-6 py-2 glass-premium-button text-white font-medium rounded-xl border border-purple-400/30 hover:border-purple-300/50 transition-all duration-300 text-sm"
-                    >
-                      Admin
-                    </Button>
+                    <Link href="/admin-login">
+                      <Button 
+                        className="relative px-6 py-2 glass-premium-button text-white font-medium rounded-xl border border-purple-400/30 hover:border-purple-300/50 transition-all duration-300 text-sm"
+                      >
+                        Admin
+                      </Button>
+                    </Link>
                   </motion.div>
                 )}
                 

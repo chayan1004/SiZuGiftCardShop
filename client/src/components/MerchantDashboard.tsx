@@ -37,14 +37,14 @@ interface Transaction {
 export default function MerchantDashboard({ isOpen, onClose }: MerchantDashboardProps) {
   const [activeTab, setActiveTab] = useState("overview");
   const { toast } = useToast();
-  const auth = useAuth();
+  // Get merchant data from localStorage
+  const merchantData = localStorage.getItem('merchantData');
+  const merchant = merchantData ? JSON.parse(merchantData) : null;
+  const merchantId = merchant?.merchantId || "";
 
-  // Use authenticated merchant ID
-  const merchantId = auth.merchantId || "";
-
-  // Redirect if not authenticated as merchant
+  // Check if merchant is authenticated
   useEffect(() => {
-    if (isOpen && (!auth.isAuthenticated || auth.role !== 'merchant')) {
+    if (isOpen && (!merchantId || !localStorage.getItem('merchantToken'))) {
       toast({
         title: "Access Denied",
         description: "Please log in as a merchant to access the dashboard",
@@ -52,7 +52,7 @@ export default function MerchantDashboard({ isOpen, onClose }: MerchantDashboard
       });
       onClose();
     }
-  }, [isOpen, auth, onClose, toast]);
+  }, [isOpen, merchantId, onClose, toast]);
 
   const { data: analyticsData, isLoading: analyticsLoading } = useQuery<{
     success: boolean;
@@ -84,7 +84,7 @@ export default function MerchantDashboard({ isOpen, onClose }: MerchantDashboard
     };
   }>({
     queryKey: ["/api/dashboard/stats"],
-    enabled: isOpen && auth.isAuthenticated && auth.role === 'merchant',
+    enabled: isOpen && !!merchantId,
     refetchInterval: 30000, // Refresh every 30 seconds for live data
     meta: {
       headers: {

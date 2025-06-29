@@ -87,6 +87,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/merchant/register", async (req: Request, res: Response) => {
+    try {
+      const registerSchema = z.object({
+        businessName: z.string().min(2, 'Business name must be at least 2 characters'),
+        email: z.string().email('Valid email is required'),
+        password: z.string()
+          .min(8, 'Password must be at least 8 characters')
+          .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+          .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+          .regex(/\d/, 'Password must contain at least one number'),
+        confirmPassword: z.string()
+      }).refine((data) => data.password === data.confirmPassword, {
+        message: "Passwords don't match",
+        path: ["confirmPassword"],
+      });
+
+      const { businessName, email, password } = registerSchema.parse(req.body);
+
+      // Check if merchant already exists
+      const existingMerchant = await storage.getMerchantByEmail(email);
+      if (existingMerchant) {
+        return res.status(409).json({
+          success: false,
+          error: 'A merchant account with this email already exists'
+        });
+      }
+
+      // Hash password
+      const passwordHash = await AuthService.hashPassword(password);
+
+      // Create merchant account
+      const merchantId = `merchant_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+      
+      const newMerchant = await storage.createMerchant({
+        squareApplicationId: 'pending-square-setup',
+        accessToken: 'pending-square-oauth',
+        refreshToken: 'pending-square-oauth',
+        merchantId,
+        businessName,
+        email,
+        passwordHash,
+        isActive: true
+      });
+
+      // Generate JWT token for auto-login
+      const token = AuthService.generateMerchantToken(newMerchant);
+
+      // Set secure HTTP-only cookie
+      res.cookie('merchantToken', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      });
+
+      res.status(201).json({
+        success: true,
+        message: 'Merchant account created successfully',
+        token,
+        merchant: {
+          id: newMerchant.id,
+          merchantId: newMerchant.merchantId,
+          businessName: newMerchant.businessName,
+          email: newMerchant.email
+        }
+      });
+
+    } catch (error) {
+      console.error('Registration route error:', error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({
+          success: false,
+          error: 'Validation failed',
+          details: error.errors.map(err => ({
+            field: err.path.join('.'),
+            message: err.message
+          }))
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          error: 'Registration failed. Please try again.'
+        });
+      }
+    }
+  });
+
   app.post("/api/merchant/demo-login", async (req: Request, res: Response) => {
     try {
       const result = await AuthService.createDemoMerchant();

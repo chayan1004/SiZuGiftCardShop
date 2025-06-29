@@ -222,9 +222,11 @@ export default function MerchantLogin() {
             <div className="text-center">
               <p className="text-sm text-gray-400">
                 Don't have an account?{" "}
-                <a href="#" className="text-cyan-400 hover:text-cyan-300 transition-colors">
-                  Contact Sales
-                </a>
+                <Link href="/merchant-register">
+                  <a className="text-cyan-400 hover:text-cyan-300 transition-colors">
+                    Sign up here
+                  </a>
+                </Link>
               </p>
             </div>
           </CardContent>

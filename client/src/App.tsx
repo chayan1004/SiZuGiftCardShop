@@ -15,6 +15,7 @@ import MerchantLogin from "@/pages/MerchantLogin";
 import MerchantRegister from "@/pages/MerchantRegister";
 import MerchantDashboard from "@/pages/MerchantDashboard";
 import MerchantVerify from "@/pages/MerchantVerify";
+import AdminLogin from "@/pages/AdminLogin";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -28,6 +29,7 @@ function Router() {
       <Route path="/merchant-login" component={MerchantLogin} />
       <Route path="/merchant-register" component={MerchantRegister} />
       <Route path="/merchant-verify" component={MerchantVerify} />
+      <Route path="/admin-login" component={AdminLogin} />
       <Route path="/merchant-dashboard">
         <ProtectedRoute requiredRole="merchant" redirectTo="/merchant-login">
           <MerchantDashboard />
@@ -37,7 +39,7 @@ function Router() {
         {(params) => <PublicGiftCard gan={params.gan} />}
       </Route>
       <Route path="/admin">
-        <ProtectedRoute requiredRole="admin">
+        <ProtectedRoute requiredRole="admin" redirectTo="/admin-login">
           <AdminDashboard />
         </ProtectedRoute>
       </Route>

@@ -27,8 +27,10 @@ export function ProtectedRoute({ children, requiredRole, redirectTo = '/' }: Pro
   useEffect(() => {
     const checkAuthentication = () => {
       // Check for admin token
-      const adminToken = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
-      if (adminToken === 'sizu-admin-2025') {
+      const adminToken = localStorage.getItem('adminToken');
+      const expectedAdminToken = import.meta.env.VITE_ADMIN_TOKEN || 'sizu-admin-2025';
+      
+      if (adminToken && adminToken === expectedAdminToken) {
         setAuthState({
           isAuthenticated: true,
           role: 'admin',
@@ -164,8 +166,10 @@ export function useAuth(): AuthContext {
 
   useEffect(() => {
     // Check for admin token
-    const adminToken = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
-    if (adminToken === 'sizu-admin-2025') {
+    const adminToken = localStorage.getItem('adminToken');
+    const expectedAdminToken = import.meta.env.VITE_ADMIN_TOKEN || 'sizu-admin-2025';
+    
+    if (adminToken && adminToken === expectedAdminToken) {
       setAuthState({
         isAuthenticated: true,
         role: 'admin',

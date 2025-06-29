@@ -1,0 +1,46 @@
+📌 Prompt Title: Phase 1 — Fix Authentication System + Admin Login Setup (SiZu Gift Card Shop)
+
+🔐 Objective:
+Fix all broken login/session flows, including:
+- Add a working admin login page `/admin-login`
+- Fix merchant login session persistence (localStorage > cookie confusion)
+- Ensure `ProtectedRoute` component handles admin + merchant roles separately and reliably
+
+🧩 Instructions:
+
+1. ✅ Create a new route `/admin-login` and its React page component `AdminLogin.tsx` inside `src/pages`. It should include:
+   - A password input field and a submit button.
+   - On submit, if the password matches `process.env.ADMIN_TOKEN` (fallback: `'sizu-admin-2025'`), store it in `localStorage.adminToken`.
+   - Then redirect to `/admin` route.
+
+2. 🔐 Update the `ProtectedRoute.tsx` component to support both roles:
+   - `requiredRole="admin"` should check `localStorage.adminToken === process.env.ADMIN_TOKEN`
+   - `requiredRole="merchant"` should check `localStorage.merchantToken` is valid JWT
+
+3. 🧹 Clean up merchant login logic:
+   - Make sure it only uses localStorage for session (ignore cookie for now).
+   - After `/api/merchant/login` succeeds, save the token as `merchantToken` in localStorage.
+
+4. 🧪 In `App.tsx`, test login and routing behavior:
+   - Ensure merchants are redirected to `/merchant-dashboard`
+   - Admins who log in via `/admin-login` can visit `/admin` and other `admin-only` routes
+
+5. 🚫 Remove or comment out hardcoded token input fields inside `AdminDashboard.tsx` or any protected component.
+
+📂 Files to Edit:
+- `src/pages/AdminLogin.tsx` (new)
+- `src/pages/MerchantLogin.tsx`
+- `src/components/ProtectedRoute.tsx`
+- `src/App.tsx`
+- `.env` → add `ADMIN_TOKEN=sizu-admin-2025`
+
+✅ Acceptance Criteria:
+- Merchant login sets token in localStorage and persists across refresh
+- Admin login via `/admin-login` shows dashboard only after correct password
+- All protected routes behave correctly for role-based access
+
+⛔ Do not:
+- Introduce new state management libraries
+- Use cookies unless explicitly required
+- Change existing route structure
+

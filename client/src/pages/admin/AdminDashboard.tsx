@@ -114,7 +114,7 @@ export default function AdminDashboard() {
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 flex relative">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 flex relative overflow-hidden">
       {/* Premium Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between p-4 bg-gradient-to-r from-slate-900/95 to-slate-800/95 backdrop-blur-xl border-b border-slate-700/50">
         <div className="flex items-center space-x-3">
@@ -282,7 +282,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Premium Main Content */}
-      <div className="flex-1 overflow-hidden lg:ml-0 pt-16 lg:pt-0">
+      <div className="flex-1 overflow-hidden lg:ml-72 pt-16 lg:pt-0 min-h-screen">
         {/* Premium Header */}
         <div className="bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-xl border-b border-white/20 px-4 lg:px-8 py-4 lg:py-6">
           <div className="flex items-center justify-between">
@@ -320,20 +320,24 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Content Area */}
-        <div className="p-4 lg:p-6 overflow-y-auto h-full">
+        {/* Premium Content Area */}
+        <div className="p-4 lg:p-8 overflow-y-auto h-full bg-gradient-to-br from-slate-900/10 to-slate-800/5 backdrop-blur-sm">
           {metricsLoading ? (
             <div className="flex items-center justify-center h-32 lg:h-64">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 lg:h-12 lg:w-12 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="mt-4 text-sm lg:text-base text-gray-600">Loading dashboard data...</p>
+                <div className="animate-spin rounded-full h-8 w-8 lg:h-12 lg:w-12 border-b-2 border-blue-400 mx-auto"></div>
+                <p className="mt-4 text-sm lg:text-base text-gray-300">Loading dashboard data...</p>
               </div>
             </div>
           ) : metricsError ? (
             <div className="flex items-center justify-center h-32 lg:h-64">
               <div className="text-center">
-                <p className="text-red-600 mb-4 text-sm lg:text-base">Failed to load admin metrics</p>
-                <Button onClick={() => window.location.href = '/admin-login'} size="sm">
+                <p className="text-red-400 mb-4 text-sm lg:text-base">Failed to load admin metrics</p>
+                <Button 
+                  onClick={() => window.location.href = '/admin-login'} 
+                  size="sm"
+                  className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
+                >
                   Re-authenticate
                 </Button>
               </div>

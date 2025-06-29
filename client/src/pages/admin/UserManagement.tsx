@@ -145,46 +145,46 @@ export default function MerchantManagement() {
       </Card>
 
       {/* Merchants Table */}
-      <Card>
+      <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
         <CardHeader>
-          <CardTitle>Merchants ({filteredMerchants.length})</CardTitle>
-          <CardDescription>All registered merchant accounts</CardDescription>
+          <CardTitle className="text-white">Merchants ({filteredMerchants.length})</CardTitle>
+          <CardDescription className="text-gray-300">All registered merchant accounts</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Business Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Square ID</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Gift Cards</TableHead>
-                    <TableHead>Total Sales</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead>Last Login</TableHead>
+                  <TableRow className="border-white/20 hover:bg-white/5">
+                    <TableHead className="text-gray-300">Business Name</TableHead>
+                    <TableHead className="text-gray-300">Email</TableHead>
+                    <TableHead className="text-gray-300">Square ID</TableHead>
+                    <TableHead className="text-gray-300">Status</TableHead>
+                    <TableHead className="text-gray-300">Gift Cards</TableHead>
+                    <TableHead className="text-gray-300">Total Sales</TableHead>
+                    <TableHead className="text-gray-300">Created</TableHead>
+                    <TableHead className="text-gray-300">Last Login</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredMerchants.map((merchant) => (
-                    <TableRow key={merchant.id}>
-                      <TableCell className="font-medium">{merchant.businessName}</TableCell>
-                      <TableCell>{merchant.email}</TableCell>
-                      <TableCell className="font-mono text-sm">{merchant.squareId}</TableCell>
+                    <TableRow key={merchant.id} className="border-white/20 hover:bg-white/5">
+                      <TableCell className="font-medium text-white">{merchant.businessName}</TableCell>
+                      <TableCell className="text-gray-300">{merchant.email}</TableCell>
+                      <TableCell className="font-mono text-sm text-gray-400">{merchant.squareId}</TableCell>
                       <TableCell>
-                        <Badge className={merchant.isEmailVerified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
+                        <Badge className={merchant.isEmailVerified ? 'bg-green-500/20 text-green-300 border-green-400/30' : 'bg-yellow-500/20 text-yellow-300 border-yellow-400/30'}>
                           {merchant.isEmailVerified ? 'Verified' : 'Pending'}
                         </Badge>
                       </TableCell>
-                      <TableCell>{merchant.activeGiftCards}</TableCell>
-                      <TableCell>${merchant.totalSales.toFixed(2)}</TableCell>
-                      <TableCell>{new Date(merchant.createdAt).toLocaleDateString()}</TableCell>
-                      <TableCell>
+                      <TableCell className="text-gray-300">{merchant.activeGiftCards}</TableCell>
+                      <TableCell className="text-gray-300">${merchant.totalSales.toFixed(2)}</TableCell>
+                      <TableCell className="text-gray-400">{new Date(merchant.createdAt).toLocaleDateString()}</TableCell>
+                      <TableCell className="text-gray-400">
                         {merchant.lastLogin ? new Date(merchant.lastLogin).toLocaleDateString() : 'Never'}
                       </TableCell>
                     </TableRow>
@@ -192,7 +192,7 @@ export default function MerchantManagement() {
                 </TableBody>
               </Table>
               {filteredMerchants.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-gray-400">
                   No merchants found matching your criteria
                 </div>
               )}

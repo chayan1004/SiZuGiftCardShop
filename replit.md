@@ -129,6 +129,7 @@ This is a full-stack gift card management application built with a modern tech s
 - June 29, 2025. Implemented enterprise-grade security architecture with email verification flow, rate limiting, brute force protection, and authentication audit logging
 - June 29, 2025. Fixed critical demo login security vulnerability and completed email verification system with proper frontend verification page
 - June 29, 2025. Completed comprehensive mobile responsiveness audit and implementation for both admin and merchant dashboards with full device compatibility
+- June 29, 2025. Renamed Users section to Merchants with full backend API integration, dark theme styling, and real-time merchant data display
 
 ## Recent Production Enhancements
 

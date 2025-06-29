@@ -7,10 +7,9 @@ import { Link } from "wouter";
 
 interface NavigationProps {
   onOpenPurchaseModal: () => void;
-  onOpenDashboard: () => void;
 }
 
-export default function Navigation({ onOpenPurchaseModal, onOpenDashboard }: NavigationProps) {
+export default function Navigation({ onOpenPurchaseModal }: NavigationProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeItem, setActiveItem] = useState('');
@@ -317,15 +316,16 @@ export default function Navigation({ onOpenPurchaseModal, onOpenDashboard }: Nav
                     whileHover={{ scale: 1.05, rotateY: 5 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <Button 
-                      onClick={onOpenDashboard}
-                      className="relative px-8 py-3 glass-premium-button text-white font-bold rounded-2xl border border-green-400/30 hover:border-green-300/50 transition-all duration-300 group overflow-hidden"
-                    >
-                      <span className="relative z-10 flex items-center space-x-2">
-                        <Shield size={18} />
-                        <span>Merchant Dashboard</span>
-                      </span>
-                    </Button>
+                    <Link href="/admin-login">
+                      <Button 
+                        className="relative px-8 py-3 glass-premium-button text-white font-bold rounded-2xl border border-green-400/30 hover:border-green-300/50 transition-all duration-300 group overflow-hidden"
+                      >
+                        <span className="relative z-10 flex items-center space-x-2">
+                          <Shield size={18} />
+                          <span>Admin Dashboard</span>
+                        </span>
+                      </Button>
+                    </Link>
                   </motion.div>
                 ) : adminToken === 'sizu-admin-2025' ? (
                   <motion.div 

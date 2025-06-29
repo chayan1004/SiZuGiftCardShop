@@ -21,18 +21,15 @@ export default function Home() {
 
   // Auto-redirect admin to main admin dashboard
   useEffect(() => {
-    if (merchantToken) {
-      setIsDashboardOpen(true);
-    } else if (adminToken === 'sizu-admin-2025') {
+    if (adminToken === 'sizu-admin-2025') {
       window.location.href = '/admin';
     }
-  }, [merchantToken, adminToken]);
+  }, [adminToken]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900">
       <Navigation 
         onOpenPurchaseModal={() => setIsPurchaseModalOpen(true)}
-        onOpenDashboard={() => setIsDashboardOpen(true)}
       />
       
       <HeroSection onOpenPurchaseModal={() => setIsPurchaseModalOpen(true)} />

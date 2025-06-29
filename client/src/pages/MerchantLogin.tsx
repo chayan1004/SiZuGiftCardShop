@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation, Link } from "wouter";
-import { loginAsMerchant } from "@/components/ProtectedRoute";
+
 
 export default function MerchantLogin() {
   const [merchantId, setMerchantId] = useState("");

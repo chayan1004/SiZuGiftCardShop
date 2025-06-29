@@ -3,7 +3,7 @@ import { Gift, Menu, X, Sparkles, Zap, Star, Shield, ChevronDown, ArrowRight, Sh
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
-import { useAuth, loginAsAdmin, loginAsMerchant } from "@/components/ProtectedRoute";
+// Authentication utilities removed - using simplified auth system
 
 interface NavigationProps {
   onOpenPurchaseModal: () => void;

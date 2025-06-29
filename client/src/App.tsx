@@ -3,7 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Home from "@/pages/Home";
 import About from "@/pages/About";
 import GiftCardStore from "@/pages/GiftCardStore";
@@ -31,7 +31,7 @@ function Router() {
       <Route path="/merchant-verify" component={MerchantVerify} />
       <Route path="/admin-login" component={AdminLogin} />
       <Route path="/merchant-dashboard">
-        <ProtectedRoute requiredRole="merchant" redirectTo="/merchant-login">
+        <ProtectedRoute role="merchant">
           <MerchantDashboard />
         </ProtectedRoute>
       </Route>
@@ -39,7 +39,7 @@ function Router() {
         {(params) => <PublicGiftCard gan={params.gan} />}
       </Route>
       <Route path="/admin">
-        <ProtectedRoute requiredRole="admin" redirectTo="/admin-login">
+        <ProtectedRoute role="admin">
           <AdminDashboard />
         </ProtectedRoute>
       </Route>

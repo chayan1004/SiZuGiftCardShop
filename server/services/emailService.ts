@@ -104,9 +104,9 @@ class EmailService {
       });
 
       const mailOptions = {
-        from: this.config!.from,
+        from: 'SiZu Pay Receipt <noreply@receipt.sizupay.com>',
         to: data.to,
-        subject: '🎁 Your Gift Card from SiZu Pay',
+        subject: 'Gift Card Receipt - SiZu Pay',
         html: htmlContent,
         text: this.createPlainTextEmail(data),
         attachments: [
@@ -233,7 +233,7 @@ class EmailService {
     <div class="container">
         <div class="header">
             <div class="brand">SiZu Pay</div>
-            <h1>🎁 Gift Card Delivery</h1>
+            <h1>Gift Card Receipt</h1>
         </div>
 
         <div style="text-align: center; margin: 30px 0;">

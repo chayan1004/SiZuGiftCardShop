@@ -897,7 +897,7 @@ Your Gift Card Details:
 ${data.message ? `Personal Message: "${data.message}"` : ''}
 
 To redeem your gift card:
-1. Visit any participating SiZu Pay merchant
+1. Visit any participating SiZu GiftCard merchant
 2. Show the QR code in this email or provide the gift card number
 3. Your gift card balance will be applied to your purchase
 
@@ -1198,7 +1198,7 @@ Gift card terms and conditions apply. Not redeemable for cash.
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="format-detection" content="telephone=no, date=no, email=no, address=no">
-    <title>SiZu Pay Security Code</title>
+    <title>SiZu GiftCard Security Code</title>
     <style>
         * { 
             box-sizing: border-box; 
@@ -1380,7 +1380,7 @@ Gift card terms and conditions apply. Not redeemable for cash.
 <body>
     <div class="container">
         <div class="header">
-            <h1 class="brand-title">SiZu Pay</h1>
+            <h1 class="brand-title">SiZu GiftCard</h1>
             <p class="subtitle">Secure Authentication</p>
         </div>
         
@@ -1390,10 +1390,10 @@ Gift card terms and conditions apply. Not redeemable for cash.
             <p class="expiry-text">This code expires in ${data.expiresInMinutes || 10} minutes</p>
         </div>
         
-        <p class="instructions">Enter this code to complete your authentication with SiZu Pay.</p>
+        <p class="instructions">Enter this code to complete your authentication with SiZu GiftCard.</p>
         
         <div class="warning">
-            <p class="warning-text">Never share this code with anyone. SiZu Pay will never ask for this code.</p>
+            <p class="warning-text">Never share this code with anyone. SiZu GiftCard will never ask for this code.</p>
         </div>
     </div>
 </body>
@@ -1401,7 +1401,7 @@ Gift card terms and conditions apply. Not redeemable for cash.
   }
 
   private createOtpPlainText(data: OtpEmailData): string {
-    return `SiZu Pay Security Code\n\nYour authentication code: ${data.code}\n\nThis code expires in ${data.expiresInMinutes || 10} minutes.\n\nEnter this code to complete your authentication with SiZu Pay.\n\nSecurity Notice: Never share this code with anyone.`;
+    return `SiZu GiftCard Security Code\n\nYour authentication code: ${data.code}\n\nThis code expires in ${data.expiresInMinutes || 10} minutes.\n\nEnter this code to complete your authentication with SiZu GiftCard.\n\nSecurity Notice: Never share this code with anyone.`;
   }
 
   private createPromoEmailHTML(data: PromoEmailData): string {
@@ -1658,7 +1658,7 @@ Gift card terms and conditions apply. Not redeemable for cash.
 <body>
     <div class="container">
         <div class="header">
-            <h1 class="brand-title">SiZu Pay</h1>
+            <h1 class="brand-title">SiZu GiftCard</h1>
             <p class="promo-subtitle">Special Promotion</p>
         </div>
         

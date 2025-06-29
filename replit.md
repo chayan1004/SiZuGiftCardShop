@@ -118,6 +118,8 @@ This is a full-stack gift card management application built with a modern tech s
 - June 29, 2025. Comprehensive TypeScript fixes and dependency security improvements
 - June 29, 2025. Implemented secure webhook signature verification with crypto HMAC SHA1 and replay protection
 - June 29, 2025. Converted email service to Nodemailer SMTP with Mailgun integration and QR code embedding
+- June 29, 2025. Enhanced all email templates with fully responsive design for mobile, tablet, and desktop devices
+- June 29, 2025. Corrected branding consistency to use "SiZu GiftCard" instead of "SiZu Pay" across all email templates
 
 ## Recent Production Enhancements
 

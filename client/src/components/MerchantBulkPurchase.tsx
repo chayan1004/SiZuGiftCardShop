@@ -78,9 +78,9 @@ export default function MerchantBulkPurchase() {
     staleTime: 30 * 1000,
   });
 
-  const tiers: PricingTier[] = tiersData?.tiers || [];
-  const orders: BulkOrder[] = ordersData?.orders || [];
-  const cards: MerchantGiftCard[] = cardsData?.cards || [];
+  const tiers: PricingTier[] = (tiersData as any)?.tiers || [];
+  const orders: BulkOrder[] = (ordersData as any)?.orders || [];
+  const cards: MerchantGiftCard[] = (cardsData as any)?.cards || [];
 
   // Calculate pricing based on quantity
   useEffect(() => {
@@ -109,13 +109,10 @@ export default function MerchantBulkPurchase() {
   // Bulk purchase mutation
   const bulkPurchaseMutation = useMutation({
     mutationFn: async (purchaseData: any) => {
-      const response = await apiRequest('/api/merchant/giftcards/bulk', {
-        method: 'POST',
-        body: JSON.stringify(purchaseData),
-      });
+      const response = await apiRequest('/api/merchant/giftcards/bulk', 'POST', purchaseData);
       return response;
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       toast({
         title: "Bulk Purchase Successful",
         description: `Created ${data.cards?.length || 0} gift cards successfully`,

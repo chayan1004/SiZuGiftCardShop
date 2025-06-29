@@ -206,6 +206,7 @@ export default function MerchantDashboard({ isOpen, onClose }: MerchantDashboard
     { id: "overview", label: "Overview", icon: BarChart3 },
     { id: "transactions", label: "Transactions", icon: History },
     { id: "giftcards", label: "Gift Cards", icon: Gift },
+    { id: "bulk-purchase", label: "Bulk Purchase", icon: Package },
     { id: "customers", label: "Customers", icon: Users },
     { id: "settings", label: "Settings", icon: Settings },
   ];
@@ -649,6 +650,16 @@ export default function MerchantDashboard({ isOpen, onClose }: MerchantDashboard
                     </div>
                   </CardContent>
                 </Card>
+              </motion.div>
+            )}
+
+            {activeTab === "bulk-purchase" && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <MerchantBulkPurchase />
               </motion.div>
             )}
 

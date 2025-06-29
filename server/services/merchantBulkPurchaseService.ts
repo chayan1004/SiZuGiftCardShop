@@ -1,6 +1,10 @@
 import { storage } from '../storage';
 import { InsertMerchantGiftCard, InsertMerchantBulkOrder } from '@shared/schema';
-import { Client, Environment } from 'square';
+// Mock Square SDK for development - replace with actual Square integration in production
+interface MockSquareClient {
+  paymentsApi: any;
+  giftCardsApi: any;
+}
 
 interface BulkPurchaseRequest {
   amount: number; // Individual card amount in cents
@@ -18,7 +22,7 @@ interface MerchantTier {
 }
 
 export class MerchantBulkPurchaseService {
-  private squareClient: Client;
+  private squareClient: MockSquareClient;
 
   constructor() {
     this.squareClient = new Client({

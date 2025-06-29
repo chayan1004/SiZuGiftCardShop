@@ -493,7 +493,7 @@ export default function MerchantDashboard() {
             <Button
               onClick={() => refetchCards()}
               variant="outline"
-              className="border-white/20 text-white hover:bg-white/10 hover:text-white hover:border-white/30"
+              className="border-white/20 text-[#613791] hover:bg-white/10 hover:text-[#613791] hover:border-white/30"
             >
               Try Again
             </Button>
@@ -534,12 +534,12 @@ export default function MerchantDashboard() {
 
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-300">Created:</span>
+                    <span className="text-[#dd4bae]">Created:</span>
                     <span className="text-white">{formatDate(card.createdAt)}</span>
                   </div>
                   {card.customMessage && (
                     <div className="bg-white/10 rounded-lg p-2 lg:p-3">
-                      <p className="text-gray-300 text-xs lg:text-sm">{card.customMessage}</p>
+                      <p className="text-[#dd4bae] text-xs lg:text-sm">{card.customMessage}</p>
                     </div>
                   )}
                 </div>
@@ -548,7 +548,7 @@ export default function MerchantDashboard() {
                   <Button 
                     size="sm" 
                     variant="outline"
-                    className="flex-1 border-white/20 text-white hover:bg-white/10 hover:text-white hover:border-white/30"
+                    className="flex-1 border-white/20 text-[#613791] hover:bg-white/10 hover:text-[#613791] hover:border-white/30"
                     onClick={() => window.location.href = `/gift/${card.gan}`}
                   >
                     <Eye className="w-3 h-3 mr-1" />
@@ -557,7 +557,7 @@ export default function MerchantDashboard() {
                   <Button 
                     size="sm" 
                     variant="outline"
-                    className="border-white/20 text-white hover:bg-white/10 hover:text-white hover:border-white/30"
+                    className="border-white/20 text-[#613791] hover:bg-white/10 hover:text-[#613791] hover:border-white/30"
                   >
                     <Download className="w-3 h-3" />
                   </Button>
@@ -600,16 +600,16 @@ export default function MerchantDashboard() {
         {ordersLoading ? (
           <div className="text-center py-8 lg:py-12">
             <div className="animate-spin w-6 h-6 lg:w-8 lg:h-8 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-            <p className="text-gray-400">Loading bulk orders...</p>
+            <p className="text-[#dd4bae]">Loading bulk orders...</p>
           </div>
         ) : ordersError ? (
           <div className="text-center py-8 lg:py-12">
             <AlertCircle className="w-8 h-8 lg:w-12 lg:h-12 text-red-400 mx-auto mb-4" />
-            <p className="text-red-400 mb-4">Failed to load bulk orders</p>
+            <p className="text-[#dd4bae] mb-4">Failed to load bulk orders</p>
             <Button
               onClick={() => refetchOrders()}
               variant="outline"
-              className="border-white/20 text-white hover:bg-white/10 hover:text-white hover:border-white/30"
+              className="border-white/20 text-[#613791] hover:bg-white/10 hover:text-[#613791] hover:border-white/30"
             >
               Try Again
             </Button>
@@ -617,7 +617,7 @@ export default function MerchantDashboard() {
         ) : bulkOrders.length === 0 ? (
           <div className="text-center py-8 lg:py-12">
             <Package className="w-8 h-8 lg:w-12 lg:h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-400 mb-4">No bulk orders found</p>
+            <p className="text-[#dd4bae] mb-4">No bulk orders found</p>
             <Button
               onClick={() => window.location.href = '/merchant-bulk-purchase'}
               className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium"
@@ -641,7 +641,7 @@ export default function MerchantDashboard() {
                         <p className="text-white font-semibold text-sm lg:text-base">
                           Order #{order.id.slice(-8)}
                         </p>
-                        <p className="text-gray-300 text-xs lg:text-sm">
+                        <p className="text-[#dd4bae] text-xs lg:text-sm">
                           {formatDate(order.created_at)}
                         </p>
                       </div>

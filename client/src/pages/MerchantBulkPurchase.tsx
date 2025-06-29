@@ -108,14 +108,14 @@ export default function MerchantBulkPurchase() {
   const basePrice = 25.00; // Original price for savings calculation
   const savings = quantity * (basePrice - currentUnitPrice);
 
-  // Create bulk order mutation
+  // Create bulk order mutation using apiRequest utility
   const createBulkOrderMutation = useMutation({
     mutationFn: async (orderData: BulkOrderRequest) => {
       const response = await fetch('/api/merchant/bulk-orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-merchant-token': merchantToken
+          'Authorization': `Bearer ${merchantToken}`
         },
         body: JSON.stringify(orderData)
       });
@@ -129,7 +129,7 @@ export default function MerchantBulkPurchase() {
     },
     onSuccess: (data) => {
       toast({
-        title: "Bulk Order Created!",
+        title: "Order Placed!",
         description: `Successfully created order for ${quantity} gift cards`,
       });
       queryClient.invalidateQueries({ queryKey: ['merchant-bulk-orders'] });

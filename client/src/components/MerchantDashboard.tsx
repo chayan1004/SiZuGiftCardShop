@@ -344,9 +344,9 @@ export default function MerchantDashboard({ isOpen, onClose }: MerchantDashboard
                         <div>
                           <p className="text-slate-600 text-sm">Redemptions</p>
                           <p className="text-2xl font-bold text-slate-800">
-                            {statsLoading ? "..." : stats?.redemptions || 0}
+                            {analyticsLoading ? "..." : analyticsData?.data?.totalRedemptions || 0}
                           </p>
-                          <p className="text-purple-600 text-sm">↗ +15.7% from last month</p>
+                          <p className="text-purple-600 text-sm">Refunds: {analyticsData?.data?.totalRefunds || 0}</p>
                         </div>
                         <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                           <ShoppingCart className="text-purple-600" size={24} />
@@ -361,14 +361,130 @@ export default function MerchantDashboard({ isOpen, onClose }: MerchantDashboard
                         <div>
                           <p className="text-slate-600 text-sm">Customers</p>
                           <p className="text-2xl font-bold text-slate-800">
-                            {statsLoading ? "..." : stats?.customers || 0}
+                            {analyticsLoading ? "..." : analyticsData?.data?.customers || 0}
                           </p>
-                          <p className="text-amber-600 text-sm">↗ +5.2% from last month</p>
+                          <p className="text-amber-600 text-sm">
+                            {analyticsData?.data?.lastUpdated ? 
+                              `Updated ${new Date(analyticsData.data.lastUpdated).toLocaleTimeString()}` : 
+                              'Live data'
+                            }
+                          </p>
                         </div>
                         <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
                           <Users className="text-amber-600" size={24} />
                         </div>
                       </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Analytics Charts */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <BarChart3 className="h-5 w-5 text-blue-600" />
+                        7-Day Activity
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {analyticsLoading ? (
+                        <div className="h-64 flex items-center justify-center">
+                          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                        </div>
+                      ) : analyticsData?.data?.chartData?.length ? (
+                        <ResponsiveContainer width="100%" height={250}>
+                          <BarChart data={analyticsData.data.chartData}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="day" />
+                            <YAxis />
+                            <Tooltip 
+                              formatter={(value, name) => [
+                                name === 'revenue' ? `$${value}` : value,
+                                name === 'purchases' ? 'Purchases' : 
+                                name === 'redemptions' ? 'Redemptions' : 'Revenue'
+                              ]}
+                            />
+                            <Bar dataKey="purchases" fill="#3b82f6" name="purchases" />
+                            <Bar dataKey="redemptions" fill="#8b5cf6" name="redemptions" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="h-64 flex items-center justify-center text-slate-500">
+                          <div className="text-center">
+                            <BarChart3 className="mx-auto h-12 w-12 text-slate-400 mb-2" />
+                            <p>No data to display</p>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <TrendingUp className="h-5 w-5 text-green-600" />
+                        Performance Overview
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {analyticsLoading ? (
+                        <div className="h-64 flex items-center justify-center">
+                          <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+                        </div>
+                      ) : (
+                        <div className="space-y-6">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="text-center p-4 bg-green-50 rounded-lg">
+                              <p className="text-2xl font-bold text-green-600">
+                                {analyticsData?.data?.totalGiftCards || 0}
+                              </p>
+                              <p className="text-sm text-green-700">Total Cards</p>
+                            </div>
+                            <div className="text-center p-4 bg-blue-50 rounded-lg">
+                              <p className="text-2xl font-bold text-blue-600">
+                                ${(analyticsData?.data?.averageCardValue || 0).toFixed(0)}
+                              </p>
+                              <p className="text-sm text-blue-700">Avg Value</p>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-slate-600">Active Cards</span>
+                              <span className="font-medium">{analyticsData?.data?.activeCards || 0}</span>
+                            </div>
+                            <div className="w-full bg-slate-200 rounded-full h-2">
+                              <div 
+                                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                style={{ 
+                                  width: `${analyticsData?.data?.totalGiftCards ? 
+                                    (analyticsData.data.activeCards / analyticsData.data.totalGiftCards) * 100 : 0}%` 
+                                }}
+                              ></div>
+                            </div>
+                            
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-slate-600">Redemption Rate</span>
+                              <span className="font-medium">
+                                {analyticsData?.data?.totalGiftCards ? 
+                                  `${((analyticsData.data.totalRedemptions / analyticsData.data.totalGiftCards) * 100).toFixed(1)}%` : 
+                                  '0%'
+                                }
+                              </span>
+                            </div>
+                            <div className="w-full bg-slate-200 rounded-full h-2">
+                              <div 
+                                className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                                style={{ 
+                                  width: `${analyticsData?.data?.totalGiftCards ? 
+                                    (analyticsData.data.totalRedemptions / analyticsData.data.totalGiftCards) * 100 : 0}%` 
+                                }}
+                              ></div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </div>
@@ -380,7 +496,7 @@ export default function MerchantDashboard({ isOpen, onClose }: MerchantDashboard
                       <CardTitle>Recent Transactions</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      {transactionsLoading ? (
+                      {analyticsLoading ? (
                         <div className="space-y-4">
                           {[1, 2, 3].map((i) => (
                             <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg animate-pulse">
@@ -395,9 +511,9 @@ export default function MerchantDashboard({ isOpen, onClose }: MerchantDashboard
                             </div>
                           ))}
                         </div>
-                      ) : transactionsData?.transactions?.length ? (
+                      ) : analyticsData?.data?.recentActivity?.length ? (
                         <div className="space-y-4">
-                          {transactionsData.transactions.slice(0, 5).map((transaction, index) => (
+                          {analyticsData.data.recentActivity.slice(0, 5).map((transaction, index) => (
                             <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                               <div className="flex items-center space-x-3">
                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center ${

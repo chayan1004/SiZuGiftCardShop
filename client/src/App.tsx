@@ -11,6 +11,7 @@ import Checkout from "@/pages/Checkout";
 import PublicGiftCard from "@/pages/PublicGiftCard";
 import AdminDashboard from "@/pages/AdminDashboard";
 import CheckBalance from "@/pages/CheckBalance";
+import MerchantLogin from "@/pages/MerchantLogin";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -21,6 +22,7 @@ function Router() {
       <Route path="/store" component={GiftCardStore} />
       <Route path="/checkout" component={Checkout} />
       <Route path="/check-balance" component={CheckBalance} />
+      <Route path="/merchant-login" component={MerchantLogin} />
       <Route path="/gift/:gan">
         {(params) => <PublicGiftCard gan={params.gan} />}
       </Route>

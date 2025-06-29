@@ -343,12 +343,13 @@ export default function Navigation({ onOpenPurchaseModal, onOpenDashboard }: Nav
                   </motion.div>
                 ) : (
                   <motion.div className="flex space-x-2">
-                    <Button 
-                      onClick={() => loginAsMerchant('demo-merchant')}
-                      className="relative px-6 py-2 glass-premium-button text-white font-medium rounded-xl border border-cyan-400/30 hover:border-cyan-300/50 transition-all duration-300 text-sm"
-                    >
-                      Merchant Login
-                    </Button>
+                    <Link href="/merchant-login">
+                      <Button 
+                        className="relative px-6 py-2 glass-premium-button text-white font-medium rounded-xl border border-cyan-400/30 hover:border-cyan-300/50 transition-all duration-300 text-sm"
+                      >
+                        Merchant Login
+                      </Button>
+                    </Link>
                     <Button 
                       onClick={() => loginAsAdmin()}
                       className="relative px-6 py-2 glass-premium-button text-white font-medium rounded-xl border border-purple-400/30 hover:border-purple-300/50 transition-all duration-300 text-sm"
@@ -450,16 +451,15 @@ export default function Navigation({ onOpenPurchaseModal, onOpenDashboard }: Nav
               
               {/* Mobile CTA buttons */}
               <div className="space-y-4 pt-4 border-t border-white/10">
-                <Button 
-                  onClick={() => {
-                    onOpenDashboard();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="w-full glass-premium-button text-white font-semibold py-4 rounded-2xl border border-cyan-400/30 hover:border-cyan-300/50 transition-all duration-300"
-                >
-                  <Shield size={18} className="mr-2" />
-                  Merchant Login
-                </Button>
+                <Link href="/merchant-login">
+                  <Button 
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="w-full glass-premium-button text-white font-semibold py-4 rounded-2xl border border-cyan-400/30 hover:border-cyan-300/50 transition-all duration-300"
+                  >
+                    <Shield size={18} className="mr-2" />
+                    Merchant Login
+                  </Button>
+                </Link>
                 
                 <Button 
                   onClick={() => {

@@ -71,7 +71,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: message ? message.substring(0, 50) + '...' : 'No message'
       });
 
-      const result = await emailService.sendGiftCardEmail({
+      const result = await emailService.sendGiftCardReceipt({
         to,
         gan,
         amount,
@@ -98,6 +98,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Email test error:', error);
       res.status(500).json({
         error: 'Email test failed',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Dynamic email test endpoint for modular email system
+  app.post("/api/test/email/:type", async (req: Request, res: Response) => {
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(404).json({ error: 'Route not available in production' });
+    }
+
+    try {
+      const { type } = req.params;
+      const { to, ...emailData } = req.body;
+
+      if (!to) {
+        return res.status(400).json({ error: 'Missing required field: to' });
+      }
+
+      console.log(`Testing ${type} email delivery to:`, to);
+
+      let result;
+
+      switch (type) {
+        case 'receipt':
+          const { gan, amount, message, senderName, recipientName } = emailData;
+          if (!gan || !amount) {
+            return res.status(400).json({ error: 'Missing required fields for receipt: gan, amount' });
+          }
+          result = await emailService.sendGiftCardReceipt({
+            to, gan, amount, message, senderName, recipientName
+          });
+          break;
+
+        case 'otp':
+          const { code, expiresInMinutes, recipientName: otpRecipient } = emailData;
+          if (!code) {
+            return res.status(400).json({ error: 'Missing required field for OTP: code' });
+          }
+          result = await emailService.sendOtpCode({
+            to, code, expiresInMinutes, recipientName: otpRecipient
+          });
+          break;
+
+        case 'promo':
+          const { subject, promoCode, discount, expiryDate, recipientName: promoRecipient } = emailData;
+          if (!subject) {
+            return res.status(400).json({ error: 'Missing required field for promo: subject' });
+          }
+          result = await emailService.sendPromoEmail({
+            to, subject, promoCode, discount, expiryDate, recipientName: promoRecipient
+          });
+          break;
+
+        case 'reminder':
+          const { gan: reminderGan, amount: reminderAmount, balance, expiryDate: reminderExpiry, recipientName: reminderRecipient } = emailData;
+          if (!reminderGan || !reminderAmount || balance === undefined) {
+            return res.status(400).json({ error: 'Missing required fields for reminder: gan, amount, balance' });
+          }
+          result = await emailService.sendGiftCardReminder({
+            to, gan: reminderGan, amount: reminderAmount, balance, expiryDate: reminderExpiry, recipientName: reminderRecipient
+          });
+          break;
+
+        case 'refund':
+          const { refundAmount, originalAmount, gan: refundGan, refundReason, refundId, recipientName: refundRecipient } = emailData;
+          if (!refundAmount || !originalAmount || !refundGan || !refundId) {
+            return res.status(400).json({ error: 'Missing required fields for refund: refundAmount, originalAmount, gan, refundId' });
+          }
+          result = await emailService.sendRefundNotice({
+            to, refundAmount, originalAmount, gan: refundGan, refundReason, refundId, recipientName: refundRecipient
+          });
+          break;
+
+        case 'fraud':
+          const { alertType, details, userEmail, gan: fraudGan, suspiciousActivity } = emailData;
+          if (!alertType || !details || !suspiciousActivity) {
+            return res.status(400).json({ error: 'Missing required fields for fraud: alertType, details, suspiciousActivity' });
+          }
+          result = await emailService.sendAdminFraudAlert({
+            adminEmail: to, alertType, details, userEmail, gan: fraudGan, suspiciousActivity, timestamp: new Date()
+          });
+          break;
+
+        default:
+          return res.status(400).json({ error: `Unknown email type: ${type}. Available types: receipt, otp, promo, reminder, refund, fraud` });
+      }
+
+      res.json({
+        status: 'email_test_complete',
+        type,
+        timestamp: new Date().toISOString(),
+        emailResult: result,
+        smtpConfigured: emailService.isConfigured(),
+        environment: process.env.NODE_ENV || 'development'
+      });
+
+    } catch (error) {
+      console.error(`Email test error for type ${req.params.type}:`, error);
+      res.status(500).json({
+        error: 'Email test failed',
+        type: req.params.type,
         details: error instanceof Error ? error.message : 'Unknown error'
       });
     }

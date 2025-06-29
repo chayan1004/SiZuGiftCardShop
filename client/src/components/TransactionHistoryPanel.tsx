@@ -127,48 +127,48 @@ export default function TransactionHistoryPanel({ onClose }: TransactionHistoryP
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5 text-blue-600" />
-            Transaction History
+    <Card className="w-full bg-white/10 backdrop-blur-xl border border-white/20">
+      <CardHeader className="pb-4 px-3 sm:px-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <CardTitle className="flex items-center gap-2 text-white">
+            <Filter className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400" />
+            <span className="text-base sm:text-lg">Transaction History</span>
           </CardTitle>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={handleExport}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 border-white/20 text-gray-300 hover:bg-white/10"
             >
               <Download className="h-4 w-4" />
-              Export
+              <span className="hidden sm:inline">Export</span>
             </Button>
             {onClose && (
-              <Button variant="ghost" size="sm" onClick={onClose}>
+              <Button variant="ghost" size="sm" onClick={onClose} className="text-gray-300 hover:bg-white/10">
                 ×
               </Button>
             )}
           </div>
         </div>
 
-        {/* Search and Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+        {/* Enhanced Mobile-First Search and Filters */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder="Search transactions..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 bg-white/5 border-white/20 text-white placeholder:text-gray-400"
             />
           </div>
 
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger>
+            <SelectTrigger className="bg-white/5 border-white/20 text-white">
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-slate-800 border-white/20">
               <SelectItem value="all">All Statuses</SelectItem>
               <SelectItem value="activate">Purchased</SelectItem>
               <SelectItem value="redeem">Redeemed</SelectItem>
@@ -178,26 +178,26 @@ export default function TransactionHistoryPanel({ onClose }: TransactionHistoryP
             </SelectContent>
           </Select>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
             <Input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="text-sm"
+              className="text-sm bg-white/5 border-white/20 text-white"
             />
-            <span className="text-sm text-gray-500">to</span>
+            <span className="text-sm text-gray-400 hidden sm:inline">to</span>
             <Input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="text-sm"
+              className="text-sm bg-white/5 border-white/20 text-white"
             />
           </div>
 
           <Button
             variant="outline"
             onClick={clearFilters}
-            className="text-sm"
+            className="text-sm border-white/20 text-gray-300 hover:bg-white/10"
           >
             Clear Filters
           </Button>
@@ -220,27 +220,27 @@ export default function TransactionHistoryPanel({ onClose }: TransactionHistoryP
           </div>
         ) : error ? (
           <div className="text-center py-8">
-            <p className="text-red-600">Failed to load transaction history</p>
+            <p className="text-red-400">Failed to load transaction history</p>
             <Button 
               variant="outline" 
               onClick={() => window.location.reload()} 
-              className="mt-2"
+              className="mt-2 border-white/20 text-gray-300 hover:bg-white/10"
             >
               Retry
             </Button>
           </div>
         ) : !transactionData?.transactions?.length ? (
           <div className="text-center py-12">
-            <Filter className="mx-auto h-12 w-12 text-slate-400 mb-4" />
-            <h3 className="text-lg font-medium text-slate-900 mb-2">No transactions found</h3>
-            <p className="text-slate-500 mb-4">
+            <Filter className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-white mb-2">No transactions found</h3>
+            <p className="text-gray-300 mb-4">
               {searchTerm || statusFilter !== 'all' || startDate || endDate
                 ? "Try adjusting your filters to see more results"
                 : "Your transaction history will appear here once you start processing gift cards"
               }
             </p>
             {(searchTerm || statusFilter !== 'all' || startDate || endDate) && (
-              <Button variant="outline" onClick={clearFilters}>
+              <Button variant="outline" onClick={clearFilters} className="border-white/20 text-gray-300 hover:bg-white/10">
                 Clear All Filters
               </Button>
             )}
@@ -248,112 +248,186 @@ export default function TransactionHistoryPanel({ onClose }: TransactionHistoryP
         ) : (
           <>
             {/* Transaction Results Summary */}
-            <div className="flex justify-between items-center mb-4 p-3 bg-blue-50 rounded-lg">
-              <p className="text-sm text-blue-800">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-4 p-3 bg-blue-500/20 border border-blue-500/30 rounded-lg backdrop-blur-sm">
+              <p className="text-sm text-blue-200">
                 Showing {transactionData.transactions.length} of {transactionData.pagination.total} transactions
               </p>
-              <p className="text-sm text-blue-600">
+              <p className="text-sm text-blue-300">
                 Page {transactionData.pagination.page} of {transactionData.pagination.totalPages}
               </p>
             </div>
 
-            {/* Transaction List */}
+            {/* Mobile-Responsive Transaction List */}
             <div className="space-y-3">
               {transactionData.transactions.map((transaction) => (
                 <div
                   key={transaction.id}
-                  className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                  className="p-4 bg-white/5 border border-white/20 rounded-lg hover:bg-white/10 transition-colors backdrop-blur-sm"
                 >
-                  <div className="flex items-center space-x-4">
-                    <div className="text-sm text-slate-600 min-w-[100px]">
-                      {format(new Date(transaction.date), 'MMM dd, yyyy')}
-                      <br />
-                      <span className="text-xs text-slate-400">{transaction.timeAgo}</span>
+                  {/* Mobile Layout - Stacked */}
+                  <div className="sm:hidden space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-medium text-white text-sm mb-1">
+                          {transaction.giftCardGan}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {format(new Date(transaction.date), 'MMM dd, yyyy')} • {transaction.timeAgo}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-white">{transaction.formattedAmount}</p>
+                        <p className="text-xs text-gray-400">Bal: {transaction.formattedBalance}</p>
+                      </div>
                     </div>
                     
-                    <div className="min-w-[120px]">
-                      <p className="font-medium text-slate-900 text-sm">
-                        {transaction.giftCardGan}
-                      </p>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        {getStatusBadge(transaction.status)}
+                      </div>
                       {transaction.recipientEmail && (
-                        <p className="text-xs text-slate-500">{transaction.recipientEmail}</p>
+                        <p className="text-xs text-gray-400 truncate max-w-[150px]">{transaction.recipientEmail}</p>
                       )}
                     </div>
                     
-                    <div className="min-w-[100px]">
-                      {getStatusBadge(transaction.status)}
-                    </div>
-                    
                     {transaction.notes && (
-                      <div className="max-w-[200px]">
-                        <p className="text-xs text-slate-600 truncate">{transaction.notes}</p>
-                      </div>
+                      <p className="text-xs text-gray-300 p-2 bg-white/5 rounded border border-white/10">{transaction.notes}</p>
                     )}
                   </div>
-                  
-                  <div className="text-right">
-                    <p className="font-semibold text-slate-900">{transaction.formattedAmount}</p>
-                    <p className="text-xs text-slate-500">Balance: {transaction.formattedBalance}</p>
+
+                  {/* Desktop Layout - Horizontal */}
+                  <div className="hidden sm:flex items-center justify-between">
+                    <div className="flex items-center space-x-4 flex-1 min-w-0">
+                      <div className="text-sm text-gray-300 min-w-[120px]">
+                        {format(new Date(transaction.date), 'MMM dd, yyyy')}
+                        <br />
+                        <span className="text-xs text-gray-400">{transaction.timeAgo}</span>
+                      </div>
+                      
+                      <div className="min-w-[140px]">
+                        <p className="font-medium text-white text-sm">
+                          {transaction.giftCardGan}
+                        </p>
+                        {transaction.recipientEmail && (
+                          <p className="text-xs text-gray-400 truncate">{transaction.recipientEmail}</p>
+                        )}
+                      </div>
+                      
+                      <div className="min-w-[120px]">
+                        {getStatusBadge(transaction.status)}
+                      </div>
+                      
+                      {transaction.notes && (
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-gray-300 truncate">{transaction.notes}</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="text-right ml-4">
+                      <p className="font-semibold text-white">{transaction.formattedAmount}</p>
+                      <p className="text-xs text-gray-400">Balance: {transaction.formattedBalance}</p>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Pagination */}
+            {/* Mobile-Responsive Pagination */}
             {transactionData.pagination.totalPages > 1 && (
-              <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-200">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  disabled={currentPage === 1}
-                  className="flex items-center gap-2"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  Previous
-                </Button>
-                
-                <div className="flex items-center gap-2">
-                  {Array.from({ length: Math.min(5, transactionData.pagination.totalPages) }, (_, i) => {
-                    const pageNum = i + 1;
-                    return (
-                      <Button
-                        key={pageNum}
-                        variant={currentPage === pageNum ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setCurrentPage(pageNum)}
-                        className="w-8 h-8 p-0"
-                      >
-                        {pageNum}
-                      </Button>
-                    );
-                  })}
+              <div className="mt-6 pt-4 border-t border-white/20">
+                {/* Mobile Pagination - Compact */}
+                <div className="sm:hidden flex items-center justify-between">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className="flex items-center gap-1 border-white/20 text-gray-300 hover:bg-white/10"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Prev
+                  </Button>
                   
-                  {transactionData.pagination.totalPages > 5 && (
-                    <>
-                      {transactionData.pagination.totalPages > 6 && <span className="text-slate-500">...</span>}
-                      <Button
-                        variant={currentPage === transactionData.pagination.totalPages ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setCurrentPage(transactionData.pagination.totalPages)}
-                        className="w-8 h-8 p-0"
-                      >
-                        {transactionData.pagination.totalPages}
-                      </Button>
-                    </>
-                  )}
+                  <span className="text-sm text-gray-300">
+                    {currentPage} of {transactionData.pagination.totalPages}
+                  </span>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.min(transactionData.pagination.totalPages, prev + 1))}
+                    disabled={currentPage >= transactionData.pagination.totalPages}
+                    className="flex items-center gap-1 border-white/20 text-gray-300 hover:bg-white/10"
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
                 </div>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(prev => Math.min(transactionData.pagination.totalPages, prev + 1))}
-                  disabled={currentPage >= transactionData.pagination.totalPages}
-                  className="flex items-center gap-2"
-                >
-                  Next
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
+
+                {/* Desktop Pagination - Full */}
+                <div className="hidden sm:flex items-center justify-between">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className="flex items-center gap-2 border-white/20 text-gray-300 hover:bg-white/10"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </Button>
+                  
+                  <div className="flex items-center gap-2">
+                    {Array.from({ length: Math.min(5, transactionData.pagination.totalPages) }, (_, i) => {
+                      const pageNum = i + 1;
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={currentPage === pageNum ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={`w-8 h-8 p-0 ${
+                            currentPage === pageNum 
+                              ? "bg-blue-600 text-white" 
+                              : "border-white/20 text-gray-300 hover:bg-white/10"
+                          }`}
+                        >
+                          {pageNum}
+                        </Button>
+                      );
+                    })}
+                    
+                    {transactionData.pagination.totalPages > 5 && (
+                      <>
+                        {transactionData.pagination.totalPages > 6 && <span className="text-gray-400">...</span>}
+                        <Button
+                          variant={currentPage === transactionData.pagination.totalPages ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentPage(transactionData.pagination.totalPages)}
+                          className={`w-8 h-8 p-0 ${
+                            currentPage === transactionData.pagination.totalPages 
+                              ? "bg-blue-600 text-white" 
+                              : "border-white/20 text-gray-300 hover:bg-white/10"
+                          }`}
+                        >
+                          {transactionData.pagination.totalPages}
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.min(transactionData.pagination.totalPages, prev + 1))}
+                    disabled={currentPage >= transactionData.pagination.totalPages}
+                    className="flex items-center gap-2 border-white/20 text-gray-300 hover:bg-white/10"
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             )}
           </>

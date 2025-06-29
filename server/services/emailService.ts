@@ -29,6 +29,7 @@ interface OtpEmailData {
   code: string;
   expiresInMinutes?: number;
   recipientName?: string;
+  purpose?: 'registration' | 'login' | 'password_reset' | 'verification' | 'admin_access';
 }
 
 interface PromoEmailData {
@@ -38,6 +39,7 @@ interface PromoEmailData {
   discount?: string;
   expiryDate?: string;
   recipientName?: string;
+  promoType?: 'seasonal' | 'welcome' | 'loyalty' | 'referral' | 'flash_sale' | 'birthday';
 }
 
 interface ReminderEmailData {
@@ -153,9 +155,9 @@ class EmailService {
       });
 
       const mailOptions = {
-        from: 'SiZu Pay Receipt <noreply@receipt.sizupay.com>',
+        from: 'SiZu GiftCard Receipt <noreply@receipt.sizupay.com>',
         to: data.to,
-        subject: 'Gift Card Receipt - SiZu Pay',
+        subject: 'Your SiZu GiftCard Receipt - Purchase Confirmation',
         html: htmlContent,
         text: this.createPlainTextEmail(data),
         attachments: [
@@ -931,10 +933,13 @@ Gift card terms and conditions apply. Not redeemable for cash.
     try {
       const htmlContent = this.createOtpEmailHTML(data);
       
+      // Dynamic sender name and subject based on purpose
+      const senderConfig = this.getOtpSenderConfig(data.purpose);
+      
       const mailOptions = {
-        from: process.env.MAIL_FROM || this.config!.from,
+        from: `${senderConfig.senderName} <${process.env.MAIL_FROM || this.config!.from}>`,
         to: data.to,
-        subject: '🔐 Your SiZu Pay Security Code',
+        subject: senderConfig.subject,
         html: htmlContent,
         text: this.createOtpPlainText(data)
       };
@@ -977,10 +982,13 @@ Gift card terms and conditions apply. Not redeemable for cash.
     try {
       const htmlContent = this.createPromoEmailHTML(data);
       
+      // Dynamic sender name and subject based on promo type
+      const promoConfig = this.getPromoSenderConfig(data.promoType);
+      
       const mailOptions = {
-        from: process.env.MAIL_FROM || this.config!.from,
+        from: `${promoConfig.senderName} <${process.env.MAIL_FROM || this.config!.from}>`,
         to: data.to,
-        subject: data.subject,
+        subject: data.subject || promoConfig.defaultSubject,
         html: htmlContent,
         text: this.createPromoPlainText(data)
       };
@@ -1187,6 +1195,87 @@ Gift card terms and conditions apply. Not redeemable for cash.
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'
       };
+    }
+  }
+
+  /**
+   * Get dynamic sender configuration based on OTP purpose
+   */
+  private getOtpSenderConfig(purpose?: string) {
+    switch (purpose) {
+      case 'registration':
+        return {
+          senderName: 'SiZu GiftCard Registration',
+          subject: '🔐 Complete Your SiZu GiftCard Registration - Verification Code'
+        };
+      case 'login':
+        return {
+          senderName: 'SiZu GiftCard Login',
+          subject: '🔐 Your SiZu GiftCard Login OTP Code'
+        };
+      case 'password_reset':
+        return {
+          senderName: 'SiZu GiftCard Security',
+          subject: '🔐 Reset Your SiZu GiftCard Password - Security Code'
+        };
+      case 'admin_access':
+        return {
+          senderName: 'SiZu GiftCard Admin',
+          subject: '🔐 Admin Access Code - SiZu GiftCard Dashboard'
+        };
+      case 'verification':
+        return {
+          senderName: 'SiZu GiftCard Verification',
+          subject: '🔐 Verify Your SiZu GiftCard Account - Security Code'
+        };
+      default:
+        return {
+          senderName: 'SiZu GiftCard OTP',
+          subject: '🔐 Your SiZu GiftCard Security Code'
+        };
+    }
+  }
+
+  /**
+   * Get dynamic sender configuration based on promotional email type
+   */
+  private getPromoSenderConfig(promoType?: string) {
+    switch (promoType) {
+      case 'seasonal':
+        return {
+          senderName: 'SiZu GiftCard Seasonal Offers',
+          defaultSubject: '🎉 Seasonal Gift Card Promotion - Limited Time Offer'
+        };
+      case 'welcome':
+        return {
+          senderName: 'SiZu GiftCard Welcome',
+          defaultSubject: '🎁 Welcome to SiZu GiftCard - Special Welcome Offer'
+        };
+      case 'loyalty':
+        return {
+          senderName: 'SiZu GiftCard Rewards',
+          defaultSubject: '⭐ Loyalty Reward - Exclusive Gift Card Offer'
+        };
+      case 'referral':
+        return {
+          senderName: 'SiZu GiftCard Referral',
+          defaultSubject: '🤝 Referral Bonus - Gift Card Reward Inside'
+        };
+      case 'flash_sale':
+        return {
+          senderName: 'SiZu GiftCard Flash Sale',
+          defaultSubject: '⚡ Flash Sale Alert - Limited Time Gift Card Deals'
+        };
+      case 'birthday':
+        return {
+          senderName: 'SiZu GiftCard Birthday',
+          defaultSubject: '🎂 Happy Birthday - Special Gift Card Surprise'
+        };
+      default:
+        return {
+          senderName: 'SiZu GiftCard Promotions',
+          defaultSubject: '🎁 Special Gift Card Promotion - Don\'t Miss Out'
+        };
     }
   }
 

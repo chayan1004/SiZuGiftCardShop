@@ -118,7 +118,7 @@ export default function MerchantDashboard({ isOpen, onClose }: MerchantDashboard
                     }`}
                   >
                     <item.icon size={20} />
-                    <span className="font-medium">{item.label}</span>
+                    <span className="font-medium text-[#9333ea]">{item.label}</span>
                   </button>
                 </li>
               ))}

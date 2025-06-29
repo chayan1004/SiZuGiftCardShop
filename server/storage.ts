@@ -20,9 +20,12 @@ export interface IStorage {
   getMerchant(id: number): Promise<Merchant | undefined>;
   getMerchantBySquareId(merchantId: string): Promise<Merchant | undefined>;
   getMerchantByEmail(email: string): Promise<Merchant | undefined>;
+  getMerchantByVerificationToken(token: string): Promise<Merchant | undefined>;
   getAllMerchants(): Promise<Merchant[]>;
   createMerchant(merchant: InsertMerchant): Promise<Merchant>;
   updateMerchantTokens(id: number, accessToken: string, refreshToken?: string): Promise<Merchant | undefined>;
+  updateMerchantVerificationToken(id: number, token: string, expiresAt: Date): Promise<Merchant | undefined>;
+  markMerchantEmailVerified(id: number): Promise<Merchant | undefined>;
   
   // Gift Card methods
   getGiftCard(id: number): Promise<GiftCard | undefined>;
@@ -109,6 +112,11 @@ export class DatabaseStorage implements IStorage {
     return merchant || undefined;
   }
 
+  async getMerchantByVerificationToken(token: string): Promise<Merchant | undefined> {
+    const [merchant] = await db.select().from(merchants).where(eq(merchants.emailVerificationToken, token));
+    return merchant || undefined;
+  }
+
   async createMerchant(insertMerchant: InsertMerchant): Promise<Merchant> {
     const [merchant] = await db
       .insert(merchants)
@@ -121,6 +129,31 @@ export class DatabaseStorage implements IStorage {
     const [merchant] = await db
       .update(merchants)
       .set({ accessToken, refreshToken: refreshToken || null })
+      .where(eq(merchants.id, id))
+      .returning();
+    return merchant || undefined;
+  }
+
+  async updateMerchantVerificationToken(id: number, token: string, expiresAt: Date): Promise<Merchant | undefined> {
+    const [merchant] = await db
+      .update(merchants)
+      .set({
+        emailVerificationToken: token,
+        emailVerificationExpires: expiresAt
+      })
+      .where(eq(merchants.id, id))
+      .returning();
+    return merchant || undefined;
+  }
+
+  async markMerchantEmailVerified(id: number): Promise<Merchant | undefined> {
+    const [merchant] = await db
+      .update(merchants)
+      .set({
+        emailVerified: true,
+        emailVerificationToken: null,
+        emailVerificationExpires: null
+      })
       .where(eq(merchants.id, id))
       .returning();
     return merchant || undefined;

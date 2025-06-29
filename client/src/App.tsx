@@ -9,13 +9,13 @@ import About from "@/pages/About";
 import GiftCardStore from "@/pages/GiftCardStore";
 import Checkout from "@/pages/Checkout";
 import PublicGiftCard from "@/pages/PublicGiftCard";
-import AdminDashboard from "@/pages/AdminDashboard";
+import AdminDashboard from "@/pages/admin/AdminDashboard";
 import CheckBalance from "@/pages/CheckBalance";
 import MerchantLogin from "@/pages/MerchantLogin";
 import MerchantRegister from "@/pages/MerchantRegister";
 import MerchantDashboard from "@/pages/MerchantDashboard";
 import MerchantVerify from "@/pages/MerchantVerify";
-import AdminLogin from "@/pages/AdminLogin";
+import AdminLogin from "@/pages/admin/AdminLogin";
 import NotFound from "@/pages/not-found";
 
 function Router() {

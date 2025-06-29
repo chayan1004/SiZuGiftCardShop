@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Gift, Shield, ArrowRight, Eye, EyeOff, Lock, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,22 @@ export default function MerchantLogin() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+
+  // Check if already logged in and redirect to dashboard
+  useEffect(() => {
+    const token = localStorage.getItem('merchantToken') || sessionStorage.getItem('merchantToken');
+    if (token && token.startsWith('eyJ')) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.role === 'merchant' && payload.exp > Date.now() / 1000) {
+          setLocation("/merchant-dashboard");
+          return;
+        }
+      } catch (error) {
+        console.error('Token validation failed:', error);
+      }
+    }
+  }, [setLocation]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

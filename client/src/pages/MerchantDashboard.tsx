@@ -38,25 +38,12 @@ export default function MerchantDashboard() {
   // Use authenticated merchant ID
   const merchantId = auth.merchantId || "";
 
-  // Debug authentication state and redirect if not authenticated
+  // Redirect if not authenticated as merchant
   useEffect(() => {
-    console.log('🔍 Dashboard Auth State:', {
-      isAuthenticated: auth.isAuthenticated,
-      role: auth.role,
-      merchantId: auth.merchantId,
-      token: auth.token ? 'present' : 'missing'
-    });
-    
     if (!auth.isAuthenticated || auth.role !== 'merchant') {
-      console.log('❌ Access denied - redirecting to login');
-      toast({
-        title: "Access Denied",
-        description: "Please log in as a merchant to access the dashboard",
-        variant: "destructive"
-      });
       setLocation("/merchant-login");
     }
-  }, [auth, setLocation, toast]);
+  }, [auth.isAuthenticated, auth.role, setLocation]);
 
   // Fetch merchant stats with 30-second refresh
   const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useQuery<any>({

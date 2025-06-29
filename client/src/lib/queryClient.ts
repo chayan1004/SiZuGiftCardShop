@@ -7,14 +7,38 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
+// Centralized token accessor
+function getMerchantToken(): string | null {
+  return localStorage.getItem('merchantToken') || 
+         sessionStorage.getItem('merchantToken') ||
+         document.cookie.split(';').find(c => c.trim().startsWith('merchantToken='))?.split('=')[1] ||
+         null;
+}
+
+// Get authenticated headers with JWT token
+function getAuthHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json"
+  };
+  
+  const token = getMerchantToken();
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  
+  return headers;
+}
+
 export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  const headers = getAuthHeaders();
+  
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers,
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
@@ -29,11 +53,9 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey, meta }) => {
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
+    const headers = getAuthHeaders();
 
-    // Add authentication headers from meta
+    // Add additional headers from meta
     if (meta?.headers) {
       Object.assign(headers, meta.headers);
     }

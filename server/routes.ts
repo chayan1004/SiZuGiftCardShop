@@ -47,6 +47,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Development-only email test route
+  app.post("/api/test/send-email", async (req: Request, res: Response) => {
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(404).json({ error: 'Route not available in production' });
+    }
+
+    try {
+      const { to, gan, amount, senderName, recipientName, message } = req.body;
+
+      if (!to || !gan || !amount) {
+        return res.status(400).json({ 
+          error: 'Missing required fields: to, gan, amount' 
+        });
+      }
+
+      console.log('Testing email delivery with data:', {
+        to,
+        gan,
+        amount,
+        senderName,
+        recipientName,
+        message: message ? message.substring(0, 50) + '...' : 'No message'
+      });
+
+      const result = await emailService.sendGiftCardEmail({
+        to,
+        gan,
+        amount,
+        senderName,
+        recipientName,
+        message
+      });
+
+      res.json({
+        status: 'test_complete',
+        timestamp: new Date().toISOString(),
+        emailResult: result,
+        mailgunConfigured: emailService.isConfigured(),
+        environment: process.env.NODE_ENV || 'development'
+      });
+
+    } catch (error) {
+      console.error('Email test error:', error);
+      res.status(500).json({
+        error: 'Email test failed',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Square OAuth routes
   app.get("/api/auth/square", async (req, res) => {
     try {

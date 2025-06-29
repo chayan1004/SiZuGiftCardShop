@@ -35,12 +35,14 @@ class EmailService {
     const from = process.env.MAIL_FROM || 'noreply@giftcardhq.com';
 
     if (!apiKey || !domain) {
-      console.warn('Mailgun not configured. Email delivery will be disabled.');
+      console.log('Mailgun configuration missing - will attempt to initialize when env vars are available');
+      this.config = { apiKey: '', domain: '', from };
       return;
     }
 
     this.config = { apiKey, domain, from };
     this.mailgun = Mailgun({ apiKey, domain });
+    console.log('Mailgun initialized successfully for domain:', domain);
   }
 
   /**
@@ -58,6 +60,11 @@ class EmailService {
     messageId?: string;
     error?: string;
   }> {
+    // Re-initialize if not configured but env vars now available
+    if (!this.isConfigured()) {
+      this.initializeMailgun();
+    }
+
     if (!this.isConfigured()) {
       return {
         success: false,

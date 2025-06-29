@@ -91,6 +91,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     legacyHeaders: false
   });
   
+  // Demo merchant login for testing JWT authentication
+  app.post("/api/merchant/demo-login", async (req: Request, res: Response) => {
+    try {
+      const result = await AuthService.createDemoMerchant();
+      
+      if (result.success) {
+        console.log(`✅ Demo merchant login successful`);
+        
+        // Set secure HTTP-only cookie
+        res.cookie('merchantToken', result.token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+
+        res.json({
+          success: true,
+          token: result.token,
+          merchant: result.merchant
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          error: result.error
+        });
+      }
+    } catch (error) {
+      console.error('Demo login route error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Demo login failed'
+      });
+    }
+  });
+
   // Merchant Authentication Routes
   app.post("/api/merchant/login", loginRateLimit, async (req: Request, res: Response) => {
     try {

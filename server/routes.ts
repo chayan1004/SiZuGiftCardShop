@@ -42,6 +42,16 @@ function getTimeAgo(date: Date): string {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  const server = createServer(app);
+
+  // SECURITY: Block demo login immediately - highest priority route
+  app.post("/api/merchant/demo-login", async (req: Request, res: Response) => {
+    console.log('🚨 Security alert: Demo login attempt blocked from IP:', req.ip);
+    return res.status(403).json({
+      success: false,
+      error: 'Demo login disabled for security. Please register a proper merchant account.'
+    });
+  });
   
   // Rate limiting for authentication endpoints
   const loginRateLimit = rateLimit({
@@ -247,14 +257,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Demo login route permanently disabled for security
-  app.post("/api/merchant/demo-login", async (req: Request, res: Response) => {
-    console.log('🚨 Security alert: Demo login attempt blocked');
-    return res.status(403).json({
-      success: false,
-      error: 'Demo login disabled for security. Please register a proper merchant account.'
-    });
-  });
+
 
   // Email verification endpoint
   app.get("/api/merchant/verify-email", async (req: Request, res: Response) => {

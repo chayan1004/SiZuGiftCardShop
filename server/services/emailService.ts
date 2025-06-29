@@ -14,7 +14,8 @@ interface SMTPConfig {
   from: string;
 }
 
-interface GiftCardEmailData {
+// Email Data Interfaces for Modular System
+interface ReceiptEmailData {
   to: string;
   gan: string;
   amount: number;
@@ -22,6 +23,54 @@ interface GiftCardEmailData {
   senderName?: string;
   recipientName?: string;
 }
+
+interface OtpEmailData {
+  to: string;
+  code: string;
+  expiresInMinutes?: number;
+  recipientName?: string;
+}
+
+interface PromoEmailData {
+  to: string;
+  subject: string;
+  promoCode?: string;
+  discount?: string;
+  expiryDate?: string;
+  recipientName?: string;
+}
+
+interface ReminderEmailData {
+  to: string;
+  gan: string;
+  amount: number;
+  balance: number;
+  expiryDate?: string;
+  recipientName?: string;
+}
+
+interface RefundEmailData {
+  to: string;
+  refundAmount: number;
+  originalAmount: number;
+  gan: string;
+  refundReason?: string;
+  refundId: string;
+  recipientName?: string;
+}
+
+interface FraudEmailData {
+  adminEmail: string;
+  alertType: string;
+  details: string;
+  userEmail?: string;
+  gan?: string;
+  suspiciousActivity: string;
+  timestamp: Date;
+}
+
+// Legacy interface for backward compatibility
+interface GiftCardEmailData extends ReceiptEmailData {}
 
 class EmailService {
   private transporter: nodemailer.Transporter | null = null;
@@ -71,9 +120,9 @@ class EmailService {
   }
 
   /**
-   * Send gift card email with QR code
+   * Send gift card receipt email with QR code (Primary Method)
    */
-  async sendGiftCardEmail(data: GiftCardEmailData): Promise<{
+  async sendGiftCardReceipt(data: ReceiptEmailData): Promise<{
     success: boolean;
     messageId?: string;
     error?: string;
@@ -643,7 +692,248 @@ Gift card terms and conditions apply. Not redeemable for cash.
   }
 
   /**
-   * Send admin notification email
+   * Send OTP/Login Code Email
+   */
+  async sendOtpCode(data: OtpEmailData): Promise<{
+    success: boolean;
+    messageId?: string;
+    error?: string;
+  }> {
+    if (!this.isConfigured()) {
+      this.initializeSMTP();
+    }
+
+    if (!this.isConfigured()) {
+      return {
+        success: false,
+        error: 'Email service not configured'
+      };
+    }
+
+    try {
+      const htmlContent = this.createOtpEmailHTML(data);
+      
+      const mailOptions = {
+        from: process.env.MAIL_FROM || this.config!.from,
+        to: data.to,
+        subject: '🔐 Your SiZu Pay Security Code',
+        html: htmlContent,
+        text: this.createOtpPlainText(data)
+      };
+
+      const result = await this.transporter!.sendMail(mailOptions);
+      
+      return {
+        success: true,
+        messageId: result.messageId
+      };
+
+    } catch (error) {
+      console.error('Failed to send OTP email:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown email error'
+      };
+    }
+  }
+
+  /**
+   * Send Promotional Email
+   */
+  async sendPromoEmail(data: PromoEmailData): Promise<{
+    success: boolean;
+    messageId?: string;
+    error?: string;
+  }> {
+    if (!this.isConfigured()) {
+      this.initializeSMTP();
+    }
+
+    if (!this.isConfigured()) {
+      return {
+        success: false,
+        error: 'Email service not configured'
+      };
+    }
+
+    try {
+      const htmlContent = this.createPromoEmailHTML(data);
+      
+      const mailOptions = {
+        from: process.env.MAIL_FROM || this.config!.from,
+        to: data.to,
+        subject: data.subject,
+        html: htmlContent,
+        text: this.createPromoPlainText(data)
+      };
+
+      const result = await this.transporter!.sendMail(mailOptions);
+      
+      return {
+        success: true,
+        messageId: result.messageId
+      };
+
+    } catch (error) {
+      console.error('Failed to send promo email:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown email error'
+      };
+    }
+  }
+
+  /**
+   * Send Gift Card Reminder Email
+   */
+  async sendGiftCardReminder(data: ReminderEmailData): Promise<{
+    success: boolean;
+    messageId?: string;
+    error?: string;
+  }> {
+    if (!this.isConfigured()) {
+      this.initializeSMTP();
+    }
+
+    if (!this.isConfigured()) {
+      return {
+        success: false,
+        error: 'Email service not configured'
+      };
+    }
+
+    try {
+      const htmlContent = this.createReminderEmailHTML(data);
+      
+      const mailOptions = {
+        from: process.env.MAIL_FROM || this.config!.from,
+        to: data.to,
+        subject: '💳 Don\'t Forget Your SiZu Pay Gift Card',
+        html: htmlContent,
+        text: this.createReminderPlainText(data)
+      };
+
+      const result = await this.transporter!.sendMail(mailOptions);
+      
+      return {
+        success: true,
+        messageId: result.messageId
+      };
+
+    } catch (error) {
+      console.error('Failed to send reminder email:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown email error'
+      };
+    }
+  }
+
+  /**
+   * Send Refund Notice Email
+   */
+  async sendRefundNotice(data: RefundEmailData): Promise<{
+    success: boolean;
+    messageId?: string;
+    error?: string;
+  }> {
+    if (!this.isConfigured()) {
+      this.initializeSMTP();
+    }
+
+    if (!this.isConfigured()) {
+      return {
+        success: false,
+        error: 'Email service not configured'
+      };
+    }
+
+    try {
+      const htmlContent = this.createRefundEmailHTML(data);
+      
+      const mailOptions = {
+        from: process.env.MAIL_FROM || this.config!.from,
+        to: data.to,
+        subject: '💰 Refund Processed - SiZu Pay',
+        html: htmlContent,
+        text: this.createRefundPlainText(data)
+      };
+
+      const result = await this.transporter!.sendMail(mailOptions);
+      
+      return {
+        success: true,
+        messageId: result.messageId
+      };
+
+    } catch (error) {
+      console.error('Failed to send refund email:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown email error'
+      };
+    }
+  }
+
+  /**
+   * Send Admin Fraud Alert Email
+   */
+  async sendAdminFraudAlert(data: FraudEmailData): Promise<{
+    success: boolean;
+    messageId?: string;
+    error?: string;
+  }> {
+    if (!this.isConfigured()) {
+      this.initializeSMTP();
+    }
+
+    if (!this.isConfigured()) {
+      return {
+        success: false,
+        error: 'Email service not configured'
+      };
+    }
+
+    try {
+      const htmlContent = this.createFraudAlertHTML(data);
+      
+      const mailOptions = {
+        from: process.env.MAIL_FROM || this.config!.from,
+        to: data.adminEmail,
+        subject: `🚨 FRAUD ALERT: ${data.alertType} - SiZu Pay`,
+        html: htmlContent,
+        text: this.createFraudAlertPlainText(data)
+      };
+
+      const result = await this.transporter!.sendMail(mailOptions);
+      
+      return {
+        success: true,
+        messageId: result.messageId
+      };
+
+    } catch (error) {
+      console.error('Failed to send fraud alert email:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown email error'
+      };
+    }
+  }
+
+  /**
+   * Legacy method for backward compatibility
+   */
+  async sendGiftCardEmail(data: GiftCardEmailData): Promise<{
+    success: boolean;
+    messageId?: string;
+    error?: string;
+  }> {
+    return this.sendGiftCardReceipt(data);
+  }
+
+  /**
+   * Send admin notification email (Legacy)
    */
   async sendAdminNotification(subject: string, content: string): Promise<{
     success: boolean;
@@ -680,6 +970,157 @@ Gift card terms and conditions apply. Not redeemable for cash.
         error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
+  }
+
+  // Template Creation Methods
+  private createOtpEmailHTML(data: OtpEmailData): string {
+    return `
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>SiZu Pay Security Code</title></head>
+<body style="font-family: Arial, sans-serif; background: #f5f7fa; margin: 0; padding: 20px;">
+  <div style="max-width: 500px; margin: 0 auto; background: white; border-radius: 12px; padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+    <div style="text-align: center; margin-bottom: 30px;">
+      <h1 style="color: #667eea; font-size: 2rem; margin: 0;">SiZu Pay</h1>
+      <p style="color: #718096; margin: 10px 0 0 0;">Secure Authentication</p>
+    </div>
+    <div style="text-align: center; padding: 30px; background: #f7fafc; border-radius: 8px; margin: 20px 0;">
+      <h2 style="color: #2d3748; margin: 0 0 15px 0;">Your Security Code</h2>
+      <div style="font-size: 2.5rem; font-weight: bold; color: #667eea; font-family: monospace; letter-spacing: 8px; margin: 20px 0;">${data.code}</div>
+      <p style="color: #718096; margin: 15px 0 0 0;">This code expires in ${data.expiresInMinutes || 10} minutes</p>
+    </div>
+    <p style="color: #4a5568; text-align: center; margin: 20px 0;">Enter this code to complete your authentication with SiZu Pay.</p>
+    <div style="background: #fed7d7; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;">
+      <p style="color: #742a2a; margin: 0; font-size: 0.9rem;">Never share this code with anyone. SiZu Pay will never ask for this code.</p>
+    </div>
+  </div>
+</body>
+</html>`;
+  }
+
+  private createOtpPlainText(data: OtpEmailData): string {
+    return `SiZu Pay Security Code\n\nYour authentication code: ${data.code}\n\nThis code expires in ${data.expiresInMinutes || 10} minutes.\n\nEnter this code to complete your authentication with SiZu Pay.\n\nSecurity Notice: Never share this code with anyone.`;
+  }
+
+  private createPromoEmailHTML(data: PromoEmailData): string {
+    return `
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>${data.subject}</title></head>
+<body style="font-family: Arial, sans-serif; background: #f5f7fa; margin: 0; padding: 20px;">
+  <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center; color: white;">
+      <h1 style="margin: 0; font-size: 2.5rem;">SiZu Pay</h1>
+      <p style="margin: 10px 0 0 0; opacity: 0.9;">Special Promotion</p>
+    </div>
+    <div style="padding: 40px 30px;">
+      <h2 style="color: #2d3748; margin: 0 0 20px 0;">Hello ${data.recipientName || 'Valued Customer'}!</h2>
+      ${data.promoCode ? `
+      <div style="background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%); padding: 25px; border-radius: 12px; text-align: center; margin: 20px 0;">
+        <h3 style="margin: 0 0 10px 0; color: #2d3748;">Promo Code</h3>
+        <div style="font-size: 1.5rem; font-weight: bold; font-family: monospace; color: #e17055;">${data.promoCode}</div>
+        ${data.discount ? `<p style="margin: 10px 0 0 0; color: #4a5568;">Save ${data.discount}</p>` : ''}
+      </div>` : ''}
+      ${data.expiryDate ? `<p style="color: #718096; text-align: center; margin: 20px 0;">Offer expires: ${data.expiryDate}</p>` : ''}
+    </div>
+  </div>
+</body>
+</html>`;
+  }
+
+  private createPromoPlainText(data: PromoEmailData): string {
+    return `SiZu Pay - Special Promotion\n\nHello ${data.recipientName || 'Valued Customer'}!\n\n${data.promoCode ? `Promo Code: ${data.promoCode}\n` : ''}${data.discount ? `Save: ${data.discount}\n` : ''}${data.expiryDate ? `Expires: ${data.expiryDate}\n` : ''}\nVisit SiZu Pay to take advantage of this special offer.`;
+  }
+
+  private createReminderEmailHTML(data: ReminderEmailData): string {
+    return `
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Gift Card Reminder</title></head>
+<body style="font-family: Arial, sans-serif; background: #f5f7fa; margin: 0; padding: 20px;">
+  <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+    <div style="text-align: center; margin-bottom: 30px;">
+      <h1 style="color: #667eea; font-size: 2rem; margin: 0;">SiZu Pay</h1>
+      <p style="color: #718096; margin: 10px 0 0 0;">Gift Card Reminder</p>
+    </div>
+    <h2 style="color: #2d3748; text-align: center;">Don't Forget Your Gift Card!</h2>
+    <p style="color: #4a5568; text-align: center;">Hello ${data.recipientName || 'there'}! You have an unused gift card.</p>
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 30px; margin: 30px 0; color: white; text-align: center;">
+      <h3 style="margin: 0 0 15px 0;">Gift Card Balance</h3>
+      <div style="font-size: 2.5rem; font-weight: bold; margin: 15px 0;">$${data.balance}</div>
+      <div style="font-family: monospace; background: rgba(255,255,255,0.2); padding: 10px; border-radius: 6px; margin: 15px 0;">${data.gan}</div>
+    </div>
+    ${data.expiryDate ? `<p style="color: #e53e3e; text-align: center; font-weight: 600;">Expires: ${data.expiryDate}</p>` : ''}
+  </div>
+</body>
+</html>`;
+  }
+
+  private createReminderPlainText(data: ReminderEmailData): string {
+    return `SiZu Pay Gift Card Reminder\n\nHello ${data.recipientName || 'there'}!\n\nYou have an unused gift card with a balance of $${data.balance}.\n\nGift Card Number: ${data.gan}\n${data.expiryDate ? `Expires: ${data.expiryDate}\n` : ''}\nDon't let your gift card go to waste! Use it at any participating SiZu Pay merchant.`;
+  }
+
+  private createRefundEmailHTML(data: RefundEmailData): string {
+    return `
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Refund Processed</title></head>
+<body style="font-family: Arial, sans-serif; background: #f5f7fa; margin: 0; padding: 20px;">
+  <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+    <div style="text-align: center; margin-bottom: 30px;">
+      <h1 style="color: #667eea; font-size: 2rem; margin: 0;">SiZu Pay</h1>
+      <p style="color: #718096; margin: 10px 0 0 0;">Refund Confirmation</p>
+    </div>
+    <div style="background: #e6fffa; border: 1px solid #38b2ac; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">
+      <h2 style="color: #2d3748; margin: 0 0 15px 0;">Refund Processed Successfully</h2>
+      <div style="font-size: 2rem; font-weight: bold; color: #38b2ac;">$${data.refundAmount}</div>
+    </div>
+    <div style="background: #f7fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+      <h3 style="color: #2d3748; margin: 0 0 15px 0;">Refund Details</h3>
+      <p style="margin: 5px 0; color: #4a5568;"><strong>Refund ID:</strong> ${data.refundId}</p>
+      <p style="margin: 5px 0; color: #4a5568;"><strong>Original Amount:</strong> $${data.originalAmount}</p>
+      <p style="margin: 5px 0; color: #4a5568;"><strong>Gift Card:</strong> ${data.gan}</p>
+      ${data.refundReason ? `<p style="margin: 5px 0; color: #4a5568;"><strong>Reason:</strong> ${data.refundReason}</p>` : ''}
+    </div>
+    <p style="color: #4a5568; text-align: center;">The refund will appear in your original payment method within 3-5 business days.</p>
+  </div>
+</body>
+</html>`;
+  }
+
+  private createRefundPlainText(data: RefundEmailData): string {
+    return `SiZu Pay Refund Confirmation\n\nYour refund has been processed successfully.\n\nRefund Amount: $${data.refundAmount}\nRefund ID: ${data.refundId}\nOriginal Amount: $${data.originalAmount}\nGift Card: ${data.gan}\n${data.refundReason ? `Reason: ${data.refundReason}\n` : ''}\nThe refund will appear in your original payment method within 3-5 business days.`;
+  }
+
+  private createFraudAlertHTML(data: FraudEmailData): string {
+    return `
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Fraud Alert</title></head>
+<body style="font-family: Arial, sans-serif; background: #f5f7fa; margin: 0; padding: 20px;">
+  <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+    <div style="background: #fed7d7; border: 2px solid #e53e3e; border-radius: 8px; padding: 20px; margin-bottom: 30px; text-align: center;">
+      <h1 style="color: #742a2a; margin: 0; font-size: 1.5rem;">🚨 FRAUD ALERT</h1>
+      <p style="color: #742a2a; margin: 10px 0 0 0; font-weight: 600;">${data.alertType}</p>
+    </div>
+    <div style="background: #f7fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+      <h3 style="color: #2d3748; margin: 0 0 15px 0;">Alert Details</h3>
+      <p style="margin: 5px 0; color: #4a5568;"><strong>Timestamp:</strong> ${data.timestamp.toLocaleString()}</p>
+      <p style="margin: 5px 0; color: #4a5568;"><strong>Suspicious Activity:</strong> ${data.suspiciousActivity}</p>
+      ${data.userEmail ? `<p style="margin: 5px 0; color: #4a5568;"><strong>User Email:</strong> ${data.userEmail}</p>` : ''}
+      ${data.gan ? `<p style="margin: 5px 0; color: #4a5568;"><strong>Gift Card:</strong> ${data.gan}</p>` : ''}
+    </div>
+    <div style="background: #fff5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+      <h4 style="color: #742a2a; margin: 0 0 10px 0;">Details</h4>
+      <p style="color: #4a5568; margin: 0;">${data.details}</p>
+    </div>
+  </div>
+</body>
+</html>`;
+  }
+
+  private createFraudAlertPlainText(data: FraudEmailData): string {
+    return `SiZu Pay FRAUD ALERT: ${data.alertType}\n\nTimestamp: ${data.timestamp.toLocaleString()}\nSuspicious Activity: ${data.suspiciousActivity}\n${data.userEmail ? `User Email: ${data.userEmail}\n` : ''}${data.gan ? `Gift Card: ${data.gan}\n` : ''}\nDetails:\n${data.details}\n\nPlease investigate this alert immediately.`;
   }
 }
 

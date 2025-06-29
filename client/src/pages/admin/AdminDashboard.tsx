@@ -63,7 +63,7 @@ export default function AdminDashboard() {
   });
 
   // Fetch weekly revenue data
-  const { data: weeklyRevenueData = [] } = useQuery<WeeklyRevenue[]>({
+  const { data: weeklyRevenue = [] } = useQuery<WeeklyRevenue[]>({
     queryKey: ["/api/admin/weekly-revenue"],
     refetchInterval: 30000,
     meta: {
@@ -72,16 +72,6 @@ export default function AdminDashboard() {
       }
     }
   });
-
-  // Process weekly revenue data - use real data or generate sample for testing
-  const weeklyRevenue = weeklyRevenueData.length > 0 ? weeklyRevenueData : [
-    { week: 'Dec 22', revenue: 2450, giftCardsSold: 12 },
-    { week: 'Dec 29', revenue: 3200, giftCardsSold: 16 },
-    { week: 'Jan 05', revenue: 4100, giftCardsSold: 22 },
-    { week: 'Jan 12', revenue: 3800, giftCardsSold: 19 },
-    { week: 'Jan 19', revenue: 5200, giftCardsSold: 28 },
-    { week: 'Jan 26', revenue: 4800, giftCardsSold: 24 }
-  ];
 
   // Fetch recent activity
   const { data: recentActivity = [] } = useQuery<RecentActivity[]>({
@@ -437,53 +427,43 @@ export default function AdminDashboard() {
                         <CardDescription className="text-sm text-gray-300">Weekly gift card sales performance</CardDescription>
                       </CardHeader>
                       <CardContent className="pt-2 lg:pt-0">
-                        {weeklyRevenue && weeklyRevenue.length > 0 ? (
-                          <ResponsiveContainer width="100%" height={250} className="lg:!h-[300px]">
-                            <LineChart data={weeklyRevenue}>
-                              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                              <XAxis 
-                                dataKey="week" 
-                                className="text-sm" 
-                                tick={{ fill: '#9CA3AF', fontSize: 12 }}
-                                axisLine={{ stroke: 'rgba(255,255,255,0.2)' }}
-                              />
-                              <YAxis 
-                                className="text-sm" 
-                                tick={{ fill: '#9CA3AF', fontSize: 12 }}
-                                axisLine={{ stroke: 'rgba(255,255,255,0.2)' }}
-                              />
-                              <Tooltip 
-                                contentStyle={{ 
-                                  backgroundColor: 'rgba(17, 24, 39, 0.95)',
-                                  border: '1px solid rgba(255,255,255,0.2)',
-                                  borderRadius: '12px',
-                                  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
-                                  color: '#fff'
-                                }}
-                                formatter={(value, name) => [
-                                  name === 'revenue' ? `$${value}` : value,
-                                  name === 'revenue' ? 'Revenue' : 'Cards Sold'
-                                ]}
-                              />
-                              <Line 
-                                type="monotone" 
-                                dataKey="revenue" 
-                                stroke="#3B82F6" 
-                                strokeWidth={3}
-                                dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
-                                activeDot={{ r: 6, stroke: '#3B82F6', strokeWidth: 2, fill: '#60A5FA' }}
-                              />
-                            </LineChart>
-                          </ResponsiveContainer>
-                        ) : (
-                          <div className="flex items-center justify-center h-[250px] lg:h-[300px] text-gray-400">
-                            <div className="text-center">
-                              <BarChart3 className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                              <p className="text-sm">No revenue data available</p>
-                              <p className="text-xs mt-1">Data will appear once gift cards are sold</p>
-                            </div>
-                          </div>
-                        )}
+                        <ResponsiveContainer width="100%" height={250} className="lg:!h-[300px]">
+                          <LineChart data={weeklyRevenue || []}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                            <XAxis 
+                              dataKey="week" 
+                              className="text-sm" 
+                              tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                              axisLine={{ stroke: 'rgba(255,255,255,0.2)' }}
+                            />
+                            <YAxis 
+                              className="text-sm" 
+                              tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                              axisLine={{ stroke: 'rgba(255,255,255,0.2)' }}
+                            />
+                            <Tooltip 
+                              contentStyle={{ 
+                                backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                                border: '1px solid rgba(255,255,255,0.2)',
+                                borderRadius: '12px',
+                                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
+                                color: '#fff'
+                              }}
+                              formatter={(value, name) => [
+                                name === 'revenue' ? `$${value}` : value,
+                                name === 'revenue' ? 'Revenue' : 'Cards Sold'
+                              ]}
+                            />
+                            <Line 
+                              type="monotone" 
+                              dataKey="revenue" 
+                              stroke="#3B82F6" 
+                              strokeWidth={3}
+                              dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
+                              activeDot={{ r: 6, stroke: '#3B82F6', strokeWidth: 2, fill: '#60A5FA' }}
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
                       </CardContent>
                     </Card>
 
@@ -497,52 +477,42 @@ export default function AdminDashboard() {
                         <CardDescription className="text-sm text-gray-300">Distribution of card statuses</CardDescription>
                       </CardHeader>
                       <CardContent className="pt-2 lg:pt-0">
-                        {metrics && (metrics.activeCards > 0 || metrics.redeemedCards > 0 || metrics.totalGiftCards > 0) ? (
-                          <ResponsiveContainer width="100%" height={250} className="lg:!h-[300px]">
-                            <PieChart>
-                              <Pie
-                                data={[
-                                  { name: 'Active', value: metrics.activeCards || 0, color: '#10B981' },
-                                  { name: 'Redeemed', value: metrics.redeemedCards || 0, color: '#3B82F6' },
-                                  { name: 'Expired', value: Math.max(0, (metrics.totalGiftCards || 0) - (metrics.activeCards || 0) - (metrics.redeemedCards || 0)), color: '#F59E0B' }
-                                ]}
-                                cx="50%"
-                                cy="50%"
-                                outerRadius={90}
-                                innerRadius={40}
-                                fill="#8884d8"
-                                dataKey="value"
-                                label={({ name, percent }) => percent > 0 ? `${name} ${(percent * 100).toFixed(0)}%` : ''}
-                                labelLine={false}
-                              >
-                                {[
-                                  { name: 'Active', value: metrics.activeCards || 0, color: '#10B981' },
-                                  { name: 'Redeemed', value: metrics.redeemedCards || 0, color: '#3B82F6' },
-                                  { name: 'Expired', value: Math.max(0, (metrics.totalGiftCards || 0) - (metrics.activeCards || 0) - (metrics.redeemedCards || 0)), color: '#F59E0B' }
-                                ].map((entry, index) => (
-                                  <Cell key={`cell-${index}`} fill={entry.color} stroke="rgba(255,255,255,0.2)" strokeWidth={2} />
-                                ))}
-                              </Pie>
-                              <Tooltip 
-                                contentStyle={{ 
-                                  backgroundColor: 'rgba(17, 24, 39, 0.95)',
-                                  border: '1px solid rgba(255,255,255,0.2)',
-                                  borderRadius: '12px',
-                                  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
-                                  color: '#fff'
-                                }}
-                              />
-                            </PieChart>
-                          </ResponsiveContainer>
-                        ) : (
-                          <div className="flex items-center justify-center h-[250px] lg:h-[300px] text-gray-400">
-                            <div className="text-center">
-                              <Gift className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                              <p className="text-sm">No gift card data available</p>
-                              <p className="text-xs mt-1">Chart will display once gift cards are created</p>
-                            </div>
-                          </div>
-                        )}
+                        <ResponsiveContainer width="100%" height={250} className="lg:!h-[300px]">
+                          <PieChart>
+                            <Pie
+                              data={[
+                                { name: 'Active', value: metrics?.activeCards || 0, color: '#10B981' },
+                                { name: 'Redeemed', value: metrics?.redeemedCards || 0, color: '#3B82F6' },
+                                { name: 'Expired', value: Math.max(0, (metrics?.totalGiftCards || 0) - (metrics?.activeCards || 0) - (metrics?.redeemedCards || 0)), color: '#F59E0B' }
+                              ]}
+                              cx="50%"
+                              cy="50%"
+                              outerRadius={90}
+                              innerRadius={40}
+                              fill="#8884d8"
+                              dataKey="value"
+                              label={({ name, percent }) => percent > 0 ? `${name} ${(percent * 100).toFixed(0)}%` : ''}
+                              labelLine={false}
+                            >
+                              {[
+                                { name: 'Active', value: metrics?.activeCards || 0, color: '#10B981' },
+                                { name: 'Redeemed', value: metrics?.redeemedCards || 0, color: '#3B82F6' },
+                                { name: 'Expired', value: Math.max(0, (metrics?.totalGiftCards || 0) - (metrics?.activeCards || 0) - (metrics?.redeemedCards || 0)), color: '#F59E0B' }
+                              ].map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} stroke="rgba(255,255,255,0.2)" strokeWidth={2} />
+                              ))}
+                            </Pie>
+                            <Tooltip 
+                              contentStyle={{ 
+                                backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                                border: '1px solid rgba(255,255,255,0.2)',
+                                borderRadius: '12px',
+                                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
+                                color: '#fff'
+                              }}
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
                       </CardContent>
                     </Card>
                   </div>

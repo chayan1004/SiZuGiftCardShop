@@ -362,14 +362,17 @@ export class DatabaseStorage implements IStorage {
     });
 
     // Convert to array and sort by week
-    return Array.from(weeklyData.entries())
+    const result = Array.from(weeklyData.entries())
+      .sort(([weekA], [weekB]) => new Date(weekA).getTime() - new Date(weekB).getTime())
       .map(([week, data]) => ({
-        week,
+        week: new Date(week).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         revenue: data.revenue,
         giftCardsSold: data.count
       }))
-      .sort((a, b) => new Date(a.week).getTime() - new Date(b.week).getTime())
       .slice(-8); // Last 8 weeks
+
+    // If no data, return empty array (charts will handle this)
+    return result;
   }
 
   // Promo Code methods

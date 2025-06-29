@@ -1772,6 +1772,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin Weekly Revenue API
+  app.get("/api/admin/weekly-revenue", requireAdmin, async (req, res) => {
+    try {
+      const weeklyRevenue = await storage.getWeeklyRevenue();
+      res.json(weeklyRevenue);
+    } catch (error) {
+      console.error('Weekly revenue error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch weekly revenue data'
+      });
+    }
+  });
+
+  // Admin Recent Activity API
+  app.get("/api/admin/recent-activity", requireAdmin, async (req, res) => {
+    try {
+      const recentActivity = await storage.getRecentTransactions('all', 15);
+      const formattedActivity = recentActivity.map(activity => ({
+        type: activity.type,
+        amount: activity.amount,
+        email: activity.email,
+        gan: activity.gan,
+        createdAt: activity.createdAt,
+        timeAgo: getTimeAgo(activity.createdAt)
+      }));
+      res.json(formattedActivity);
+    } catch (error) {
+      console.error('Recent activity error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch recent activity'
+      });
+    }
+  });
+
   // Admin Dashboard API - Comprehensive Metrics and Analytics
   app.get("/api/admin/metrics", requireAdmin, async (req, res) => {
     try {

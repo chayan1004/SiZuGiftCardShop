@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { 
@@ -114,43 +114,83 @@ export default function AdminDashboard() {
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex relative">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 flex relative">
+      {/* Premium Mobile Header */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between p-4 bg-gradient-to-r from-slate-900/95 to-slate-800/95 backdrop-blur-xl border-b border-slate-700/50">
+        <div className="flex items-center space-x-3">
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg blur opacity-75"></div>
+            <div className="relative p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-lg">
+              <Shield className="w-5 h-5 text-white" />
+            </div>
+          </div>
+          <div>
+            <h1 className="text-lg font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+              Admin Portal
+            </h1>
+            <p className="text-xs text-blue-300 font-medium">SiZu GiftCard System</p>
+          </div>
+        </div>
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="relative p-3 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-200 group"
+        >
+          <Menu className="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-600/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+        </button>
+      </div>
+
       {/* Mobile Overlay */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <div className={`
-        fixed lg:relative lg:translate-x-0 transition-transform duration-300 ease-in-out z-50
-        w-64 bg-white shadow-lg border-r border-gray-200
+        fixed lg:relative lg:translate-x-0 transition-all duration-300 ease-in-out z-50
+        w-72 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 shadow-2xl border-r border-slate-700/50
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:block
+        lg:block backdrop-blur-xl
       `}>
-        <div className="p-4 lg:p-6 border-b border-gray-200">
+        {/* Premium Header */}
+        <div className="p-6 lg:p-8 border-b border-slate-700/50 bg-gradient-to-r from-blue-600/10 to-purple-600/10">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-600 rounded-lg">
-                <Shield className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl blur opacity-75"></div>
+                <div className="relative p-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg">
+                  <Shield className="w-6 h-6 lg:w-7 lg:h-7 text-white" />
+                </div>
               </div>
               <div>
-                <h1 className="text-lg lg:text-xl font-bold text-gray-900">Admin Panel</h1>
-                <p className="text-xs lg:text-sm text-gray-500">SiZu GiftCard</p>
+                <h1 className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                  Admin Portal
+                </h1>
+                <p className="text-sm lg:text-base text-blue-300 font-medium">SiZu GiftCard System</p>
               </div>
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden p-2 rounded-md text-gray-500 hover:text-gray-700"
+              className="lg:hidden p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
+          
+          {/* Premium Status Indicator */}
+          <div className="mt-4 flex items-center space-x-2">
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+            <span className="text-xs text-green-300 font-medium">System Online</span>
+            <div className="ml-auto">
+              <span className="text-xs text-gray-400">v2.1.0</span>
+            </div>
+          </div>
         </div>
 
-        <nav className="p-3 lg:p-4 space-y-1 lg:space-y-2 flex-1 overflow-y-auto">
+        <nav className="p-4 lg:p-6 space-y-2 flex-1 overflow-y-auto">
           {sidebarItems.map((item) => (
             <button
               key={item.id}
@@ -158,38 +198,85 @@ export default function AdminDashboard() {
                 setActiveSection(item.id);
                 setSidebarOpen(false); // Close mobile sidebar on selection
               }}
-              className={`w-full flex items-center space-x-3 px-3 lg:px-4 py-2 lg:py-3 rounded-lg text-left transition-colors text-sm lg:text-base ${
-                activeSection === item.id
-                  ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-              }`}
+              className={`
+                group w-full flex items-center space-x-4 px-4 lg:px-5 py-3 lg:py-4 rounded-xl text-left 
+                transition-all duration-300 ease-in-out hover:scale-[1.02] relative overflow-hidden
+                ${activeSection === item.id 
+                  ? 'bg-gradient-to-r from-blue-600/20 to-purple-600/20 text-white shadow-lg shadow-blue-500/20 border border-blue-500/30' 
+                  : 'text-gray-300 hover:bg-white/5 hover:text-white border border-transparent hover:border-white/10'
+                }
+              `}
             >
-              {item.icon}
-              <span className="font-medium">{item.label}</span>
+              {/* Active indicator */}
+              {activeSection === item.id && (
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-400 to-purple-500 rounded-r-full"></div>
+              )}
+              
+              {/* Icon with premium styling */}
+              <div className={`
+                relative p-2 rounded-lg transition-all duration-200
+                ${activeSection === item.id 
+                  ? 'bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg transform scale-110' 
+                  : 'bg-white/5 group-hover:bg-white/10 group-hover:scale-105'
+                }
+              `}>
+                {React.cloneElement(item.icon, { 
+                  className: "w-4 h-4 lg:w-5 lg:h-5 transition-transform duration-200" 
+                })}
+              </div>
+              
+              {/* Text content with premium styling */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm lg:text-base font-semibold tracking-wide">{item.label}</span>
+                  {activeSection === item.id && (
+                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                  )}
+                </div>
+                <div className={`
+                  h-px w-0 bg-gradient-to-r from-blue-400 to-purple-500 transition-all duration-300
+                  ${activeSection === item.id ? 'w-full' : 'group-hover:w-1/2'}
+                `}></div>
+              </div>
             </button>
           ))}
         </nav>
 
-        <div className="absolute bottom-0 w-64 p-3 lg:p-4 border-t border-gray-200 bg-white">
-          <div className="space-y-2">
-            <Button
-              onClick={() => window.location.href = '/'}
-              variant="outline"
-              size="sm"
-              className="w-full justify-start text-xs lg:text-sm"
-            >
-              <Home className="w-3 h-3 lg:w-4 lg:h-4 mr-2" />
-              Back to Site
-            </Button>
-            <Button
-              onClick={handleLogout}
-              variant="outline"
-              size="sm"
-              className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50 text-xs lg:text-sm"
-            >
-              <LogOut className="w-3 h-3 lg:w-4 lg:h-4 mr-2" />
-              Logout
-            </Button>
+        {/* Premium Footer */}
+        <div className="absolute bottom-0 w-72 p-4 lg:p-6 border-t border-slate-700/50 bg-gradient-to-r from-slate-900/90 to-slate-800/90 backdrop-blur-xl">
+          <div className="space-y-3">
+            {/* Premium Admin Profile */}
+            <div className="flex items-center space-x-3 p-3 bg-white/5 rounded-lg border border-white/10">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                <span className="text-white text-sm font-bold">A</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white text-sm font-semibold">Admin User</p>
+                <p className="text-gray-400 text-xs truncate">System Administrator</p>
+              </div>
+            </div>
+            
+            {/* Premium Action Buttons */}
+            <div className="space-y-2">
+              <Button
+                onClick={() => window.location.href = '/'}
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start text-gray-300 hover:text-white hover:bg-white/10 border border-transparent hover:border-white/20 transition-all duration-200"
+              >
+                <Home className="w-4 h-4 mr-3" />
+                <span className="text-sm font-medium">Back to Site</span>
+              </Button>
+              <Button
+                onClick={handleLogout}
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-transparent hover:border-red-500/30 transition-all duration-200"
+              >
+                <LogOut className="w-4 h-4 mr-3" />
+                <span className="text-sm font-medium">Logout</span>
+              </Button>
+            </div>
           </div>
         </div>
       </div>

@@ -28,9 +28,19 @@ export const getQueryFn: <T>(options: {
   on401: UnauthorizedBehavior;
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
-  async ({ queryKey }) => {
+  async ({ queryKey, meta }) => {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+
+    // Add authentication headers from meta
+    if (meta?.headers) {
+      Object.assign(headers, meta.headers);
+    }
+
     const res = await fetch(queryKey[0] as string, {
       credentials: "include",
+      headers,
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {

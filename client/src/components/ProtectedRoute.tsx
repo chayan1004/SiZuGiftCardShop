@@ -6,6 +6,29 @@ interface ProtectedRouteProps {
   role: 'admin' | 'merchant';
 }
 
+// Validate JWT token structure and expiration
+function validateJWTToken(token: string): boolean {
+  try {
+    if (!token || !token.startsWith('eyJ')) {
+      return false;
+    }
+    
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    console.log('🔍 Validating merchant token:', {
+      role: payload.role,
+      email: payload.email,
+      merchantId: payload.merchantId,
+      exp: new Date(payload.exp * 1000).toISOString(),
+      isValid: payload.exp > Date.now() / 1000
+    });
+    
+    return payload.role === 'merchant' && payload.exp > Date.now() / 1000;
+  } catch (error) {
+    console.error('❌ Token validation failed:', error);
+    return false;
+  }
+}
+
 export default function ProtectedRoute({ children, role }: ProtectedRouteProps) {
   const [, setLocation] = useLocation();
 
@@ -20,10 +43,14 @@ export default function ProtectedRoute({ children, role }: ProtectedRouteProps) 
     
     if (role === 'merchant') {
       const token = localStorage.getItem('merchantToken');
-      if (!token) {
+      if (!token || !validateJWTToken(token)) {
+        console.log('❌ Invalid or missing merchant token, redirecting to login');
+        localStorage.removeItem('merchantToken');
+        localStorage.removeItem('merchantData');
         setLocation('/merchant-login');
         return;
       }
+      console.log('✅ Valid merchant token confirmed');
     }
   }, [role, setLocation]);
 
@@ -37,7 +64,7 @@ export default function ProtectedRoute({ children, role }: ProtectedRouteProps) 
   
   if (role === 'merchant') {
     const token = localStorage.getItem('merchantToken');
-    if (!token) {
+    if (!token || !validateJWTToken(token)) {
       return null;
     }
   }

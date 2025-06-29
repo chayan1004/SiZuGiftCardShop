@@ -15,7 +15,7 @@ import { emailDeliveryMonitor } from './services/emailDeliveryMonitor';
 import { domainAuthentication } from './services/domainAuthentication';
 import { pdfReceiptService } from './services/pdfReceiptService';
 import { squareWebhookHandler } from './webhooks/squareWebhookHandler';
-import { requireAdmin, requireMerchant, checkMerchantStatus } from './middleware/authMiddleware';
+import { requireAdmin, requireMerchant, requireMerchantAuth, checkMerchantStatus } from './middleware/authMiddleware';
 import { AuthService } from './services/authService';
 import { generateGiftCardQR, generateGiftCardBarcode } from '../utils/qrGenerator';
 import { z } from "zod";
@@ -2928,6 +2928,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Failed to retrieve merchants" 
       });
     }
+  });
+
+  // Protected merchant dashboard routes - Add missing route protection
+  app.get('/merchant-dashboard', requireMerchantAuth, (req: Request, res: Response) => {
+    // This route is handled by the frontend - just ensure authentication
+    res.redirect('/merchant-dashboard');
+  });
+
+  app.get('/merchant-bulk-orders', requireMerchantAuth, (req: Request, res: Response) => {
+    // This route is handled by the frontend - just ensure authentication
+    res.redirect('/merchant-bulk-orders');
+  });
+
+  app.get('/merchant-giftcards', requireMerchantAuth, (req: Request, res: Response) => {
+    // This route is handled by the frontend - just ensure authentication
+    res.redirect('/merchant-giftcards');
   });
 
   return httpServer;

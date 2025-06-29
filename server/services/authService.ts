@@ -44,36 +44,35 @@ export class AuthService {
    * Generate a JWT token for a merchant
    */
   static generateMerchantToken(merchant: any): string {
-    const payload: MerchantTokenPayload & { 
-      id: number;
-      iat: number;
-      exp: number;
-      iss: string;
-      aud: string;
-    } = {
+    const payload = {
       id: merchant.id,
       merchantId: merchant.merchantId,
       role: 'merchant',
       email: merchant.email,
-      businessName: merchant.businessName,
-      iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60), // 7 days
-      iss: 'sizu-giftcard',
-      aud: 'merchant'
+      businessName: merchant.businessName
     };
 
-    console.log(`🔐 Generated JWT token for merchant ${merchant.email}:`, {
-      merchantId: payload.merchantId,
-      role: payload.role,
-      businessName: payload.businessName,
-      exp: new Date(payload.exp * 1000).toISOString()
-    });
+    try {
+      const token = jwt.sign(payload, JWT_SECRET, { 
+        expiresIn: JWT_EXPIRES_IN,
+        issuer: 'sizu-giftcard',
+        audience: 'merchant'
+      });
 
-    return jwt.sign(payload, JWT_SECRET, { 
-      expiresIn: JWT_EXPIRES_IN,
-      issuer: 'sizu-giftcard',
-      audience: 'merchant'
-    });
+      // Log token structure for debugging
+      const decoded = jwt.decode(token) as any;
+      console.log(`🔐 Generated JWT token for merchant ${merchant.email}:`, {
+        merchantId: decoded.merchantId,
+        role: decoded.role,
+        businessName: decoded.businessName,
+        exp: new Date(decoded.exp * 1000).toISOString()
+      });
+
+      return token;
+    } catch (error) {
+      console.error('JWT generation error:', error);
+      throw new Error('Failed to generate authentication token');
+    }
   }
 
   /**

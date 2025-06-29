@@ -383,41 +383,43 @@ export default function AdminDashboard() {
 
                   {/* Recent Activity */}
                   <Card>
-                    <CardHeader>
-                      <CardTitle>Recent Activity</CardTitle>
-                      <CardDescription>Latest gift card transactions and system events</CardDescription>
+                    <CardHeader className="pb-2 lg:pb-6">
+                      <CardTitle className="text-lg lg:text-xl">Recent Activity</CardTitle>
+                      <CardDescription className="text-sm">Latest gift card transactions and system events</CardDescription>
                     </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
+                    <CardContent className="pt-2 lg:pt-0">
+                      <div className="space-y-3 lg:space-y-4">
                         {recentActivity.length > 0 ? (
-                          recentActivity.slice(0, 8).map((activity, index) => (
-                            <div key={index} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
-                              <div className={`p-2 rounded-full ${
+                          recentActivity.slice(0, 6).map((activity, index) => (
+                            <div key={index} className="flex items-center space-x-3 lg:space-x-4 p-2 lg:p-3 bg-gray-50 rounded-lg">
+                              <div className={`p-1.5 lg:p-2 rounded-full flex-shrink-0 ${
                                 activity.type === 'purchase' ? 'bg-green-100 text-green-600' :
                                 activity.type === 'redemption' ? 'bg-blue-100 text-blue-600' :
                                 'bg-orange-100 text-orange-600'
                               }`}>
-                                {activity.type === 'purchase' && <CreditCard className="w-4 h-4" />}
-                                {activity.type === 'redemption' && <QrCode className="w-4 h-4" />}
-                                {activity.type !== 'purchase' && activity.type !== 'redemption' && <Activity className="w-4 h-4" />}
+                                {activity.type === 'purchase' && <CreditCard className="w-3 h-3 lg:w-4 lg:h-4" />}
+                                {activity.type === 'redemption' && <QrCode className="w-3 h-3 lg:w-4 lg:h-4" />}
+                                {activity.type !== 'purchase' && activity.type !== 'redemption' && <Activity className="w-3 h-3 lg:w-4 lg:h-4" />}
                               </div>
-                              <div className="flex-1">
-                                <p className="font-medium capitalize">{activity.type}</p>
-                                <p className="text-sm text-gray-500">
-                                  {activity.email && `${activity.email} • `}
-                                  {activity.gan && `${activity.gan} • `}
-                                  ${(activity.amount / 100).toFixed(2)}
-                                </p>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm lg:text-base font-medium capitalize truncate">{activity.type}</p>
+                                <div className="text-xs lg:text-sm text-gray-500 space-y-1">
+                                  {activity.email && <p className="truncate">{activity.email}</p>}
+                                  <p className="flex items-center justify-between">
+                                    <span>{activity.gan && `${activity.gan.slice(0, 8)}...`}</span>
+                                    <span className="font-medium">${(activity.amount / 100).toFixed(2)}</span>
+                                  </p>
+                                </div>
                               </div>
-                              <div className="text-sm text-gray-400">
+                              <div className="text-xs lg:text-sm text-gray-400 flex-shrink-0">
                                 {activity.timeAgo}
                               </div>
                             </div>
                           ))
                         ) : (
-                          <div className="text-center py-8 text-gray-500">
-                            <Activity className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                            <p>No recent activity to display</p>
+                          <div className="text-center py-6 lg:py-8 text-gray-500">
+                            <Activity className="w-8 h-8 lg:w-12 lg:h-12 mx-auto mb-2 lg:mb-4 opacity-50" />
+                            <p className="text-sm lg:text-base">No recent activity to display</p>
                           </div>
                         )}
                       </div>
@@ -470,22 +472,24 @@ function MetricCard({ title, value, icon, color, subtitle, trend }: MetricCardPr
 
   return (
     <Card className="relative overflow-hidden">
-      <CardContent className="p-6">
+      <CardContent className="p-4 lg:p-6">
         <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
-            <p className="text-3xl font-bold text-gray-900 mb-2">{value}</p>
-            <p className="text-xs text-gray-500">{subtitle}</p>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs lg:text-sm font-medium text-gray-600 mb-1 truncate">{title}</p>
+            <p className="text-xl lg:text-3xl font-bold text-gray-900 mb-1 lg:mb-2">{value}</p>
+            <p className="text-xs text-gray-500 truncate">{subtitle}</p>
           </div>
-          <div className={`p-3 rounded-lg ${colorClasses[color]}`}>
-            {icon}
+          <div className={`p-2 lg:p-3 rounded-lg flex-shrink-0 ${colorClasses[color]}`}>
+            <div className="w-5 h-5 lg:w-6 lg:h-6">
+              {icon}
+            </div>
           </div>
         </div>
         {trend && (
-          <div className="mt-4 flex items-center">
-            <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-            <span className="text-sm font-medium text-green-600">{trend}</span>
-            <span className="text-sm text-gray-500 ml-1">vs last month</span>
+          <div className="mt-3 lg:mt-4 flex items-center">
+            <TrendingUp className="w-3 h-3 lg:w-4 lg:h-4 text-green-500 mr-1 flex-shrink-0" />
+            <span className="text-xs lg:text-sm font-medium text-green-600">{trend}</span>
+            <span className="text-xs lg:text-sm text-gray-500 ml-1 hidden sm:inline">vs last month</span>
           </div>
         )}
       </CardContent>

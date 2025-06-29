@@ -64,21 +64,21 @@ export default function GiftCardManagement() {
 
       {/* Filters */}
       <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row gap-4">
+        <CardContent className="p-4 lg:p-6">
+          <div className="flex flex-col sm:flex-row gap-3 lg:gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
                 placeholder="Search by GAN, email, or merchant..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 text-sm lg:text-base"
               />
             </div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm lg:text-base"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
@@ -86,9 +86,10 @@ export default function GiftCardManagement() {
               <option value="expired">Expired</option>
               <option value="pending">Pending</option>
             </select>
-            <Button variant="outline">
-              <Filter className="w-4 h-4 mr-2" />
-              More Filters
+            <Button variant="outline" size="sm" className="lg:size-default">
+              <Filter className="w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2" />
+              <span className="hidden sm:inline">More Filters</span>
+              <span className="sm:hidden">Filters</span>
             </Button>
           </div>
         </CardContent>
@@ -110,38 +111,38 @@ export default function GiftCardManagement() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>GAN</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Balance</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Recipient</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className="text-xs lg:text-sm">GAN</TableHead>
+                    <TableHead className="text-xs lg:text-sm">Amount</TableHead>
+                    <TableHead className="text-xs lg:text-sm hidden sm:table-cell">Balance</TableHead>
+                    <TableHead className="text-xs lg:text-sm">Status</TableHead>
+                    <TableHead className="text-xs lg:text-sm hidden md:table-cell">Recipient</TableHead>
+                    <TableHead className="text-xs lg:text-sm hidden lg:table-cell">Created</TableHead>
+                    <TableHead className="text-xs lg:text-sm">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredCards.map((card) => (
                     <TableRow key={card.id}>
-                      <TableCell className="font-mono">{card.gan}</TableCell>
-                      <TableCell>${(card.amount / 100).toFixed(2)}</TableCell>
-                      <TableCell>${(card.balance / 100).toFixed(2)}</TableCell>
+                      <TableCell className="font-mono text-xs lg:text-sm">{card.gan.slice(0, 8)}...</TableCell>
+                      <TableCell className="text-xs lg:text-sm font-medium">${(card.amount / 100).toFixed(2)}</TableCell>
+                      <TableCell className="text-xs lg:text-sm hidden sm:table-cell">${(card.balance / 100).toFixed(2)}</TableCell>
                       <TableCell>
-                        <Badge className={getStatusColor(card.status)}>
+                        <Badge className={`${getStatusColor(card.status)} text-xs`}>
                           {card.status}
                         </Badge>
                       </TableCell>
-                      <TableCell>{card.recipientEmail || 'N/A'}</TableCell>
-                      <TableCell>{new Date(card.createdAt).toLocaleDateString()}</TableCell>
+                      <TableCell className="text-xs lg:text-sm hidden md:table-cell max-w-32 truncate">{card.recipientEmail || 'N/A'}</TableCell>
+                      <TableCell className="text-xs lg:text-sm hidden lg:table-cell">{new Date(card.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <Button variant="ghost" size="sm">
-                            <Eye className="w-4 h-4" />
+                        <div className="flex items-center space-x-1">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <Eye className="w-3 h-3 lg:w-4 lg:h-4" />
                           </Button>
-                          <Button variant="ghost" size="sm">
-                            <Edit className="w-4 h-4" />
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hidden sm:flex">
+                            <Edit className="w-3 h-3 lg:w-4 lg:h-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="text-red-600">
-                            <Trash2 className="w-4 h-4" />
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-600 hidden lg:flex">
+                            <Trash2 className="w-3 h-3 lg:w-4 lg:h-4" />
                           </Button>
                         </div>
                       </TableCell>

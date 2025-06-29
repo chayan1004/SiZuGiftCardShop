@@ -104,25 +104,26 @@ export default function MerchantDashboard() {
       {/* Email Verification Banner */}
       <EmailVerificationBanner merchantEmail={merchantId || ""} />
       
-      <div className="p-6">
+      <div className="p-4 lg:p-6">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Merchant Dashboard</h1>
-            <p className="text-gray-300">Welcome back! Here's your business overview.</p>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 lg:mb-8 space-y-4 sm:space-y-0">
+          <div className="flex-1">
+            <h1 className="text-2xl lg:text-3xl font-bold text-white mb-1 lg:mb-2">Merchant Dashboard</h1>
+            <p className="text-sm lg:text-base text-gray-300">Welcome back! Here's your business overview.</p>
           </div>
           <Button
             onClick={handleLogout}
             variant="outline"
-            className="border-red-500/50 text-red-400 hover:bg-red-500/10 hover:border-red-400"
+            size="sm"
+            className="border-red-500/50 text-red-400 hover:bg-red-500/10 hover:border-red-400 self-start sm:self-auto"
           >
-            <LogOut size={16} className="mr-2" />
-            Logout
+            <LogOut size={14} className="lg:mr-2" />
+            <span className="hidden lg:inline">Logout</span>
           </Button>
         </div>
 
         {/* Tabs */}
-        <div className="flex space-x-1 mb-8 bg-white/10 p-1 rounded-xl backdrop-blur-sm border border-white/20">
+        <div className="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-1 mb-6 lg:mb-8 bg-white/10 p-1 rounded-xl backdrop-blur-sm border border-white/20">
           {[
             { id: "overview", label: "Overview", icon: BarChart3 },
             { id: "transactions", label: "Transactions", icon: History },
@@ -133,14 +134,16 @@ export default function MerchantDashboard() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               variant={activeTab === tab.id ? "default" : "ghost"}
-              className={`flex-1 ${
+              size="sm"
+              className={`flex-1 text-xs lg:text-sm ${
                 activeTab === tab.id
                   ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg"
                   : "text-gray-300 hover:text-white hover:bg-white/10"
               }`}
             >
-              <tab.icon size={16} className="mr-2" />
-              {tab.label}
+              <tab.icon size={14} className="mr-1 lg:mr-2" />
+              <span className="hidden sm:inline lg:inline">{tab.label}</span>
+              <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
             </Button>
           ))}
         </div>
@@ -153,53 +156,53 @@ export default function MerchantDashboard() {
           transition={{ duration: 0.3 }}
         >
           {activeTab === "overview" && stats && (
-            <div className="space-y-6">
+            <div className="space-y-4 lg:space-y-6">
               {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
                 <Card className="bg-white/10 backdrop-blur-2xl border border-white/20">
-                  <CardContent className="p-6">
+                  <CardContent className="p-4 lg:p-6">
                     <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-gray-400 text-sm font-medium">Total Sales</p>
-                        <p className="text-2xl font-bold text-white">${stats?.data?.totalRevenue?.toFixed(2) || '0.00'}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-gray-400 text-xs lg:text-sm font-medium">Total Sales</p>
+                        <p className="text-lg lg:text-2xl font-bold text-white truncate">${stats?.data?.totalRevenue?.toFixed(2) || '0.00'}</p>
                       </div>
-                      <DollarSign className="text-green-400" size={24} />
+                      <DollarSign className="text-green-400 flex-shrink-0" size={20} />
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card className="bg-white/10 backdrop-blur-2xl border border-white/20">
-                  <CardContent className="p-6">
+                  <CardContent className="p-4 lg:p-6">
                     <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-gray-400 text-sm font-medium">Active Cards</p>
-                        <p className="text-2xl font-bold text-white">{stats?.data?.activeCards || 0}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-gray-400 text-xs lg:text-sm font-medium">Active Cards</p>
+                        <p className="text-lg lg:text-2xl font-bold text-white">{stats?.data?.activeCards || 0}</p>
                       </div>
-                      <Gift className="text-blue-400" size={24} />
+                      <Gift className="text-blue-400 flex-shrink-0" size={20} />
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card className="bg-white/10 backdrop-blur-2xl border border-white/20">
-                  <CardContent className="p-6">
+                  <CardContent className="p-4 lg:p-6">
                     <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-gray-400 text-sm font-medium">Redemptions</p>
-                        <p className="text-2xl font-bold text-white">{stats?.data?.totalRedemptions || 0}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-gray-400 text-xs lg:text-sm font-medium">Redemptions</p>
+                        <p className="text-lg lg:text-2xl font-bold text-white">{stats?.data?.totalRedemptions || 0}</p>
                       </div>
-                      <CreditCard className="text-purple-400" size={24} />
+                      <CreditCard className="text-purple-400 flex-shrink-0" size={20} />
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card className="bg-white/10 backdrop-blur-2xl border border-white/20">
-                  <CardContent className="p-6">
+                  <CardContent className="p-4 lg:p-6">
                     <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-gray-400 text-sm font-medium">Customers</p>
-                        <p className="text-2xl font-bold text-white">{stats?.data?.customers || 0}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-gray-400 text-xs lg:text-sm font-medium">Customers</p>
+                        <p className="text-lg lg:text-2xl font-bold text-white">{stats?.data?.customers || 0}</p>
                       </div>
-                      <Users className="text-cyan-400" size={24} />
+                      <Users className="text-cyan-400 flex-shrink-0" size={20} />
                     </div>
                   </CardContent>
                 </Card>
@@ -207,17 +210,17 @@ export default function MerchantDashboard() {
 
               {/* Charts */}
               {stats?.data?.chartData && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
                   <Card className="bg-white/10 backdrop-blur-2xl border border-white/20">
-                    <CardHeader>
-                      <CardTitle className="text-white">Revenue Trend</CardTitle>
+                    <CardHeader className="pb-2 lg:pb-6">
+                      <CardTitle className="text-white text-lg lg:text-xl">Revenue Trend</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <ResponsiveContainer width="100%" height={300}>
+                    <CardContent className="pt-2 lg:pt-0">
+                      <ResponsiveContainer width="100%" height={250} className="lg:!h-[300px]">
                         <BarChart data={stats?.data?.chartData || []}>
                           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                          <XAxis dataKey="date" stroke="rgba(255,255,255,0.5)" />
-                          <YAxis stroke="rgba(255,255,255,0.5)" />
+                          <XAxis dataKey="date" stroke="rgba(255,255,255,0.5)" className="text-xs lg:text-sm" />
+                          <YAxis stroke="rgba(255,255,255,0.5)" className="text-xs lg:text-sm" />
                           <Tooltip 
                             contentStyle={{ 
                               backgroundColor: 'rgba(0,0,0,0.8)', 
@@ -233,17 +236,17 @@ export default function MerchantDashboard() {
                   </Card>
 
                   <Card className="bg-white/10 backdrop-blur-2xl border border-white/20">
-                    <CardHeader>
-                      <CardTitle className="text-white">Recent Activity</CardTitle>
+                    <CardHeader className="pb-2 lg:pb-6">
+                      <CardTitle className="text-white text-lg lg:text-xl">Recent Activity</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {stats?.data?.recentActivity?.slice(0, 5).map((activity: any, index: number) => (
-                          <div key={index} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                            <div className="flex items-center space-x-3">
-                              <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
-                              <div>
-                                <p className="text-white text-sm font-medium">{activity.type}</p>
+                    <CardContent className="pt-2 lg:pt-0">
+                      <div className="space-y-3 lg:space-y-4">
+                        {stats?.data?.recentActivity?.slice(0, 4).map((activity: any, index: number) => (
+                          <div key={index} className="flex items-center justify-between p-2 lg:p-3 bg-white/5 rounded-lg">
+                            <div className="flex items-center space-x-2 lg:space-x-3 min-w-0 flex-1">
+                              <div className="w-2 h-2 bg-cyan-400 rounded-full flex-shrink-0"></div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-white text-xs lg:text-sm font-medium truncate">{activity.type}</p>
                                 <p className="text-gray-400 text-xs">{activity.timeAgo}</p>
                               </div>
                             </div>

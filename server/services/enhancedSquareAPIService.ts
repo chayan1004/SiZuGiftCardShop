@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { storage } from '../storage';
 import { SquareClient, SquareEnvironment, SquareError } from 'square';
+import fetch, { RequestInit } from 'node-fetch';
 
 /**
  * Enhanced Square API Service - Production Ready Implementation
@@ -119,9 +120,9 @@ class EnhancedSquareAPIService {
   private async makeSquareRequest(
     endpoint: string, 
     method: string = 'GET', 
-    body?: any,
+    body?: Record<string, any>,
     retries: number = 3
-  ): Promise<any> {
+  ): Promise<Record<string, any>> {
     const url = `${this.baseUrl}${endpoint}`;
     
     const options: RequestInit = {
@@ -185,6 +186,9 @@ class EnhancedSquareAPIService {
         await this.delay(Math.pow(2, attempt) * 1000);
       }
     }
+    
+    // This should never be reached, but TypeScript requires a return
+    throw new Error('Maximum retries exceeded');
   }
 
   private delay(ms: number): Promise<void> {
@@ -228,15 +232,15 @@ class EnhancedSquareAPIService {
         };
       }
 
-      const { result, statusCode, headers } = await this.client.giftCards.create(requestBody);
+      const response = await this.client.giftCards.createGiftCard(requestBody);
 
-      if (result.giftCard) {
+      if (response.result.giftCard) {
         // Store gift card in database with comprehensive tracking
-        await this.syncGiftCardToDatabase(result.giftCard);
+        await this.syncGiftCardToDatabase(response.result.giftCard);
         
         return {
           success: true,
-          giftCard: result.giftCard
+          giftCard: response.result.giftCard
         };
       }
 

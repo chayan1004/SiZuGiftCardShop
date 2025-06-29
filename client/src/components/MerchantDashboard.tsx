@@ -70,6 +70,63 @@ export default function MerchantDashboard({ isOpen, onClose }: MerchantDashboard
     }
   });
 
+  const [isSquareConnected, setIsSquareConnected] = useState(false);
+  const [squareBusinessName, setSquareBusinessName] = useState("");
+
+  // Check Square connection status
+  useEffect(() => {
+    const checkSquareConnection = async () => {
+      if (!auth.isAuthenticated || !merchantId) return;
+      
+      try {
+        const response = await fetch("/api/merchant/me", {
+          headers: {
+            'x-merchant-token': auth.token || '',
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        const data = await response.json();
+        if (data.success && data.merchant) {
+          // Check if merchant has Square tokens (not demo tokens)
+          const hasSquareConnection = data.merchant.accessToken && 
+                                     !data.merchant.accessToken.startsWith('demo_') &&
+                                     !data.merchant.accessToken.includes('pending');
+          setIsSquareConnected(hasSquareConnection);
+        }
+      } catch (error) {
+        console.error('Failed to check Square connection:', error);
+      }
+    };
+
+    checkSquareConnection();
+  }, [auth, merchantId]);
+
+  // Listen for Square OAuth success messages
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.type === 'SQUARE_OAUTH_SUCCESS') {
+        setIsSquareConnected(true);
+        if (event.data.merchantInfo?.businessName) {
+          setSquareBusinessName(event.data.merchantInfo.businessName);
+        }
+        toast({
+          title: "Square Connected",
+          description: "Your Square account has been successfully linked!",
+        });
+      } else if (event.data.type === 'SQUARE_OAUTH_ERROR') {
+        toast({
+          title: "Connection Failed",
+          description: "Failed to connect Square account. Please try again.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [toast]);
+
   const squareOAuthMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch("/api/auth/square", {
@@ -79,17 +136,35 @@ export default function MerchantDashboard({ isOpen, onClose }: MerchantDashboard
           'Content-Type': 'application/json'
         }
       });
-      return response.json();
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to get auth URL');
+      }
+      return data;
     },
     onSuccess: (data) => {
       if (data.authUrl) {
-        window.open(data.authUrl, '_blank', 'width=600,height=700');
+        // Open Square OAuth in popup
+        const popup = window.open(
+          data.authUrl, 
+          'square-oauth', 
+          'width=600,height=700,scrollbars=yes,resizable=yes'
+        );
+        
+        // Check if popup was blocked
+        if (!popup) {
+          toast({
+            title: "Popup Blocked",
+            description: "Please allow popups and try again",
+            variant: "destructive",
+          });
+        }
       }
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
-        title: "Error",
-        description: "Failed to initiate Square OAuth flow",
+        title: "Connection Error",
+        description: error.message || "Failed to initiate Square OAuth flow",
         variant: "destructive",
       });
     }
@@ -344,14 +419,26 @@ export default function MerchantDashboard({ isOpen, onClose }: MerchantDashboard
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
-                        <Button 
-                          onClick={handleSquareLogin}
-                          disabled={squareOAuthMutation.isPending}
-                          className="w-full bg-square-blue text-white hover:bg-square-blue-dark"
-                        >
-                          <Plus className="mr-2" size={16} />
-                          {squareOAuthMutation.isPending ? "Connecting..." : "Connect Square Account"}
-                        </Button>
+                        {isSquareConnected ? (
+                          <div className="w-full p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
+                            <CheckCircle className="h-5 w-5 text-green-600" />
+                            <div className="flex-1">
+                              <p className="font-medium text-green-800">Square Connected</p>
+                              {squareBusinessName && (
+                                <p className="text-sm text-green-600">{squareBusinessName}</p>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <Button 
+                            onClick={() => squareOAuthMutation.mutate()}
+                            disabled={squareOAuthMutation.isPending}
+                            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
+                          >
+                            <CreditCard className="mr-2" size={16} />
+                            {squareOAuthMutation.isPending ? "Connecting..." : "Connect Square Account"}
+                          </Button>
+                        )}
                         <Button variant="outline" className="w-full">
                           <Eye className="mr-2" size={16} />
                           View All Gift Cards

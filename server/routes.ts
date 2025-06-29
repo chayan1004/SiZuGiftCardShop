@@ -414,52 +414,132 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Square OAuth routes (Protected)
   app.get("/api/auth/square", requireMerchant, async (req, res) => {
     try {
-      const authUrl = squareService.getAuthorizationUrl();
+      const merchantId = (req as any).merchantId;
+      
+      // Generate Square OAuth URL with merchant ID in state
+      const authUrl = squareService.getAuthorizationUrl(merchantId);
       res.json({ authUrl });
     } catch (error) {
       console.error('Square auth URL error:', error);
-      res.status(500).json({ message: "Failed to generate authorization URL" });
+      res.status(500).json({ 
+        success: false,
+        error: "Failed to generate Square authorization URL" 
+      });
     }
   });
 
-  app.post("/api/auth/square/callback", requireMerchant, async (req, res) => {
+  app.get("/api/auth/square/callback", async (req, res) => {
     try {
-      const { code, state } = req.body;
+      const { code, state } = req.query;
       
       if (!code) {
-        return res.status(400).json({ message: "Authorization code is required" });
+        return res.status(400).send(`
+          <html><body style="font-family: Arial; text-align: center; padding: 50px;">
+            <h2 style="color: #ef4444;">❌ Authorization Failed</h2>
+            <p>Authorization code not provided</p>
+            <script>setTimeout(() => window.close(), 3000);</script>
+          </body></html>
+        `);
+      }
+
+      if (!state) {
+        return res.status(400).send(`
+          <html><body style="font-family: Arial; text-align: center; padding: 50px;">
+            <h2 style="color: #ef4444;">❌ Connection Failed</h2>
+            <p>Merchant ID not provided</p>
+            <script>setTimeout(() => window.close(), 3000);</script>
+          </body></html>
+        `);
       }
 
       // Exchange code for access token
-      const tokenData = await squareService.exchangeCodeForToken(code);
+      const tokenData = await squareService.exchangeCodeForToken(code as string);
       
-      // Get merchant info
-      const merchantInfo = await squareService.getMerchantInfo(tokenData.access_token);
+      // Get Square merchant info
+      const squareMerchantInfo = await squareService.getMerchantInfo(tokenData.access_token);
       
-      // Store or update merchant in database
-      let merchant = await storage.getMerchantBySquareId(merchantInfo.id);
+      // Find the merchant by the ID passed in state
+      const localMerchant = await storage.getMerchantBySquareId(state as string);
       
-      if (merchant) {
-        merchant = await storage.updateMerchantTokens(
-          merchant.id, 
-          tokenData.access_token, 
-          tokenData.refresh_token
-        );
-      } else {
-        merchant = await storage.createMerchant({
-          squareApplicationId: process.env.SQUARE_CLIENT_ID || "",
-          accessToken: tokenData.access_token,
-          refreshToken: tokenData.refresh_token,
-          merchantId: merchantInfo.id,
-          businessName: merchantInfo.business_name || "Unknown Business",
-          email: merchantInfo.email || "",
-        });
+      if (!localMerchant) {
+        return res.status(404).send(`
+          <html><body style="font-family: Arial; text-align: center; padding: 50px;">
+            <h2 style="color: #ef4444;">❌ Merchant Not Found</h2>
+            <p>Please log in again and try connecting Square</p>
+            <script>setTimeout(() => window.close(), 3000);</script>
+          </body></html>
+        `);
       }
 
-      res.json({ merchant, success: true });
+      // Update merchant with Square tokens
+      await storage.updateMerchantTokens(
+        localMerchant.id, 
+        tokenData.access_token, 
+        tokenData.refresh_token
+      );
+
+      // Return success response
+      res.send(`
+        <html>
+          <head>
+            <title>Square Connected Successfully</title>
+            <style>
+              body { 
+                font-family: Arial, sans-serif; 
+                display: flex; 
+                justify-content: center; 
+                align-items: center; 
+                height: 100vh; 
+                margin: 0; 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+              }
+              .container { text-align: center; }
+              .success { color: #4ade80; font-size: 24px; margin-bottom: 16px; }
+              .message { font-size: 18px; margin-bottom: 20px; }
+              .auto-close { font-size: 14px; color: #e5e7eb; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="success">✅ Square Connected Successfully!</div>
+              <div class="message">Your Square account has been linked to SiZu GiftCard.</div>
+              <div class="auto-close">This window will close automatically...</div>
+            </div>
+            <script>
+              setTimeout(() => {
+                if (window.opener) {
+                  window.opener.postMessage({ 
+                    type: 'SQUARE_OAUTH_SUCCESS',
+                    merchantInfo: ${JSON.stringify({ 
+                      businessName: squareMerchantInfo.business_name,
+                      squareId: squareMerchantInfo.id 
+                    })}
+                  }, '*');
+                }
+                window.close();
+              }, 2000);
+            </script>
+          </body>
+        </html>
+      `);
+
     } catch (error) {
       console.error('Square OAuth callback error:', error);
-      res.status(500).json({ message: "OAuth callback failed" });
+      res.send(`
+        <html><body style="font-family: Arial; text-align: center; padding: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+          <h2 style="color: #ef4444;">❌ Connection Failed</h2>
+          <p>Unable to connect your Square account. Please try again.</p>
+          <script>
+            setTimeout(() => {
+              if (window.opener) {
+                window.opener.postMessage({ type: 'SQUARE_OAUTH_ERROR' }, '*');
+              }
+              window.close();
+            }, 3000);
+          </script>
+        </body></html>
+      `);
     }
   });
 

@@ -14,13 +14,13 @@ class SquareService {
     return this.environment === "production" ? "production" : "sandbox";
   }
 
-  getAuthorizationUrl(): string {
+  getAuthorizationUrl(merchantId?: string): string {
     const baseUrl = process.env.REPLIT_DOMAINS 
       ? `https://${process.env.REPLIT_DOMAINS.split(',')[0]}`
       : process.env.BASE_URL || "http://localhost:5000";
     
     const redirectUri = `${baseUrl}/api/auth/square/callback`;
-    const state = Math.random().toString(36).substring(2, 15);
+    const state = merchantId || Math.random().toString(36).substring(2, 15);
     
     const params = new URLSearchParams({
       client_id: this.clientId,

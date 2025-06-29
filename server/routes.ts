@@ -247,7 +247,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Demo login route removed for security - all merchants must use proper authentication
+  // Demo login route permanently disabled for security
+  app.post("/api/merchant/demo-login", async (req: Request, res: Response) => {
+    console.log('🚨 Security alert: Demo login attempt blocked');
+    return res.status(403).json({
+      success: false,
+      error: 'Demo login disabled for security. Please register a proper merchant account.'
+    });
+  });
 
   // Email verification endpoint
   app.get("/api/merchant/verify-email", async (req: Request, res: Response) => {

@@ -291,9 +291,9 @@ Keep this email safe - it contains your gift card information.
     }
 
     try {
-      await this.mailgun!.messages().send({
+      const result = await this.mg.messages.create(this.config!.domain, {
         from: this.config!.from,
-        to: adminEmail,
+        to: [adminEmail],
         subject: `[GiftCard Admin] ${subject}`,
         text: content
       });

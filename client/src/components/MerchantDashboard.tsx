@@ -202,6 +202,7 @@ export default function MerchantDashboard({ isOpen, onClose }: MerchantDashboard
 
   const sidebarItems = [
     { id: "overview", label: "Overview", icon: BarChart3 },
+    { id: "transactions", label: "Transactions", icon: History },
     { id: "giftcards", label: "Gift Cards", icon: Gift },
     { id: "customers", label: "Customers", icon: Users },
     { id: "settings", label: "Settings", icon: Settings },
@@ -592,6 +593,18 @@ export default function MerchantDashboard({ isOpen, onClose }: MerchantDashboard
                     </CardContent>
                   </Card>
                 </div>
+              </motion.div>
+            )}
+
+            {activeTab === "transactions" && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-6"
+              >
+                <TransactionHistoryPanel />
               </motion.div>
             )}
 

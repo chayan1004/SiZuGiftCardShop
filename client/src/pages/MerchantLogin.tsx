@@ -82,49 +82,7 @@ export default function MerchantLogin() {
     }
   };
 
-  const handleDemoLogin = async () => {
-    setIsLoading(true);
-    
-    try {
-      const response = await fetch('/api/merchant/demo-login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include'
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        localStorage.setItem('merchantToken', data.token);
-        localStorage.setItem('merchantData', JSON.stringify(data.merchant));
-        
-        toast({
-          title: "Demo Login Successful",
-          description: `Welcome to ${data.merchant.businessName}!`,
-        });
-        
-        // Redirect to merchant dashboard
-        setLocation("/merchant-dashboard");
-      } else {
-        toast({
-          title: "Demo Login Failed",
-          description: data.error || "Please try again",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error('Demo login error:', error);
-      toast({
-        title: "Demo Login Failed",
-        description: "Network error. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Demo login removed for security - merchants must use proper authentication
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 flex items-center justify-center px-4">
@@ -227,14 +185,7 @@ export default function MerchantLogin() {
               </div>
             </div>
 
-            <Button
-              onClick={handleDemoLogin}
-              variant="outline"
-              className="w-full border-white/30 bg-white/5 text-white hover:bg-white/15 hover:border-white/40 transition-all duration-300 backdrop-blur-sm"
-            >
-              <Gift size={16} className="mr-2" />
-              Try Demo Account
-            </Button>
+
 
             <div className="text-center">
               <p className="text-sm text-gray-400">

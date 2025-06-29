@@ -247,37 +247,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/merchant/demo-login", async (req: Request, res: Response) => {
-    try {
-      const result = await AuthService.createDemoMerchant();
-
-      if (result.success) {
-        res.cookie('merchantToken', result.token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict',
-          maxAge: 7 * 24 * 60 * 60 * 1000
-        });
-
-        res.json({
-          success: true,
-          token: result.token,
-          merchant: result.merchant
-        });
-      } else {
-        res.status(500).json({
-          success: false,
-          error: result.error
-        });
-      }
-    } catch (error) {
-      console.error('Demo login route error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to create demo login'
-      });
-    }
-  });
+  // Demo login route removed for security - all merchants must use proper authentication
 
   // Email verification endpoint
   app.get("/api/merchant/verify-email", async (req: Request, res: Response) => {

@@ -232,7 +232,7 @@ class EnhancedSquareAPIService {
         };
       }
 
-      const response = await this.client.giftCards.createGiftCard(requestBody);
+      const response = await this.client.giftCardsApi.createGiftCard(requestBody);
 
       if (response.result.giftCard) {
         // Store gift card in database with comprehensive tracking

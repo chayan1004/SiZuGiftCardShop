@@ -113,7 +113,7 @@ export default function MerchantDashboard({ isOpen, onClose }: MerchantDashboard
                     onClick={() => setActiveTab(item.id)}
                     className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                       activeTab === item.id
-                        ? "text-square-blue bg-blue-50"
+                        ? "text-white bg-square-blue shadow-md"
                         : "text-slate-600 hover:text-square-blue hover:bg-slate-50"
                     }`}
                   >

@@ -253,7 +253,7 @@ export default function AdminDashboard() {
           {/* Premium Status Indicator */}
           <div className="mt-4 flex items-center space-x-2">
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-            <span className="text-xs text-green-300 font-medium">System Online</span>
+            <span className="text-xs text-[#192336] font-medium">System Online</span>
             <div className="ml-auto">
               <span className="text-xs text-gray-400">v2.1.0</span>
             </div>

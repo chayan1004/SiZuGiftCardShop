@@ -936,12 +936,36 @@ Gift card terms and conditions apply. Not redeemable for cash.
       // Dynamic sender name and subject based on purpose
       const senderConfig = this.getOtpSenderConfig(data.purpose);
       
+      // Use dedicated security email address for OTP emails
+      const securityFromAddress = 'security@sizupay.com';
+      const fallbackFromAddress = process.env.MAIL_FROM || this.config!.from;
+      
       const mailOptions = {
-        from: `${senderConfig.senderName} <${process.env.MAIL_FROM || this.config!.from}>`,
+        from: `${senderConfig.senderName} <${securityFromAddress}>`,
+        replyTo: fallbackFromAddress,
         to: data.to,
         subject: senderConfig.subject,
         html: htmlContent,
-        text: this.createOtpPlainText(data)
+        text: this.createOtpPlainText(data),
+        // Enhanced transactional email headers
+        headers: {
+          'X-Priority': '1',
+          'X-MSMail-Priority': 'High',
+          'Importance': 'high',
+          'X-Mailer': 'SiZu GiftCard Security System',
+          'X-Message-Source': 'Automated Security Authentication',
+          'X-Entity-ID': `SiZu-OTP-${Date.now()}`,
+          'X-Campaign-ID': 'security-authentication-otp',
+          'X-Email-Type-ID': 'transactional-security',
+          'X-Auto-Response-Suppress': 'All',
+          'Precedence': 'list',
+          'X-SiZu-Service': 'authentication',
+          'X-SiZu-Type': 'otp-verification',
+          'Authentication-Results': `spf=pass smtp.mailfrom=${securityFromAddress}`,
+          'X-Originating-IP': '[127.0.0.1]',
+          'X-Spam-Score': '0',
+          'X-Spam-Flag': 'NO'
+        }
       };
 
       const result = await this.transporter!.sendMail(mailOptions);
@@ -1258,33 +1282,33 @@ Gift card terms and conditions apply. Not redeemable for cash.
     switch (purpose) {
       case 'registration':
         return {
-          senderName: 'SiZu GiftCard Registration',
-          subject: '🔐 Complete Your SiZu GiftCard Registration - Verification Code'
+          senderName: 'SiZu GiftCard Security',
+          subject: 'Secure Account Registration - Verification Required'
         };
       case 'login':
         return {
-          senderName: 'SiZu GiftCard Login',
-          subject: '🔐 Your SiZu GiftCard Login OTP Code'
+          senderName: 'SiZu GiftCard Security',
+          subject: 'Account Access Verification - Security Code Required'
         };
       case 'password_reset':
         return {
           senderName: 'SiZu GiftCard Security',
-          subject: '🔐 Reset Your SiZu GiftCard Password - Security Code'
+          subject: 'Password Reset Authorization - Security Verification'
         };
       case 'admin_access':
         return {
-          senderName: 'SiZu GiftCard Admin',
-          subject: '🔐 Admin Access Code - SiZu GiftCard Dashboard'
+          senderName: 'SiZu GiftCard Security',
+          subject: 'Administrative Access Verification - Security Code Required'
         };
       case 'verification':
         return {
-          senderName: 'SiZu GiftCard Verification',
-          subject: '🔐 Verify Your SiZu GiftCard Account - Security Code'
+          senderName: 'SiZu GiftCard Security',
+          subject: 'Account Verification Required - Security Authentication'
         };
       default:
         return {
-          senderName: 'SiZu GiftCard OTP',
-          subject: '🔐 Your SiZu GiftCard Security Code'
+          senderName: 'SiZu GiftCard Security',
+          subject: 'Security Verification Required - Authentication Code'
         };
     }
   }
@@ -1533,10 +1557,21 @@ Gift card terms and conditions apply. Not redeemable for cash.
             <p class="expiry-text">This code expires in ${data.expiresInMinutes || 10} minutes</p>
         </div>
         
-        <p class="instructions">Enter this code to complete your authentication with SiZu GiftCard.</p>
+        <p class="instructions">Enter this code to complete your secure authentication with SiZu GiftCard.</p>
         
-        <div class="warning">
-            <p class="warning-text">Never share this code with anyone. SiZu GiftCard will never ask for this code.</p>
+        <div class="security-info" style="background: #e6fffa; border: 1px solid #38b2ac; border-radius: 8px; padding: 15px; margin: 20px 0; text-align: center;">
+            <p style="color: #234e52; margin: 0; font-size: 0.85rem; line-height: 1.4;">
+                <strong>Security Notice:</strong> This is an automated security message from SiZu GiftCard. 
+                We will never ask you to share this code via phone, email, or any other method.
+            </p>
+        </div>
+        
+        <div class="auth-details" style="background: #f7fafc; border-radius: 8px; padding: 15px; margin: 20px 0; text-align: center;">
+            <p style="color: #4a5568; margin: 0; font-size: 0.8rem;">
+                Request Time: ${new Date().toLocaleString()}<br>
+                Security Level: High Priority Authentication<br>
+                Service: SiZu GiftCard Account Access
+            </p>
         </div>
     </div>
 </body>
@@ -1544,7 +1579,29 @@ Gift card terms and conditions apply. Not redeemable for cash.
   }
 
   private createOtpPlainText(data: OtpEmailData): string {
-    return `SiZu GiftCard Security Code\n\nYour authentication code: ${data.code}\n\nThis code expires in ${data.expiresInMinutes || 10} minutes.\n\nEnter this code to complete your authentication with SiZu GiftCard.\n\nSecurity Notice: Never share this code with anyone.`;
+    const currentTime = new Date().toLocaleString();
+    return `SiZu GiftCard Security Authentication
+
+SECURITY CODE: ${data.code}
+
+This is an automated security message from SiZu GiftCard.
+
+Code Details:
+- Expires in: ${data.expiresInMinutes || 10} minutes
+- Request Time: ${currentTime}
+- Security Level: High Priority Authentication
+- Service: SiZu GiftCard Account Access
+
+Instructions:
+Enter this code to complete your secure authentication with SiZu GiftCard.
+
+IMPORTANT SECURITY NOTICE:
+This is a legitimate security code from SiZu GiftCard. We will never ask you to share this code via phone, email, or any other method. If you did not request this code, please ignore this message.
+
+---
+SiZu GiftCard Security Team
+This message was sent to: ${data.to}
+If you have concerns about this message, contact: security@sizupay.com`;
   }
 
   private createPromoEmailHTML(data: PromoEmailData): string {

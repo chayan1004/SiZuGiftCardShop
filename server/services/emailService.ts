@@ -1,5 +1,7 @@
 import nodemailer from 'nodemailer';
 import { generateGiftCardQR } from '../../utils/qrGenerator';
+import { emailDeliveryMonitor } from './emailDeliveryMonitor';
+import { domainAuthentication } from './domainAuthentication';
 
 /**
  * Email delivery service for gift cards using Nodemailer SMTP

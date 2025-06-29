@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth, logout } from "@/components/ProtectedRoute";
+// Authentication utilities simplified - using localStorage directly
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import TransactionHistoryPanel from "@/components/TransactionHistoryPanel";
 import EmailVerificationBanner from "@/components/EmailVerificationBanner";
@@ -32,23 +32,24 @@ interface Transaction {
 export default function MerchantDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const { toast } = useToast();
-  const auth = useAuth();
   const [, setLocation] = useLocation();
 
-  // Use authenticated merchant ID
-  const merchantId = auth.merchantId || "";
+  // Get merchant data from localStorage
+  const merchantData = localStorage.getItem('merchantData');
+  const merchant = merchantData ? JSON.parse(merchantData) : null;
+  const merchantId = merchant?.merchantId || "";
 
   // Redirect if not authenticated as merchant
   useEffect(() => {
-    if (!auth.isAuthenticated || auth.role !== 'merchant') {
+    if (!merchantId || !localStorage.getItem('merchantToken')) {
       setLocation("/merchant-login");
     }
-  }, [auth.isAuthenticated, auth.role, setLocation]);
+  }, [merchantId, setLocation]);
 
   // Fetch merchant stats with 30-second refresh
   const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useQuery<any>({
     queryKey: ['/api/dashboard/stats'],
-    enabled: !!merchantId && auth.isAuthenticated && auth.role === 'merchant',
+    enabled: !!merchantId,
     refetchInterval: 30000, // Auto-refresh every 30 seconds
     staleTime: 25000, // Consider data stale after 25 seconds
   });
@@ -61,11 +62,14 @@ export default function MerchantDashboard() {
       }, 30000);
       return () => clearInterval(interval);
     }
-  }, [merchantId, auth.isAuthenticated, refetchStats]);
+  }, [merchantId, refetchStats]);
 
   const handleLogout = async () => {
     try {
-      await logout();
+      // Clear localStorage and redirect
+      localStorage.removeItem('merchantToken');
+      localStorage.removeItem('merchantData');
+      
       toast({
         title: "Logged Out",
         description: "You have been successfully logged out",

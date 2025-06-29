@@ -11,22 +11,24 @@ import MerchantDashboard from "@/components/MerchantDashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
 import { Gift, Shield, Smartphone, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
-import { useAuth } from "@/components/ProtectedRoute";
+// Authentication utilities removed - using simplified auth system
 
 export default function Home() {
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const [isAdminDashboardOpen, setIsAdminDashboardOpen] = useState(false);
-  const auth = useAuth();
+  // Check authentication status from localStorage
+  const merchantToken = localStorage.getItem('merchantToken');
+  const adminToken = localStorage.getItem('adminToken');
 
   // Auto-open merchant dashboard if merchant is authenticated
   useEffect(() => {
-    if (auth.isAuthenticated && auth.role === 'merchant') {
+    if (merchantToken) {
       setIsDashboardOpen(true);
-    } else if (auth.isAuthenticated && auth.role === 'admin') {
+    } else if (adminToken === 'sizu-admin-2025') {
       setIsAdminDashboardOpen(true);
     }
-  }, [auth.isAuthenticated, auth.role]);
+  }, [merchantToken, adminToken]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900">

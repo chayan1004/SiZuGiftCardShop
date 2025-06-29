@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth, logout } from "@/components/ProtectedRoute";
+// Authentication utilities simplified - using localStorage directly
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import TransactionHistoryPanel from "./TransactionHistoryPanel";
 import EmailVerificationBanner from "./EmailVerificationBanner";

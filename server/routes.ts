@@ -1213,6 +1213,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Merchant Bulk Order Routes
+  app.post("/api/merchant/bulk-orders", requireMerchant, async (req: Request, res: Response) => {
+    try {
+      const merchantId = (req as any).merchantId;
+      
+      if (!merchantId) {
+        return res.status(401).json({
+          success: false,
+          error: "Merchant authentication required"
+        });
+      }
+
+      // Validate input with Zod
+      const bulkOrderSchema = z.object({
+        quantity: z.number().int().min(1, "Quantity must be at least 1"),
+        unit_price: z.number().positive("Unit price must be positive")
+      });
+
+      const { quantity, unit_price } = bulkOrderSchema.parse(req.body);
+
+      // Import and use the service
+      const { MerchantBulkOrderService } = await import('./services/merchantBulkOrderService');
+      const order = await MerchantBulkOrderService.createBulkOrder(merchantId, quantity, unit_price);
+
+      console.log(`Bulk order created for merchant ${merchantId}: ${quantity} units at $${unit_price} each`);
+
+      res.json({
+        success: true,
+        message: "Bulk order placed successfully",
+        order: MerchantBulkOrderService.formatOrderForResponse(order)
+      });
+
+    } catch (error: any) {
+      console.error('Bulk order creation error:', error);
+      
+      // Handle validation errors
+      if (error.name === 'ZodError') {
+        return res.status(400).json({
+          success: false,
+          error: error.errors[0]?.message || "Invalid input data"
+        });
+      }
+
+      res.status(500).json({
+        success: false,
+        error: "Failed to create bulk order"
+      });
+    }
+  });
+
+  app.get("/api/merchant/bulk-orders", requireMerchant, async (req: Request, res: Response) => {
+    try {
+      const merchantId = (req as any).merchantId;
+      
+      if (!merchantId) {
+        return res.status(401).json({
+          success: false,
+          error: "Merchant authentication required"
+        });
+      }
+
+      // Import and use the service
+      const { MerchantBulkOrderService } = await import('./services/merchantBulkOrderService');
+      const orders = await MerchantBulkOrderService.getBulkOrdersByMerchant(merchantId);
+
+      const formattedOrders = orders.map(order => 
+        MerchantBulkOrderService.formatOrderForResponse(order)
+      );
+
+      res.json({
+        success: true,
+        orders: formattedOrders
+      });
+
+    } catch (error) {
+      console.error('Error fetching bulk orders:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch bulk orders"
+      });
+    }
+  });
+
   // Merchant Email Verification Routes
   app.post("/api/merchant/verify-email", async (req: Request, res: Response) => {
     try {

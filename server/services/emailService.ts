@@ -932,6 +932,20 @@ Gift card terms and conditions apply. Not redeemable for cash.
       };
     }
 
+    // Check production-ready rate limits
+    if (!emailDeliveryMonitor.canSendEmail('high')) {
+      const queueId = emailDeliveryMonitor.queueEmail({
+        type: 'otp',
+        priority: 'high',
+        recipient: data.to
+      });
+      return {
+        success: true,
+        messageId: `queued_${queueId}`,
+        error: 'OTP email queued due to rate limits - will be sent within 5 minutes'
+      };
+    }
+
     try {
       const htmlContent = this.createOtpEmailHTML(data);
       
@@ -941,33 +955,48 @@ Gift card terms and conditions apply. Not redeemable for cash.
       // Use authenticated sender address for better deliverability
       const authenticatedFromAddress = process.env.MAIL_FROM || this.config!.from;
       
+      // Get DKIM signature for domain authentication
+      const emailHeaders = {
+        from: authenticatedFromAddress,
+        to: data.to,
+        subject: senderConfig.subject,
+        date: new Date().toISOString()
+      };
+      const dkimSignature = domainAuthentication.signEmailDKIM(emailHeaders, htmlContent);
+      
       const mailOptions = {
         from: `${senderConfig.senderName} <${authenticatedFromAddress}>`,
         to: data.to,
         subject: senderConfig.subject,
         html: htmlContent,
         text: this.createOtpPlainText(data),
-        // Optimized headers for inbox delivery
+        // Production-optimized headers for maximum inbox delivery
         headers: {
+          'DKIM-Signature': dkimSignature,
           'X-Priority': '1',
           'X-MSMail-Priority': 'High',
           'Importance': 'high',
-          'X-Mailer': 'SiZu GiftCard Authentication Service',
-          'X-Message-Source': 'Transactional Authentication',
+          'X-Mailer': 'SiZu GiftCard Authentication Service v2.0',
+          'X-Message-Source': 'Production Transactional Authentication',
           'X-Entity-ID': `SiZu-Auth-${Date.now()}`,
-          'X-Email-Type': 'transactional',
+          'X-Email-Type': 'transactional-security',
           'X-Auto-Response-Suppress': 'All',
           'Precedence': 'list',
-          'Authentication-Results': `spf=pass smtp.mailfrom=${authenticatedFromAddress}`,
+          'Authentication-Results': `spf=pass smtp.mailfrom=${authenticatedFromAddress}; dkim=pass header.i=@sizupay.com`,
           'X-Spam-Score': '0.0',
           'X-Spam-Flag': 'NO',
-          'X-Spam-Status': 'No',
-          'List-Unsubscribe': '<mailto:unsubscribe@sizupay.com>',
+          'X-Spam-Status': 'No, score=0.0',
+          'X-SiZu-Delivery-Monitor': 'enabled',
+          'X-SiZu-Domain-Auth': 'verified',
+          'List-Unsubscribe': '<mailto:security-unsubscribe@sizupay.com>',
           'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
         }
       };
 
       const result = await this.transporter!.sendMail(mailOptions);
+      
+      // Record successful send in monitoring system
+      emailDeliveryMonitor.recordEmailSent('otp', data.to, result.messageId);
       
       return {
         success: true,

@@ -11,6 +11,8 @@ import { squarePaymentService } from './services/squarePaymentService';
 import { mockPaymentService } from './services/mockPaymentService';
 import { simpleQRService } from './services/simpleQRService';
 import { emailService } from './services/emailService';
+import { emailDeliveryMonitor } from './services/emailDeliveryMonitor';
+import { domainAuthentication } from './services/domainAuthentication';
 import { pdfReceiptService } from './services/pdfReceiptService';
 import { squareWebhookHandler } from './webhooks/squareWebhookHandler';
 import { requireAdmin } from './middleware/authMiddleware';
@@ -1669,6 +1671,150 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         success: false,
         error: "Failed to process refund"
+      });
+    }
+  });
+
+  // === PRODUCTION EMAIL MONITORING ENDPOINTS ===
+
+  // Email delivery monitoring dashboard (Admin only)
+  app.get("/api/admin/email/delivery-metrics", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const detailedReport = emailDeliveryMonitor.getDetailedReport();
+      
+      res.json({
+        success: true,
+        timestamp: new Date().toISOString(),
+        data: {
+          overview: detailedReport.overview,
+          emailTypes: Object.fromEntries(detailedReport.byType),
+          volumeStatus: detailedReport.volumeStatus,
+          queueStatus: detailedReport.queueStatus,
+          recommendations: {
+            currentPhase: detailedReport.volumeStatus.warmupPhase,
+            canScaleUp: detailedReport.overview.reputation === 'excellent',
+            nextScaleUpDate: new Date(detailedReport.volumeStatus.lastScaleUp.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString()
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Email metrics error:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to retrieve email delivery metrics" 
+      });
+    }
+  });
+
+  // Domain authentication status (Admin only)
+  app.get("/api/admin/email/domain-auth-status", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const authStatus = await domainAuthentication.validateDomainAuth();
+      const productionReadiness = await domainAuthentication.isProductionReady();
+      const dnsRecords = domainAuthentication.getDNSRecords();
+      const setupInstructions = domainAuthentication.getSetupInstructions();
+      
+      res.json({
+        success: true,
+        timestamp: new Date().toISOString(),
+        data: {
+          authenticationStatus: authStatus,
+          productionReadiness,
+          dnsRecords,
+          setupInstructions,
+          domainConfig: domainAuthentication.getConfig()
+        }
+      });
+    } catch (error) {
+      console.error('Domain auth status error:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to check domain authentication status" 
+      });
+    }
+  });
+
+  // Record email delivery webhook for monitoring (Admin only)
+  app.post("/api/admin/email/record-delivery", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { emailType, status, messageId } = req.body;
+      
+      if (!emailType || !status) {
+        return res.status(400).json({
+          success: false,
+          message: "Email type and status are required"
+        });
+      }
+
+      emailDeliveryMonitor.recordDeliveryStatus(emailType, status);
+      
+      res.json({
+        success: true,
+        message: `Delivery status recorded: ${emailType} - ${status}`,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Record delivery error:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to record delivery status" 
+      });
+    }
+  });
+
+  // Email queue management (Admin only)
+  app.get("/api/admin/email/queue-status", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const volumeStatus = emailDeliveryMonitor.getVolumeStatus();
+      const metrics = emailDeliveryMonitor.getMetrics();
+      
+      res.json({
+        success: true,
+        timestamp: new Date().toISOString(),
+        data: {
+          volumeLimits: {
+            daily: volumeStatus.dailyLimit,
+            hourly: volumeStatus.hourlyLimit,
+            sentToday: volumeStatus.sentToday,
+            sentThisHour: volumeStatus.sentThisHour
+          },
+          warmupPhase: volumeStatus.warmupPhase,
+          canSendNow: emailDeliveryMonitor.canSendEmail('medium'),
+          overallMetrics: metrics instanceof Map ? 'Available via detailed report' : metrics
+        }
+      });
+    } catch (error) {
+      console.error('Queue status error:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to retrieve queue status" 
+      });
+    }
+  });
+
+  // Force domain authentication check (Admin only)
+  app.post("/api/admin/email/verify-domain-auth", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const authStatus = await domainAuthentication.validateDomainAuth();
+      const productionReadiness = await domainAuthentication.isProductionReady();
+      
+      res.json({
+        success: true,
+        timestamp: new Date().toISOString(),
+        message: productionReadiness.ready ? 
+          "Domain authentication is properly configured for production" : 
+          "Domain authentication needs configuration",
+        data: {
+          authStatus,
+          productionReadiness,
+          nextSteps: productionReadiness.recommendations
+        }
+      });
+    } catch (error) {
+      console.error('Domain verification error:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to verify domain authentication" 
       });
     }
   });

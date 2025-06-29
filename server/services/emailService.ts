@@ -135,145 +135,479 @@ class EmailService {
   }
 
   /**
-   * Create beautifully formatted HTML email for gift card
+   * Create premium designed HTML email receipt for gift card
    */
   private createGiftCardEmailHTML(data: GiftCardEmailData & { qrCodeDataUrl: string }): string {
+    const currentDate = new Date();
+    const receiptNumber = `RCPT-${currentDate.getFullYear()}${(currentDate.getMonth() + 1).toString().padStart(2, '0')}${currentDate.getDate().toString().padStart(2, '0')}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+    const transactionId = `TXN-${Date.now().toString().slice(-8)}`;
+    
     return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Gift Card</title>
+    <title>SiZu Pay Gift Card Receipt</title>
     <style>
+        * { box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            background: #f5f7fa;
+            color: #2d3748;
+            line-height: 1.6;
         }
-        .container {
-            max-width: 600px;
+        .email-wrapper {
+            max-width: 650px;
             margin: 0 auto;
-            padding: 20px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            margin-top: 40px;
-            margin-bottom: 40px;
+            background: #ffffff;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
         .header {
-            text-align: center;
-            padding: 30px 0;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 12px 12px 0 0;
-            color: white;
-            margin: -20px -20px 30px -20px;
-        }
-        .gift-card {
-            background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);
-            border-radius: 12px;
-            padding: 30px;
-            margin: 20px 0;
-            color: white;
+            padding: 40px 30px;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            color: white;
+            position: relative;
+            overflow: hidden;
         }
-        .amount {
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="80" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="60" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.3;
+            z-index: 1;
+        }
+        .logo-section {
+            position: relative;
+            z-index: 2;
+        }
+        .brand-logo {
             font-size: 2.5rem;
-            font-weight: bold;
-            margin: 10px 0;
+            font-weight: 800;
+            margin: 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            letter-spacing: -1px;
         }
-        .gan {
-            font-family: 'Courier New', monospace;
-            font-size: 1.2rem;
-            background: rgba(255,255,255,0.2);
-            padding: 10px;
-            border-radius: 6px;
-            margin: 15px 0;
-            letter-spacing: 2px;
+        .tagline {
+            font-size: 1rem;
+            margin: 8px 0 0 0;
+            opacity: 0.9;
+            font-weight: 300;
         }
-        .qr-code {
-            text-align: center;
+        .receipt-title {
+            font-size: 1.5rem;
+            margin: 20px 0 0 0;
+            font-weight: 600;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .receipt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .receipt-info {
+            text-align: left;
+        }
+        .receipt-number {
+            font-size: 0.9rem;
+            color: #718096;
+            margin: 0;
+        }
+        .receipt-date {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 5px 0 0 0;
+        }
+        .status-badge {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .customer-section {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 25px;
             margin: 30px 0;
+            border-left: 4px solid #667eea;
+        }
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0 0 15px 0;
+            color: #2d3748;
+        }
+        .customer-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .detail-item {
+            margin: 0;
+        }
+        .detail-label {
+            font-size: 0.85rem;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0 0 4px 0;
+        }
+        .detail-value {
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 0;
+            color: #2d3748;
+        }
+        .gift-card-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            padding: 35px;
+            margin: 30px 0;
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .gift-card-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            z-index: 1;
+        }
+        .gift-card-content {
+            position: relative;
+            z-index: 2;
+        }
+        .gift-card-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin: 0 0 20px 0;
+            opacity: 0.9;
+        }
+        .gift-card-amount {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin: 10px 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .gift-card-number {
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+            font-size: 1.4rem;
+            background: rgba(255,255,255,0.2);
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            letter-spacing: 3px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+        }
+        .transaction-details {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            margin: 30px 0;
+            overflow: hidden;
+        }
+        .transaction-header {
+            background: #f7fafc;
+            padding: 20px 25px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .transaction-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 25px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .transaction-row:last-child {
+            border-bottom: none;
+            background: #f7fafc;
+            font-weight: 600;
+        }
+        .transaction-label {
+            color: #4a5568;
+        }
+        .transaction-value {
+            font-weight: 600;
+            color: #2d3748;
+        }
+        .qr-section {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 30px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        .qr-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0 0 20px 0;
+            color: #2d3748;
         }
         .qr-code img {
-            max-width: 200px;
-            border: 4px solid #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            max-width: 220px;
+            width: 100%;
+            border: 3px solid #667eea;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.25);
         }
-        .message {
-            background: #f8f9fa;
-            border-left: 4px solid #667eea;
-            padding: 20px;
-            margin: 20px 0;
-            border-radius: 6px;
+        .qr-instructions {
+            margin: 20px 0 0 0;
+            color: #718096;
+            font-size: 0.95rem;
+        }
+        .personal-message {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+            border-left: 4px solid #e17055;
+        }
+        .message-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0 0 12px 0;
+            color: #2d3748;
+        }
+        .message-content {
+            font-style: italic;
+            font-size: 1.05rem;
+            line-height: 1.6;
+            color: #4a5568;
+            margin: 0;
+        }
+        .usage-guide {
+            background: #ebf8ff;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+            border-left: 4px solid #3182ce;
+        }
+        .guide-steps {
+            list-style: none;
+            padding: 0;
+            margin: 15px 0 0 0;
+        }
+        .guide-step {
+            display: flex;
+            align-items: flex-start;
+            margin: 12px 0;
+        }
+        .step-number {
+            background: #3182ce;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-right: 12px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .step-text {
+            color: #2d3748;
+            line-height: 1.5;
         }
         .footer {
+            background: #2d3748;
+            color: #a0aec0;
+            padding: 30px;
             text-align: center;
-            color: #666;
-            font-size: 14px;
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
         }
-        .brand {
-            font-size: 2rem;
-            font-weight: bold;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        .footer-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            margin: 0 0 15px 0;
+        }
+        .footer-links {
+            margin: 20px 0;
+        }
+        .footer-link {
+            color: #667eea;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 0.9rem;
+        }
+        .footer-text {
+            font-size: 0.85rem;
+            margin: 10px 0;
+            line-height: 1.5;
+        }
+        .security-note {
+            background: #fed7d7;
+            border: 1px solid #fc8181;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 0.9rem;
+            color: #742a2a;
+        }
+        @media (max-width: 600px) {
+            .email-wrapper { margin: 0; }
+            .content { padding: 20px; }
+            .receipt-header { flex-direction: column; gap: 15px; text-align: center; }
+            .customer-details { grid-template-columns: 1fr; }
+            .transaction-row { flex-direction: column; gap: 5px; text-align: center; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="email-wrapper">
         <div class="header">
-            <div class="brand">SiZu Pay</div>
-            <h1>Gift Card Receipt</h1>
+            <div class="logo-section">
+                <h1 class="brand-logo">SiZu Pay</h1>
+                <p class="tagline">Premium Digital Gift Card Solutions</p>
+                <h2 class="receipt-title">Gift Card Purchase Receipt</h2>
+            </div>
         </div>
 
-        <div style="text-align: center; margin: 30px 0;">
-            ${data.recipientName ? `<h2>Hi ${data.recipientName}!</h2>` : '<h2>You\'ve received a gift card!</h2>'}
-            ${data.senderName ? `<p>This gift card is from <strong>${data.senderName}</strong></p>` : ''}
-        </div>
+        <div class="content">
+            <div class="receipt-header">
+                <div class="receipt-info">
+                    <p class="receipt-number">Receipt #${receiptNumber}</p>
+                    <p class="receipt-date">${currentDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                </div>
+                <div class="status-badge">Activated</div>
+            </div>
 
-        <div class="gift-card">
-            <h3>Your Gift Card</h3>
-            <div class="amount">$${data.amount}</div>
-            <div class="gan">${data.gan}</div>
-            <p>Present this code at checkout or scan the QR code below</p>
-        </div>
+            <div class="customer-section">
+                <h3 class="section-title">Customer Information</h3>
+                <div class="customer-details">
+                    <div class="detail-item">
+                        <p class="detail-label">Recipient</p>
+                        <p class="detail-value">${data.recipientName || 'Gift Card Holder'}</p>
+                    </div>
+                    <div class="detail-item">
+                        <p class="detail-label">From</p>
+                        <p class="detail-value">${data.senderName || 'SiZu Pay'}</p>
+                    </div>
+                    <div class="detail-item">
+                        <p class="detail-label">Email</p>
+                        <p class="detail-value">${data.to}</p>
+                    </div>
+                    <div class="detail-item">
+                        <p class="detail-label">Transaction ID</p>
+                        <p class="detail-value">${transactionId}</p>
+                    </div>
+                </div>
+            </div>
 
-        ${data.message ? `
-        <div class="message">
-            <h4>Personal Message:</h4>
-            <p style="font-style: italic; font-size: 16px; line-height: 1.5;">"${data.message}"</p>
-        </div>` : ''}
+            <div class="gift-card-section">
+                <div class="gift-card-content">
+                    <h3 class="gift-card-title">Digital Gift Card</h3>
+                    <div class="gift-card-amount">$${data.amount}</div>
+                    <div class="gift-card-number">${data.gan}</div>
+                    <p style="margin: 15px 0 0 0; opacity: 0.9;">Present this code at any participating merchant</p>
+                </div>
+            </div>
 
-        <div class="qr-code">
-            <h4>Scan to Redeem</h4>
-            <img src="cid:qrcode" alt="Gift Card QR Code" />
-            <p style="color: #666; font-size: 14px;">Scan this QR code with your phone to redeem instantly</p>
-        </div>
+            <div class="transaction-details">
+                <div class="transaction-header">
+                    <h3 class="section-title" style="margin: 0;">Transaction Summary</h3>
+                </div>
+                <div class="transaction-row">
+                    <span class="transaction-label">Gift Card Value</span>
+                    <span class="transaction-value">$${data.amount}.00</span>
+                </div>
+                <div class="transaction-row">
+                    <span class="transaction-label">Processing Fee</span>
+                    <span class="transaction-value">$0.00</span>
+                </div>
+                <div class="transaction-row">
+                    <span class="transaction-label">Tax</span>
+                    <span class="transaction-value">$0.00</span>
+                </div>
+                <div class="transaction-row">
+                    <span class="transaction-label">Total Paid</span>
+                    <span class="transaction-value">$${data.amount}.00</span>
+                </div>
+            </div>
 
-        <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 30px 0;">
-            <h4 style="color: #1976d2; margin-top: 0;">How to Use Your Gift Card:</h4>
-            <ol style="color: #333; line-height: 1.6;">
-                <li>Visit any participating SiZu Pay merchant</li>
-                <li>Show this QR code or provide the gift card number</li>
-                <li>Your gift card balance will be applied to your purchase</li>
-                <li>Enjoy your shopping!</li>
-            </ol>
+            ${data.message ? `
+            <div class="personal-message">
+                <h4 class="message-title">Personal Message</h4>
+                <p class="message-content">"${data.message}"</p>
+            </div>` : ''}
+
+            <div class="qr-section">
+                <h3 class="qr-title">Scan to Redeem</h3>
+                <div class="qr-code">
+                    <img src="cid:qrcode" alt="Gift Card QR Code" />
+                </div>
+                <p class="qr-instructions">Use your smartphone camera to scan this QR code for instant redemption</p>
+            </div>
+
+            <div class="usage-guide">
+                <h3 class="section-title">How to Use Your Gift Card</h3>
+                <ul class="guide-steps">
+                    <li class="guide-step">
+                        <span class="step-number">1</span>
+                        <span class="step-text">Visit any participating SiZu Pay merchant location</span>
+                    </li>
+                    <li class="guide-step">
+                        <span class="step-number">2</span>
+                        <span class="step-text">Present this QR code or provide the gift card number at checkout</span>
+                    </li>
+                    <li class="guide-step">
+                        <span class="step-number">3</span>
+                        <span class="step-text">Your gift card balance will be applied to your purchase automatically</span>
+                    </li>
+                    <li class="guide-step">
+                        <span class="step-number">4</span>
+                        <span class="step-text">Keep this receipt for your records and balance inquiries</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="security-note">
+                <strong>Security Notice:</strong> Treat this gift card like cash. SiZu Pay is not responsible for lost, stolen, or unauthorized use of gift cards. Report any suspicious activity immediately.
+            </div>
         </div>
 
         <div class="footer">
-            <p>This gift card was delivered by <strong>SiZu Pay</strong></p>
-            <p>For support, please contact us at support@sizupay.com</p>
-            <p style="font-size: 12px; color: #999;">Gift card terms and conditions apply. Not redeemable for cash.</p>
+            <h3 class="footer-logo">SiZu Pay</h3>
+            <p class="footer-text">Leading provider of digital payment solutions and gift card services</p>
+            <div class="footer-links">
+                <a href="#" class="footer-link">Support Center</a>
+                <a href="#" class="footer-link">Terms of Service</a>
+                <a href="#" class="footer-link">Privacy Policy</a>
+                <a href="#" class="footer-link">Merchant Portal</a>
+            </div>
+            <p class="footer-text">
+                For customer support, contact us at support@sizupay.com or call 1-800-SIZU-PAY<br>
+                Business hours: Monday - Friday, 9:00 AM - 6:00 PM EST
+            </p>
+            <p class="footer-text" style="margin-top: 20px; font-size: 0.75rem; opacity: 0.7;">
+                © ${currentDate.getFullYear()} SiZu Pay Technologies, Inc. All rights reserved.<br>
+                Gift cards do not expire and are non-refundable. Terms and conditions apply.
+            </p>
         </div>
     </div>
 </body>

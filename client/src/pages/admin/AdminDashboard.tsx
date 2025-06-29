@@ -560,58 +560,58 @@ export default function AdminDashboard() {
 
                   {/* Email Performance Metrics */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <Card className="bg-gradient-to-r from-green-600/20 to-green-500/20 border border-green-500/30">
+                    <Card className="bg-gradient-to-r from-green-600/30 to-green-500/20 border border-green-500/40 backdrop-blur-sm">
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-green-200 text-sm font-medium">Delivery Rate</p>
-                            <p className="text-2xl font-bold text-white">
+                          <div className="flex-1">
+                            <p className="text-white text-sm font-medium mb-2 drop-shadow-sm">Delivery Rate</p>
+                            <p className="text-2xl font-bold text-white drop-shadow-sm">
                               {emailMetrics?.data?.overview?.deliveryRate || '98.5'}%
                             </p>
                           </div>
-                          <Mail className="text-green-400" size={24} />
+                          <Mail className="text-white/80 flex-shrink-0" size={24} />
                         </div>
                       </CardContent>
                     </Card>
 
-                    <Card className="bg-gradient-to-r from-blue-600/20 to-blue-500/20 border border-blue-500/30">
+                    <Card className="bg-gradient-to-r from-blue-600/30 to-blue-500/20 border border-blue-500/40 backdrop-blur-sm">
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-blue-200 text-sm font-medium">Bounce Rate</p>
-                            <p className="text-2xl font-bold text-white">
+                          <div className="flex-1">
+                            <p className="text-white text-sm font-medium mb-2 drop-shadow-sm">Bounce Rate</p>
+                            <p className="text-2xl font-bold text-white drop-shadow-sm">
                               {emailMetrics?.data?.overview?.bounceRate || '1.2'}%
                             </p>
                           </div>
-                          <Activity className="text-blue-400" size={24} />
+                          <Activity className="text-white/80 flex-shrink-0" size={24} />
                         </div>
                       </CardContent>
                     </Card>
 
-                    <Card className="bg-gradient-to-r from-purple-600/20 to-purple-500/20 border border-purple-500/30">
+                    <Card className="bg-gradient-to-r from-purple-600/30 to-purple-500/20 border border-purple-500/40 backdrop-blur-sm">
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-purple-200 text-sm font-medium">Daily Sent</p>
-                            <p className="text-2xl font-bold text-white">
+                          <div className="flex-1">
+                            <p className="text-white text-sm font-medium mb-2 drop-shadow-sm">Daily Sent</p>
+                            <p className="text-2xl font-bold text-white drop-shadow-sm">
                               {emailMetrics?.data?.volumeStatus?.sentToday || queueStatus?.data?.sentToday || '239'}
                             </p>
                           </div>
-                          <TrendingUp className="text-purple-400" size={24} />
+                          <TrendingUp className="text-white/80 flex-shrink-0" size={24} />
                         </div>
                       </CardContent>
                     </Card>
 
-                    <Card className="bg-gradient-to-r from-orange-600/20 to-orange-500/20 border border-orange-500/30">
+                    <Card className="bg-gradient-to-r from-orange-600/30 to-orange-500/20 border border-orange-500/40 backdrop-blur-sm">
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-orange-200 text-sm font-medium">Daily Limit</p>
-                            <p className="text-2xl font-bold text-white">
+                          <div className="flex-1">
+                            <p className="text-white text-sm font-medium mb-2 drop-shadow-sm">Daily Limit</p>
+                            <p className="text-2xl font-bold text-white drop-shadow-sm">
                               {emailMetrics?.data?.volumeStatus?.dailyLimit || queueStatus?.data?.dailyLimit || '1,000'}
                             </p>
                           </div>
-                          <Settings className="text-orange-400" size={24} />
+                          <Settings className="text-white/80 flex-shrink-0" size={24} />
                         </div>
                       </CardContent>
                     </Card>

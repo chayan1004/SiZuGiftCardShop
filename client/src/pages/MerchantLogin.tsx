@@ -89,7 +89,8 @@ export default function MerchantLogin() {
           description: `Welcome to ${data.merchant.businessName}!`,
         });
         
-        setLocation("/");
+        // Trigger a page reload to update authentication state and redirect to home
+        window.location.href = "/";
       } else {
         toast({
           title: "Demo Login Failed",

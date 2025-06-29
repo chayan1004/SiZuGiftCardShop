@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import HeroSection from "@/components/HeroSection";
 import FeaturesSection from "@/components/FeaturesSection";
@@ -11,11 +11,22 @@ import MerchantDashboard from "@/components/MerchantDashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
 import { Gift, Shield, Smartphone, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
+import { useAuth } from "@/components/ProtectedRoute";
 
 export default function Home() {
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const [isAdminDashboardOpen, setIsAdminDashboardOpen] = useState(false);
+  const auth = useAuth();
+
+  // Auto-open merchant dashboard if merchant is authenticated
+  useEffect(() => {
+    if (auth.isAuthenticated && auth.role === 'merchant') {
+      setIsDashboardOpen(true);
+    } else if (auth.isAuthenticated && auth.role === 'admin') {
+      setIsAdminDashboardOpen(true);
+    }
+  }, [auth.isAuthenticated, auth.role]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900">

@@ -232,7 +232,7 @@ class EnhancedSquareAPIService {
         };
       }
 
-      const response = await this.client.giftCardsApi.createGiftCard(requestBody);
+      const response = await this.client.giftCards.createGiftCard(requestBody);
 
       if (response.result.giftCard) {
         // Store gift card in database with comprehensive tracking
@@ -655,7 +655,7 @@ class EnhancedSquareAPIService {
   /**
    * Sync activity data to local database
    */
-  private async syncActivityToDatabase(activity: any): Promise<void> {
+  private async syncActivityToDatabase(activity: Record<string, any>): Promise<void> {
     try {
       const giftCard = await storage.getGiftCardByGan(activity.gift_card_gan);
       

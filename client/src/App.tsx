@@ -16,6 +16,7 @@ import MerchantRegister from "@/pages/MerchantRegister";
 import MerchantDashboard from "@/pages/MerchantDashboard";
 import MerchantVerify from "@/pages/MerchantVerify";
 import AdminLogin from "@/pages/admin/AdminLogin";
+import TestModal from "@/pages/TestModal";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -30,6 +31,7 @@ function Router() {
       <Route path="/merchant-register" component={MerchantRegister} />
       <Route path="/merchant-verify" component={MerchantVerify} />
       <Route path="/admin-login" component={AdminLogin} />
+      <Route path="/test-modal" component={TestModal} />
       <Route path="/merchant-dashboard">
         <ProtectedRoute role="merchant">
           <MerchantDashboard />

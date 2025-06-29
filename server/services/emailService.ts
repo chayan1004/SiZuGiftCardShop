@@ -1,4 +1,5 @@
-import Mailgun from 'mailgun-js';
+import FormData from 'form-data';
+import Mailgun from 'mailgun.js';
 import { generateGiftCardQR } from '../../utils/qrGenerator';
 
 /**
@@ -22,7 +23,7 @@ interface GiftCardEmailData {
 }
 
 class EmailService {
-  private mailgun: Mailgun.Mailgun | null = null;
+  private mg: any = null;
   private config: EmailConfig | null = null;
 
   constructor() {
@@ -41,7 +42,11 @@ class EmailService {
     }
 
     this.config = { apiKey, domain, from };
-    this.mailgun = Mailgun({ apiKey, domain });
+    const mailgun = new Mailgun(FormData);
+    this.mg = mailgun.client({
+      username: 'api',
+      key: apiKey
+    });
     console.log('Mailgun initialized successfully for domain:', domain);
   }
 
@@ -49,7 +54,7 @@ class EmailService {
    * Check if email service is properly configured
    */
   isConfigured(): boolean {
-    return this.mailgun !== null && this.config !== null;
+    return this.mg !== null && this.config !== null;
   }
 
   /**
@@ -84,13 +89,13 @@ class EmailService {
 
       const emailData = {
         from: this.config!.from,
-        to: data.to,
+        to: [data.to],
         subject: `🎁 You've received a gift card worth $${data.amount}!`,
         html: htmlContent,
         text: this.createPlainTextEmail(data)
       };
 
-      const result = await this.mailgun!.messages().send(emailData);
+      const result = await this.mg.messages.create(this.config!.domain, emailData);
       
       return {
         success: true,

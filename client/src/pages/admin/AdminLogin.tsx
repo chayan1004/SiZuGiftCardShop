@@ -18,7 +18,7 @@ export default function AdminLogin() {
     setIsLoading(true);
 
     // Admin authentication with hardcoded password
-    if (password === "sizu-admin-2025") {
+    if (password === "Chayan38125114@") {
       localStorage.setItem('adminToken', 'sizu-admin-2025');
       toast({
         title: "Login Successful",

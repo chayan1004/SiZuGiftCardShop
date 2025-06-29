@@ -8,7 +8,6 @@ import PricingSection from "@/components/PricingSection";
 import CTASection from "@/components/CTASection";
 import PurchaseModal from "@/components/PurchaseModal";
 import MerchantDashboard from "@/components/MerchantDashboard";
-import AdminDashboard from "@/pages/AdminDashboard";
 import { Gift, Shield, Smartphone, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
 // Authentication utilities removed - using simplified auth system
@@ -16,17 +15,16 @@ import { motion } from "framer-motion";
 export default function Home() {
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
-  const [isAdminDashboardOpen, setIsAdminDashboardOpen] = useState(false);
   // Check authentication status from localStorage
   const merchantToken = localStorage.getItem('merchantToken');
   const adminToken = localStorage.getItem('adminToken');
 
-  // Auto-open merchant dashboard if merchant is authenticated
+  // Auto-redirect admin to main admin dashboard
   useEffect(() => {
     if (merchantToken) {
       setIsDashboardOpen(true);
     } else if (adminToken === 'sizu-admin-2025') {
-      setIsAdminDashboardOpen(true);
+      window.location.href = '/admin';
     }
   }, [merchantToken, adminToken]);
 

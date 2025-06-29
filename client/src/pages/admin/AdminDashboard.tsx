@@ -588,7 +588,7 @@ export default function AdminDashboard() {
                           <div className="flex-1">
                             <p className="text-white text-sm font-medium mb-2 drop-shadow-sm">Delivery Rate</p>
                             <p className="text-2xl font-bold text-white drop-shadow-sm">
-                              {emailMetrics?.data?.overview?.deliveryRate || '98.5'}%
+                              {(emailMetrics as any)?.data?.overview?.deliveryRate || '98.5'}%
                             </p>
                           </div>
                           <Mail className="text-white/80 flex-shrink-0" size={24} />
@@ -602,7 +602,7 @@ export default function AdminDashboard() {
                           <div className="flex-1">
                             <p className="text-white text-sm font-medium mb-2 drop-shadow-sm">Bounce Rate</p>
                             <p className="text-2xl font-bold text-white drop-shadow-sm">
-                              {emailMetrics?.data?.overview?.bounceRate || '1.2'}%
+                              {(emailMetrics as any)?.data?.overview?.bounceRate || '1.2'}%
                             </p>
                           </div>
                           <Activity className="text-white/80 flex-shrink-0" size={24} />
@@ -616,7 +616,7 @@ export default function AdminDashboard() {
                           <div className="flex-1">
                             <p className="text-white text-sm font-medium mb-2 drop-shadow-sm">Daily Sent</p>
                             <p className="text-2xl font-bold text-white drop-shadow-sm">
-                              {emailMetrics?.data?.volumeStatus?.sentToday || queueStatus?.data?.sentToday || '239'}
+                              {(emailMetrics as any)?.data?.volumeStatus?.sentToday || (queueStatus as any)?.data?.sentToday || '239'}
                             </p>
                           </div>
                           <TrendingUp className="text-white/80 flex-shrink-0" size={24} />
@@ -630,7 +630,7 @@ export default function AdminDashboard() {
                           <div className="flex-1">
                             <p className="text-white text-sm font-medium mb-2 drop-shadow-sm">Daily Limit</p>
                             <p className="text-2xl font-bold text-white drop-shadow-sm">
-                              {emailMetrics?.data?.volumeStatus?.dailyLimit || queueStatus?.data?.dailyLimit || '1,000'}
+                              {(emailMetrics as any)?.data?.volumeStatus?.dailyLimit || (queueStatus as any)?.data?.dailyLimit || '1,000'}
                             </p>
                           </div>
                           <Settings className="text-white/80 flex-shrink-0" size={24} />
@@ -649,21 +649,21 @@ export default function AdminDashboard() {
                       <CardContent>
                         <div className="space-y-4">
                           <div className={`flex items-center justify-between p-3 rounded-lg border ${
-                            domainAuth?.data?.authenticationStatus?.spf ? 
+                            (domainAuth as any)?.data?.authenticationStatus?.spf ? 
                             'bg-green-500/10 border-green-500/30' : 'bg-orange-500/10 border-orange-500/30'
                           }`}>
                             <div className="flex items-center space-x-3">
                               <div className={`w-3 h-3 rounded-full ${
-                                domainAuth?.data?.authenticationStatus?.spf ? 'bg-green-400' : 'bg-orange-400'
+                                (domainAuth as any)?.data?.authenticationStatus?.spf ? 'bg-green-400' : 'bg-orange-400'
                               }`}></div>
                               <span className="text-white font-medium">SPF Record</span>
                             </div>
                             <Badge className={`${
-                              domainAuth?.data?.authenticationStatus?.spf ? 
+                              (domainAuth as any)?.data?.authenticationStatus?.spf ? 
                               'bg-green-500/20 text-green-300 border-green-500/30' : 
                               'bg-orange-500/20 text-orange-300 border-orange-500/30'
                             }`}>
-                              {domainAuth?.data?.authenticationStatus?.spf ? 'Verified' : 'Pending'}
+                              {(domainAuth as any)?.data?.authenticationStatus?.spf ? 'Verified' : 'Pending'}
                             </Badge>
                           </div>
                           

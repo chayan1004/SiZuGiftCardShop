@@ -123,6 +123,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create merchant account
       const merchantId = `merchant_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
       
+      // Generate email verification token
+      const verificationToken = crypto.randomBytes(32).toString('hex');
+      const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
       const newMerchant = await storage.createMerchant({
         squareApplicationId: 'pending-square-setup',
         accessToken: 'pending-square-oauth',
@@ -131,10 +135,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         businessName,
         email,
         passwordHash,
+        emailVerified: false,
+        emailVerificationToken: verificationToken,
+        emailVerificationExpires: verificationExpires,
         isActive: true
       });
 
-      // Generate JWT token for auto-login
+      // Send verification email
+      try {
+        const verificationUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/api/merchant/verify-email?token=${verificationToken}`;
+        
+        await emailService.sendVerificationEmail({
+          to: email,
+          businessName,
+          verificationUrl
+        });
+
+        console.log(`✅ Verification email sent to: ${email}`);
+      } catch (emailError) {
+        console.error('Failed to send verification email:', emailError);
+        // Don't fail registration if email fails, just log it
+      }
+
+      // Generate JWT token but mark as unverified
       const token = AuthService.generateMerchantToken(newMerchant);
 
       // Set secure HTTP-only cookie
@@ -147,14 +170,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.status(201).json({
         success: true,
-        message: 'Merchant account created successfully',
+        message: 'Account created successfully! Please check your email to verify your account.',
         token,
         merchant: {
           id: newMerchant.id,
           merchantId: newMerchant.merchantId,
           businessName: newMerchant.businessName,
-          email: newMerchant.email
-        }
+          email: newMerchant.email,
+          emailVerified: newMerchant.emailVerified
+        },
+        requiresEmailVerification: true
       });
 
     } catch (error) {
@@ -205,6 +230,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         success: false,
         error: 'Failed to create demo login'
+      });
+    }
+  });
+
+  // Email verification endpoint
+  app.get("/api/merchant/verify-email", async (req: Request, res: Response) => {
+    try {
+      const { token } = req.query;
+
+      if (!token || typeof token !== 'string') {
+        return res.status(400).json({
+          success: false,
+          error: 'Verification token is required'
+        });
+      }
+
+      // Find merchant by verification token
+      const merchant = await storage.getMerchantByVerificationToken(token);
+      if (!merchant) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid or expired verification token'
+        });
+      }
+
+      // Check if token has expired
+      if (merchant.emailVerificationExpires && new Date() > merchant.emailVerificationExpires) {
+        return res.status(400).json({
+          success: false,
+          error: 'Verification token has expired. Please request a new verification email.'
+        });
+      }
+
+      // Check if already verified
+      if (merchant.emailVerified) {
+        return res.redirect('/merchant-dashboard?verified=already');
+      }
+
+      // Mark email as verified
+      await storage.markMerchantEmailVerified(merchant.id);
+
+      console.log(`✅ Email verified successfully for merchant: ${merchant.email}`);
+
+      // Redirect to dashboard with success message
+      res.redirect('/merchant-dashboard?verified=success');
+
+    } catch (error) {
+      console.error('Email verification error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Email verification failed. Please try again.'
       });
     }
   });

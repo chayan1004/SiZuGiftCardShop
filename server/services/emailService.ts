@@ -1259,6 +1259,46 @@ Gift card terms and conditions apply. Not redeemable for cash.
   }
 
   /**
+   * Send merchant email verification email
+   */
+  async sendVerificationEmail(data: VerificationEmailData): Promise<{
+    success: boolean;
+    messageId?: string;
+    error?: string;
+  }> {
+    if (!this.isConfigured()) {
+      this.initializeSMTP();
+      if (!this.isConfigured()) {
+        return { success: false, error: 'Email service not configured' };
+      }
+    }
+
+    try {
+      const mailOptions = {
+        from: 'SiZu GiftCard Team <' + (process.env.MAIL_FROM || this.config!.from) + '>',
+        to: data.to,
+        subject: 'Verify Your SiZu GiftCard Merchant Account',
+        html: this.createVerificationEmailHTML(data),
+        text: this.createVerificationPlainText(data)
+      };
+
+      const result = await this.transporter!.sendMail(mailOptions);
+      
+      return {
+        success: true,
+        messageId: result.messageId
+      };
+
+    } catch (error) {
+      console.error('Failed to send verification email:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown email error'
+      };
+    }
+  }
+
+  /**
    * Legacy method for backward compatibility
    */
   async sendGiftCardEmail(data: GiftCardEmailData): Promise<{
@@ -1267,6 +1307,165 @@ Gift card terms and conditions apply. Not redeemable for cash.
     error?: string;
   }> {
     return this.sendGiftCardReceipt(data);
+  }
+
+  /**
+   * Create verification email HTML template
+   */
+  public createVerificationEmailHTML(data: VerificationEmailData): string {
+    return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your SiZu GiftCard Merchant Account</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f5f7fa;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 20px;
+            text-align: center;
+            color: white;
+        }
+        .logo {
+            font-size: 2rem;
+            font-weight: 800;
+            margin: 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .content {
+            padding: 40px;
+        }
+        .verification-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 30px 0;
+        }
+        .verify-button {
+            display: inline-block;
+            background: #ffffff;
+            color: #667eea;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+        .verify-button:hover {
+            background: #f7fafc;
+            transform: translateY(-2px);
+        }
+        .footer {
+            background: #f8fafc;
+            padding: 30px;
+            text-align: center;
+            color: #718096;
+            font-size: 14px;
+        }
+        .security-note {
+            background: #edf2f7;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #4299e1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="logo">🎁 SiZu GiftCard</h1>
+            <p>Merchant Account Verification</p>
+        </div>
+        
+        <div class="content">
+            <h2>Welcome to SiZu GiftCard, ${data.businessName}!</h2>
+            
+            <p>Thank you for creating your merchant account. To complete your registration and access your dashboard, please verify your email address.</p>
+            
+            <div class="verification-box">
+                <h3>Verify Your Email Address</h3>
+                <p>Click the button below to confirm your email and activate your merchant account:</p>
+                <a href="${data.verificationUrl}" class="verify-button">Verify Email Address</a>
+            </div>
+            
+            <div class="security-note">
+                <h4>🔒 Security Information</h4>
+                <ul>
+                    <li>This verification link expires in 24 hours</li>
+                    <li>Only click this link if you created a SiZu GiftCard merchant account</li>
+                    <li>If you didn't request this, please ignore this email</li>
+                </ul>
+            </div>
+            
+            <p>Once verified, you'll be able to:</p>
+            <ul>
+                <li>Access your merchant dashboard</li>
+                <li>Create and manage gift cards</li>
+                <li>View analytics and reports</li>
+                <li>Process customer transactions</li>
+            </ul>
+            
+            <p>If the button doesn't work, copy and paste this link into your browser:</p>
+            <p style="word-break: break-all; color: #4299e1;">${data.verificationUrl}</p>
+        </div>
+        
+        <div class="footer">
+            <p>© 2024 SiZu GiftCard. All rights reserved.</p>
+            <p>This is an automated message. Please do not reply to this email.</p>
+        </div>
+    </div>
+</body>
+</html>`;
+  }
+
+  /**
+   * Create verification email plain text template
+   */
+  public createVerificationPlainText(data: VerificationEmailData): string {
+    return `
+SiZu GiftCard - Merchant Account Verification
+
+Welcome to SiZu GiftCard, ${data.businessName}!
+
+Thank you for creating your merchant account. To complete your registration and access your dashboard, please verify your email address.
+
+VERIFY YOUR EMAIL ADDRESS
+Copy and paste this link into your browser to verify your account:
+${data.verificationUrl}
+
+SECURITY INFORMATION
+- This verification link expires in 24 hours
+- Only click this link if you created a SiZu GiftCard merchant account
+- If you didn't request this, please ignore this email
+
+Once verified, you'll be able to:
+- Access your merchant dashboard
+- Create and manage gift cards
+- View analytics and reports  
+- Process customer transactions
+
+© 2024 SiZu GiftCard. All rights reserved.
+This is an automated message. Please do not reply to this email.
+`;
   }
 
   /**

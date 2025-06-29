@@ -321,7 +321,7 @@ export default function MerchantBulkPurchase() {
                     </Badge>
                   )}
                 </div>
-                <p className="text-gray-300 text-xs lg:text-sm">
+                <p className="text-[#dd4bae] text-xs lg:text-sm">
                   {tier.minQuantity} - {tier.maxQuantity === 999999 ? '∞' : tier.maxQuantity} cards
                 </p>
                 {currentTier?.name === tier.name && (
@@ -354,7 +354,7 @@ export default function MerchantBulkPurchase() {
                     <Package className="w-5 h-5" />
                     Order Configuration
                   </CardTitle>
-                  <CardDescription className="text-gray-300">
+                  <CardDescription className="text-[#dd4bae]">
                     Configure your bulk gift card order
                   </CardDescription>
                 </CardHeader>
@@ -385,7 +385,7 @@ export default function MerchantBulkPurchase() {
                         max="10000"
                         value={quantity}
                         onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
-                        className="bg-white/5 border-white/20 text-white placeholder-gray-400"
+                        className="bg-white/5 border-white/20 text-[#613791] placeholder-[#dd4bae]"
                         placeholder="Custom quantity"
                       />
                     </div>
@@ -394,7 +394,7 @@ export default function MerchantBulkPurchase() {
                     <div className="space-y-3">
                       <Label className="text-white text-sm lg:text-base">Base Unit Price (USD)</Label>
                       <div className="relative">
-                        <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#dd4bae] w-4 h-4" />
                         <Input
                           type="number"
                           step="0.01"
@@ -402,7 +402,7 @@ export default function MerchantBulkPurchase() {
                           max="1000"
                           value={unitPrice}
                           onChange={(e) => setUnitPrice(parseFloat(e.target.value) || 0)}
-                          className="pl-10 bg-white/5 border-white/20 text-white placeholder-gray-400"
+                          className="pl-10 bg-white/5 border-white/20 text-[#613791] placeholder-[#dd4bae]"
                           placeholder="25.00"
                         />
                       </div>
@@ -415,11 +415,11 @@ export default function MerchantBulkPurchase() {
                         value={customMessage}
                         onChange={(e) => setCustomMessage(e.target.value)}
                         placeholder="Add a custom message to all gift cards in this order..."
-                        className="bg-white/5 border-white/20 text-white placeholder-gray-400 resize-none"
+                        className="bg-white/5 border-white/20 text-[#613791] placeholder-[#dd4bae] resize-none"
                         rows={3}
                         maxLength={200}
                       />
-                      <div className="text-xs text-gray-400">
+                      <div className="text-xs text-[#dd4bae]">
                         {customMessage.length}/200 characters
                       </div>
                     </div>
@@ -436,26 +436,26 @@ export default function MerchantBulkPurchase() {
                     <Calculator className="w-5 h-5" />
                     Order Summary
                   </CardTitle>
-                  <CardDescription className="text-gray-300">
+                  <CardDescription className="text-[#dd4bae]">
                     Review your order before checkout
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-300 text-sm">Quantity:</span>
+                      <span className="text-[#dd4bae] text-sm">Quantity:</span>
                       <span className="text-white font-semibold">{quantity} cards</span>
                     </div>
                     
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-300 text-sm">Base price per card:</span>
+                      <span className="text-[#dd4bae] text-sm">Base price per card:</span>
                       <span className="text-white">{formatCurrency(unitPrice)}</span>
                     </div>
 
                     {currentTier && currentTier.discountPercentage > 0 && (
                       <>
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-300 text-sm">Discount ({currentTier.name}):</span>
+                          <span className="text-[#dd4bae] text-sm">Discount ({currentTier.name}):</span>
                           <span className="text-green-400">-{currentTier.discountPercentage}%</span>
                         </div>
                         

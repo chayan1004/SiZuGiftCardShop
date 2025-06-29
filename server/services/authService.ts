@@ -80,18 +80,30 @@ export class AuthService {
    */
   static async authenticateMerchant(email: string, password: string): Promise<AuthResult> {
     try {
+      console.log('🔍 AuthService: Authenticating merchant with email:', email);
+      
       // Find merchant by email
       const merchant = await storage.getMerchantByEmail(email);
       
       if (!merchant) {
+        console.log('❌ AuthService: No merchant found with email:', email);
         return {
           success: false,
           error: 'Invalid email or password'
         };
       }
 
+      console.log('✅ AuthService: Merchant found:', {
+        id: merchant.id,
+        email: merchant.email,
+        businessName: merchant.businessName,
+        hasPasswordHash: !!merchant.passwordHash,
+        passwordHashLength: merchant.passwordHash?.length
+      });
+
       // Check if merchant is active
       if (!merchant.isActive) {
+        console.log('❌ AuthService: Merchant account is not active');
         return {
           success: false,
           error: 'Account is deactivated. Please contact support.'
@@ -99,17 +111,23 @@ export class AuthService {
       }
 
       // Verify password
+      console.log('🔐 AuthService: Verifying password...');
       const isValidPassword = await this.verifyPassword(password, merchant.passwordHash);
+      console.log('🔐 AuthService: Password verification result:', isValidPassword);
       
       if (!isValidPassword) {
+        console.log('❌ AuthService: Password verification failed');
         return {
           success: false,
           error: 'Invalid email or password'
         };
       }
 
+      console.log('✅ AuthService: Password verified successfully');
+
       // Generate JWT token
       const token = this.generateMerchantToken(merchant);
+      console.log('🎫 AuthService: JWT token generated successfully');
 
       return {
         success: true,

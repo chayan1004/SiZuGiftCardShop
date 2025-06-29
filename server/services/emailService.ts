@@ -198,7 +198,7 @@ class EmailService {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="format-detection" content="telephone=no, date=no, email=no, address=no">
-    <title>SiZu Pay Gift Card Receipt</title>
+    <title>SiZu GiftCard Gift Card Receipt</title>
     <!--[if mso]>
     <noscript>
     <xml>
@@ -748,7 +748,7 @@ class EmailService {
     <div class="email-wrapper">
         <div class="header">
             <div class="logo-section">
-                <h1 class="brand-logo">SiZu Pay</h1>
+                <h1 class="brand-logo">SiZu GiftCard</h1>
                 <p class="tagline">Premium Digital Gift Card Solutions</p>
                 <h2 class="receipt-title">Gift Card Purchase Receipt</h2>
             </div>
@@ -853,12 +853,12 @@ class EmailService {
             </div>
 
             <div class="security-note">
-                <strong>Security Notice:</strong> Treat this gift card like cash. SiZu Pay is not responsible for lost, stolen, or unauthorized use of gift cards. Report any suspicious activity immediately.
+                <strong>Security Notice:</strong> Treat this gift card like cash. SiZu GiftCard is not responsible for lost, stolen, or unauthorized use of gift cards. Report any suspicious activity immediately.
             </div>
         </div>
 
         <div class="footer">
-            <h3 class="footer-logo">SiZu Pay</h3>
+            <h3 class="footer-logo">SiZu GiftCard</h3>
             <p class="footer-text">Leading provider of digital payment solutions and gift card services</p>
             <div class="footer-links">
                 <a href="#" class="footer-link">Support Center</a>
@@ -871,7 +871,7 @@ class EmailService {
                 Business hours: Monday - Friday, 9:00 AM - 6:00 PM EST
             </p>
             <p class="footer-text" style="margin-top: 20px; font-size: 0.75rem; opacity: 0.7;">
-                © ${currentDate.getFullYear()} SiZu Pay Technologies, Inc. All rights reserved.<br>
+                © ${currentDate.getFullYear()} SiZu GiftCard Technologies, Inc. All rights reserved.<br>
                 Gift cards do not expire and are non-refundable. Terms and conditions apply.
             </p>
         </div>
@@ -885,7 +885,7 @@ class EmailService {
    */
   private createPlainTextEmail(data: GiftCardEmailData): string {
     let text = `
-🎁 Gift Card from SiZu Pay
+🎁 Gift Card from SiZu GiftCard
 
 ${data.recipientName ? `Hi ${data.recipientName}!` : 'You\'ve received a gift card!'}
 ${data.senderName ? `This gift card is from ${data.senderName}` : ''}

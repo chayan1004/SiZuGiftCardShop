@@ -14,6 +14,7 @@ import CheckBalance from "@/pages/CheckBalance";
 import MerchantLogin from "@/pages/MerchantLogin";
 import MerchantRegister from "@/pages/MerchantRegister";
 import MerchantDashboard from "@/pages/MerchantDashboard";
+import MerchantVerify from "@/pages/MerchantVerify";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -26,6 +27,7 @@ function Router() {
       <Route path="/check-balance" component={CheckBalance} />
       <Route path="/merchant-login" component={MerchantLogin} />
       <Route path="/merchant-register" component={MerchantRegister} />
+      <Route path="/merchant-verify" component={MerchantVerify} />
       <Route path="/merchant-dashboard">
         <ProtectedRoute requiredRole="merchant" redirectTo="/merchant-login">
           <MerchantDashboard />

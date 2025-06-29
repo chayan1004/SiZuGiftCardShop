@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, Gift, BarChart3, Users, Settings, LogOut, Plus, Eye, Download, Cog, DollarSign, ShoppingCart, TrendingUp, CheckCircle, CreditCard, Loader2 } from "lucide-react";
+import { X, Gift, BarChart3, Users, Settings, LogOut, Plus, Eye, Download, Cog, DollarSign, ShoppingCart, TrendingUp, CheckCircle, CreditCard, Loader2, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth, logout } from "@/components/ProtectedRoute";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import TransactionHistoryPanel from "./TransactionHistoryPanel";
 
 interface MerchantDashboardProps {
   isOpen: boolean;

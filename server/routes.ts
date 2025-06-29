@@ -1053,6 +1053,139 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Merchant Transaction History (Protected by JWT)
+  app.get("/api/dashboard/transactions", requireMerchant, async (req, res) => {
+    try {
+      const merchantId = (req as any).merchantId;
+      
+      if (!merchantId) {
+        return res.status(401).json({ 
+          success: false,
+          error: "Merchant authentication required" 
+        });
+      }
+
+      const { 
+        startDate, 
+        endDate, 
+        status, 
+        search, 
+        page = 1, 
+        limit = 50 
+      } = req.query;
+
+      console.log(`Merchant ${merchantId}: Fetching transaction history`);
+
+      // Get gift cards for this merchant
+      const merchantGiftCards = await storage.getGiftCardsByMerchant(merchantId);
+      const giftCardIds = merchantGiftCards.map(gc => gc.id);
+
+      if (giftCardIds.length === 0) {
+        return res.json({
+          success: true,
+          transactions: [],
+          pagination: {
+            page: parseInt(page as string),
+            limit: parseInt(limit as string),
+            total: 0,
+            totalPages: 0
+          }
+        });
+      }
+
+      // Get activities for all merchant gift cards
+      const allActivities = await Promise.all(
+        giftCardIds.map(id => storage.getGiftCardActivities(id))
+      );
+      
+      let transactions = allActivities.flat();
+
+      // Apply date filters
+      if (startDate || endDate) {
+        transactions = transactions.filter(tx => {
+          const txDate = tx.createdAt ? new Date(tx.createdAt) : new Date();
+          if (startDate && txDate < new Date(startDate as string)) return false;
+          if (endDate && txDate > new Date(endDate as string)) return false;
+          return true;
+        });
+      }
+
+      // Apply status filter
+      if (status && status !== 'all') {
+        transactions = transactions.filter(tx => 
+          tx.type.toLowerCase() === (status as string).toLowerCase()
+        );
+      }
+
+      // Apply search filter
+      if (search) {
+        const searchTerm = (search as string).toLowerCase();
+        transactions = transactions.filter(tx => {
+          const giftCard = merchantGiftCards.find(gc => gc.id === tx.giftCardId);
+          return (
+            giftCard?.gan.toLowerCase().includes(searchTerm) ||
+            giftCard?.recipientEmail?.toLowerCase().includes(searchTerm) ||
+            tx.type.toLowerCase().includes(searchTerm)
+          );
+        });
+      }
+
+      // Sort by date (newest first)
+      transactions.sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
+
+      // Pagination
+      const pageNum = parseInt(page as string);
+      const limitNum = parseInt(limit as string);
+      const total = transactions.length;
+      const totalPages = Math.ceil(total / limitNum);
+      const startIndex = (pageNum - 1) * limitNum;
+      const paginatedTransactions = transactions.slice(startIndex, startIndex + limitNum);
+
+      // Format transactions with gift card details
+      const formattedTransactions = paginatedTransactions.map(tx => {
+        const giftCard = merchantGiftCards.find(gc => gc.id === tx.giftCardId);
+        const txDate = tx.createdAt ? new Date(tx.createdAt) : new Date();
+        return {
+          id: tx.id,
+          date: tx.createdAt || new Date().toISOString(),
+          giftCardGan: giftCard?.gan || 'N/A',
+          recipientEmail: giftCard?.recipientEmail,
+          amount: tx.amount,
+          formattedAmount: `$${(tx.amount / 100).toFixed(2)}`,
+          status: tx.type,
+          type: tx.type === 'ACTIVATE' ? 'PURCHASE' : tx.type,
+          notes: `${tx.type} transaction`,
+          timeAgo: getTimeAgo(txDate),
+          balanceAfter: giftCard?.amount || 0,
+          formattedBalance: `$${((giftCard?.amount || 0) / 100).toFixed(2)}`
+        };
+      });
+
+      res.json({
+        success: true,
+        transactions: formattedTransactions,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total,
+          totalPages
+        }
+      });
+
+    } catch (error) {
+      console.error("Error fetching merchant transactions:", error);
+      res.status(500).json({ 
+        success: false,
+        error: "Failed to fetch transactions",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Merchant Dashboard Analytics - Live Stats (Protected by JWT)
   app.get("/api/dashboard/stats", requireMerchant, async (req, res) => {
     try {

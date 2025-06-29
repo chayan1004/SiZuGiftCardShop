@@ -56,7 +56,7 @@ export default function MerchantDashboard() {
 
   // Auto-refresh effect
   useEffect(() => {
-    if (merchantId && auth.isAuthenticated) {
+    if (merchantId && localStorage.getItem('merchantToken')) {
       const interval = setInterval(() => {
         refetchStats();
       }, 30000);

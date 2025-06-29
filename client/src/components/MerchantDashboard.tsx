@@ -88,7 +88,7 @@ export default function MerchantDashboard({ isOpen, onClose }: MerchantDashboard
     refetchInterval: 30000, // Refresh every 30 seconds for live data
     meta: {
       headers: {
-        'x-merchant-token': auth.token || ''
+        'x-merchant-token': localStorage.getItem('merchantToken') || ''
       }
     }
   });
@@ -99,12 +99,12 @@ export default function MerchantDashboard({ isOpen, onClose }: MerchantDashboard
   // Check Square connection status
   useEffect(() => {
     const checkSquareConnection = async () => {
-      if (!auth.isAuthenticated || !merchantId) return;
+      if (!merchantId || !localStorage.getItem('merchantToken')) return;
       
       try {
         const response = await fetch("/api/merchant/me", {
           headers: {
-            'x-merchant-token': auth.token || '',
+            'x-merchant-token': localStorage.getItem('merchantToken') || '',
             'Content-Type': 'application/json'
           }
         });
@@ -123,7 +123,7 @@ export default function MerchantDashboard({ isOpen, onClose }: MerchantDashboard
     };
 
     checkSquareConnection();
-  }, [auth, merchantId]);
+  }, [merchantId]);
 
   // Listen for Square OAuth success messages
   useEffect(() => {
@@ -155,7 +155,7 @@ export default function MerchantDashboard({ isOpen, onClose }: MerchantDashboard
       const response = await fetch("/api/auth/square", {
         method: "GET",
         headers: {
-          'x-merchant-token': auth.token || '',
+          'x-merchant-token': localStorage.getItem('merchantToken') || '',
           'Content-Type': 'application/json'
         }
       });
@@ -194,7 +194,7 @@ export default function MerchantDashboard({ isOpen, onClose }: MerchantDashboard
   });
 
   const handleLogout = () => {
-    logout();
+    localStorage.removeItem('merchantToken');
     onClose();
     toast({
       title: "Logged Out",

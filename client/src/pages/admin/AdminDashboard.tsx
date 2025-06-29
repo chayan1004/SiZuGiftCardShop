@@ -515,15 +515,192 @@ export default function AdminDashboard() {
               {activeSection === "giftcards" && <GiftCardManagement />}
               {activeSection === "users" && <UserManagement />}
               
-              {!["overview", "giftcards", "users"].includes(activeSection) && (
+              {activeSection === "analytics" && (
+                <div className="space-y-6">
+                  {/* Advanced Analytics Header */}
+                  <div className="bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-xl p-6">
+                    <h3 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-2">
+                      Advanced Analytics
+                    </h3>
+                    <p className="text-gray-300">Deep insights into your gift card business performance</p>
+                  </div>
+
+                  {/* Revenue Analytics */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
+                      <CardHeader>
+                        <CardTitle className="text-white">Revenue Trend Analysis</CardTitle>
+                        <CardDescription className="text-gray-300">Weekly revenue performance</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <ResponsiveContainer width="100%" height={300}>
+                          <LineChart data={weeklyRevenue}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                            <XAxis dataKey="week" stroke="rgba(255,255,255,0.5)" />
+                            <YAxis stroke="rgba(255,255,255,0.5)" />
+                            <Tooltip 
+                              contentStyle={{ 
+                                backgroundColor: 'rgba(0,0,0,0.8)', 
+                                border: '1px solid rgba(255,255,255,0.2)',
+                                borderRadius: '8px',
+                                color: 'white'
+                              }} 
+                            />
+                            <Line 
+                              type="monotone" 
+                              dataKey="revenue" 
+                              stroke="#06b6d4" 
+                              strokeWidth={3}
+                              dot={{ fill: '#06b6d4', strokeWidth: 2, r: 6 }}
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
+                      <CardHeader>
+                        <CardTitle className="text-white">Gift Cards Distribution</CardTitle>
+                        <CardDescription className="text-gray-300">Status breakdown</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <ResponsiveContainer width="100%" height={300}>
+                          <PieChart>
+                            <Pie
+                              data={[
+                                { name: 'Active', value: metrics.activeCards, color: '#06b6d4' },
+                                { name: 'Redeemed', value: metrics.redeemedCards, color: '#10b981' },
+                                { name: 'Pending', value: Math.max(0, metrics.totalGiftCards - metrics.activeCards - metrics.redeemedCards), color: '#f59e0b' }
+                              ]}
+                              cx="50%"
+                              cy="50%"
+                              outerRadius={100}
+                              fill="#8884d8"
+                              dataKey="value"
+                              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                            >
+                              {[
+                                { name: 'Active', value: metrics.activeCards, color: '#06b6d4' },
+                                { name: 'Redeemed', value: metrics.redeemedCards, color: '#10b981' },
+                                { name: 'Pending', value: Math.max(0, metrics.totalGiftCards - metrics.activeCards - metrics.redeemedCards), color: '#f59e0b' }
+                              ].map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                              ))}
+                            </Pie>
+                            <Tooltip 
+                              contentStyle={{ 
+                                backgroundColor: 'rgba(0,0,0,0.8)', 
+                                border: '1px solid rgba(255,255,255,0.2)',
+                                borderRadius: '8px',
+                                color: 'white'
+                              }} 
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Performance Metrics */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <Card className="bg-gradient-to-r from-blue-600/20 to-blue-500/20 border border-blue-500/30">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-blue-200 text-sm font-medium">Conversion Rate</p>
+                            <p className="text-2xl font-bold text-white">{metrics.conversionRate}</p>
+                          </div>
+                          <TrendingUp className="text-blue-400" size={24} />
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-gradient-to-r from-green-600/20 to-green-500/20 border border-green-500/30">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-green-200 text-sm font-medium">Avg. Card Value</p>
+                            <p className="text-2xl font-bold text-white">${(metrics.averageValue / 100).toFixed(2)}</p>
+                          </div>
+                          <DollarSign className="text-green-400" size={24} />
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-gradient-to-r from-purple-600/20 to-purple-500/20 border border-purple-500/30">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-purple-200 text-sm font-medium">Total Customers</p>
+                            <p className="text-2xl font-bold text-white">{metrics.customers}</p>
+                          </div>
+                          <Users className="text-purple-400" size={24} />
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-gradient-to-r from-orange-600/20 to-orange-500/20 border border-orange-500/30">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-orange-200 text-sm font-medium">Total Redemptions</p>
+                            <p className="text-2xl font-bold text-white">{metrics.redemptions}</p>
+                          </div>
+                          <Activity className="text-orange-400" size={24} />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Detailed Activity Analytics */}
+                  <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
+                    <CardHeader>
+                      <CardTitle className="text-white">Recent Transaction Analytics</CardTitle>
+                      <CardDescription className="text-gray-300">Detailed breakdown of recent activities</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {recentActivity.slice(0, 10).map((activity, index) => (
+                          <div key={index} className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10">
+                            <div className="flex items-center space-x-4">
+                              <div className={`p-2 rounded-full ${
+                                activity.type === 'purchase' ? 'bg-green-500/20 text-green-400' :
+                                activity.type === 'redemption' ? 'bg-blue-500/20 text-blue-400' :
+                                'bg-orange-500/20 text-orange-400'
+                              }`}>
+                                {activity.type === 'purchase' && <CreditCard className="w-4 h-4" />}
+                                {activity.type === 'redemption' && <QrCode className="w-4 h-4" />}
+                                {activity.type !== 'purchase' && activity.type !== 'redemption' && <Activity className="w-4 h-4" />}
+                              </div>
+                              <div>
+                                <p className="text-white font-medium capitalize">{activity.type}</p>
+                                <p className="text-gray-400 text-sm">{activity.email || 'N/A'}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-white font-bold">${(activity.amount / 100).toFixed(2)}</p>
+                              <p className="text-gray-400 text-sm">{activity.timeAgo}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+              
+              {!["overview", "giftcards", "users", "analytics"].includes(activeSection) && (
                 <div className="text-center py-16">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2 capitalize">
+                  <h3 className="text-xl font-semibold text-white mb-2 capitalize">
                     {activeSection} Section
                   </h3>
-                  <p className="text-gray-500 mb-6">
+                  <p className="text-gray-400 mb-6">
                     This section is being developed. More features coming soon.
                   </p>
-                  <Button onClick={() => setActiveSection("overview")}>
+                  <Button 
+                    onClick={() => setActiveSection("overview")}
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                  >
                     Back to Overview
                   </Button>
                 </div>

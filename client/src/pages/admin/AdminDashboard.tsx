@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import GiftCardManagement from "./GiftCardManagement";
-import UserManagement from "./UserManagement";
+import MerchantManagement from "./UserManagement";
 
 interface DashboardMetrics {
   totalGiftCards: number;
@@ -138,7 +138,7 @@ export default function AdminDashboard() {
   const sidebarItems = [
     { id: "overview", label: "Overview", icon: <BarChart3 className="w-5 h-5" /> },
     { id: "giftcards", label: "Gift Cards", icon: <Gift className="w-5 h-5" /> },
-    { id: "users", label: "Users", icon: <Users className="w-5 h-5" /> },
+    { id: "merchants", label: "Merchants", icon: <Users className="w-5 h-5" /> },
     { id: "analytics", label: "Analytics", icon: <TrendingUp className="w-5 h-5" /> },
     { id: "email", label: "Email System", icon: <Mail className="w-5 h-5" /> },
     { id: "settings", label: "Settings", icon: <Settings className="w-5 h-5" /> },
@@ -327,7 +327,7 @@ export default function AdminDashboard() {
                 <p className="text-sm lg:text-base text-gray-300 mt-2 hidden sm:block font-medium">
                   {activeSection === "overview" && "Monitor your gift card business performance"}
                   {activeSection === "giftcards" && "Manage all gift cards and transactions"}
-                  {activeSection === "users" && "View and manage user accounts"}
+                  {activeSection === "merchants" && "View and manage merchant accounts"}
                   {activeSection === "analytics" && "Detailed business analytics and reports"}
                   {activeSection === "email" && "Email delivery and domain authentication"}
                   {activeSection === "settings" && "System configuration and preferences"}
@@ -546,7 +546,7 @@ export default function AdminDashboard() {
               )}
 
               {activeSection === "giftcards" && <GiftCardManagement />}
-              {activeSection === "users" && <UserManagement />}
+              {activeSection === "merchants" && <MerchantManagement />}
               
               {activeSection === "email" && (
                 <div className="space-y-6">

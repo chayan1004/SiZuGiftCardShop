@@ -19,7 +19,7 @@ interface Merchant {
   activeGiftCards: number;
 }
 
-export default function UserManagement() {
+export default function MerchantManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -46,10 +46,10 @@ export default function UserManagement() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">User Management</h1>
-          <p className="text-gray-600">Manage merchant accounts and user access</p>
+          <h1 className="text-3xl font-bold text-white">Merchant Management</h1>
+          <p className="text-gray-300">Manage merchant accounts and business access</p>
         </div>
-        <Button>
+        <Button className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium hover:from-blue-600 hover:to-purple-700 shadow-lg">
           <UserPlus className="w-4 h-4 mr-2" />
           Add Merchant
         </Button>

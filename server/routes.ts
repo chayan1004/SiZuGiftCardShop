@@ -2825,5 +2825,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all merchants for admin dashboard
+  app.get("/api/admin/merchants", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const merchants = await storage.getAllMerchants();
+      
+      // Enhance with additional stats for each merchant
+      const merchantsWithStats = await Promise.all(
+        merchants.map(async (merchant) => {
+          const stats = await storage.getMerchantStats(merchant.squareId);
+          return {
+            id: merchant.id,
+            businessName: merchant.businessName,
+            email: merchant.email,
+            squareId: merchant.squareId,
+            isEmailVerified: merchant.isEmailVerified,
+            createdAt: merchant.createdAt.toISOString(),
+            lastLogin: merchant.lastLogin?.toISOString(),
+            totalSales: stats.totalSales,
+            activeGiftCards: stats.activeCards
+          };
+        })
+      );
+
+      res.json(merchantsWithStats);
+    } catch (error) {
+      console.error('Get merchants error:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to retrieve merchants" 
+      });
+    }
+  });
+
   return httpServer;
 }

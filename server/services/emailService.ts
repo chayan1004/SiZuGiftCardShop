@@ -1078,9 +1078,9 @@ Gift card terms and conditions apply. Not redeemable for cash.
       const htmlContent = this.createRefundEmailHTML(data);
       
       const mailOptions = {
-        from: process.env.MAIL_FROM || this.config!.from,
+        from: 'SiZu GiftCard Refunds <' + (process.env.MAIL_FROM || this.config!.from) + '>',
         to: data.to,
-        subject: '💰 Refund Processed - SiZu Pay',
+        subject: '💰 Refund Processed - SiZu GiftCard Transaction',
         html: htmlContent,
         text: this.createRefundPlainText(data)
       };
@@ -1140,6 +1140,59 @@ Gift card terms and conditions apply. Not redeemable for cash.
 
     } catch (error) {
       console.error('Failed to send fraud alert email:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown email error'
+      };
+    }
+  }
+
+  /**
+   * Send Gift Card Delivery Email (for gifting to others)
+   */
+  async sendGiftCardDelivery(data: GiftCardEmailData): Promise<{
+    success: boolean;
+    messageId?: string;
+    error?: string;
+  }> {
+    if (!this.isConfigured()) {
+      this.initializeSMTP();
+      if (!this.isConfigured()) {
+        return { success: false, error: 'Email service not configured' };
+      }
+    }
+
+    try {
+      console.log('Creating QR code for gift card delivery:', data.gan);
+      const qrCodeDataUrl = await generateGiftCardQR(
+        data.gan,
+        data.amount,
+        { width: 300, margin: 2 }
+      );
+
+      const mailOptions = {
+        from: 'SiZu GiftCard Delivery <' + (process.env.MAIL_FROM || this.config!.from) + '>',
+        to: data.to,
+        subject: '🎁 You\'ve Received a SiZu GiftCard - Ready to Use!',
+        html: this.createGiftCardEmailHTML({ ...data, qrCodeDataUrl }),
+        text: this.createPlainTextEmail(data),
+        attachments: [{
+          filename: 'gift-card-qr.png',
+          content: qrCodeDataUrl.split(',')[1],
+          encoding: 'base64',
+          cid: 'qrcode'
+        }]
+      };
+
+      const result = await this.transporter!.sendMail(mailOptions);
+      
+      return {
+        success: true,
+        messageId: result.messageId
+      };
+
+    } catch (error) {
+      console.error('Failed to send gift card delivery email:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown email error'

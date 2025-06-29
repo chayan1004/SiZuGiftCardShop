@@ -62,10 +62,12 @@ export default function AdminDashboard() {
     }
   });
 
-  // Fetch weekly revenue data
+  // Fetch weekly revenue data with real-time updates
   const { data: weeklyRevenue = [], isLoading: revenueLoading } = useQuery<WeeklyRevenue[]>({
     queryKey: ["/api/admin/weekly-revenue"],
-    refetchInterval: 30000,
+    refetchInterval: 10000, // More frequent updates for real-time feel
+    refetchOnWindowFocus: true,
+    staleTime: 5000,
     meta: {
       headers: {
         'x-admin-token': localStorage.getItem('adminToken') || ''
@@ -73,11 +75,12 @@ export default function AdminDashboard() {
     }
   });
 
-  // Debug logging
-  useEffect(() => {
-    console.log('Weekly Revenue Data:', weeklyRevenue);
-    console.log('Metrics Data:', metrics);
-  }, [weeklyRevenue, metrics]);
+  // Calculate trend indicators
+  const revenueGrowth = weeklyRevenue.length >= 2 ? 
+    ((weeklyRevenue[weeklyRevenue.length - 1]?.revenue || 0) - (weeklyRevenue[weeklyRevenue.length - 2]?.revenue || 0)) / (weeklyRevenue[weeklyRevenue.length - 2]?.revenue || 1) * 100 : 0;
+
+  const totalWeeklyRevenue = weeklyRevenue.reduce((sum, week) => sum + week.revenue, 0);
+  const averageWeeklyRevenue = weeklyRevenue.length > 0 ? totalWeeklyRevenue / weeklyRevenue.length : 0;
 
   // Fetch recent activity
   const { data: recentActivity = [] } = useQuery<RecentActivity[]>({
@@ -426,49 +429,129 @@ export default function AdminDashboard() {
                     {/* Revenue Trend Chart */}
                     <Card className="col-span-1 bg-white/10 backdrop-blur-xl border border-white/20">
                       <CardHeader className="pb-2 lg:pb-6">
-                        <CardTitle className="text-lg lg:text-xl text-white flex items-center gap-2">
-                          <TrendingUp className="w-5 h-5 text-blue-400" />
-                          Revenue Trend
+                        <CardTitle className="text-lg lg:text-xl text-white flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <TrendingUp className="w-5 h-5 text-blue-400" />
+                            Revenue Trend
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            {revenueGrowth !== 0 && (
+                              <Badge className={`text-xs ${revenueGrowth > 0 ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-red-500/20 text-red-400 border-red-500/30'}`}>
+                                {revenueGrowth > 0 ? '↗' : '↘'} {Math.abs(revenueGrowth).toFixed(1)}%
+                              </Badge>
+                            )}
+                            <span className="text-xs text-blue-400 font-medium">${averageWeeklyRevenue.toFixed(0)}/avg</span>
+                          </div>
                         </CardTitle>
-                        <CardDescription className="text-sm text-gray-300">Weekly gift card sales performance</CardDescription>
+                        <CardDescription className="text-sm text-gray-300">Weekly performance with growth indicators and real-time updates</CardDescription>
                       </CardHeader>
                       <CardContent className="pt-2 lg:pt-0">
-                        <div className="w-full h-[250px] lg:h-[300px]">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={weeklyRevenue || []} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                              <XAxis 
-                                dataKey="week" 
-                                tick={{ fill: '#9CA3AF', fontSize: 12 }}
-                                axisLine={{ stroke: 'rgba(255,255,255,0.2)' }}
-                              />
-                              <YAxis 
-                                tick={{ fill: '#9CA3AF', fontSize: 12 }}
-                                axisLine={{ stroke: 'rgba(255,255,255,0.2)' }}
-                              />
-                              <Tooltip 
-                                contentStyle={{ 
-                                  backgroundColor: 'rgba(17, 24, 39, 0.95)',
-                                  border: '1px solid rgba(255,255,255,0.2)',
-                                  borderRadius: '12px',
-                                  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
-                                  color: '#fff'
-                                }}
-                                formatter={(value, name) => [
-                                  name === 'revenue' ? `$${Number(value).toFixed(2)}` : value,
-                                  name === 'revenue' ? 'Revenue' : 'Cards Sold'
-                                ]}
-                              />
-                              <Line 
-                                type="monotone" 
-                                dataKey="revenue" 
-                                stroke="#3B82F6" 
-                                strokeWidth={3}
-                                dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
-                                activeDot={{ r: 6, stroke: '#3B82F6', strokeWidth: 2, fill: '#60A5FA' }}
-                              />
-                            </LineChart>
-                          </ResponsiveContainer>
+                        <div className="w-full h-[250px] lg:h-[350px] relative">
+                          {revenueLoading ? (
+                            <div className="flex items-center justify-center h-full">
+                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div>
+                            </div>
+                          ) : (
+                            <ResponsiveContainer width="100%" height="100%">
+                              <LineChart 
+                                data={weeklyRevenue || []} 
+                                margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                              >
+                                <defs>
+                                  <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
+                                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.1}/>
+                                  </linearGradient>
+                                  <filter id="glow">
+                                    <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                                    <feMerge> 
+                                      <feMergeNode in="coloredBlur"/>
+                                      <feMergeNode in="SourceGraphic"/>
+                                    </feMerge>
+                                  </filter>
+                                </defs>
+                                <CartesianGrid 
+                                  strokeDasharray="2 4" 
+                                  stroke="rgba(255,255,255,0.08)" 
+                                  horizontal={true}
+                                  vertical={false}
+                                />
+                                <XAxis 
+                                  dataKey="week" 
+                                  tick={{ fill: '#9CA3AF', fontSize: 11, fontWeight: 500 }}
+                                  axisLine={false}
+                                  tickLine={false}
+                                  dy={10}
+                                />
+                                <YAxis 
+                                  tick={{ fill: '#9CA3AF', fontSize: 11, fontWeight: 500 }}
+                                  axisLine={false}
+                                  tickLine={false}
+                                  tickFormatter={(value) => `$${value}`}
+                                  dx={-10}
+                                />
+                                <Tooltip 
+                                  contentStyle={{ 
+                                    backgroundColor: 'rgba(15, 23, 42, 0.98)',
+                                    border: '1px solid rgba(148, 163, 184, 0.2)',
+                                    borderRadius: '16px',
+                                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255,255,255,0.05)',
+                                    color: '#fff',
+                                    padding: '12px 16px',
+                                    backdropFilter: 'blur(12px)'
+                                  }}
+                                  labelStyle={{ color: '#E2E8F0', fontWeight: 600, marginBottom: '8px' }}
+                                  formatter={(value, name) => [
+                                    <span style={{ color: '#60A5FA', fontWeight: 600 }}>
+                                      {name === 'revenue' ? `$${Number(value).toFixed(2)}` : `${value} cards`}
+                                    </span>,
+                                    <span style={{ color: '#94A3B8' }}>
+                                      {name === 'revenue' ? 'Weekly Revenue' : 'Cards Sold'}
+                                    </span>
+                                  ]}
+                                  cursor={{ stroke: 'rgba(59, 130, 246, 0.3)', strokeWidth: 2 }}
+                                />
+                                <Line 
+                                  type="monotone" 
+                                  dataKey="revenue" 
+                                  stroke="url(#revenueGradient)" 
+                                  strokeWidth={4}
+                                  dot={{ 
+                                    fill: '#3B82F6', 
+                                    strokeWidth: 3, 
+                                    r: 5,
+                                    filter: 'url(#glow)'
+                                  }}
+                                  activeDot={{ 
+                                    r: 8, 
+                                    stroke: '#3B82F6', 
+                                    strokeWidth: 3, 
+                                    fill: '#60A5FA',
+                                    filter: 'url(#glow)',
+                                    style: { cursor: 'pointer' }
+                                  }}
+                                  strokeDasharray="0"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                                <Line 
+                                  type="monotone" 
+                                  dataKey="giftCardsSold" 
+                                  stroke="#10B981" 
+                                  strokeWidth={3}
+                                  strokeDasharray="5 5"
+                                  dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
+                                  activeDot={{ r: 6, stroke: '#10B981', strokeWidth: 2, fill: '#34D399' }}
+                                />
+                              </LineChart>
+                            </ResponsiveContainer>
+                          )}
+                          
+                          {/* Real-time indicator */}
+                          <div className="absolute top-4 right-4 flex items-center space-x-2">
+                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                            <span className="text-xs text-green-400 font-medium">Live Data</span>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
@@ -483,43 +566,159 @@ export default function AdminDashboard() {
                         <CardDescription className="text-sm text-gray-300">Distribution of card statuses</CardDescription>
                       </CardHeader>
                       <CardContent className="pt-2 lg:pt-0">
-                        <div className="w-full h-[250px] lg:h-[300px]">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <PieChart margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                              <Pie
-                                data={[
-                                  { name: 'Active', value: metrics?.activeCards || 0, color: '#10B981' },
-                                  { name: 'Redeemed', value: metrics?.redeemedCards || 0, color: '#3B82F6' },
-                                  { name: 'Expired', value: Math.max(0, (metrics?.totalGiftCards || 0) - (metrics?.activeCards || 0) - (metrics?.redeemedCards || 0)), color: '#F59E0B' }
-                                ]}
-                                cx="50%"
-                                cy="50%"
-                                outerRadius={90}
-                                innerRadius={40}
-                                fill="#8884d8"
-                                dataKey="value"
-                                label={({ name, percent }) => percent > 0 ? `${name} ${(percent * 100).toFixed(0)}%` : ''}
-                                labelLine={false}
-                              >
-                                {[
-                                  { name: 'Active', value: metrics?.activeCards || 0, color: '#10B981' },
-                                  { name: 'Redeemed', value: metrics?.redeemedCards || 0, color: '#3B82F6' },
-                                  { name: 'Expired', value: Math.max(0, (metrics?.totalGiftCards || 0) - (metrics?.activeCards || 0) - (metrics?.redeemedCards || 0)), color: '#F59E0B' }
-                                ].map((entry, index) => (
-                                  <Cell key={`cell-${index}`} fill={entry.color} stroke="rgba(255,255,255,0.2)" strokeWidth={2} />
-                                ))}
-                              </Pie>
-                              <Tooltip 
-                                contentStyle={{ 
-                                  backgroundColor: 'rgba(17, 24, 39, 0.95)',
-                                  border: '1px solid rgba(255,255,255,0.2)',
-                                  borderRadius: '12px',
-                                  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
-                                  color: '#fff'
-                                }}
-                              />
-                            </PieChart>
-                          </ResponsiveContainer>
+                        <div className="w-full h-[250px] lg:h-[350px] relative">
+                          {metricsLoading ? (
+                            <div className="flex items-center justify-center h-full">
+                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-400"></div>
+                            </div>
+                          ) : (
+                            <>
+                              <ResponsiveContainer width="100%" height="100%">
+                                <PieChart margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
+                                  <defs>
+                                    <filter id="pieGlow">
+                                      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                                      <feMerge> 
+                                        <feMergeNode in="coloredBlur"/>
+                                        <feMergeNode in="SourceGraphic"/>
+                                      </feMerge>
+                                    </filter>
+                                    <linearGradient id="activeGradient" x1="0" y1="0" x2="1" y2="1">
+                                      <stop offset="0%" stopColor="#10B981"/>
+                                      <stop offset="100%" stopColor="#34D399"/>
+                                    </linearGradient>
+                                    <linearGradient id="redeemedGradient" x1="0" y1="0" x2="1" y2="1">
+                                      <stop offset="0%" stopColor="#3B82F6"/>
+                                      <stop offset="100%" stopColor="#60A5FA"/>
+                                    </linearGradient>
+                                    <linearGradient id="expiredGradient" x1="0" y1="0" x2="1" y2="1">
+                                      <stop offset="0%" stopColor="#F59E0B"/>
+                                      <stop offset="100%" stopColor="#FBBF24"/>
+                                    </linearGradient>
+                                  </defs>
+                                  <Pie
+                                    data={[
+                                      { 
+                                        name: 'Active Cards', 
+                                        value: metrics?.activeCards || 0, 
+                                        color: 'url(#activeGradient)',
+                                        originalColor: '#10B981'
+                                      },
+                                      { 
+                                        name: 'Redeemed Cards', 
+                                        value: metrics?.redeemedCards || 0, 
+                                        color: 'url(#redeemedGradient)',
+                                        originalColor: '#3B82F6'
+                                      },
+                                      { 
+                                        name: 'Other Cards', 
+                                        value: Math.max(0, (metrics?.totalGiftCards || 0) - (metrics?.activeCards || 0) - (metrics?.redeemedCards || 0)), 
+                                        color: 'url(#expiredGradient)',
+                                        originalColor: '#F59E0B'
+                                      }
+                                    ]}
+                                    cx="50%"
+                                    cy="50%"
+                                    outerRadius={100}
+                                    innerRadius={50}
+                                    dataKey="value"
+                                    startAngle={90}
+                                    endAngle={450}
+                                    animationBegin={0}
+                                    animationDuration={2000}
+                                    label={({ name, percent, value }) => 
+                                      percent > 0 ? `${(percent * 100).toFixed(1)}%` : ''
+                                    }
+                                    labelLine={false}
+                                  >
+                                    {[
+                                      { 
+                                        name: 'Active Cards', 
+                                        value: metrics?.activeCards || 0, 
+                                        color: 'url(#activeGradient)'
+                                      },
+                                      { 
+                                        name: 'Redeemed Cards', 
+                                        value: metrics?.redeemedCards || 0, 
+                                        color: 'url(#redeemedGradient)'
+                                      },
+                                      { 
+                                        name: 'Other Cards', 
+                                        value: Math.max(0, (metrics?.totalGiftCards || 0) - (metrics?.activeCards || 0) - (metrics?.redeemedCards || 0)), 
+                                        color: 'url(#expiredGradient)'
+                                      }
+                                    ].map((entry, index) => (
+                                      <Cell 
+                                        key={`cell-${index}`} 
+                                        fill={entry.color}
+                                        stroke="rgba(255,255,255,0.1)" 
+                                        strokeWidth={3}
+                                        filter="url(#pieGlow)"
+                                        style={{ cursor: 'pointer' }}
+                                      />
+                                    ))}
+                                  </Pie>
+                                  <Tooltip 
+                                    contentStyle={{ 
+                                      backgroundColor: 'rgba(15, 23, 42, 0.98)',
+                                      border: '1px solid rgba(148, 163, 184, 0.2)',
+                                      borderRadius: '16px',
+                                      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255,255,255,0.05)',
+                                      color: '#fff',
+                                      padding: '12px 16px',
+                                      backdropFilter: 'blur(12px)'
+                                    }}
+                                    formatter={(value, name) => [
+                                      <span style={{ color: '#60A5FA', fontWeight: 600 }}>
+                                        {value} cards
+                                      </span>,
+                                      <span style={{ color: '#94A3B8' }}>
+                                        {name}
+                                      </span>
+                                    ]}
+                                  />
+                                  <Legend 
+                                    verticalAlign="bottom" 
+                                    height={36}
+                                    iconType="circle"
+                                    wrapperStyle={{
+                                      paddingTop: '20px',
+                                      fontSize: '12px',
+                                      color: '#9CA3AF'
+                                    }}
+                                  />
+                                </PieChart>
+                              </ResponsiveContainer>
+                              
+                              {/* Center Stats Display */}
+                              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <div className="text-center">
+                                  <div className="text-3xl font-bold text-white mb-1">
+                                    {metrics?.totalGiftCards || 0}
+                                  </div>
+                                  <div className="text-sm text-gray-400 font-medium">
+                                    Total Cards
+                                  </div>
+                                  <div className="flex items-center justify-center mt-2 space-x-4 text-xs">
+                                    <div className="flex items-center space-x-1">
+                                      <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                                      <span className="text-gray-400">{metrics?.activeCards || 0} Active</span>
+                                    </div>
+                                    <div className="flex items-center space-x-1">
+                                      <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                                      <span className="text-gray-400">{metrics?.redeemedCards || 0} Used</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* Real-time indicator */}
+                              <div className="absolute top-4 right-4 flex items-center space-x-2">
+                                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                                <span className="text-xs text-green-400 font-medium">Live</span>
+                              </div>
+                            </>
+                          )}
                         </div>
                       </CardContent>
                     </Card>

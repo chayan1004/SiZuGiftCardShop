@@ -1,5 +1,5 @@
 import { 
-  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, merchantCardDesigns, fraudLogs, autoDefenseRules, cardRedemptions, webhookEvents, webhookDeliveryLogs, webhookRetryQueue, webhookFailureLog, merchantApiKeys,
+  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, merchantCardDesigns, fraudLogs, autoDefenseRules, cardRedemptions, webhookEvents, webhookDeliveryLogs, webhookRetryQueue, webhookFailureLog, merchantApiKeys, giftCardTransactions,
   type User, type InsertUser,
   type Merchant, type InsertMerchant, 
   type GiftCard, type InsertGiftCard,
@@ -19,7 +19,8 @@ import {
   type WebhookDeliveryLog, type InsertWebhookDeliveryLog,
   type WebhookRetryQueue, type InsertWebhookRetryQueue,
   type WebhookFailureLog, type InsertWebhookFailureLog,
-  type MerchantApiKey, type InsertMerchantApiKey
+  type MerchantApiKey, type InsertMerchantApiKey,
+  type GiftCardTransaction, type InsertGiftCardTransaction
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, count, sum, and, gte, lte, asc } from "drizzle-orm";
@@ -1682,6 +1683,136 @@ export class DatabaseStorage implements IStorage {
       .from(merchants)
       .where(eq(merchants.merchantId, merchantId));
     return merchant;
+  }
+
+  // Phase 17B: Gift Card Transaction Tracking
+  async logGiftCardTransaction(transaction: InsertGiftCardTransaction): Promise<string> {
+    const [result] = await db
+      .insert(giftCardTransactions)
+      .values(transaction)
+      .returning({ id: giftCardTransactions.id });
+    return result.id;
+  }
+
+  async getTransactionFeed(filters: {
+    merchantId?: string;
+    type?: string;
+    status?: string;
+    dateFrom?: Date;
+    dateTo?: Date;
+    search?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<GiftCardTransaction[]> {
+    let query = db
+      .select()
+      .from(giftCardTransactions);
+
+    const conditions = [];
+    
+    if (filters.merchantId) {
+      conditions.push(eq(giftCardTransactions.merchantId, filters.merchantId));
+    }
+    
+    if (filters.type) {
+      conditions.push(eq(giftCardTransactions.type, filters.type));
+    }
+    
+    if (filters.status) {
+      conditions.push(eq(giftCardTransactions.status, filters.status));
+    }
+    
+    if (filters.dateFrom) {
+      conditions.push(gte(giftCardTransactions.createdAt, filters.dateFrom));
+    }
+    
+    if (filters.dateTo) {
+      conditions.push(lte(giftCardTransactions.createdAt, filters.dateTo));
+    }
+    
+    if (filters.search) {
+      conditions.push(
+        sql`(${giftCardTransactions.cardId} ILIKE '%' || ${filters.search} || '%' 
+        OR ${giftCardTransactions.customerEmail} ILIKE '%' || ${filters.search} || '%'
+        OR ${giftCardTransactions.orderReference} ILIKE '%' || ${filters.search} || '%')`
+      );
+    }
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+
+    return await query
+      .orderBy(desc(giftCardTransactions.createdAt))
+      .limit(filters.limit || 50)
+      .offset(filters.offset || 0);
+  }
+
+  async getTransactionDetail(id: string): Promise<any> {
+    const [transaction] = await db
+      .select({
+        transaction: giftCardTransactions,
+        merchant: {
+          merchantId: merchants.merchantId,
+          businessName: merchants.businessName,
+          email: merchants.email
+        }
+      })
+      .from(giftCardTransactions)
+      .leftJoin(merchants, eq(giftCardTransactions.merchantId, merchants.merchantId))
+      .where(eq(giftCardTransactions.id, id));
+
+    if (!transaction) return null;
+
+    // Get related fraud logs
+    const fraudLogs = await db
+      .select()
+      .from(fraudLogs)
+      .where(eq(fraudLogs.ipAddress, transaction.transaction.ipAddress || ''))
+      .orderBy(desc(fraudLogs.timestamp))
+      .limit(10);
+
+    return {
+      ...transaction.transaction,
+      merchant: transaction.merchant,
+      fraudLogs
+    };
+  }
+
+  async getTransactionStats(): Promise<any> {
+    const [stats] = await db
+      .select({
+        totalTransactions: count(),
+        successfulTransactions: sum(sql`CASE WHEN ${giftCardTransactions.success} = true THEN 1 ELSE 0 END`),
+        failedTransactions: sum(sql`CASE WHEN ${giftCardTransactions.success} = false THEN 1 ELSE 0 END`),
+        totalAmount: sum(giftCardTransactions.amount),
+        issueCount: sum(sql`CASE WHEN ${giftCardTransactions.type} = 'issue' THEN 1 ELSE 0 END`),
+        redeemCount: sum(sql`CASE WHEN ${giftCardTransactions.type} = 'redeem' THEN 1 ELSE 0 END`),
+        refundCount: sum(sql`CASE WHEN ${giftCardTransactions.type} = 'refund' THEN 1 ELSE 0 END`)
+      })
+      .from(giftCardTransactions);
+
+    return stats;
+  }
+
+  async updateTransactionStatus(id: string, status: string, success: boolean, failureReason?: string): Promise<void> {
+    await db
+      .update(giftCardTransactions)
+      .set({ 
+        status, 
+        success, 
+        failureReason,
+        attemptCount: sql`${giftCardTransactions.attemptCount} + 1`
+      })
+      .where(eq(giftCardTransactions.id, id));
+  }
+
+  async getRecentTransactions(limit: number = 10): Promise<GiftCardTransaction[]> {
+    return await db
+      .select()
+      .from(giftCardTransactions)
+      .orderBy(desc(giftCardTransactions.createdAt))
+      .limit(limit);
   }
 }
 

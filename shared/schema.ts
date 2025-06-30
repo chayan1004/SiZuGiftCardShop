@@ -441,3 +441,31 @@ export const insertMerchantApiKeySchema = createInsertSchema(merchantApiKeys).om
 
 export type MerchantApiKey = typeof merchantApiKeys.$inferSelect;
 export type InsertMerchantApiKey = z.infer<typeof insertMerchantApiKeySchema>;
+
+// Phase 17B: Gift Card Transactions Table for Real-Time Monitoring
+export const giftCardTransactions = pgTable("gift_card_transactions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  type: text("type", { enum: ["issue", "redeem", "refund"] }).notNull(),
+  merchantId: text("merchant_id").references(() => merchants.merchantId),
+  cardId: text("card_id"), // Gift card GAN or ID
+  amount: integer("amount").notNull(), // Amount in cents
+  status: text("status").notNull().default("pending"), // pending, completed, failed
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  deviceId: text("device_id"), // SHA256 hash of user agent
+  attemptCount: integer("attempt_count").default(1),
+  success: boolean("success").default(false),
+  failureReason: text("failure_reason"),
+  customerEmail: text("customer_email"),
+  orderReference: text("order_reference"), // Reference to public order or bulk order
+  squareTransactionId: text("square_transaction_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertGiftCardTransactionSchema = createInsertSchema(giftCardTransactions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type GiftCardTransaction = typeof giftCardTransactions.$inferSelect;
+export type InsertGiftCardTransaction = z.infer<typeof insertGiftCardTransactionSchema>;

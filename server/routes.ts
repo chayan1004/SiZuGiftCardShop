@@ -5135,6 +5135,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Phase 17B: Transaction Explorer API Endpoints
+  app.get("/api/admin/transactions", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const {
+        merchantId,
+        type,
+        status,
+        dateFrom,
+        dateTo,
+        search,
+        page = '1',
+        limit = '50'
+      } = req.query;
+
+      const offset = (parseInt(page as string) - 1) * parseInt(limit as string);
+
+      const filters = {
+        merchantId: merchantId as string,
+        type: type as string,
+        status: status as string,
+        dateFrom: dateFrom ? new Date(dateFrom as string) : undefined,
+        dateTo: dateTo ? new Date(dateTo as string) : undefined,
+        search: search as string,
+        limit: parseInt(limit as string),
+        offset
+      };
+
+      const transactions = await storage.getTransactionFeed(filters);
+      const stats = await storage.getTransactionStats();
+
+      res.json({
+        success: true,
+        transactions,
+        stats,
+        pagination: {
+          page: parseInt(page as string),
+          limit: parseInt(limit as string),
+          total: transactions.length
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching transaction feed:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch transaction feed"
+      });
+    }
+  });
+
+  app.get("/api/admin/transactions/:id", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const transactionDetail = await storage.getTransactionDetail(id);
+
+      if (!transactionDetail) {
+        return res.status(404).json({
+          success: false,
+          error: "Transaction not found"
+        });
+      }
+
+      res.json({
+        success: true,
+        transaction: transactionDetail
+      });
+    } catch (error) {
+      console.error('Error fetching transaction detail:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch transaction detail"
+      });
+    }
+  });
+
+  app.get("/api/admin/transactions/stats/dashboard", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const stats = await storage.getTransactionStats();
+      const recentTransactions = await storage.getRecentTransactions(5);
+
+      res.json({
+        success: true,
+        stats,
+        recentTransactions
+      });
+    } catch (error) {
+      console.error('Error fetching transaction dashboard stats:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch dashboard statistics"
+      });
+    }
+  });
+
   // Phase 17A: Merchant Settings and API Keys Management
 
   // GET /api/merchant/settings - Get merchant settings

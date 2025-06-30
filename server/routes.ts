@@ -20,6 +20,7 @@ import { FraudDetectionService } from './services/FraudDetectionService';
 import { ThreatReplayService } from './services/ThreatReplayService';
 import { AutoDefenseEngine } from './services/AutoDefenseEngine';
 import { FraudSocketService, calculateThreatSeverity } from './services/FraudSocketService';
+import { fileUploadService } from './services/FileUploadService';
 import { requireAdmin, requireMerchant, requireMerchantAuth, checkMerchantStatus } from './middleware/authMiddleware';
 import { AuthService } from './services/authService';
 import { generateGiftCardQR, generateGiftCardBarcode } from '../utils/qrGenerator';
@@ -3932,6 +3933,173 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         success: false,
         error: "Failed to fetch analytics"
+      });
+    }
+  });
+
+  // Merchant Card Design API Endpoints (Phase 1)
+  
+  // POST /api/merchant/card-design - Upload and save merchant card design
+  app.post("/api/merchant/card-design", requireMerchantAuth, async (req: Request, res: Response) => {
+    try {
+      const merchant = req.user as any;
+      const { designImageBase64, logoImageBase64, themeColor, customMessage } = req.body;
+
+      // Validation schema
+      const cardDesignSchema = z.object({
+        designImageBase64: z.string().optional(),
+        logoImageBase64: z.string().optional(),
+        themeColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
+        customMessage: z.string().max(200).optional()
+      });
+
+      const validatedData = cardDesignSchema.parse({
+        designImageBase64,
+        logoImageBase64,
+        themeColor,
+        customMessage
+      });
+
+      let designUrl: string | undefined;
+      let logoUrl: string | undefined;
+
+      // Upload design image if provided
+      if (validatedData.designImageBase64) {
+        const designUpload = await fileUploadService.uploadFromBase64(
+          validatedData.designImageBase64,
+          `design-${merchant.id}-${Date.now()}.png`
+        );
+        
+        if (!designUpload.success) {
+          return res.status(400).json({
+            success: false,
+            error: designUpload.error || "Failed to upload design image"
+          });
+        }
+        designUrl = designUpload.url;
+      }
+
+      // Upload logo image if provided
+      if (validatedData.logoImageBase64) {
+        const logoUpload = await fileUploadService.uploadFromBase64(
+          validatedData.logoImageBase64,
+          `logo-${merchant.id}-${Date.now()}.png`
+        );
+        
+        if (!logoUpload.success) {
+          return res.status(400).json({
+            success: false,
+            error: logoUpload.error || "Failed to upload logo image"
+          });
+        }
+        logoUrl = logoUpload.url;
+      }
+
+      // Check if merchant already has a card design
+      const existingDesign = await storage.getMerchantCardDesign(merchant.id);
+      
+      let cardDesign;
+      if (existingDesign) {
+        // Update existing design
+        const updateData: any = {};
+        if (designUrl) updateData.designUrl = designUrl;
+        if (logoUrl) updateData.logoUrl = logoUrl;
+        if (validatedData.themeColor) updateData.themeColor = validatedData.themeColor;
+        if (validatedData.customMessage !== undefined) updateData.customMessage = validatedData.customMessage;
+
+        cardDesign = await storage.updateMerchantCardDesign(merchant.id, updateData);
+      } else {
+        // Create new design
+        cardDesign = await storage.createMerchantCardDesign({
+          merchantId: merchant.id,
+          designUrl: designUrl || null,
+          logoUrl: logoUrl || null,
+          themeColor: validatedData.themeColor || "#6366f1",
+          customMessage: validatedData.customMessage || null,
+          isActive: true
+        });
+      }
+
+      console.log(`Merchant ${merchant.id} updated card design: design=${!!designUrl}, logo=${!!logoUrl}, theme=${validatedData.themeColor}`);
+
+      res.json({
+        success: true,
+        message: "Card design saved successfully",
+        design: cardDesign
+      });
+
+    } catch (error) {
+      console.error('Error saving merchant card design:', error);
+      
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid input data",
+          details: error.errors
+        });
+      }
+
+      res.status(500).json({
+        success: false,
+        error: "Failed to save card design"
+      });
+    }
+  });
+
+  // GET /api/merchant/card-design - Retrieve merchant card design
+  app.get("/api/merchant/card-design", requireMerchantAuth, async (req: Request, res: Response) => {
+    try {
+      const merchant = req.user as any;
+      
+      const cardDesign = await storage.getMerchantCardDesign(merchant.id);
+      
+      if (!cardDesign) {
+        // Return default design if none exists
+        return res.json({
+          success: true,
+          design: {
+            designUrl: null,
+            logoUrl: null,
+            themeColor: "#6366f1",
+            customMessage: null,
+            isActive: true
+          }
+        });
+      }
+
+      res.json({
+        success: true,
+        design: cardDesign
+      });
+
+    } catch (error) {
+      console.error('Error fetching merchant card design:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch card design"
+      });
+    }
+  });
+
+  // GET /api/merchant/card-design/validation - Get upload validation config
+  app.get("/api/merchant/card-design/validation", requireMerchantAuth, async (req: Request, res: Response) => {
+    try {
+      const validation = fileUploadService.getValidationConfig();
+      
+      res.json({
+        success: true,
+        validation: {
+          maxSize: validation.maxSize,
+          maxSizeMB: Math.floor(validation.maxSize / 1024 / 1024),
+          allowedTypes: validation.allowedTypes,
+          allowedExtensions: validation.allowedExtensions
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching validation config:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch validation config"
       });
     }
   });

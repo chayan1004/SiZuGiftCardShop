@@ -284,8 +284,6 @@ class SquarePaymentService {
         ? SquareEnvironment.Production 
         : SquareEnvironment.Sandbox,
       accessToken: this.accessToken,
-      customUrl: undefined, // Use default Square URLs
-      squareVersion: '2023-10-18',
       userAgentDetail: 'SiZu-GiftCard/1.0'
     });
 

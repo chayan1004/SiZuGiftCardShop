@@ -25,6 +25,7 @@ import AdminGiftCardOrders from "../AdminGiftCardOrders";
 import AdminWebhookFailures from "../../components/admin/AdminWebhookFailures";
 import ThreatFeedPanel from "../../components/admin/ThreatFeedPanel";
 import TransactionExplorerPage from "./TransactionExplorerPage";
+import AdminCommandCenter from "./AdminCommandCenter";
 import type { FraudAlert } from "../../components/admin/ThreatFeedPanel";
 
 interface DashboardMetrics {
@@ -234,6 +235,7 @@ export default function AdminDashboard() {
     { id: "orders", label: "Public Orders", icon: <CreditCard className="w-5 h-5" /> },
     { id: "analytics", label: "Gift Card Analytics", icon: <BarChart3 className="w-5 h-5" /> },
     { id: "transactions", label: "Transaction Explorer", icon: <Activity className="w-5 h-5" /> },
+    { id: "command-center", label: "Command Center", icon: <Settings className="w-5 h-5" /> },
     { id: "settings", label: "Merchant Settings", icon: <Settings className="w-5 h-5" /> },
     { id: "webhooks", label: "Webhook Intelligence", icon: <Activity className="w-5 h-5" /> },
     { id: "security", label: "Threat Replay", icon: <Brain className="w-5 h-5" /> },

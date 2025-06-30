@@ -233,6 +233,16 @@ export interface IStorage {
     responseTimeMs: number;
     payload: string;
   }): Promise<void>;
+
+  // Phase 18: Admin Command Center - Global Settings Management
+  getGlobalSettings(): Promise<GlobalSetting[]>;
+  getGlobalSetting(key: string): Promise<GlobalSetting | undefined>;
+  updateGlobalSetting(key: string, value: string): Promise<GlobalSetting>;
+
+  // Phase 18: Gateway Feature Toggles Management
+  getGatewayFeatures(): Promise<GatewayFeatureToggle[]>;
+  getGatewayFeature(gatewayName: string, feature: string): Promise<GatewayFeatureToggle | undefined>;
+  updateGatewayFeature(gatewayName: string, feature: string, enabled: boolean): Promise<GatewayFeatureToggle>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1886,6 +1896,94 @@ export class DatabaseStorage implements IStorage {
       .from(giftCardTransactions)
       .orderBy(desc(giftCardTransactions.createdAt))
       .limit(limit);
+  }
+
+  // Phase 18: Admin Command Center - Global Settings Management
+  async getGlobalSettings(): Promise<GlobalSetting[]> {
+    return await db.select().from(globalSettings).orderBy(globalSettings.key);
+  }
+
+  async getGlobalSetting(key: string): Promise<GlobalSetting | undefined> {
+    const [setting] = await db
+      .select()
+      .from(globalSettings)
+      .where(eq(globalSettings.key, key));
+    return setting || undefined;
+  }
+
+  async updateGlobalSetting(key: string, value: string): Promise<GlobalSetting> {
+    const existing = await this.getGlobalSetting(key);
+    
+    if (existing) {
+      const [updated] = await db
+        .update(globalSettings)
+        .set({ 
+          value,
+          updatedAt: new Date()
+        })
+        .where(eq(globalSettings.key, key))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db
+        .insert(globalSettings)
+        .values({
+          key,
+          value,
+          updatedAt: new Date()
+        })
+        .returning();
+      return created;
+    }
+  }
+
+  // Phase 18: Gateway Feature Toggles Management
+  async getGatewayFeatures(): Promise<GatewayFeatureToggle[]> {
+    return await db
+      .select()
+      .from(gatewayFeatureToggles)
+      .orderBy(gatewayFeatureToggles.gatewayName, gatewayFeatureToggles.feature);
+  }
+
+  async getGatewayFeature(gatewayName: string, feature: string): Promise<GatewayFeatureToggle | undefined> {
+    const [toggle] = await db
+      .select()
+      .from(gatewayFeatureToggles)
+      .where(and(
+        eq(gatewayFeatureToggles.gatewayName, gatewayName),
+        eq(gatewayFeatureToggles.feature, feature)
+      ));
+    return toggle || undefined;
+  }
+
+  async updateGatewayFeature(gatewayName: string, feature: string, enabled: boolean): Promise<GatewayFeatureToggle> {
+    const existing = await this.getGatewayFeature(gatewayName, feature);
+    
+    if (existing) {
+      const [updated] = await db
+        .update(gatewayFeatureToggles)
+        .set({ 
+          enabled,
+          updatedAt: new Date()
+        })
+        .where(and(
+          eq(gatewayFeatureToggles.gatewayName, gatewayName),
+          eq(gatewayFeatureToggles.feature, feature)
+        ))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db
+        .insert(gatewayFeatureToggles)
+        .values({
+          gatewayName,
+          feature,
+          enabled,
+          updatedAt: new Date()
+        })
+        .returning();
+      return created;
+    }
   }
 }
 

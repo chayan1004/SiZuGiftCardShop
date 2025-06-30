@@ -1,5 +1,5 @@
 import { 
-  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders,
+  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding,
   type User, type InsertUser,
   type Merchant, type InsertMerchant, 
   type GiftCard, type InsertGiftCard,
@@ -8,7 +8,9 @@ import {
   type PromoUsage, type InsertPromoUsage,
   type MerchantGiftCard, type InsertMerchantGiftCard,
   type MerchantBulkOrder, type InsertMerchantBulkOrder,
-  type PublicGiftCardOrder, type InsertPublicGiftCardOrder
+  type PublicGiftCardOrder, type InsertPublicGiftCardOrder,
+  type MerchantPricingTier, type InsertMerchantPricingTier,
+  type MerchantBranding, type InsertMerchantBranding
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, count, sum, and } from "drizzle-orm";
@@ -29,6 +31,17 @@ export interface IStorage {
   updateMerchantTokens(id: number, accessToken: string, refreshToken?: string): Promise<Merchant | undefined>;
   updateMerchantVerificationToken(id: number, token: string, expiresAt: Date): Promise<Merchant | undefined>;
   markMerchantEmailVerified(id: number): Promise<Merchant | undefined>;
+
+  // Merchant Pricing Tiers methods
+  getMerchantPricingTiers(merchantId: number): Promise<MerchantPricingTier[]>;
+  createMerchantPricingTier(tier: InsertMerchantPricingTier): Promise<MerchantPricingTier>;
+  updateMerchantPricingTier(id: number, tier: Partial<InsertMerchantPricingTier>): Promise<MerchantPricingTier | undefined>;
+  deleteMerchantPricingTier(id: number): Promise<boolean>;
+
+  // Merchant Branding methods
+  getMerchantBranding(merchantId: number): Promise<MerchantBranding | undefined>;
+  createMerchantBranding(branding: InsertMerchantBranding): Promise<MerchantBranding>;
+  updateMerchantBranding(merchantId: number, branding: Partial<InsertMerchantBranding>): Promise<MerchantBranding | undefined>;
 
   // Merchant Bulk Purchase methods
   createMerchantBulkOrder(order: InsertMerchantBulkOrder): Promise<MerchantBulkOrder>;

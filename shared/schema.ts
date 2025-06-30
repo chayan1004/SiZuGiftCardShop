@@ -140,6 +140,25 @@ export const merchantBulkOrdersSchema = createInsertSchema(merchant_bulk_orders)
   created_at: true,
 });
 
+export const merchantPricingTiers = pgTable("merchant_pricing_tiers", {
+  id: serial("id").primaryKey(),
+  merchantId: integer("merchant_id").notNull(),
+  minQuantity: integer("min_quantity").notNull(),
+  pricePerUnit: integer("price_per_unit").notNull(), // Price in cents
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const merchantBranding = pgTable("merchant_branding", {
+  id: serial("id").primaryKey(),
+  merchantId: integer("merchant_id").notNull().unique(),
+  logoUrl: text("logo_url"),
+  themeColor: text("theme_color").default('#6366f1'),
+  tagline: text("tagline"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const publicGiftCardOrders = pgTable("public_giftcard_orders", {
   id: uuid("id").primaryKey().defaultRandom(),
   recipientEmail: text("recipient_email").notNull(),
@@ -166,6 +185,18 @@ export const insertPublicGiftCardOrderSchema = createInsertSchema(publicGiftCard
   createdAt: true,
 });
 
+export const insertMerchantPricingTierSchema = createInsertSchema(merchantPricingTiers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertMerchantBrandingSchema = createInsertSchema(merchantBranding).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export type Merchant = typeof merchants.$inferSelect;
 export type InsertMerchant = z.infer<typeof insertMerchantSchema>;
 export type GiftCard = typeof giftCards.$inferSelect;
@@ -184,3 +215,7 @@ export type MerchantBulkOrder = typeof merchant_bulk_orders.$inferSelect;
 export type InsertMerchantBulkOrder = z.infer<typeof merchantBulkOrdersSchema>;
 export type PublicGiftCardOrder = typeof publicGiftCardOrders.$inferSelect;
 export type InsertPublicGiftCardOrder = z.infer<typeof insertPublicGiftCardOrderSchema>;
+export type MerchantPricingTier = typeof merchantPricingTiers.$inferSelect;
+export type InsertMerchantPricingTier = z.infer<typeof insertMerchantPricingTierSchema>;
+export type MerchantBranding = typeof merchantBranding.$inferSelect;
+export type InsertMerchantBranding = z.infer<typeof insertMerchantBrandingSchema>;

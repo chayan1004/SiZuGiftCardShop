@@ -1,0 +1,254 @@
+{
+  "info": {
+    "name": "Phase 2: Live Design Renderer on Checkout",
+    "description": "Test collection for Phase 2 - Dynamic merchant branding in checkout flow",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "merchantId",
+      "value": "merchant_1751221971890_zmi502",
+      "type": "string"
+    },
+    {
+      "key": "testMerchantId",
+      "value": "test-merchant-123",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Test Default Merchant Design",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Test merchant design endpoint with fallback",
+              "pm.test('Default design endpoint responds', function () {",
+              "    pm.response.to.have.status(200);",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.success).to.be.true;",
+              "    pm.expect(response.design).to.exist;",
+              "});",
+              "",
+              "pm.test('Default design structure is correct', function () {",
+              "    const response = pm.response.json();",
+              "    const design = response.design;",
+              "    ",
+              "    pm.expect(design.hasCustomDesign).to.be.a('boolean');",
+              "    pm.expect(design.backgroundImageUrl).to.exist;",
+              "    pm.expect(design.logoUrl).to.exist;",
+              "    pm.expect(design.themeColor).to.be.a('string');",
+              "    pm.expect(design.customMessage).to.be.a('string');",
+              "});",
+              "",
+              "pm.test('Default design uses fallback values', function () {",
+              "    const response = pm.response.json();",
+              "    const design = response.design;",
+              "    ",
+              "    pm.expect(design.hasCustomDesign).to.be.false;",
+              "    pm.expect(design.themeColor).to.equal('#613791');",
+              "    pm.expect(design.customMessage).to.include('Thank you');",
+              "});",
+              "",
+              "console.log('✅ Default Merchant Design Test:');",
+              "console.log('   Status:', pm.response.code);",
+              "console.log('   Has Custom Design:', pm.response.json().design.hasCustomDesign);",
+              "console.log('   Theme Color:', pm.response.json().design.themeColor);",
+              "console.log('   Message:', pm.response.json().design.customMessage);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/public/merchant-design/{{testMerchantId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "public", "merchant-design", "{{testMerchantId}}"]
+        }
+      }
+    },
+    {
+      "name": "2. Test Real Merchant Design",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Test merchant design endpoint with real merchant",
+              "pm.test('Real merchant design endpoint responds', function () {",
+              "    pm.response.to.have.status(200);",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.success).to.be.true;",
+              "    pm.expect(response.design).to.exist;",
+              "});",
+              "",
+              "pm.test('Real merchant design structure', function () {",
+              "    const response = pm.response.json();",
+              "    const design = response.design;",
+              "    ",
+              "    pm.expect(design).to.have.property('hasCustomDesign');",
+              "    pm.expect(design).to.have.property('backgroundImageUrl');",
+              "    pm.expect(design).to.have.property('logoUrl');",
+              "    pm.expect(design).to.have.property('themeColor');",
+              "    pm.expect(design).to.have.property('customMessage');",
+              "});",
+              "",
+              "// Store design data for validation",
+              "const design = pm.response.json().design;",
+              "pm.globals.set('merchantDesign', JSON.stringify(design));",
+              "",
+              "console.log('✅ Real Merchant Design Test:');",
+              "console.log('   Status:', pm.response.code);",
+              "console.log('   Has Custom Design:', design.hasCustomDesign);",
+              "console.log('   Theme Color:', design.themeColor);",
+              "console.log('   Background Image:', design.backgroundImageUrl ? 'Yes' : 'No');",
+              "console.log('   Logo Image:', design.logoUrl ? 'Yes' : 'No');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/public/merchant-design/{{merchantId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "public", "merchant-design", "{{merchantId}}"]
+        }
+      }
+    },
+    {
+      "name": "3. Test Invalid Merchant ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Test merchant design endpoint with invalid merchant",
+              "pm.test('Invalid merchant returns fallback design', function () {",
+              "    pm.response.to.have.status(200);",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.success).to.be.true;",
+              "    pm.expect(response.design).to.exist;",
+              "});",
+              "",
+              "pm.test('Invalid merchant uses default design', function () {",
+              "    const response = pm.response.json();",
+              "    const design = response.design;",
+              "    ",
+              "    pm.expect(design.hasCustomDesign).to.be.false;",
+              "    pm.expect(design.themeColor).to.equal('#613791');",
+              "    pm.expect(design.backgroundImageUrl).to.be.null;",
+              "    pm.expect(design.logoUrl).to.be.null;",
+              "});",
+              "",
+              "console.log('✅ Invalid Merchant Test:');",
+              "console.log('   Status:', pm.response.code);",
+              "console.log('   Fallback Design Used:', !pm.response.json().design.hasCustomDesign);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/public/merchant-design/invalid-merchant-999",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "public", "merchant-design", "invalid-merchant-999"]
+        }
+      }
+    },
+    {
+      "name": "4. Test Merchant Validation",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Test merchant validation endpoint",
+              "pm.test('Merchant validation works', function () {",
+              "    pm.response.to.have.status(200);",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('valid');",
+              "});",
+              "",
+              "pm.test('Merchant validation returns boolean', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.valid).to.be.a('boolean');",
+              "});",
+              "",
+              "console.log('✅ Merchant Validation Test:');",
+              "console.log('   Status:', pm.response.code);",
+              "console.log('   Merchant Valid:', pm.response.json().valid);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/public/validate-merchant/{{merchantId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "public", "validate-merchant", "{{merchantId}}"]
+        }
+      }
+    },
+    {
+      "name": "5. Test Square Config for Checkout",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Test Square configuration for checkout integration",
+              "pm.test('Square config endpoint responds', function () {",
+              "    pm.response.to.have.status(200);",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('applicationId');",
+              "    pm.expect(response).to.have.property('locationId');",
+              "    pm.expect(response).to.have.property('environment');",
+              "});",
+              "",
+              "pm.test('Square config has required fields', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.applicationId).to.be.a('string');",
+              "    pm.expect(response.locationId).to.be.a('string');",
+              "    pm.expect(response.environment).to.be.oneOf(['sandbox', 'production']);",
+              "});",
+              "",
+              "console.log('✅ Square Config Test:');",
+              "console.log('   Status:', pm.response.code);",
+              "console.log('   Environment:', pm.response.json().environment);",
+              "console.log('   Application ID:', pm.response.json().applicationId.substring(0, 10) + '...');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/config/square",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "config", "square"]
+        }
+      }
+    }
+  ]
+}

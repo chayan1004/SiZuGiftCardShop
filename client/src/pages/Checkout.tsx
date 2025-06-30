@@ -547,36 +547,33 @@ export default function Checkout() {
                   </Card>
                 </div>
 
-                {/* Order Summary */}
+                {/* Gift Card Preview with Merchant Branding */}
                 <div>
                   <Card className="glass-premium border-white/10 sticky top-8">
                     <CardHeader>
-                      <CardTitle className="text-white">Order Summary</CardTitle>
+                      <CardTitle className="text-white">Gift Card Preview</CardTitle>
+                      {merchantId && (
+                        <p className="text-gray-400 text-sm">
+                          {isLoadingDesign ? 'Loading merchant design...' : 
+                           merchantDesign?.hasCustomDesign ? 'Custom merchant design' : 'Default design'}
+                        </p>
+                      )}
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="flex justify-between items-center py-3 border-b border-white/10">
-                        <span className="text-gray-300">Gift Card Amount</span>
-                        <span className="text-2xl font-bold text-cyan-300">
-                          ${form.watch("amount")}
-                        </span>
-                      </div>
+                    <CardContent className="space-y-6">
+                      {/* Dynamic Design Preview */}
+                      <DesignPreview 
+                        merchantDesign={merchantDesign}
+                        amount={(form.watch("amount") || 0) * 100} // Convert to cents
+                        isLoading={isLoadingDesign}
+                      />
                       
-                      <div className="space-y-2 text-sm">
-                        <div className="flex items-center gap-2 text-gray-300">
-                          <CheckCircle className="w-4 h-4 text-green-400" />
-                          Instant email delivery
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-300">
-                          <CheckCircle className="w-4 h-4 text-green-400" />
-                          QR code for easy redemption
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-300">
-                          <CheckCircle className="w-4 h-4 text-green-400" />
-                          Never expires
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-300">
-                          <CheckCircle className="w-4 h-4 text-green-400" />
-                          Secure & trusted
+                      {/* Order Summary */}
+                      <div className="pt-4 border-t border-white/10">
+                        <div className="flex justify-between items-center py-3">
+                          <span className="text-gray-300">Gift Card Amount</span>
+                          <span className="text-2xl font-bold text-cyan-300">
+                            ${form.watch("amount")}
+                          </span>
                         </div>
                       </div>
                     </CardContent>

@@ -36,6 +36,7 @@ function Router() {
       <Route path="/giftcard-store" component={GiftCardStore} />
       <Route path="/giftcard-store/success/:orderId" component={GiftCardSuccess} />
       <Route path="/checkout" component={Checkout} />
+      <Route path="/checkout/:merchantId" component={Checkout} />
       <Route path="/check-balance" component={CheckBalance} />
       <Route path="/merchant-login" component={MerchantLogin} />
       <Route path="/merchant-register" component={MerchantRegister} />

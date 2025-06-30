@@ -1,5 +1,6 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
+import { Server as SocketServer } from "socket.io";
 import crypto from "crypto";
 import path from "path";
 import { storage } from "./storage";
@@ -5386,6 +5387,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // Initialize Socket.IO for real-time transaction monitoring
+  const io = new SocketServer(httpServer, {
+    cors: {
+      origin: "*",
+      methods: ["GET", "POST"]
+    }
+  });
+
+  // Socket.IO authentication middleware
+  io.use((socket: any, next: any) => {
+    const token = socket.handshake.auth.token;
+    if (token === 'sizu-admin-2025') {
+      next();
+    } else {
+      next(new Error('Authentication error'));
+    }
+  });
+
+  // Socket.IO connection handling for transaction monitoring
+  io.on('connection', (socket: any) => {
+    console.log('🔌 Admin connected to transaction feed:', socket.id);
+    
+    // Join transaction monitoring room
+    socket.join('transaction-feed');
+    
+    socket.on('disconnect', () => {
+      console.log('🔌 Admin disconnected from transaction feed:', socket.id);
+    });
+  });
+
+  // Store io instance globally for transaction updates
+  (global as any).transactionIO = io;
+  
+  console.log('🚀 Socket.IO transaction monitoring system initialized');
 
   return httpServer;
 }

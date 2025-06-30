@@ -164,15 +164,11 @@ export class ActionRuleEngine {
       await this.recordDefenseHistory(action, cluster, rule, 'success');
 
       // Send real-time alert
-      this.fraudSocketService.emitThreatAlert({
-        type: 'defense_action_triggered',
-        severity: rule.severity,
+      this.fraudSocketService.emitFraudAlert({
+        type: 'suspicious_activity',
+        severity: 'high',
         message: `Defense action "${rule.actionType}" triggered by rule "${rule.name}"`,
-        metadata: {
-          actionId: action.id,
-          clusterId: cluster.id,
-          targetValue: targetValue
-        }
+        ip: 'unknown'
       });
 
     } catch (error) {
@@ -299,15 +295,11 @@ export class ActionRuleEngine {
     console.log(`🚨 Alert sent for cluster ${cluster.id}`);
     
     // This could integrate with email/SMS/webhook alerts
-    this.fraudSocketService.emitThreatAlert({
-      type: 'high_risk_cluster',
-      severity: action.severity,
+    this.fraudSocketService.emitFraudAlert({
+      type: 'suspicious_activity',
+      severity: 'high',
       message: `High-risk fraud cluster detected: ${cluster.label}`,
-      metadata: {
-        clusterId: cluster.id,
-        score: cluster.score,
-        threatCount: cluster.threatCount
-      }
+      ip: 'unknown'
     });
   }
 

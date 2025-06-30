@@ -3399,14 +3399,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           throw new Error('Square access token not configured');
         }
 
-        const squareModule = await import('squareup');
-        const Client = squareModule.Client;
-        const Environment = squareModule.Environment;
+        // Using Square SDK for proper type safety
+        const { Client, Environment } = require('square');
         const client = new Client({
           accessToken: process.env.SQUARE_ACCESS_TOKEN,
           environment: process.env.SQUARE_ENVIRONMENT === 'production' 
-            ? Environment.Production 
-            : Environment.Sandbox
+            ? 'production' 
+            : 'sandbox'
         });
 
         const paymentsApi = client.paymentsApi;

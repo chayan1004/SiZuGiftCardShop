@@ -151,6 +151,8 @@ export const publicGiftCardOrders = pgTable("public_giftcard_orders", {
   giftCardGan: text("gift_card_gan"), // Generated gift card GAN after successful payment
   giftCardId: text("gift_card_id"), // Square gift card ID
   giftCardState: text("gift_card_state"), // Square gift card state (ACTIVE, PENDING, etc.)
+  emailSent: boolean("email_sent").notNull().default(false), // Email delivery tracking
+  emailSentAt: timestamp("email_sent_at"), // Timestamp when email was successfully sent
   createdAt: timestamp("created_at").defaultNow(),
 });
 

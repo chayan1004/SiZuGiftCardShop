@@ -3084,9 +3084,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
               await storage.createGiftCard(giftCardData);
 
-              // TODO: Send gift card email notification
-              // This will be implemented in Prompt 6 - Email Delivery + Digital Receipt System
-              console.log(`TODO: Send gift card email to ${recipientEmail} with card details`);
+              // Send gift card email notification
+              try {
+                const { emailService } = require('./services/EmailService');
+                
+                // Check if email already sent to prevent duplicates
+                const currentOrder = await storage.getPublicGiftCardOrderById(order.id);
+                if (currentOrder && !currentOrder.emailSent) {
+                  const emailResult = await emailService.sendGiftCardEmail({
+                    recipientEmail: recipientEmail,
+                    recipientName: recipientEmail.split('@')[0],
+                    giftCardId: giftCardId,
+                    amount: amount,
+                    giftCardGan: gan,
+                    businessName: 'SiZu Gift Card Store',
+                    customMessage: message || undefined,
+                    orderId: order.id
+                  });
+
+                  if (emailResult.success) {
+                    await storage.updatePublicGiftCardOrderEmailStatus(order.id, true, emailResult.timestamp);
+                    console.log(`✅ Gift card email sent via ${emailResult.method}: ${emailResult.messageId}`);
+                  } else {
+                    console.error(`❌ Failed to send gift card email: ${emailResult.error}`);
+                    // Don't fail the entire transaction if email fails
+                  }
+                } else {
+                  console.log(`📧 Email already sent for order ${order.id}, skipping duplicate send`);
+                }
+              } catch (emailError) {
+                console.error('Email service error:', emailError);
+                // Don't fail the entire transaction if email fails
+              }
 
               console.log(`✅ Gift card issued successfully: ID=${giftCardId} for ${recipientEmail}`);
 

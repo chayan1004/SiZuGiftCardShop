@@ -1,5 +1,5 @@
 import { 
-  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding,
+  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, fraudLogs,
   type User, type InsertUser,
   type Merchant, type InsertMerchant, 
   type GiftCard, type InsertGiftCard,
@@ -10,7 +10,8 @@ import {
   type MerchantBulkOrder, type InsertMerchantBulkOrder,
   type PublicGiftCardOrder, type InsertPublicGiftCardOrder,
   type MerchantPricingTier, type InsertMerchantPricingTier,
-  type MerchantBranding, type InsertMerchantBranding
+  type MerchantBranding, type InsertMerchantBranding,
+  type FraudLog, type InsertFraudLog
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, count, sum, and } from "drizzle-orm";
@@ -121,6 +122,13 @@ export interface IStorage {
     revenue: number;
     giftCardsSold: number;
   }>>;
+
+  // Fraud Detection methods
+  createFraudLog(fraudLog: InsertFraudLog): Promise<FraudLog>;
+  getFraudLogsByIP(ipAddress: string, timeWindowMinutes?: number): Promise<FraudLog[]>;
+  getFraudLogsByGAN(gan: string): Promise<FraudLog[]>;
+  getFraudLogsByMerchant(merchantId: string, timeWindowMinutes?: number): Promise<FraudLog[]>;
+  getRecentFraudLogs(limit?: number): Promise<FraudLog[]>;
 
   // Promo Code methods
   getPromoCode(code: string): Promise<PromoCode | undefined>;
@@ -798,6 +806,55 @@ export class DatabaseStorage implements IStorage {
       .where(eq(merchants.merchantId, merchantId))
       .limit(1);
     return !!merchant;
+  }
+
+  // Fraud Detection methods
+  async createFraudLog(insertFraudLog: InsertFraudLog): Promise<FraudLog> {
+    const [fraudLog] = await db
+      .insert(fraudLogs)
+      .values(insertFraudLog)
+      .returning();
+    return fraudLog;
+  }
+
+  async getFraudLogsByIP(ipAddress: string, timeWindowMinutes = 60): Promise<FraudLog[]> {
+    const cutoffTime = new Date(Date.now() - timeWindowMinutes * 60 * 1000);
+    return await db
+      .select()
+      .from(fraudLogs)
+      .where(and(
+        eq(fraudLogs.ipAddress, ipAddress),
+        gte(fraudLogs.createdAt, cutoffTime)
+      ))
+      .orderBy(desc(fraudLogs.createdAt));
+  }
+
+  async getFraudLogsByGAN(gan: string): Promise<FraudLog[]> {
+    return await db
+      .select()
+      .from(fraudLogs)
+      .where(eq(fraudLogs.gan, gan))
+      .orderBy(desc(fraudLogs.createdAt));
+  }
+
+  async getFraudLogsByMerchant(merchantId: string, timeWindowMinutes = 300): Promise<FraudLog[]> {
+    const cutoffTime = new Date(Date.now() - timeWindowMinutes * 60 * 1000);
+    return await db
+      .select()
+      .from(fraudLogs)
+      .where(and(
+        eq(fraudLogs.merchantId, merchantId),
+        gte(fraudLogs.createdAt, cutoffTime)
+      ))
+      .orderBy(desc(fraudLogs.createdAt));
+  }
+
+  async getRecentFraudLogs(limit = 50): Promise<FraudLog[]> {
+    return await db
+      .select()
+      .from(fraudLogs)
+      .orderBy(desc(fraudLogs.createdAt))
+      .limit(limit);
   }
 }
 

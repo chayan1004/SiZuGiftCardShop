@@ -223,3 +223,22 @@ export type MerchantPricingTier = typeof merchantPricingTiers.$inferSelect;
 export type InsertMerchantPricingTier = z.infer<typeof insertMerchantPricingTierSchema>;
 export type MerchantBranding = typeof merchantBranding.$inferSelect;
 export type InsertMerchantBranding = z.infer<typeof insertMerchantBrandingSchema>;
+
+// Fraud Detection Schema
+export const fraudLogs = pgTable("fraud_logs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  gan: text("gan"),
+  ipAddress: text("ip_address").notNull(),
+  merchantId: text("merchant_id"),
+  userAgent: text("user_agent"),
+  reason: text("reason").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertFraudLogSchema = createInsertSchema(fraudLogs).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type FraudLog = typeof fraudLogs.$inferSelect;
+export type InsertFraudLog = z.infer<typeof insertFraudLogSchema>;

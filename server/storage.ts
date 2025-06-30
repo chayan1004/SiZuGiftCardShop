@@ -342,20 +342,24 @@ export class DatabaseStorage implements IStorage {
       recipientEmail?: string;
     }>;
   }> {
-    let giftCardQuery = db.select().from(giftCards);
+    const conditions = [];
     
     if (merchantId) {
-      giftCardQuery = giftCardQuery.where(eq(giftCards.merchantId, merchantId));
+      conditions.push(eq(giftCards.merchantId, merchantId));
     }
     
     if (dateRange) {
-      giftCardQuery = giftCardQuery.where(
+      conditions.push(
         and(
           sql`${giftCards.createdAt} >= ${dateRange.start}`,
           sql`${giftCards.createdAt} <= ${dateRange.end}`
         )
       );
     }
+
+    const giftCardQuery = conditions.length > 0 
+      ? db.select().from(giftCards).where(and(...conditions))
+      : db.select().from(giftCards);
     
     const allCards = await giftCardQuery;
     

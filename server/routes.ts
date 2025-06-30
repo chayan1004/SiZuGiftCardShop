@@ -980,7 +980,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Store in database
       const giftCard = await storage.createGiftCard({
         merchantId,
-        squareGiftCardId: giftCardResult.giftCard.id!,
+        squareGiftCardId: giftCardResult.giftCard?.id || '',
         gan: gan,
         amount,
         balance: amount,
@@ -988,7 +988,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         recipientEmail: recipientEmail || null,
         personalMessage: personalMessage || null,
         qrCodeData: qrCodeData.redemptionUrl,
-        squareState: giftCardResult.giftCard.state || 'ACTIVE',
+        squareState: giftCardResult.giftCard?.state || 'ACTIVE',
       });
 
       // Log creation activity
@@ -3109,13 +3109,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Create new gift card with refund amount using Square API
       const amountCents = Math.round(amount * 100);
-      const result = await enhancedSquareAPIService.createGiftCard({
-        type: 'DIGITAL',
-        locationId: process.env.SQUARE_LOCATION_ID!
-      }, amountCents, {
-        recipientEmail: null,
-        note: `Refund: ${reason}`
-      });
+      const result = await enhancedSquareAPIService.createGiftCard(
+        amountCents, 
+        `Refund: ${reason}`,
+        {
+          type: 'DIGITAL',
+          locationId: process.env.SQUARE_LOCATION_ID!
+        }
+      );
 
       if (!result.success || !result.giftCard) {
         return res.status(500).json({

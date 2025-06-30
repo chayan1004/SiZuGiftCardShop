@@ -226,11 +226,9 @@ const PhysicalCardPreview = ({
                 transition={{ delay: 0.3, type: "spring" }}
                 className="flex items-center space-x-2"
               >
-                <img 
-                  src="/attached_assets/image_1751306402919.png" 
-                  alt="SiZu Logo" 
-                  className="w-10 h-10 rounded-full object-cover border-2 border-white/30"
-                />
+                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center border-2 border-white/30">
+                  <Gift className="w-6 h-6 text-white" />
+                </div>
                 <div>
                   <h3 className="text-xl font-bold tracking-wide">SiZu GiftCard</h3>
                   <p className="text-xs opacity-80 font-medium">{style.material}</p>

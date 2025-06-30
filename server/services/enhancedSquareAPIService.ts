@@ -566,30 +566,30 @@ class EnhancedSquareAPIService {
       const idempotencyKey = crypto.randomUUID();
       
       const requestBody = {
-        idempotency_key: idempotencyKey,
-        checkout_options: {
-          accepted_payment_methods: {
-            apple_pay: true,
-            google_pay: true,
-            afterpay_clearpay: true,
-            cash_app_pay: true
+        idempotencyKey: idempotencyKey,
+        checkoutOptions: {
+          acceptedPaymentMethods: {
+            applePay: true,
+            googlePay: true,
+            afterpayClearpay: true,
+            cashAppPay: true
           },
-          allow_tipping: false,
-          custom_fields: [],
-          subscription_plan_id: null,
-          redirect_url: checkoutData.redirectUrl,
-          merchant_support_email: 'support@sizu-giftcard.com'
+          allowTipping: false,
+          customFields: [],
+          subscriptionPlanId: null,
+          redirectUrl: checkoutData.redirectUrl,
+          merchantSupportEmail: 'support@sizu-giftcard.com'
         },
         order: {
-          location_id: this.locationId,
+          locationId: this.locationId,
           order: {
-            location_id: this.locationId,
-            line_items: [
+            locationId: this.locationId,
+            lineItems: [
               {
                 quantity: "1",
-                item_type: "ITEM",
-                base_price_money: {
-                  amount: checkoutData.amount,
+                itemType: "ITEM",
+                basePriceMoney: {
+                  amount: BigInt(checkoutData.amount),
                   currency: checkoutData.currency || 'USD'
                 },
                 name: "Physical Gift Card",
@@ -598,21 +598,22 @@ class EnhancedSquareAPIService {
             ]
           }
         },
-        payment_note: checkoutData.note,
-        pre_populated_data: checkoutData.prePopulatedData ? {
-          buyer_email: checkoutData.prePopulatedData.buyerEmail,
-          buyer_phone_number: checkoutData.prePopulatedData.buyerPhoneNumber,
-          buyer_address: checkoutData.prePopulatedData.buyerAddress
+        paymentNote: checkoutData.note,
+        prePopulatedData: checkoutData.prePopulatedData ? {
+          buyerEmail: checkoutData.prePopulatedData.buyerEmail,
+          buyerPhoneNumber: checkoutData.prePopulatedData.buyerPhoneNumber,
+          buyerAddress: checkoutData.prePopulatedData.buyerAddress
         } : undefined
       };
 
-      const response = await this.makeSquareRequest('/v2/online-checkout/payment-links', 'POST', requestBody);
+      console.log('Creating payment link with Square SDK...');
+      const response = await this.client.checkoutApi.createPaymentLink(requestBody);
 
-      if (response.payment_link) {
+      if (response.result.paymentLink) {
         return {
           success: true,
-          checkoutUrl: response.payment_link.url,
-          checkoutId: response.payment_link.id
+          checkoutUrl: response.result.paymentLink.url,
+          checkoutId: response.result.paymentLink.id
         };
       }
 

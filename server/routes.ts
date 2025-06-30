@@ -4729,5 +4729,188 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Phase 15B: Merchant Webhook Configuration Management
+  
+  // GET /api/merchant/webhooks - Get all webhooks for current merchant
+  app.get("/api/merchant/webhooks", requireMerchant, async (req: Request, res: Response) => {
+    try {
+      const merchantId = (req as any).user.merchantId;
+      const reveal = req.query.reveal === 'true';
+      
+      const webhooks = await WebhookConfigService.getMerchantWebhooks(merchantId, reveal);
+      
+      res.json({
+        success: true,
+        webhooks,
+        count: webhooks.length
+      });
+    } catch (error) {
+      console.error('Get merchant webhooks error:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch webhooks"
+      });
+    }
+  });
+
+  // POST /api/merchant/webhooks - Create new webhook
+  app.post("/api/merchant/webhooks", requireMerchant, async (req: Request, res: Response) => {
+    try {
+      const merchantId = (req as any).user.merchantId;
+      const { url, eventTypes, enabled = true } = req.body;
+
+      if (!url || !eventTypes || !Array.isArray(eventTypes)) {
+        return res.status(400).json({
+          success: false,
+          error: "URL and eventTypes array are required"
+        });
+      }
+
+      const webhook = await WebhookConfigService.createWebhook(merchantId, {
+        url,
+        eventTypes,
+        enabled
+      });
+
+      console.log(`🔗 Webhook created for merchant: ${merchantId} - URL: ${url}, Events: ${eventTypes.join(', ')}`);
+
+      res.status(201).json({
+        success: true,
+        message: "Webhook created successfully",
+        webhook: {
+          id: webhook.id,
+          url: webhook.url,
+          eventTypes,
+          enabled: webhook.enabled,
+          secret: WebhookConfigService.maskSecret(webhook.secret),
+          created_at: webhook.createdAt
+        }
+      });
+    } catch (error) {
+      console.error('Create webhook error:', error);
+      res.status(400).json({
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to create webhook"
+      });
+    }
+  });
+
+  // PUT /api/merchant/webhooks/:id - Update webhook
+  app.put("/api/merchant/webhooks/:id", requireMerchant, async (req: Request, res: Response) => {
+    try {
+      const merchantId = (req as any).user.merchantId;
+      const webhookId = req.params.id;
+      const { url, eventTypes, enabled } = req.body;
+
+      await WebhookConfigService.updateWebhook(webhookId, merchantId, {
+        url,
+        eventTypes,
+        enabled
+      });
+
+      console.log(`🔗 Webhook updated for merchant: ${merchantId} - Webhook ID: ${webhookId}`);
+
+      res.json({
+        success: true,
+        message: "Webhook updated successfully"
+      });
+    } catch (error) {
+      console.error('Update webhook error:', error);
+      res.status(400).json({
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to update webhook"
+      });
+    }
+  });
+
+  // DELETE /api/merchant/webhooks/:id - Delete webhook
+  app.delete("/api/merchant/webhooks/:id", requireMerchant, async (req: Request, res: Response) => {
+    try {
+      const merchantId = (req as any).user.merchantId;
+      const webhookId = req.params.id;
+
+      await WebhookConfigService.deleteWebhook(webhookId, merchantId);
+
+      console.log(`🔗 Webhook deleted for merchant: ${merchantId} - Webhook ID: ${webhookId}`);
+
+      res.json({
+        success: true,
+        message: "Webhook deleted successfully"
+      });
+    } catch (error) {
+      console.error('Delete webhook error:', error);
+      res.status(400).json({
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to delete webhook"
+      });
+    }
+  });
+
+  // GET /api/merchant/webhooks/:id/logs - Get delivery logs for webhook
+  app.get("/api/merchant/webhooks/:id/logs", requireMerchant, async (req: Request, res: Response) => {
+    try {
+      const merchantId = (req as any).user.merchantId;
+      const webhookId = req.params.id;
+      const limit = parseInt(req.query.limit as string) || 10;
+
+      const logs = await WebhookConfigService.getWebhookLogs(webhookId, merchantId, limit);
+
+      res.json({
+        success: true,
+        logs,
+        count: logs.length
+      });
+    } catch (error) {
+      console.error('Get webhook logs error:', error);
+      res.status(400).json({
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to fetch webhook logs"
+      });
+    }
+  });
+
+  // Admin-only webhook overview endpoints
+
+  // GET /api/admin/webhook-logs - Get all webhook logs (admin only)
+  app.get("/api/admin/webhook-logs", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const merchantId = req.query.merchantId as string;
+      const limit = parseInt(req.query.limit as string) || 50;
+
+      const logs = await WebhookConfigService.getAllWebhookLogs(merchantId, limit);
+
+      res.json({
+        success: true,
+        logs,
+        count: logs.length,
+        filtered_by_merchant: !!merchantId
+      });
+    } catch (error) {
+      console.error('Get admin webhook logs error:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch webhook logs"
+      });
+    }
+  });
+
+  // GET /api/admin/webhook-stats - Get webhook statistics (admin only)
+  app.get("/api/admin/webhook-stats", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const stats = await WebhookConfigService.getWebhookStats();
+
+      res.json({
+        success: true,
+        stats
+      });
+    } catch (error) {
+      console.error('Get webhook stats error:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch webhook statistics"
+      });
+    }
+  });
+
   return httpServer;
 }

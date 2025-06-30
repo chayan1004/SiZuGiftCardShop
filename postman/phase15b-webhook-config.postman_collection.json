@@ -1,0 +1,579 @@
+{
+  "info": {
+    "name": "Phase 15B: Webhook Configuration Management",
+    "description": "Comprehensive test suite for merchant webhook configuration dashboard with secure CRUD operations, admin oversight, and delivery log monitoring",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Merchant Webhook Management",
+      "item": [
+        {
+          "name": "Test 1: Create New Webhook Configuration",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchant_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://merchant-webhook.example.com/sizu-events\",\n  \"eventTypes\": [\"gift_card_issued\", \"gift_card_redeemed\"],\n  \"enabled\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/merchant/webhooks",
+              "host": ["{{base_url}}"],
+              "path": ["api", "merchant", "webhooks"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Webhook created successfully', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Response contains webhook details', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.webhook).to.have.property('id');",
+                  "    pm.expect(jsonData.webhook.url).to.eql('https://merchant-webhook.example.com/sizu-events');",
+                  "    pm.expect(jsonData.webhook.eventTypes).to.be.an('array');",
+                  "    pm.expect(jsonData.webhook.secret).to.include('••••');",
+                  "    ",
+                  "    // Store webhook ID for subsequent tests",
+                  "    pm.globals.set('webhook_id', jsonData.webhook.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Test 2: Get Merchant Webhooks (Masked Secrets)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchant_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/merchant/webhooks",
+              "host": ["{{base_url}}"],
+              "path": ["api", "merchant", "webhooks"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Webhooks retrieved successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response contains webhook list with masked secrets', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.webhooks).to.be.an('array');",
+                  "    pm.expect(jsonData.count).to.be.greaterThan(0);",
+                  "    ",
+                  "    if (jsonData.webhooks.length > 0) {",
+                  "        const webhook = jsonData.webhooks[0];",
+                  "        pm.expect(webhook.secret).to.include('••••');",
+                  "        pm.expect(webhook.eventTypes).to.be.an('array');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Test 3: Get Merchant Webhooks (Revealed Secrets)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchant_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/merchant/webhooks?reveal=true",
+              "host": ["{{base_url}}"],
+              "path": ["api", "merchant", "webhooks"],
+              "query": [
+                {
+                  "key": "reveal",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Webhooks retrieved with revealed secrets', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response contains full webhook secrets', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    ",
+                  "    if (jsonData.webhooks.length > 0) {",
+                  "        const webhook = jsonData.webhooks[0];",
+                  "        pm.expect(webhook.secret).to.not.include('••••');",
+                  "        pm.expect(webhook.secret.length).to.be.greaterThan(10);",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Test 4: Update Webhook Configuration",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchant_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://updated-webhook.example.com/sizu-events\",\n  \"eventTypes\": [\"gift_card_issued\", \"gift_card_redeemed\", \"gift_card_refunded\"],\n  \"enabled\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/merchant/webhooks/{{webhook_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "merchant", "webhooks", "{{webhook_id}}"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Webhook updated successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Update confirmation received', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.message).to.include('updated successfully');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Test 5: Get Webhook Delivery Logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchant_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/merchant/webhooks/{{webhook_id}}/logs?limit=5",
+              "host": ["{{base_url}}"],
+              "path": ["api", "merchant", "webhooks", "{{webhook_id}}", "logs"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Webhook logs retrieved successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Logs response structure is valid', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.logs).to.be.an('array');",
+                  "    pm.expect(jsonData.count).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Test 6: Invalid Webhook URL Validation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchant_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"invalid-url-format\",\n  \"eventTypes\": [\"gift_card_issued\"],\n  \"enabled\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/merchant/webhooks",
+              "host": ["{{base_url}}"],
+              "path": ["api", "merchant", "webhooks"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Invalid URL is rejected', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Error message indicates URL validation', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.false;",
+                  "    pm.expect(jsonData.error).to.include('Invalid');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Test 7: Missing Event Types Validation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchant_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://valid-webhook.example.com/events\",\n  \"enabled\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/merchant/webhooks",
+              "host": ["{{base_url}}"],
+              "path": ["api", "merchant", "webhooks"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Missing event types are rejected', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Error message indicates missing eventTypes', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.false;",
+                  "    pm.expect(jsonData.error).to.include('eventTypes');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Test 8: Unauthorized Access Protection",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/merchant/webhooks",
+              "host": ["{{base_url}}"],
+              "path": ["api", "merchant", "webhooks"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Unauthorized access is blocked', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test('Error indicates authentication required', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.false;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Admin Webhook Overview",
+      "item": [
+        {
+          "name": "Test 9: Admin Webhook Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/webhook-stats",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "webhook-stats"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Admin webhook stats retrieved', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Statistics structure is valid', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.stats).to.have.property('totalWebhooks');",
+                  "    pm.expect(jsonData.stats).to.have.property('activeWebhooks');",
+                  "    pm.expect(jsonData.stats).to.have.property('successRate');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Test 10: Admin All Webhook Logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/webhook-logs?limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "webhook-logs"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Admin webhook logs retrieved', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Logs include merchant information', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.logs).to.be.an('array');",
+                  "    ",
+                  "    if (jsonData.logs.length > 0) {",
+                  "        const log = jsonData.logs[0];",
+                  "        pm.expect(log).to.have.property('merchant_id');",
+                  "        pm.expect(log).to.have.property('webhook_url');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Test 11: Admin Filtered Webhook Logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/webhook-logs?merchantId=test-merchant-001&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "webhook-logs"],
+              "query": [
+                {
+                  "key": "merchantId",
+                  "value": "test-merchant-001"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Filtered webhook logs retrieved', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Filtering by merchant works', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.filtered_by_merchant).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Test 12: Delete Webhook Configuration",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchant_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/merchant/webhooks/{{webhook_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "merchant", "webhooks", "{{webhook_id}}"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Webhook deleted successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Deletion confirmation received', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.message).to.include('deleted successfully');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Set base URL and authentication tokens",
+          "pm.globals.set('base_url', 'http://localhost:5000');",
+          "pm.globals.set('merchant_token', 'test-merchant-token-123');",
+          "pm.globals.set('admin_token', 'sizu-admin-2025');"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test script - runs after each request",
+          "pm.test('Response time is reasonable', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(3000);",
+          "});",
+          "",
+          "pm.test('Response has valid JSON structure', function () {",
+          "    pm.response.to.be.json;",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "merchant_token",
+      "value": "test-merchant-token-123",
+      "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "sizu-admin-2025",
+      "type": "string"
+    }
+  ]
+}

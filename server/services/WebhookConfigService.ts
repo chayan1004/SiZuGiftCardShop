@@ -133,7 +133,8 @@ export class WebhookConfigService {
 
     // Get existing webhooks for this merchant with the same base ID
     const existingWebhooks = await storage.getWebhookEventsByMerchant(merchantId);
-    const webhooksToUpdate = existingWebhooks.filter(w => w.id === webhookId || w.url === (await storage.getWebhookEventById(webhookId))?.url);
+    const targetWebhook = await storage.getWebhookEventById(webhookId);
+    const webhooksToUpdate = existingWebhooks.filter(w => w.id === webhookId || (targetWebhook && w.url === targetWebhook.url));
 
     if (webhooksToUpdate.length === 0) {
       throw new Error('Webhook not found or access denied');

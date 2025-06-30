@@ -2,6 +2,7 @@ import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import fs from 'fs/promises';
 import path from 'path';
 import { PublicGiftCardOrder } from '@shared/schema';
+import { QRCodeUtil } from '../utils/QRCodeUtil';
 
 export interface ReceiptGenerationResult {
   success: boolean;
@@ -217,6 +218,38 @@ export class ReceiptService {
         font: font,
         color: grayColor,
       });
+
+      // Add QR Code in bottom-right corner
+      try {
+        const receiptURL = QRCodeUtil.generateReceiptURL(order.id);
+        const qrCodeBuffer = await QRCodeUtil.generateQRCodeBuffer(receiptURL, {
+          width: 80,
+          margin: 1
+        });
+        
+        const qrCodeImage = await pdfDoc.embedPng(qrCodeBuffer);
+        const qrCodeDims = qrCodeImage.scale(0.8);
+        
+        // Position QR code in bottom-right corner
+        page.drawImage(qrCodeImage, {
+          x: width - qrCodeDims.width - 30,
+          y: 30,
+          width: qrCodeDims.width,
+          height: qrCodeDims.height,
+        });
+        
+        // Add QR code caption
+        page.drawText('Scan to Reopen Receipt', {
+          x: width - qrCodeDims.width - 30,
+          y: 15,
+          size: 8,
+          font: font,
+          color: grayColor,
+        });
+      } catch (qrError) {
+        console.error('QR code generation failed:', qrError);
+        // Continue without QR code if generation fails
+      }
 
       // Generate PDF bytes
       const pdfBytes = await pdfDoc.save();

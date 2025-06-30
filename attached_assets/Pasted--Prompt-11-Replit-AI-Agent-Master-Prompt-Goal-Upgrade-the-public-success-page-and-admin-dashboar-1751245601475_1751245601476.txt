@@ -1,0 +1,73 @@
+✅ Prompt 11 — Replit AI Agent Master Prompt
+Goal:
+Upgrade the public success page and admin dashboard to support mobile-friendly receipt views and embed a QR code on each PDF + HTML receipt page for quick re-access and sharing.
+
+🧠 Replit AI Agent — MASTER IMPLEMENTATION PROMPT
+✅ ACT AS a precision Replit AI Agent. Do not create any duplicate files. Use only existing routes, pages, services, and types.
+✅ Fix all issues fully. No placeholders. No mock data. No broken logic.
+✅ Proceed in exact order. Never skip a step. Never hallucinate a new system.
+✅ Confirm the platform uses Square-only payments and single-admin ownership.
+✅ Enhance the existing /giftcard-store/success/:orderId and PDF receipt system as follows:
+
+✅ Step-by-Step Tasks:
+Enhance HTML Receipt View (Success Page)
+
+Update GiftCardSuccess.tsx page to:
+
+Be fully mobile-optimized (Tailwind CSS responsive)
+
+Display gift card details cleanly (amount, message, date)
+
+Add a "Download PDF Receipt" button
+
+Add a new “Scan to Reopen” section with a live QR Code (see below)
+
+Add QR Code Generation Service
+
+Use a lightweight Node package like qrcode to:
+
+Generate a PNG or data URI of a QR Code
+
+Encode the current public receipt URL (/giftcard-store/success/:orderId)
+
+Save this QR as part of the PDF if possible (below)
+
+Embed QR Code in PDF Receipts
+
+In ReceiptService.ts:
+
+Modify the receipt layout to include a QR code image (use canvas or embed PNG)
+
+Position: Bottom-right of the PDF (under receipt metadata)
+
+Caption: “Scan to Reopen This Receipt”
+
+Admin Dashboard: Add QR Access
+
+In AdminGiftCardOrders.tsx, add a new “QR” column with a button:
+
+Opens a modal showing the live QR code for the order receipt
+
+Include copy/share button to share receipt URL
+
+Test Flow
+
+Make a test public order
+
+Validate:
+
+Success page is fully mobile-friendly
+
+PDF receipt has the QR code
+
+Admin panel can open + share QR codes
+
+Commit results and checkpoint all work
+
+🔐 Rules
+Use only client/src/pages/GiftCardSuccess.tsx, server/services/ReceiptService.ts, server/routes.ts, and existing components.
+
+Add QR logic using clean utility files if needed (e.g., QRCodeUtil.ts)
+
+Optimize for loading time (don’t embed base64 if it bloats PDF too much)
+

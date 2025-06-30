@@ -35,6 +35,7 @@ import LoadingAnimation from "../../components/ui/LoadingAnimation";
 import GDPRComplianceDashboard from "../../components/admin/GDPRComplianceDashboard";
 import PCIDSSComplianceDashboard from "../../components/admin/PCIDSSComplianceDashboard";
 import PricingManagement from "../../components/admin/PricingManagement";
+import AdminCheckoutConfig from "../../components/admin/AdminCheckoutConfig";
 import type { FraudAlert } from "../../components/admin/ThreatFeedPanel";
 
 interface DashboardMetrics {
@@ -246,6 +247,7 @@ export default function AdminDashboard() {
     { id: "transactions", label: "Transaction Explorer", icon: <Activity className="w-5 h-5" /> },
     { id: "command-center", label: "Command Center", icon: <Settings className="w-5 h-5" /> },
     { id: "settings", label: "Merchant Settings", icon: <Settings className="w-5 h-5" /> },
+    { id: "checkout-config", label: "Checkout Configuration", icon: <CreditCard className="w-5 h-5" /> },
     { id: "webhooks", label: "Webhook Intelligence", icon: <Activity className="w-5 h-5" /> },
     { id: "security", label: "Threat Replay", icon: <Brain className="w-5 h-5" /> },
     { id: "fraud-clusters", label: "Fraud Pattern Analyzer", icon: <Brain className="w-5 h-5" /> },
@@ -1104,6 +1106,13 @@ export default function AdminDashboard() {
               {activeSection === "pci-dss" && (
                 <div className="space-y-6">
                   <PCIDSSComplianceDashboard />
+                </div>
+              )}
+
+              {/* Checkout Configuration Section */}
+              {activeSection === "checkout-config" && (
+                <div className="space-y-6">
+                  <AdminCheckoutConfig />
                 </div>
               )}
 

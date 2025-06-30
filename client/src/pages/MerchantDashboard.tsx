@@ -325,6 +325,17 @@ export default function MerchantDashboard() {
                   <BarChart3 className="w-4 h-4 mr-2" />
                   Analytics & Reports
                 </Button>
+
+                <Button
+                  variant="ghost"
+                  className="justify-start text-white hover:bg-white/10"
+                  onClick={() => {
+                    window.location.href = '/merchant-settings';
+                  }}
+                >
+                  <Settings className="w-4 h-4 mr-2" />
+                  Settings & API Keys
+                </Button>
                 
                 <hr className="border-white/10 my-4" />
                 

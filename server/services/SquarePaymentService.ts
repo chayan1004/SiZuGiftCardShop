@@ -1,14 +1,6 @@
 /**
  * Square Payments API Service - Production Ready Implementation
- * 
- * Uses official Square SDK for:
- * - Payment processing with various payment methods
- * - Payment retrieval and status tracking
- * - Payment listing with advanced filtering
- * - Webhook processing for real-time updates
- * - Error handling with comprehensive retry logic
- * 
- * Reference: https://developer.squareup.com/reference/square/payments-api
+ * Official Square SDK Integration
  */
 
 import crypto from 'crypto';
@@ -44,32 +36,16 @@ interface PaymentResponse {
   updatedAt: string;
 }
 
-interface WebhookPayload {
-  merchant_id: string;
-  type: string;
-  event_id: string;
-  created_at: string;
-  data: {
-    type: string;
-    id: string;
-    object: PaymentResponse;
-  };
-}
-
 class SquarePaymentService {
   private client: SquareClient;
   private accessToken: string;
   private locationId: string;
   private environment: string;
-  private applicationId: string;
-  private webhookSignatureKey: string;
 
   constructor() {
     this.accessToken = process.env.SQUARE_ACCESS_TOKEN || '';
     this.locationId = process.env.SQUARE_LOCATION_ID || '';
     this.environment = process.env.SQUARE_ENVIRONMENT || 'sandbox';
-    this.applicationId = process.env.SQUARE_APPLICATION_ID || '';
-    this.webhookSignatureKey = process.env.SQUARE_WEBHOOK_SIGNATURE_KEY || '';
     
     // Initialize Square SDK Client
     this.client = new SquareClient({
@@ -93,7 +69,6 @@ class SquarePaymentService {
 
   /**
    * Create Payment using Square SDK
-   * POST /v2/payments
    */
   async createPayment(paymentRequest: PaymentRequest): Promise<{
     success: boolean;
@@ -120,10 +95,10 @@ class SquarePaymentService {
       };
 
       console.log('Creating payment with Square SDK...');
-      const { result } = await this.client.paymentsApi.createPayment(requestBody);
+      const response = await this.client.paymentsApi.createPayment(requestBody);
 
-      if (result.payment) {
-        const payment = this.formatPaymentResponse(result.payment);
+      if (response.result && response.result.payment) {
+        const payment = this.formatPaymentResponse(response.result.payment);
         console.log(`Payment created successfully: ${payment.id}`);
         
         return {
@@ -148,7 +123,6 @@ class SquarePaymentService {
 
   /**
    * Get Payment by ID using Square SDK
-   * GET /v2/payments/{payment_id}
    */
   async getPayment(paymentId: string): Promise<{
     success: boolean;
@@ -157,10 +131,10 @@ class SquarePaymentService {
   }> {
     try {
       console.log(`Retrieving payment: ${paymentId}`);
-      const { result } = await this.client.paymentsApi.getPayment(paymentId);
+      const response = await this.client.paymentsApi.getPayment(paymentId);
 
-      if (result.payment) {
-        const payment = this.formatPaymentResponse(result.payment);
+      if (response.result && response.result.payment) {
+        const payment = this.formatPaymentResponse(response.result.payment);
         return {
           success: true,
           payment
@@ -183,7 +157,6 @@ class SquarePaymentService {
 
   /**
    * List Payments using Square SDK
-   * GET /v2/payments
    */
   async listPayments(options: {
     beginTime?: string;
@@ -215,17 +188,17 @@ class SquarePaymentService {
       };
 
       console.log('Listing payments with filters...');
-      const { result } = await this.client.paymentsApi.listPayments(requestParams);
+      const response = await this.client.paymentsApi.listPayments(requestParams);
 
-      if (result.payments) {
-        const payments = result.payments.map(payment => 
+      if (response.result && response.result.payments) {
+        const payments = response.result.payments.map((payment: any) => 
           this.formatPaymentResponse(payment)
         );
 
         return {
           success: true,
           payments,
-          cursor: result.cursor
+          cursor: response.result.cursor
         };
       }
 
@@ -262,133 +235,6 @@ class SquarePaymentService {
       createdAt: payment.createdAt || new Date().toISOString(),
       updatedAt: payment.updatedAt || new Date().toISOString()
     };
-  }
-
-  /**
-   * Webhook signature verification for secure webhook handling
-   */
-  verifyWebhookSignature(body: string, signature: string, url: string): boolean {
-    if (!this.webhookSignatureKey) {
-      console.warn('Webhook signature key not configured');
-      return false;
-    }
-
-    try {
-      const hmac = crypto.createHmac('sha1', this.webhookSignatureKey);
-      hmac.update(url + body);
-      const expectedSignature = hmac.digest('base64');
-      
-      return crypto.timingSafeEqual(
-        Buffer.from(signature, 'base64'),
-        Buffer.from(expectedSignature, 'base64')
-      );
-    } catch (error) {
-      console.error('Webhook signature verification error:', error);
-      return false;
-    }
-  }
-
-  /**
-   * Process webhook events for real-time updates
-   */
-  async processWebhook(payload: WebhookPayload): Promise<{
-    success: boolean;
-    message: string;
-  }> {
-    try {
-      console.log(`Processing webhook event: ${payload.type}`);
-      
-      switch (payload.type) {
-        case 'payment.created':
-          await this.handlePaymentCreated(payload.data.object);
-          break;
-        case 'payment.updated':
-          await this.handlePaymentUpdated(payload.data.object);
-          break;
-        default:
-          console.log(`Unhandled webhook event type: ${payload.type}`);
-      }
-
-      return {
-        success: true,
-        message: 'Webhook processed successfully'
-      };
-
-    } catch (error) {
-      console.error('Webhook processing error:', error);
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : 'Failed to process webhook'
-      };
-    }
-  }
-
-  /**
-   * Handle payment created webhook
-   */
-  private async handlePaymentCreated(payment: PaymentResponse): Promise<void> {
-    console.log(`Payment created: ${payment.id} - Status: ${payment.status}`);
-    
-    // Handle initial payment status
-    if (payment.status === 'COMPLETED') {
-      await this.handlePaymentCompleted(payment);
-    }
-  }
-
-  /**
-   * Handle payment updated webhook
-   */
-  private async handlePaymentUpdated(payment: PaymentResponse): Promise<void> {
-    console.log(`Payment updated: ${payment.id} - Status: ${payment.status}`);
-    
-    // Handle status changes
-    switch (payment.status) {
-      case 'COMPLETED':
-        await this.handlePaymentCompleted(payment);
-        break;
-      case 'FAILED':
-        await this.handlePaymentFailed(payment);
-        break;
-      case 'CANCELED':
-        await this.handlePaymentCanceled(payment);
-        break;
-    }
-  }
-
-  /**
-   * Handle completed payment
-   */
-  private async handlePaymentCompleted(payment: PaymentResponse): Promise<void> {
-    console.log(`Processing completed payment: ${payment.id}`);
-    
-    // Update related orders/gift cards
-    if (payment.orderId) {
-      // Update order status to paid
-      // Trigger gift card creation if applicable
-      // Send confirmation emails
-    }
-  }
-
-  /**
-   * Handle failed payment
-   */
-  private async handlePaymentFailed(payment: PaymentResponse): Promise<void> {
-    console.log(`Processing failed payment: ${payment.id}`);
-    
-    // Handle failure logic
-    // Send failure notifications
-    // Update order status
-  }
-
-  /**
-   * Handle canceled payment
-   */
-  private async handlePaymentCanceled(payment: PaymentResponse): Promise<void> {
-    console.log(`Processing canceled payment: ${payment.id}`);
-    
-    // Handle cancellation logic
-    // Release inventory
-    // Send cancellation notifications
   }
 
   /**
@@ -450,6 +296,17 @@ class SquarePaymentService {
       statementDescriptionIdentifier: 'PHYSCARD',
       autocomplete: true
     });
+  }
+
+  /**
+   * Get Web SDK Configuration
+   */
+  getWebSDKConfig() {
+    return {
+      applicationId: process.env.VITE_SQUARE_APPLICATION_ID || '',
+      locationId: this.locationId,
+      environment: this.environment
+    };
   }
 }
 

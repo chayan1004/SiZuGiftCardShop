@@ -15,7 +15,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
-import { CreditCard, Package, Truck, Users, Building2, Calculator, Palette, FileText, CheckCircle, AlertCircle, Sparkles, Zap, Star, Layers, Eye, ArrowLeft, Menu, Home, ShoppingCart, Gift, Shield, Crown, Diamond } from "lucide-react";
+import { CreditCard, Package, Truck, Users, Building2, Calculator, Palette, FileText, CheckCircle, AlertCircle, Sparkles, Zap, Star, Layers, Eye, ArrowLeft, Menu, Home, ShoppingCart, Gift, Shield, Crown, Diamond, Flame, Rocket, Hexagon, Activity, Target, Wand2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";

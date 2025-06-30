@@ -67,10 +67,27 @@ export interface IStorage {
   // Gift Card methods
   getGiftCard(id: number): Promise<GiftCard | undefined>;
   getGiftCardByGan(gan: string): Promise<GiftCard | undefined>;
+  getGiftCardByCode(code: string): Promise<GiftCard | undefined>;
   getGiftCardsByMerchant(merchantId: string): Promise<GiftCard[]>;
   createGiftCard(giftCard: InsertGiftCard): Promise<GiftCard>;
   updateGiftCardBalance(id: number, balance: number): Promise<GiftCard | undefined>;
   updateGiftCardStatus(id: number, status: string): Promise<GiftCard | undefined>;
+  redeemGiftCard(code: string, redeemedBy: string, amount?: number): Promise<GiftCard | undefined>;
+  getGiftCardAnalytics(merchantId?: string, dateRange?: { start: Date; end: Date }): Promise<{
+    totalIssued: number;
+    totalRedeemed: number;
+    totalUnused: number;
+    totalValue: number;
+    redemptionRate: number;
+    dailyStats: Array<{ date: string; issued: number; redeemed: number }>;
+    recentRedemptions: Array<{
+      gan: string;
+      amount: number;
+      redeemedBy: string;
+      redeemedAt: Date;
+      recipientEmail?: string;
+    }>;
+  }>;
   
   // Gift Card Activity methods
   getGiftCardActivities(giftCardId: number): Promise<GiftCardActivity[]>;
@@ -264,6 +281,110 @@ export class DatabaseStorage implements IStorage {
   async getGiftCardByGan(gan: string): Promise<GiftCard | undefined> {
     const [giftCard] = await db.select().from(giftCards).where(eq(giftCards.gan, gan));
     return giftCard || undefined;
+  }
+
+  async getGiftCardByCode(code: string): Promise<GiftCard | undefined> {
+    // Use GAN as code for Square gift cards
+    const [giftCard] = await db.select().from(giftCards).where(eq(giftCards.gan, code));
+    return giftCard || undefined;
+  }
+
+  async redeemGiftCard(code: string, redeemedBy: string, amount?: number): Promise<GiftCard | undefined> {
+    const [updated] = await db
+      .update(giftCards)
+      .set({ 
+        redeemed: true, 
+        redeemedAt: new Date(), 
+        redeemedBy,
+        lastRedemptionAmount: amount || 0,
+        updatedAt: new Date()
+      })
+      .where(eq(giftCards.gan, code))
+      .returning();
+    return updated || undefined;
+  }
+
+  async getGiftCardAnalytics(merchantId?: string, dateRange?: { start: Date; end: Date }): Promise<{
+    totalIssued: number;
+    totalRedeemed: number;
+    totalUnused: number;
+    totalValue: number;
+    redemptionRate: number;
+    dailyStats: Array<{ date: string; issued: number; redeemed: number }>;
+    recentRedemptions: Array<{
+      gan: string;
+      amount: number;
+      redeemedBy: string;
+      redeemedAt: Date;
+      recipientEmail?: string;
+    }>;
+  }> {
+    let giftCardQuery = db.select().from(giftCards);
+    
+    if (merchantId) {
+      giftCardQuery = giftCardQuery.where(eq(giftCards.merchantId, merchantId));
+    }
+    
+    if (dateRange) {
+      giftCardQuery = giftCardQuery.where(
+        and(
+          sql`${giftCards.createdAt} >= ${dateRange.start}`,
+          sql`${giftCards.createdAt} <= ${dateRange.end}`
+        )
+      );
+    }
+    
+    const allCards = await giftCardQuery;
+    
+    const totalIssued = allCards.length;
+    const redeemedCards = allCards.filter(card => card.redeemed);
+    const totalRedeemed = redeemedCards.length;
+    const totalUnused = totalIssued - totalRedeemed;
+    const totalValue = allCards.reduce((sum, card) => sum + card.amount, 0);
+    const redemptionRate = totalIssued > 0 ? (totalRedeemed / totalIssued) * 100 : 0;
+    
+    // Generate daily stats for the last 30 days
+    const dailyStats: Array<{ date: string; issued: number; redeemed: number }> = [];
+    const today = new Date();
+    
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      
+      const dayIssued = allCards.filter(card => 
+        card.createdAt && card.createdAt.toISOString().split('T')[0] === dateStr
+      ).length;
+      
+      const dayRedeemed = allCards.filter(card => 
+        card.redeemedAt && card.redeemedAt.toISOString().split('T')[0] === dateStr
+      ).length;
+      
+      dailyStats.push({ date: dateStr, issued: dayIssued, redeemed: dayRedeemed });
+    }
+    
+    // Get recent redemptions (last 20)
+    const recentRedemptions = redeemedCards
+      .filter(card => card.redeemedAt && card.redeemedBy)
+      .sort((a, b) => (b.redeemedAt?.getTime() || 0) - (a.redeemedAt?.getTime() || 0))
+      .slice(0, 20)
+      .map(card => ({
+        gan: card.gan,
+        amount: card.lastRedemptionAmount || card.amount,
+        redeemedBy: card.redeemedBy!,
+        redeemedAt: card.redeemedAt!,
+        recipientEmail: card.recipientEmail || undefined
+      }));
+    
+    return {
+      totalIssued,
+      totalRedeemed,
+      totalUnused,
+      totalValue: Math.floor(totalValue / 100), // Convert cents to dollars
+      redemptionRate: Math.round(redemptionRate * 100) / 100,
+      dailyStats,
+      recentRedemptions
+    };
   }
 
   async getGiftCardsByMerchant(merchantId: string): Promise<GiftCard[]> {

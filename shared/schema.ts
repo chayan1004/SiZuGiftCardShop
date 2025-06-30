@@ -33,6 +33,10 @@ export const giftCards = pgTable("gift_cards", {
   personalMessage: text("personal_message"),
   qrCodeData: text("qr_code_data"), // QR code redemption URL
   squareState: text("square_state"), // Square's internal state
+  redeemed: boolean("redeemed").default(false),
+  redeemedAt: timestamp("redeemed_at"),
+  redeemedBy: text("redeemed_by"), // Customer email or ID who redeemed
+  lastRedemptionAmount: integer("last_redemption_amount"), // Last redemption amount in cents
   expiresAt: timestamp("expires_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

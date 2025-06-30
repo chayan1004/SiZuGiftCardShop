@@ -148,6 +148,7 @@ This is a full-stack gift card management application built with a modern tech s
 - June 30, 2025. Prompt 7: Admin Dashboard for Public Gift Card Orders - created comprehensive admin interface at /admin/giftcard-orders with real-time data display, advanced filtering, status badges, and secure access controls
 - June 30, 2025. Prompt 8: Resend Email + Admin Recovery Panel - implemented comprehensive email recovery system with resend functionality, manual failure marking, tracking counters, and admin action buttons
 - June 30, 2025. Prompt 9: PDF Receipt Generator + Download Link - implemented automatic PDF receipt generation with professional branding, admin dashboard download functionality, public success page with receipt access, and complete end-to-end integration with Square checkout flow
+- June 30, 2025. Prompt 10: Gift Card Orders Postman Test Suite - created comprehensive automated testing collection with newman CLI runner, validating payment processing, Square API integration, email delivery, PDF receipt generation, and admin endpoints with real data validation
 
 ## Prompt 4: Branded Public Gift Card Storefront (June 30, 2025)
 
@@ -341,6 +342,39 @@ CREATE TABLE public_giftcard_orders (
 - **Real-time Status**: Visual indicators for PDF generation status and email delivery
 - **Download Access**: Secure PDF download links for customers and admin monitoring
 - **Mobile Optimization**: Touch-friendly download buttons and responsive receipt display
+
+## Prompt 10: Gift Card Orders Postman Test Suite (June 30, 2025)
+
+### Comprehensive Test Collection
+- **Test Suite**: Created `sizu-giftcard-tests.postman_collection.json` with 5 test scenarios
+- **Newman CLI Runner**: Implemented `scripts/test-giftcards.js` for automated test execution
+- **Real Data Validation**: Tests use authentic Square sandbox APIs and live database operations
+- **Complete Coverage**: Payment processing, gift card creation, email delivery, PDF receipts, admin endpoints
+
+### Test Scenarios Implementation
+- **Test 1 - Public Checkout**: POST `/api/public/checkout` with Square sandbox token validation
+- **Test 2 - Admin Orders List**: GET `/api/admin/giftcard-orders` with admin authentication
+- **Test 3 - Email Delivery Log**: GET `/api/admin/email-log/:orderId` for delivery tracking
+- **Test 4 - PDF Receipt Download**: Direct PDF URL validation with content-type verification  
+- **Test 5 - Public Order Details**: GET `/api/public/order/:orderId` for success page data
+
+### Test Infrastructure
+- **Postman Collection**: Organized folder structure with public tests and admin tests
+- **Variable Management**: Dynamic order ID, gift card ID, and receipt URL tracking between tests
+- **Error Handling**: Comprehensive assertion validation for HTTP status codes and data schema
+- **Documentation**: Complete testing guide in `README-testing.md` with troubleshooting
+
+### Automated Execution Features
+- **CLI Script**: Node.js script using newman for command-line test execution
+- **Test Reporting**: JSON output with pass/fail metrics and response time tracking
+- **Delay Configuration**: 2-second delays between requests for proper processing
+- **Environment Variables**: Configurable base URL for different deployment environments
+
+### Quality Assurance Benefits
+- **End-to-End Validation**: Complete order flow from payment to receipt delivery
+- **Regression Testing**: Automated detection of API breaking changes
+- **Performance Monitoring**: Response time tracking for all endpoints
+- **Integration Verification**: Real Square API and database connectivity validation
 
 ## Recent Production Enhancements
 

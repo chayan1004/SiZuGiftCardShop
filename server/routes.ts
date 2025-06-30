@@ -2999,7 +2999,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         const squareModule = await import('squareup');
-        const { Client, Environment } = squareModule;
+        const Client = squareModule.Client;
+        const Environment = squareModule.Environment;
         const client = new Client({
           accessToken: process.env.SQUARE_ACCESS_TOKEN,
           environment: process.env.SQUARE_ENVIRONMENT === 'production' 

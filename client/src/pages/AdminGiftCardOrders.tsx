@@ -34,7 +34,7 @@ export default function AdminGiftCardOrders() {
     refetchInterval: 60000, // 1 minute
   });
 
-  const filteredOrders = orders.filter((order: PublicGiftCardOrder) => {
+  const filteredOrders = orders.filter((order) => {
     const matchesSearch = 
       order.recipientEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -144,7 +144,7 @@ export default function AdminGiftCardOrders() {
                 <div>
                   <p className="text-sm text-slate-300">Issued</p>
                   <p className="text-2xl font-bold text-white">
-                    {orders.filter((o: PublicGiftCardOrder) => o.status === 'issued').length}
+                    {orders.filter((o) => o.status === 'issued').length}
                   </p>
                 </div>
               </div>
@@ -158,7 +158,7 @@ export default function AdminGiftCardOrders() {
                 <div>
                   <p className="text-sm text-slate-300">Emails Sent</p>
                   <p className="text-2xl font-bold text-white">
-                    {orders.filter((o: PublicGiftCardOrder) => o.emailSent).length}
+                    {orders.filter((o) => o.emailSent).length}
                   </p>
                 </div>
               </div>
@@ -172,7 +172,7 @@ export default function AdminGiftCardOrders() {
                 <div>
                   <p className="text-sm text-slate-300">Total Value</p>
                   <p className="text-2xl font-bold text-white">
-                    {formatCurrency(orders.reduce((sum: number, o: PublicGiftCardOrder) => sum + o.amount, 0))}
+                    {formatCurrency(orders.reduce((sum, o) => sum + o.amount, 0))}
                   </p>
                 </div>
               </div>
@@ -265,7 +265,7 @@ export default function AdminGiftCardOrders() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredOrders.map((order: PublicGiftCardOrder) => (
+                    filteredOrders.map((order) => (
                       <TableRow key={order.id} className="border-white/20 hover:bg-white/5">
                         <TableCell className="text-white font-mono text-xs">
                           {order.id.substring(0, 8)}...

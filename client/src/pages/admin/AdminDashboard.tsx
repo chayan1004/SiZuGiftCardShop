@@ -1084,6 +1084,13 @@ export default function AdminDashboard() {
                 </div>
               )}
 
+              {/* PCI DSS Compliance Section */}
+              {activeSection === "pci-dss" && (
+                <div className="space-y-6">
+                  <PCIDSSComplianceDashboard />
+                </div>
+              )}
+
               {/* Customer Insights Section */}
               {activeSection === "customers" && (
                 <div className="space-y-6">

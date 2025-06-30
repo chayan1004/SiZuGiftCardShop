@@ -130,16 +130,26 @@ export default function PCIDSSComplianceDashboard() {
     queryKey: ['/api/admin/pci/incidents']
   });
 
-  const pciStats: PCIStats = stats?.stats || {};
-  const assessments: Assessment[] = assessmentsData?.assessments || [];
-  const scans: SecurityScan[] = scansData?.scans || [];
-  const controls: SecurityControl[] = controlsData?.controls || [];
-  const incidents: Incident[] = incidentsData?.incidents || [];
+  const pciStats: PCIStats = (stats as any)?.stats || {
+    totalAssessments: 0,
+    lastAssessmentDate: null,
+    complianceScore: 0,
+    vulnerabilities: { critical: 0, high: 0, medium: 0, low: 0 },
+    controlsImplemented: 0,
+    totalControls: 12,
+    incidentCount: 0
+  };
+  const assessments: Assessment[] = (assessmentsData as any)?.assessments || [];
+  const scans: SecurityScan[] = (scansData as any)?.scans || [];
+  const controls: SecurityControl[] = (controlsData as any)?.controls || [];
+  const incidents: Incident[] = (incidentsData as any)?.incidents || [];
 
   // Generate compliance report mutation
   const generateReportMutation = useMutation({
-    mutationFn: (reportType: string) => 
-      apiRequest('POST', '/api/admin/pci/generate-report', { reportType }),
+    mutationFn: async (reportType: string) => {
+      const response = await apiRequest('POST', '/api/admin/pci/generate-report', { reportType });
+      return response.json();
+    },
     onSuccess: (data) => {
       toast({
         title: "Report Generated",
@@ -147,7 +157,7 @@ export default function PCIDSSComplianceDashboard() {
       });
       
       // Download the report
-      const reportBlob = new Blob([JSON.stringify(data.report, null, 2)], {
+      const reportBlob = new Blob([JSON.stringify(data.report || data, null, 2)], {
         type: 'application/json'
       });
       const url = URL.createObjectURL(reportBlob);

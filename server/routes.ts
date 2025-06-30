@@ -3012,6 +3012,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           success: true,
           receiptId: result.receiptId,
           downloadUrl: `/api/receipts/${result.receiptId}`,
+          url: `/api/receipts/${result.receiptId}`,
           message: 'PDF receipt generated successfully'
         });
       } else {

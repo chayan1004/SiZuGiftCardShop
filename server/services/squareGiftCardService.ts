@@ -297,7 +297,8 @@ export class SquareGiftCardService {
         };
       }
 
-      const data = responseData as { gift_card?: any };
+      const validated = SquareGiftCardResponseSchema.parse(responseData);
+      const data = validated;
       if (data.gift_card) {
         const giftCard = data.gift_card;
         const balance = giftCard.balance_money?.amount ? Number(giftCard.balance_money.amount) : 0;

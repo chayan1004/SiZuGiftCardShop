@@ -1,5 +1,5 @@
 import { 
-  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, merchantCardDesigns, fraudLogs, autoDefenseRules, cardRedemptions, webhookEvents, webhookDeliveryLogs, webhookRetryQueue, webhookFailureLog, merchantApiKeys, giftCardTransactions, globalSettings, gatewayFeatureToggles, fraudClusters, clusterPatterns, defenseActions, actionRules, defenseHistory, dataProcessingRecords, userConsentRecords, dataSubjectRequests, dataBreachIncidents, privacyImpactAssessments,
+  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, merchantCardDesigns, fraudLogs, autoDefenseRules, cardRedemptions, webhookEvents, webhookDeliveryLogs, webhookRetryQueue, webhookFailureLog, merchantApiKeys, giftCardTransactions, globalSettings, gatewayFeatureToggles, fraudClusters, clusterPatterns, defenseActions, actionRules, defenseHistory, dataProcessingRecords, userConsentRecords, dataSubjectRequests, dataBreachIncidents, privacyImpactAssessments, pciComplianceAssessments, pciSecurityScans, pciSecurityControls, pciIncidentResponses, pciNetworkDiagrams, pciAuditLogs,
   type User, type InsertUser,
   type Merchant, type InsertMerchant, 
   type GiftCard, type InsertGiftCard,
@@ -32,7 +32,13 @@ import {
   type UserConsentRecord, type InsertUserConsentRecord,
   type DataSubjectRequest, type InsertDataSubjectRequest,
   type DataBreachIncident, type InsertDataBreachIncident,
-  type PrivacyImpactAssessment, type InsertPrivacyImpactAssessment
+  type PrivacyImpactAssessment, type InsertPrivacyImpactAssessment,
+  type PciComplianceAssessment, type InsertPciComplianceAssessment,
+  type PciSecurityScan, type InsertPciSecurityScan,
+  type PciSecurityControl, type InsertPciSecurityControl,
+  type PciIncidentResponse, type InsertPciIncidentResponse,
+  type PciNetworkDiagram, type InsertPciNetworkDiagram,
+  type PciAuditLog, type InsertPciAuditLog
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, count, sum, and, gte, lte, asc, or, isNull, isNotNull } from "drizzle-orm";
@@ -311,6 +317,50 @@ export interface IStorage {
   createPrivacyImpactAssessment(assessment: InsertPrivacyImpactAssessment): Promise<PrivacyImpactAssessment>;
   getPrivacyImpactAssessments(): Promise<PrivacyImpactAssessment[]>;
   updatePrivacyImpactAssessment(id: string, updates: Partial<InsertPrivacyImpactAssessment>): Promise<PrivacyImpactAssessment | undefined>;
+
+  // PCI DSS Compliance Management
+  // Compliance Assessments
+  createPciComplianceAssessment(assessment: InsertPciComplianceAssessment): Promise<PciComplianceAssessment>;
+  getPciComplianceAssessments(): Promise<PciComplianceAssessment[]>;
+  updatePciComplianceAssessment(id: string, updates: Partial<InsertPciComplianceAssessment>): Promise<PciComplianceAssessment | undefined>;
+  
+  // Security Scans
+  createPciSecurityScan(scan: InsertPciSecurityScan): Promise<PciSecurityScan>;
+  getPciSecurityScans(): Promise<PciSecurityScan[]>;
+  updatePciSecurityScan(id: string, updates: Partial<InsertPciSecurityScan>): Promise<PciSecurityScan | undefined>;
+  
+  // Security Controls
+  createPciSecurityControl(control: InsertPciSecurityControl): Promise<PciSecurityControl>;
+  getPciSecurityControls(): Promise<PciSecurityControl[]>;
+  updatePciSecurityControl(id: string, updates: Partial<InsertPciSecurityControl>): Promise<PciSecurityControl | undefined>;
+  
+  // Incident Response
+  createPciIncidentResponse(incident: InsertPciIncidentResponse): Promise<PciIncidentResponse>;
+  getPciIncidentResponses(): Promise<PciIncidentResponse[]>;
+  updatePciIncidentResponse(id: string, updates: Partial<InsertPciIncidentResponse>): Promise<PciIncidentResponse | undefined>;
+  
+  // Network Diagrams
+  createPciNetworkDiagram(diagram: InsertPciNetworkDiagram): Promise<PciNetworkDiagram>;
+  getPciNetworkDiagrams(): Promise<PciNetworkDiagram[]>;
+  updatePciNetworkDiagram(id: string, updates: Partial<InsertPciNetworkDiagram>): Promise<PciNetworkDiagram | undefined>;
+  
+  // Audit Logs
+  createPciAuditLog(log: InsertPciAuditLog): Promise<PciAuditLog>;
+  getPciAuditLogs(filters?: { startDate?: Date; endDate?: Date; eventType?: string; userId?: string }): Promise<PciAuditLog[]>;
+  
+  // PCI DSS Statistics
+  getPciComplianceStats(): Promise<{
+    assessmentsCount: number;
+    scansCount: number;
+    controlsCount: number;
+    incidentsCount: number;
+    lastAssessmentDate?: Date;
+    nextScanDue?: Date;
+    complianceScore?: number;
+    implementedControlsCount: number;
+    pendingControlsCount: number;
+    overdueScanCount: number;
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2761,6 +2811,239 @@ export class DatabaseStorage implements IStorage {
       .where(eq(privacyImpactAssessments.id, id))
       .returning();
     return updated || undefined;
+  }
+
+  // ===== PCI DSS COMPLIANCE METHODS =====
+
+  // Compliance Assessments
+  async createPciComplianceAssessment(assessment: InsertPciComplianceAssessment): Promise<PciComplianceAssessment> {
+    const [created] = await db
+      .insert(pciComplianceAssessments)
+      .values(assessment)
+      .returning();
+    return created;
+  }
+
+  async getPciComplianceAssessments(): Promise<PciComplianceAssessment[]> {
+    return await db.select().from(pciComplianceAssessments)
+      .orderBy(desc(pciComplianceAssessments.createdAt));
+  }
+
+  async updatePciComplianceAssessment(id: string, updates: Partial<InsertPciComplianceAssessment>): Promise<PciComplianceAssessment | undefined> {
+    const [updated] = await db
+      .update(pciComplianceAssessments)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(pciComplianceAssessments.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  // Security Scans
+  async createPciSecurityScan(scan: InsertPciSecurityScan): Promise<PciSecurityScan> {
+    const [created] = await db
+      .insert(pciSecurityScans)
+      .values(scan)
+      .returning();
+    return created;
+  }
+
+  async getPciSecurityScans(): Promise<PciSecurityScan[]> {
+    return await db.select().from(pciSecurityScans)
+      .orderBy(desc(pciSecurityScans.createdAt));
+  }
+
+  async updatePciSecurityScan(id: string, updates: Partial<InsertPciSecurityScan>): Promise<PciSecurityScan | undefined> {
+    const [updated] = await db
+      .update(pciSecurityScans)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(pciSecurityScans.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  // Security Controls
+  async createPciSecurityControl(control: InsertPciSecurityControl): Promise<PciSecurityControl> {
+    const [created] = await db
+      .insert(pciSecurityControls)
+      .values(control)
+      .returning();
+    return created;
+  }
+
+  async getPciSecurityControls(): Promise<PciSecurityControl[]> {
+    return await db.select().from(pciSecurityControls)
+      .orderBy(pciSecurityControls.requirementNumber);
+  }
+
+  async updatePciSecurityControl(id: string, updates: Partial<InsertPciSecurityControl>): Promise<PciSecurityControl | undefined> {
+    const [updated] = await db
+      .update(pciSecurityControls)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(pciSecurityControls.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  // Incident Response
+  async createPciIncidentResponse(incident: InsertPciIncidentResponse): Promise<PciIncidentResponse> {
+    const [created] = await db
+      .insert(pciIncidentResponses)
+      .values(incident)
+      .returning();
+    return created;
+  }
+
+  async getPciIncidentResponses(): Promise<PciIncidentResponse[]> {
+    return await db.select().from(pciIncidentResponses)
+      .orderBy(desc(pciIncidentResponses.createdAt));
+  }
+
+  async updatePciIncidentResponse(id: string, updates: Partial<InsertPciIncidentResponse>): Promise<PciIncidentResponse | undefined> {
+    const [updated] = await db
+      .update(pciIncidentResponses)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(pciIncidentResponses.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  // Network Diagrams
+  async createPciNetworkDiagram(diagram: InsertPciNetworkDiagram): Promise<PciNetworkDiagram> {
+    const [created] = await db
+      .insert(pciNetworkDiagrams)
+      .values(diagram)
+      .returning();
+    return created;
+  }
+
+  async getPciNetworkDiagrams(): Promise<PciNetworkDiagram[]> {
+    return await db.select().from(pciNetworkDiagrams)
+      .where(eq(pciNetworkDiagrams.isActive, true))
+      .orderBy(desc(pciNetworkDiagrams.createdAt));
+  }
+
+  async updatePciNetworkDiagram(id: string, updates: Partial<InsertPciNetworkDiagram>): Promise<PciNetworkDiagram | undefined> {
+    const [updated] = await db
+      .update(pciNetworkDiagrams)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(pciNetworkDiagrams.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  // Audit Logs
+  async createPciAuditLog(log: InsertPciAuditLog): Promise<PciAuditLog> {
+    const [created] = await db
+      .insert(pciAuditLogs)
+      .values(log)
+      .returning();
+    return created;
+  }
+
+  async getPciAuditLogs(filters?: { startDate?: Date; endDate?: Date; eventType?: string; userId?: string }): Promise<PciAuditLog[]> {
+    let query = db.select().from(pciAuditLogs);
+    
+    if (filters) {
+      const conditions = [];
+      
+      if (filters.startDate) {
+        conditions.push(gte(pciAuditLogs.timestamp, filters.startDate));
+      }
+      
+      if (filters.endDate) {
+        conditions.push(lte(pciAuditLogs.timestamp, filters.endDate));
+      }
+      
+      if (filters.eventType) {
+        conditions.push(eq(pciAuditLogs.eventType, filters.eventType));
+      }
+      
+      if (filters.userId) {
+        conditions.push(eq(pciAuditLogs.userId, filters.userId));
+      }
+      
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+    }
+    
+    return await query.orderBy(desc(pciAuditLogs.timestamp));
+  }
+
+  // PCI DSS Statistics
+  async getPciComplianceStats(): Promise<{
+    assessmentsCount: number;
+    scansCount: number;
+    controlsCount: number;
+    incidentsCount: number;
+    lastAssessmentDate?: Date;
+    nextScanDue?: Date;
+    complianceScore?: number;
+    implementedControlsCount: number;
+    pendingControlsCount: number;
+    overdueScanCount: number;
+  }> {
+    // Get counts for each table
+    const [assessmentsResult] = await db.select({ count: count() }).from(pciComplianceAssessments);
+    const [scansResult] = await db.select({ count: count() }).from(pciSecurityScans);
+    const [controlsResult] = await db.select({ count: count() }).from(pciSecurityControls);
+    const [incidentsResult] = await db.select({ count: count() }).from(pciIncidentResponses);
+
+    // Get implemented controls count
+    const [implementedResult] = await db
+      .select({ count: count() })
+      .from(pciSecurityControls)
+      .where(eq(pciSecurityControls.implementationStatus, 'implemented'));
+
+    // Get pending controls count
+    const [pendingResult] = await db
+      .select({ count: count() })
+      .from(pciSecurityControls)
+      .where(or(
+        eq(pciSecurityControls.implementationStatus, 'not_implemented'),
+        eq(pciSecurityControls.implementationStatus, 'partially_implemented')
+      ));
+
+    // Get last assessment
+    const lastAssessment = await db
+      .select()
+      .from(pciComplianceAssessments)
+      .where(eq(pciComplianceAssessments.assessmentStatus, 'completed'))
+      .orderBy(desc(pciComplianceAssessments.assessmentDate))
+      .limit(1);
+
+    // Get next scan due
+    const nextScan = await db
+      .select()
+      .from(pciSecurityScans)
+      .where(and(
+        eq(pciSecurityScans.scanStatus, 'scheduled'),
+        isNotNull(pciSecurityScans.nextScanDue)
+      ))
+      .orderBy(asc(pciSecurityScans.nextScanDue))
+      .limit(1);
+
+    // Get overdue scans count
+    const [overdueScansResult] = await db
+      .select({ count: count() })
+      .from(pciSecurityScans)
+      .where(and(
+        eq(pciSecurityScans.scanStatus, 'scheduled'),
+        lte(pciSecurityScans.nextScanDue, new Date())
+      ));
+
+    return {
+      assessmentsCount: assessmentsResult.count,
+      scansCount: scansResult.count,
+      controlsCount: controlsResult.count,
+      incidentsCount: incidentsResult.count,
+      lastAssessmentDate: lastAssessment[0]?.assessmentDate || undefined,
+      nextScanDue: nextScan[0]?.nextScanDue || undefined,
+      complianceScore: lastAssessment[0]?.complianceScore || undefined,
+      implementedControlsCount: implementedResult.count,
+      pendingControlsCount: pendingResult.count,
+      overdueScanCount: overdueScansResult.count,
+    };
   }
 }
 

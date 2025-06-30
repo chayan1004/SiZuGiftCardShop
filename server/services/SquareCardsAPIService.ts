@@ -66,11 +66,11 @@ class SquareCardsAPIService {
       environment: this.environment === 'production' 
         ? SquareEnvironment.Production 
         : SquareEnvironment.Sandbox,
-      accessToken: this.accessToken,
+      squareVersion: '2023-10-18',
     });
 
-    this.customersApi = this.client.customersApi;
-    this.cardsApi = this.client.cardsApi;
+    this.customersApi = this.client.customers;
+    this.cardsApi = this.client.cards;
 
     if (!this.accessToken) {
       console.warn('Square Cards API credentials not configured properly');

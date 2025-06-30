@@ -8262,6 +8262,273 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ================================
+  // SQUARE CARDS API ROUTES - Customer Payment Profiles
+  // ================================
+
+  // Create or get customer profile
+  app.post("/api/customers/profile", async (req: Request, res: Response) => {
+    try {
+      const { email, firstName, lastName, phone } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({
+          success: false,
+          message: "Email is required"
+        });
+      }
+
+      // Check if customer already exists
+      let customerProfile = await storage.getCustomerProfileByEmail(email);
+      
+      if (!customerProfile) {
+        // Create new Square customer and local profile
+        const { squareCardsAPIService } = await import('./services/SquareCardsAPIService');
+        const customerResult = await squareCardsAPIService.createOrGetCustomer({
+          email,
+          firstName,
+          lastName,
+          phone
+        });
+
+        if (!customerResult.success) {
+          return res.status(500).json({
+            success: false,
+            message: customerResult.error || "Failed to create customer profile"
+          });
+        }
+
+        customerProfile = await storage.getCustomerProfileBySquareId(customerResult.squareCustomerId!);
+      }
+
+      res.json({
+        success: true,
+        customer: customerProfile
+      });
+    } catch (error) {
+      console.error('Error managing customer profile:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to manage customer profile"
+      });
+    }
+  });
+
+  // Save payment card for customer
+  app.post("/api/customers/:customerId/cards", async (req: Request, res: Response) => {
+    try {
+      const { customerId } = req.params;
+      const { cardNonce, cardNickname, billingAddress, verificationToken } = req.body;
+      
+      if (!cardNonce) {
+        return res.status(400).json({
+          success: false,
+          message: "Card nonce is required"
+        });
+      }
+
+      const customerProfile = await storage.getCustomerProfileBySquareId(customerId);
+      if (!customerProfile) {
+        return res.status(404).json({
+          success: false,
+          message: "Customer not found"
+        });
+      }
+
+      const { squareCardsAPIService } = await import('./services/SquareCardsAPIService');
+      const cardResult = await squareCardsAPIService.saveCardOnFile({
+        customerId,
+        cardNonce,
+        cardNickname,
+        billingAddress,
+        verificationToken
+      });
+
+      if (!cardResult.success) {
+        return res.status(500).json({
+          success: false,
+          message: cardResult.error || "Failed to save card"
+        });
+      }
+
+      res.json({
+        success: true,
+        card: cardResult.card,
+        message: "Payment method saved successfully"
+      });
+    } catch (error) {
+      console.error('Error saving payment card:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to save payment method"
+      });
+    }
+  });
+
+  // Get customer's saved cards
+  app.get("/api/customers/:customerId/cards", async (req: Request, res: Response) => {
+    try {
+      const { customerId } = req.params;
+      
+      const customerProfile = await storage.getCustomerProfileBySquareId(customerId);
+      if (!customerProfile) {
+        return res.status(404).json({
+          success: false,
+          message: "Customer not found"
+        });
+      }
+
+      const savedCards = await storage.getSavedCardsByCustomer(customerProfile.id);
+      
+      res.json({
+        success: true,
+        cards: savedCards
+      });
+    } catch (error) {
+      console.error('Error fetching saved cards:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch payment methods"
+      });
+    }
+  });
+
+  // Create payment token for saved card
+  app.post("/api/customers/:customerId/cards/:cardId/token", async (req: Request, res: Response) => {
+    try {
+      const { customerId, cardId } = req.params;
+      const { amount, currency } = req.body;
+      
+      const { squareCardsAPIService } = await import('./services/SquareCardsAPIService');
+      const tokenResult = await squareCardsAPIService.createPaymentToken({
+        cardId,
+        customerId,
+        amount,
+        currency
+      });
+
+      if (!tokenResult.success) {
+        return res.status(500).json({
+          success: false,
+          message: tokenResult.error || "Failed to create payment token"
+        });
+      }
+
+      res.json({
+        success: true,
+        token: tokenResult.token
+      });
+    } catch (error) {
+      console.error('Error creating payment token:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to create payment token"
+      });
+    }
+  });
+
+  // Disable a saved card
+  app.delete("/api/customers/:customerId/cards/:cardId", async (req: Request, res: Response) => {
+    try {
+      const { cardId } = req.params;
+      
+      const { squareCardsAPIService } = await import('./services/SquareCardsAPIService');
+      const result = await squareCardsAPIService.disableCard(cardId);
+
+      if (!result.success) {
+        return res.status(500).json({
+          success: false,
+          message: result.error || "Failed to remove payment method"
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "Payment method removed successfully"
+      });
+    } catch (error) {
+      console.error('Error removing payment card:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to remove payment method"
+      });
+    }
+  });
+
+  // Enhanced checkout with customer profiles
+  app.post("/api/checkout/enhanced", async (req: Request, res: Response) => {
+    try {
+      const { email, amount, paymentSource, savePaymentMethod, customerData } = req.body;
+      
+      if (!email || !amount || !paymentSource) {
+        return res.status(400).json({
+          success: false,
+          message: "Email, amount, and payment source are required"
+        });
+      }
+
+      let customerProfile;
+      
+      // Create or get customer profile if saving payment method
+      if (savePaymentMethod) {
+        const { squareCardsAPIService } = await import('./services/SquareCardsAPIService');
+        const customerResult = await squareCardsAPIService.createOrGetCustomer({
+          email,
+          firstName: customerData?.firstName,
+          lastName: customerData?.lastName,
+          phone: customerData?.phone
+        });
+
+        if (customerResult.success) {
+          customerProfile = await storage.getCustomerProfileBySquareId(customerResult.squareCustomerId!);
+        }
+      }
+
+      // Process payment (integrate with existing payment flow)
+      const paymentResult = await enhancedSquareAPIService.processPayment({
+        amount: Math.round(amount * 100), // Convert to cents
+        currency: 'USD',
+        sourceId: paymentSource.cardNonce || paymentSource.cardId,
+        buyerEmailAddress: email,
+        autocomplete: true,
+        locationId: process.env.SQUARE_LOCATION_ID,
+        idempotencyKey: crypto.randomUUID(),
+        note: `Gift card purchase - ${amount} USD`
+      });
+
+      if (!paymentResult.success) {
+        return res.status(400).json({
+          success: false,
+          message: paymentResult.error || "Payment failed"
+        });
+      }
+
+      // Save card if requested and payment successful
+      if (savePaymentMethod && customerProfile && paymentSource.cardNonce) {
+        const { squareCardsAPIService } = await import('./services/SquareCardsAPIService');
+        await squareCardsAPIService.saveCardOnFile({
+          customerId: customerProfile.squareCustomerId,
+          cardNonce: paymentSource.cardNonce,
+          cardNickname: paymentSource.nickname,
+          billingAddress: paymentSource.billingAddress
+        });
+      }
+
+      res.json({
+        success: true,
+        payment: paymentResult.payment,
+        customer: customerProfile,
+        message: "Payment processed successfully"
+      });
+    } catch (error) {
+      console.error('Error processing enhanced checkout:', error);
+      res.status(500).json({
+        success: false,
+        message: "Payment processing failed"
+      });
+    }
+  });
+
+  // ================================
   // BRANDED CHECKOUT API ROUTES
   // ================================
 
@@ -8270,18 +8537,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { orderId } = req.params;
       
-      // This would typically fetch order details from database
-      // For now, return a mock order for testing
-      const order = {
-        id: orderId,
-        productName: "SiZu Gift Card",
-        amount: 50.00,
-        quantity: 1,
-        total: 50.00,
-        status: "pending"
-      };
+      // Fetch actual order from database
+      const order = await storage.getPublicGiftCardOrderById(orderId);
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          message: "Order not found"
+        });
+      }
       
-      res.json(order);
+      res.json({
+        success: true,
+        order: {
+          id: order.id,
+          productName: "SiZu Gift Card",
+          amount: order.amount / 100, // Convert from cents
+          quantity: 1,
+          total: order.amount / 100,
+          status: order.status,
+          recipientEmail: order.recipientEmail
+        }
+      });
     } catch (error) {
       console.error('Error fetching order:', error);
       res.status(500).json({ 

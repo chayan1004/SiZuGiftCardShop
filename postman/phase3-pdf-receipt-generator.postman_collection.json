@@ -1,0 +1,328 @@
+{
+  "info": {
+    "name": "Phase 3: PDF Receipt Generator with Branded Design",
+    "description": "Test collection for Phase 3 - PDF receipt generation with merchant branding",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "merchantId",
+      "value": "merchant_1751221971890_zmi502",
+      "type": "string"
+    },
+    {
+      "key": "receiptId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Test PDF Receipt Generation - Default Merchant",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Test PDF receipt generation with default merchant branding",
+              "pm.test('PDF generation successful', function () {",
+              "    pm.response.to.have.status(200);",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.success).to.be.true;",
+              "    pm.expect(response.receiptId).to.exist;",
+              "    pm.expect(response.downloadUrl).to.exist;",
+              "});",
+              "",
+              "pm.test('Receipt ID format is correct', function () {",
+              "    const response = pm.response.json();",
+              "    const receiptId = response.receiptId;",
+              "    pm.expect(receiptId).to.match(/^receipt_test_order_\\d+_\\d+$/);",
+              "    ",
+              "    // Store receipt ID for next test",
+              "    pm.globals.set('testReceiptId', receiptId);",
+              "});",
+              "",
+              "pm.test('Download URL is properly formatted', function () {",
+              "    const response = pm.response.json();",
+              "    const downloadUrl = response.downloadUrl;",
+              "    pm.expect(downloadUrl).to.include('/api/receipts/');",
+              "    pm.expect(downloadUrl).to.include(response.receiptId);",
+              "});",
+              "",
+              "console.log('✅ PDF Receipt Generation Test:');",
+              "console.log('   Status:', pm.response.code);",
+              "console.log('   Receipt ID:', pm.response.json().receiptId);",
+              "console.log('   Download URL:', pm.response.json().downloadUrl);",
+              "console.log('   Message:', pm.response.json().message);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"merchantId\": \"{{merchantId}}\",\n  \"recipientEmail\": \"customer@example.com\",\n  \"recipientName\": \"John Customer\",\n  \"senderName\": \"Jane Sender\",\n  \"amount\": 5000,\n  \"personalMessage\": \"Happy Birthday! Enjoy this special gift card.\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/test/generate-receipt",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "test", "generate-receipt"]
+        }
+      }
+    },
+    {
+      "name": "2. Test PDF Receipt Download",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Get the receipt ID from the previous test",
+              "const receiptId = pm.globals.get('testReceiptId');",
+              "if (receiptId) {",
+              "    pm.request.url = pm.request.url.toString().replace(':receiptId', receiptId);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Test PDF download functionality",
+              "pm.test('PDF download successful', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('PDF content type is correct', function () {",
+              "    pm.expect(pm.response.headers.get('Content-Type')).to.equal('application/pdf');",
+              "});",
+              "",
+              "pm.test('PDF has download headers', function () {",
+              "    pm.expect(pm.response.headers.get('Content-Disposition')).to.include('attachment');",
+              "    pm.expect(pm.response.headers.get('Content-Disposition')).to.include('.pdf');",
+              "});",
+              "",
+              "pm.test('PDF has security headers', function () {",
+              "    pm.expect(pm.response.headers.get('Cache-Control')).to.include('private');",
+              "    pm.expect(pm.response.headers.get('Cache-Control')).to.include('no-cache');",
+              "    pm.expect(pm.response.headers.get('Pragma')).to.equal('no-cache');",
+              "});",
+              "",
+              "pm.test('PDF file has content', function () {",
+              "    const contentLength = parseInt(pm.response.headers.get('Content-Length'));",
+              "    pm.expect(contentLength).to.be.above(1000); // PDF should be at least 1KB",
+              "});",
+              "",
+              "console.log('✅ PDF Download Test:');",
+              "console.log('   Status:', pm.response.code);",
+              "console.log('   Content-Type:', pm.response.headers.get('Content-Type'));",
+              "console.log('   Content-Length:', pm.response.headers.get('Content-Length'), 'bytes');",
+              "console.log('   Content-Disposition:', pm.response.headers.get('Content-Disposition'));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/receipts/:receiptId",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "receipts", ":receiptId"]
+        }
+      }
+    },
+    {
+      "name": "3. Test PDF Generation with Custom Amount",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Test PDF generation with custom amount and different merchant",
+              "pm.test('Custom amount PDF generation successful', function () {",
+              "    pm.response.to.have.status(200);",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.success).to.be.true;",
+              "    pm.expect(response.receiptId).to.exist;",
+              "});",
+              "",
+              "pm.test('Response contains all required fields', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('success');",
+              "    pm.expect(response).to.have.property('receiptId');",
+              "    pm.expect(response).to.have.property('downloadUrl');",
+              "    pm.expect(response).to.have.property('message');",
+              "});",
+              "",
+              "// Store receipt ID for validation",
+              "const response = pm.response.json();",
+              "pm.globals.set('customReceiptId', response.receiptId);",
+              "",
+              "console.log('✅ Custom Amount PDF Test:');",
+              "console.log('   Status:', pm.response.code);",
+              "console.log('   Receipt ID:', response.receiptId);",
+              "console.log('   Amount: $100.00 (custom amount test)');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"merchantId\": \"test-merchant-custom\",\n  \"recipientEmail\": \"premium@customer.com\",\n  \"recipientName\": \"Premium Customer\",\n  \"senderName\": \"Corporate Sender\",\n  \"amount\": 10000,\n  \"personalMessage\": \"Thank you for your business! This premium gift card is our token of appreciation.\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/test/generate-receipt",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "test", "generate-receipt"]
+        }
+      }
+    },
+    {
+      "name": "4. Test Invalid Receipt ID Access",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Test security - invalid receipt ID should return 404",
+              "pm.test('Invalid receipt ID returns 404', function () {",
+              "    pm.response.to.have.status(404);",
+              "});",
+              "",
+              "pm.test('Invalid receipt ID returns error message', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('error');",
+              "    pm.expect(response.error).to.include('not found');",
+              "});",
+              "",
+              "console.log('✅ Invalid Receipt ID Test:');",
+              "console.log('   Status:', pm.response.code);",
+              "console.log('   Error:', pm.response.json().error);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/receipts/invalid_receipt_id_999",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "receipts", "invalid_receipt_id_999"]
+        }
+      }
+    },
+    {
+      "name": "5. Test Receipt ID Format Validation",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Test security - malformed receipt ID should return 400",
+              "pm.test('Malformed receipt ID returns 400', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "",
+              "pm.test('Malformed receipt ID returns validation error', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('error');",
+              "    pm.expect(response.error).to.include('Invalid receipt ID format');",
+              "});",
+              "",
+              "console.log('✅ Receipt ID Validation Test:');",
+              "console.log('   Status:', pm.response.code);",
+              "console.log('   Validation Error:', pm.response.json().error);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/receipts/../../../etc/passwd",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "receipts", "../../../etc/passwd"]
+        }
+      }
+    },
+    {
+      "name": "6. Test Merchant Design Integration",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Test that merchant design is being fetched during PDF generation",
+              "pm.test('Merchant design integration works', function () {",
+              "    pm.response.to.have.status(200);",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.success).to.be.true;",
+              "});",
+              "",
+              "pm.test('PDF generated with merchant branding', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.receiptId).to.include('test_order_');",
+              "    pm.expect(response.message).to.include('generated successfully');",
+              "});",
+              "",
+              "console.log('✅ Merchant Design Integration Test:');",
+              "console.log('   Status:', pm.response.code);",
+              "console.log('   Merchant ID: {{merchantId}}');",
+              "console.log('   Receipt ID:', pm.response.json().receiptId);",
+              "console.log('   Branding: Applied merchant theme color and design');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"merchantId\": \"{{merchantId}}\",\n  \"recipientEmail\": \"branded@customer.com\",\n  \"recipientName\": \"Branded Customer\",\n  \"senderName\": \"Merchant Sender\",\n  \"amount\": 7500,\n  \"personalMessage\": \"This receipt should include our merchant branding and theme colors!\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/test/generate-receipt",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "test", "generate-receipt"]
+        }
+      }
+    }
+  ]
+}

@@ -2941,13 +2941,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { receiptId } = req.params;
       
-      if (!receiptId || !/^receipt_[a-zA-Z0-9_-]+$/.test(receiptId)) {
+      // Enhanced security validation - prevent path traversal
+      if (!receiptId || 
+          !/^receipt_[a-zA-Z0-9_-]+$/.test(receiptId) ||
+          receiptId.includes('..') ||
+          receiptId.includes('/') ||
+          receiptId.includes('\\')) {
         return res.status(400).json({ error: 'Invalid receipt ID format' });
       }
 
       const filePath = await ReceiptService.getReceiptFilePath(receiptId);
       if (!filePath) {
         return res.status(404).json({ error: 'Receipt not found' });
+      }
+
+      // Additional security check - ensure file is within receipts directory
+      const path = require('path');
+      const receiptDir = path.join(process.cwd(), 'storage', 'receipts');
+      if (!filePath.startsWith(receiptDir)) {
+        return res.status(403).json({ error: 'Access denied' });
       }
 
       // Set proper headers for PDF download

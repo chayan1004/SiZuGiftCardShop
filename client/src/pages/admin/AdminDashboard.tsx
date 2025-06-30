@@ -1541,111 +1541,26 @@ export default function AdminDashboard() {
                 </div>
               )}
 
+              {/* Gift Card Analytics Section */}
               {activeSection === "analytics" && (
                 <div className="space-y-6">
-                  {/* Advanced Analytics Header */}
-                  <div className="bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-xl p-6">
-                    <h3 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-2">
-                      Advanced Analytics
-                    </h3>
-                    <p className="text-gray-300">Deep insights into your gift card business performance</p>
-                  </div>
+                  <AdminGiftCardAnalytics />
+                </div>
+              )}
 
-                  {/* Revenue Analytics */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
-                      <CardHeader>
-                        <CardTitle className="text-white">Revenue Trend Analysis</CardTitle>
-                        <CardDescription className="text-gray-300">Weekly revenue performance</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <ResponsiveContainer width="100%" height={300}>
-                          <LineChart data={weeklyRevenue}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                            <XAxis dataKey="week" stroke="rgba(255,255,255,0.5)" />
-                            <YAxis stroke="rgba(255,255,255,0.5)" />
-                            <Tooltip 
-                              contentStyle={{ 
-                                backgroundColor: 'rgba(0,0,0,0.8)', 
-                                border: '1px solid rgba(255,255,255,0.2)',
-                                borderRadius: '8px',
-                                color: 'white'
-                              }} 
-                            />
-                            <Line 
-                              type="monotone" 
-                              dataKey="revenue" 
-                              stroke="#06b6d4" 
-                              strokeWidth={3}
-                              dot={{ fill: '#06b6d4', strokeWidth: 2, r: 6 }}
-                            />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </CardContent>
-                    </Card>
+              {/* Public Orders Section */}
+              {activeSection === "orders" && (
+                <div className="space-y-6">
+                  <AdminGiftCardOrders />
+                </div>
+              )}
 
-                    <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
-                      <CardHeader>
-                        <CardTitle className="text-white">Gift Cards Distribution</CardTitle>
-                        <CardDescription className="text-gray-300">Status breakdown</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <ResponsiveContainer width="100%" height={300}>
-                          <PieChart>
-                            <Pie
-                              data={[
-                                { name: 'Active', value: metrics.activeCards, color: '#06b6d4' },
-                                { name: 'Redeemed', value: metrics.redeemedCards, color: '#10b981' },
-                                { name: 'Pending', value: Math.max(0, metrics.totalGiftCards - metrics.activeCards - metrics.redeemedCards), color: '#f59e0b' }
-                              ]}
-                              cx="50%"
-                              cy="50%"
-                              outerRadius={100}
-                              fill="#8884d8"
-                              dataKey="value"
-                              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                            >
-                              {[
-                                { name: 'Active', value: metrics.activeCards, color: '#06b6d4' },
-                                { name: 'Redeemed', value: metrics.redeemedCards, color: '#10b981' },
-                                { name: 'Pending', value: Math.max(0, metrics.totalGiftCards - metrics.activeCards - metrics.redeemedCards), color: '#f59e0b' }
-                              ].map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.color} />
-                              ))}
-                            </Pie>
-                            <Tooltip 
-                              contentStyle={{ 
-                                backgroundColor: 'rgba(0,0,0,0.8)', 
-                                border: '1px solid rgba(255,255,255,0.2)',
-                                borderRadius: '8px',
-                                color: 'white'
-                              }} 
-                            />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  {/* Performance Metrics */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <Card className="bg-gradient-to-br from-blue-600/30 via-cyan-500/25 to-blue-500/30 border-blue-400/40 shadow-lg shadow-blue-500/20 backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl">
-                      <CardContent className="p-6">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-white text-sm font-medium">Conversion Rate</p>
-                            <p className="text-2xl font-bold text-white">{metrics.conversionRate}</p>
-                          </div>
-                          <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 via-cyan-400 to-blue-600 shadow-xl shadow-blue-500/40">
-                            <TrendingUp className="text-white" size={24} />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="bg-gradient-to-br from-green-600/30 via-emerald-500/25 to-green-500/30 border-green-400/40 shadow-lg shadow-green-500/20 backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl">
-                      <CardContent className="p-6">
-                        <div className="flex items-center justify-between">
+              {/* Merchant Settings Section */}
+              {activeSection === "settings" && (
+                <div className="space-y-6">
+                  <AdminMerchantSettings />
+                </div>
+              )}
                           <div>
                             <p className="text-white text-sm font-medium">Avg. Card Value</p>
                             <p className="text-2xl font-bold text-white">${(metrics.averageValue / 100).toFixed(2)}</p>
@@ -1730,22 +1645,7 @@ export default function AdminDashboard() {
                 </div>
               )}
 
-              {!["overview", "giftcards", "merchants", "email", "analytics", "settings", "security"].includes(activeSection) && (
-                <div className="text-center py-16">
-                  <h3 className="text-xl font-semibold text-white mb-2 capitalize">
-                    {activeSection} Section
-                  </h3>
-                  <p className="text-gray-400 mb-6">
-                    This section is being developed. More features coming soon.
-                  </p>
-                  <Button 
-                    onClick={() => setActiveSection("overview")}
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                  >
-                    Back to Overview
-                  </Button>
-                </div>
-              )}
+    
 
               {/* Revenue Analytics Section */}
               {activeSection === "revenue" && (

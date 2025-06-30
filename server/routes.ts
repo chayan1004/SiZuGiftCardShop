@@ -3496,10 +3496,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 const currentOrder = await storage.getPublicGiftCardOrderById(order.id);
                 if (currentOrder && !currentOrder.emailSent) {
                   const emailResult = await emailService.sendGiftCardEmail({
+                    to: recipientEmail,
+                    gan: gan,
+                    amount: amount,
+                    message: message || undefined,
+                    senderName: 'SiZu Gift Card Store',
                     recipientName: recipientEmail.split('@')[0],
                     recipientEmail: recipientEmail,
                     giftCardId: giftCardId,
-                    amount: amount,
                     giftCardGan: gan,
                     businessName: 'SiZu Gift Card Store',
                     customMessage: message || undefined,

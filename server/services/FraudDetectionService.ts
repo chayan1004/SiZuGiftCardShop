@@ -161,7 +161,10 @@ export class FraudDetectionService {
       };
 
       const alertType = (alertTypeMap[fraudData.reason] || 'suspicious_activity') as 'invalid_code' | 'rate_limit_ip_violation' | 'device_fingerprint_violation' | 'reused_code' | 'merchant_rate_limit' | 'suspicious_activity';
-      const severity = calculateThreatSeverity(alertType, fraudData.ipAddress);
+      const severity = calculateThreatSeverity(alertType, { 
+        attemptCount: 1, 
+        isRepeated: false 
+      });
 
       // Generate human-readable messages
       const messageMap: Record<string, string> = {

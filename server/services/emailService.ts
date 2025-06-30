@@ -80,7 +80,15 @@ interface FraudEmailData {
 }
 
 // Legacy interface for backward compatibility
-interface GiftCardEmailData extends ReceiptEmailData {}
+interface GiftCardEmailData extends ReceiptEmailData {
+  recipientEmail?: string;
+  recipientName?: string;
+  giftCardId?: string;
+  giftCardGan?: string;
+  businessName?: string;
+  customMessage?: string;
+  orderId?: string;
+}
 
 class EmailService {
   private transporter: nodemailer.Transporter | null = null;

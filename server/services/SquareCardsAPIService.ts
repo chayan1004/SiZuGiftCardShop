@@ -64,8 +64,12 @@ class SquareCardsAPIService {
 
     this.client = new SquareClient({
       environment: this.environment === 'production' ? SquareEnvironment.Production : SquareEnvironment.Sandbox,
-      accessToken: this.accessToken,
     });
+    
+    // Set access token via setAccessToken method if available
+    if (this.client.setAccessToken) {
+      this.client.setAccessToken(this.accessToken);
+    }
 
     this.customersApi = this.client.customers;
     this.cardsApi = this.client.cards;
@@ -112,7 +116,7 @@ class SquareCardsAPIService {
       }
 
       // Create new customer
-      const createRequest: CreateCustomerRequest = {
+      const createRequest: any = {
         idempotencyKey,
         givenName: profileData.firstName,
         familyName: profileData.lastName,

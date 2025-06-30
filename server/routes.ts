@@ -4204,18 +4204,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const order = await storage.createPublicGiftCardOrder(orderData);
 
-      // Process payment with Square
+      // Process payment with Square Payment Link API
       try {
         if (!process.env.SQUARE_ACCESS_TOKEN) {
           throw new Error('Square access token not configured');
         }
 
-        // Simplified Square integration for workflow testing
-        const mockSquarePaymentResult = {
+        // Create Square payment link with Cash App Pay support
+        const paymentLinkResult = await enhancedSquareAPI.createPaymentLink({
+          amount: amount, // Amount in cents
+          currency: 'USD',
+          redirectUrl: `${process.env.FRONTEND_URL || 'https://sizugiftcardshop.replit.app'}/giftcard-store/success/${order.id}`,
+          acceptedPaymentMethods: {
+            applePay: true,
+            googlePay: true,
+            cashApp: true,
+            creditCard: true,
+            debitCard: true
+          },
+          merchantSupportEmail: 'support@sizugiftcard.com',
+          itemName: 'SiZu Gift Card',
+          itemDescription: message || 'Digital Gift Card Purchase'
+        });
+
+        if (!paymentLinkResult.success) {
+          throw new Error(paymentLinkResult.error || 'Payment link creation failed');
+        }
+
+        const squarePaymentResult = {
           payment: {
-            id: `payment_${Date.now()}`,
+            id: paymentLinkResult.checkoutId,
             orderId: order.id,
-            receiptNumber: `rcpt_${Math.random().toString(36).substr(2, 9)}`
+            receiptNumber: `rcpt_${Math.random().toString(36).substr(2, 9)}`,
+            checkoutUrl: paymentLinkResult.checkoutUrl
           }
         };
 

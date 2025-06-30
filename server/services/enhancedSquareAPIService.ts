@@ -536,6 +536,94 @@ class EnhancedSquareAPIService {
   }
 
   /**
+   * Create a payment link for Cash App Pay and other payment methods
+   */
+  async createPaymentLink(paymentData: {
+    amount: number;
+    currency: string;
+    redirectUrl: string;
+    acceptedPaymentMethods?: {
+      applePay?: boolean;
+      googlePay?: boolean;
+      cashApp?: boolean;
+      creditCard?: boolean;
+      debitCard?: boolean;
+    };
+    merchantSupportEmail?: string;
+    itemName?: string;
+    itemDescription?: string;
+  }): Promise<{
+    success: boolean;
+    checkoutUrl?: string;
+    checkoutId?: string;
+    error?: string;
+  }> {
+    try {
+      const { SquareClient, SquareEnvironment } = await import('square');
+      
+      const client = new SquareClient({
+        environment: process.env.SQUARE_ENVIRONMENT === 'production' 
+          ? SquareEnvironment.Production 
+          : SquareEnvironment.Sandbox,
+        accessToken: process.env.SQUARE_ACCESS_TOKEN || "EAAAlxqLNvlPZ0CtBPELxpPe6Hjq9--DfFPA45gVsXFnhmR4pyHhvqHc79HFaPMn"
+      });
+
+      const result = await client.checkoutApi.createPaymentLink({
+        idempotencyKey: crypto.randomUUID(),
+        checkoutOptions: {
+          acceptedPaymentMethods: {
+            applePay: paymentData.acceptedPaymentMethods?.applePay || true,
+            googlePay: paymentData.acceptedPaymentMethods?.googlePay || true,
+            cashAppPay: paymentData.acceptedPaymentMethods?.cashApp || true,
+            afterpayClearpay: false
+          },
+          allowTipping: false,
+          askForShippingAddress: false,
+          merchantSupportEmail: paymentData.merchantSupportEmail || 'support@sizugiftcard.com',
+          redirectUrl: paymentData.redirectUrl
+        },
+        order: {
+          locationId: process.env.SQUARE_LOCATION_ID || "LD50VRHA8P636",
+          state: 'OPEN',
+          lineItems: [
+            {
+              quantity: "1",
+              itemType: 'ITEM_VARIATION',
+              basePriceMoney: {
+                amount: BigInt(paymentData.amount * 100), // Convert to cents
+                currency: paymentData.currency || 'USD'
+              },
+              name: paymentData.itemName || "SiZu Gift Card",
+              note: paymentData.itemDescription || "Digital Gift Card Purchase"
+            }
+          ]
+        },
+        paymentNote: paymentData.itemDescription || ""
+      });
+
+      if (result.result?.paymentLink) {
+        return {
+          success: true,
+          checkoutUrl: result.result.paymentLink.url,
+          checkoutId: result.result.paymentLink.id
+        };
+      }
+
+      return {
+        success: false,
+        error: 'Failed to create payment link'
+      };
+
+    } catch (error) {
+      console.error('Create payment link error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Payment link creation failed'
+      };
+    }
+  }
+
+  /**
    * Create hosted checkout session for Square payments
    */
   async createHostedCheckout(checkoutData: {

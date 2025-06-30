@@ -1,5 +1,5 @@
 import { 
-  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders,
+  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders,
   type User, type InsertUser,
   type Merchant, type InsertMerchant, 
   type GiftCard, type InsertGiftCard,
@@ -7,7 +7,8 @@ import {
   type PromoCode, type InsertPromoCode,
   type PromoUsage, type InsertPromoUsage,
   type MerchantGiftCard, type InsertMerchantGiftCard,
-  type MerchantBulkOrder, type InsertMerchantBulkOrder
+  type MerchantBulkOrder, type InsertMerchantBulkOrder,
+  type PublicGiftCardOrder, type InsertPublicGiftCardOrder
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, count, sum, and } from "drizzle-orm";

@@ -2946,5 +2946,164 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.redirect('/merchant-giftcards');
   });
 
+  // === PUBLIC GIFT CARD STORE API ENDPOINTS ===
+
+  // Validate merchant ID for business pricing
+  app.get("/api/public/validate-merchant/:merchantId", async (req: Request, res: Response) => {
+    try {
+      const { merchantId } = req.params;
+      const isValid = await storage.validateMerchantById(merchantId);
+      res.json({ valid: isValid });
+    } catch (error) {
+      console.error('Merchant validation error:', error);
+      res.status(500).json({ valid: false, error: 'Validation failed' });
+    }
+  });
+
+  // Public gift card checkout with Square payment processing
+  app.post("/api/public/checkout", async (req: Request, res: Response) => {
+    try {
+      const { recipientEmail, merchantId, amount, message, paymentToken } = req.body;
+
+      // Validate input data
+      if (!recipientEmail || !amount || amount < 500 || amount > 50000) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid input data. Amount must be between $5.00 and $500.00"
+        });
+      }
+
+      if (!paymentToken) {
+        return res.status(400).json({
+          success: false,
+          message: "Payment token is required"
+        });
+      }
+
+      // Create order record first (pending status)
+      const orderData = {
+        recipientEmail,
+        merchantId: merchantId || null,
+        amount,
+        message: message || null,
+        status: 'pending'
+      };
+
+      const order = await storage.createPublicGiftCardOrder(orderData);
+
+      // Process payment with Square
+      try {
+        if (!process.env.SQUARE_ACCESS_TOKEN) {
+          throw new Error('Square access token not configured');
+        }
+
+        const { Client, Environment } = require('squareup');
+        const client = new Client({
+          accessToken: process.env.SQUARE_ACCESS_TOKEN,
+          environment: process.env.SQUARE_ENVIRONMENT === 'production' 
+            ? Environment.Production 
+            : Environment.Sandbox
+        });
+
+        const paymentsApi = client.paymentsApi;
+
+        // Create payment
+        const paymentRequest = {
+          sourceId: paymentToken,
+          amountMoney: {
+            amount: amount,
+            currency: 'USD'
+          },
+          idempotencyKey: `giftcard_${order.id}_${Date.now()}`,
+          note: `Gift card purchase for ${recipientEmail}`,
+          buyerEmailAddress: recipientEmail
+        };
+
+        const { result: paymentResult } = await paymentsApi.createPayment(paymentRequest);
+
+        if (paymentResult.payment && paymentResult.payment.status === 'COMPLETED') {
+          // Payment successful - now create the gift card
+          const squareGiftCardsApi = client.giftCardsApi;
+          
+          // Create gift card with Square
+          const giftCardRequest = {
+            idempotencyKey: `gift_${order.id}_${Date.now()}`,
+            locationId: process.env.SQUARE_LOCATION_ID,
+            giftCard: {
+              type: 'DIGITAL',
+              ganSource: 'SQUARE',
+              state: 'ACTIVE',
+              balanceMoney: {
+                amount: amount,
+                currency: 'USD'
+              },
+              recipientEmail: recipientEmail,
+              message: message || undefined
+            }
+          };
+
+          const { result: giftCardResult } = await squareGiftCardsApi.createGiftCard(giftCardRequest);
+
+          if (giftCardResult.giftCard && giftCardResult.giftCard.gan) {
+            // Update order with success status and gift card info
+            await storage.updatePublicGiftCardOrderStatus(
+              order.id,
+              'completed',
+              paymentResult.payment.id,
+              giftCardResult.giftCard.gan
+            );
+
+            // Also create a gift card record in our database for tracking
+            const giftCardData = {
+              merchantId: merchantId || 'public',
+              squareGiftCardId: giftCardResult.giftCard.id!,
+              gan: giftCardResult.giftCard.gan,
+              amount: amount,
+              balance: amount,
+              status: 'ACTIVE',
+              recipientEmail: recipientEmail,
+              recipientName: recipientEmail.split('@')[0],
+              senderName: 'Gift Card Store',
+              personalMessage: message || null,
+              qrCodeData: `https://square.link/u/${giftCardResult.giftCard.gan}`,
+              squareState: giftCardResult.giftCard.state || 'ACTIVE'
+            };
+
+            await storage.createGiftCard(giftCardData);
+
+            console.log(`✅ Public gift card created successfully: ${giftCardResult.giftCard.gan} for ${recipientEmail}`);
+
+            res.json({
+              success: true,
+              message: "Gift card created successfully",
+              orderId: order.id,
+              giftCardGan: giftCardResult.giftCard.gan
+            });
+          } else {
+            throw new Error('Gift card creation failed - no GAN received');
+          }
+        } else {
+          throw new Error(`Payment failed: ${paymentResult.payment?.status || 'Unknown error'}`);
+        }
+      } catch (paymentError: any) {
+        console.error('Payment/Gift card creation error:', paymentError);
+        
+        // Update order status to failed
+        await storage.updatePublicGiftCardOrderStatus(order.id, 'failed');
+        
+        res.status(400).json({
+          success: false,
+          message: paymentError.message || "Payment processing failed"
+        });
+      }
+    } catch (error: any) {
+      console.error('Public checkout error:', error);
+      res.status(500).json({
+        success: false,
+        message: "An error occurred while processing your order"
+      });
+    }
+  });
+
   return httpServer;
 }

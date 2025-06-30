@@ -570,6 +570,64 @@ export default function BrandedCheckout() {
                                 💵 Cash App
                               </Button>
                             )}
+
+                            {checkoutConfig?.acceptedPaymentMethods?.debitCard && (
+                              <Button
+                                type="button"
+                                variant={selectedPaymentMethod === 'debitCard' ? 'default' : 'outline'}
+                                onClick={() => setSelectedPaymentMethod('debitCard')}
+                                className={`${
+                                  selectedPaymentMethod === 'debitCard' 
+                                    ? 'border-white/40 text-white' 
+                                    : 'border-white/20 text-gray-300 hover:bg-white/10'
+                                }`}
+                                style={selectedPaymentMethod === 'debitCard' ? {
+                                  background: checkoutConfig ? `linear-gradient(135deg, ${checkoutConfig.primaryColor}, ${checkoutConfig.secondaryColor})` : 'linear-gradient(135deg, #7c3aed, #ec4899)',
+                                  border: 'none'
+                                } : {}}
+                              >
+                                <CreditCard className="w-4 h-4 mr-2" />
+                                Debit Card
+                              </Button>
+                            )}
+
+                            {checkoutConfig?.acceptedPaymentMethods?.paypal && (
+                              <Button
+                                type="button"
+                                variant={selectedPaymentMethod === 'paypal' ? 'default' : 'outline'}
+                                onClick={() => setSelectedPaymentMethod('paypal')}
+                                className={`${
+                                  selectedPaymentMethod === 'paypal' 
+                                    ? 'border-white/40 text-white' 
+                                    : 'border-white/20 text-gray-300 hover:bg-white/10'
+                                }`}
+                                style={selectedPaymentMethod === 'paypal' ? {
+                                  background: checkoutConfig ? `linear-gradient(135deg, ${checkoutConfig.primaryColor}, ${checkoutConfig.secondaryColor})` : 'linear-gradient(135deg, #7c3aed, #ec4899)',
+                                  border: 'none'
+                                } : {}}
+                              >
+                                🅿️ PayPal
+                              </Button>
+                            )}
+
+                            {checkoutConfig?.acceptedPaymentMethods?.bankTransfer && (
+                              <Button
+                                type="button"
+                                variant={selectedPaymentMethod === 'bankTransfer' ? 'default' : 'outline'}
+                                onClick={() => setSelectedPaymentMethod('bankTransfer')}
+                                className={`${
+                                  selectedPaymentMethod === 'bankTransfer' 
+                                    ? 'border-white/40 text-white' 
+                                    : 'border-white/20 text-gray-300 hover:bg-white/10'
+                                }`}
+                                style={selectedPaymentMethod === 'bankTransfer' ? {
+                                  background: checkoutConfig ? `linear-gradient(135deg, ${checkoutConfig.primaryColor}, ${checkoutConfig.secondaryColor})` : 'linear-gradient(135deg, #7c3aed, #ec4899)',
+                                  border: 'none'
+                                } : {}}
+                              >
+                                🏦 Bank Transfer
+                              </Button>
+                            )}
                           </div>
                         </div>
 

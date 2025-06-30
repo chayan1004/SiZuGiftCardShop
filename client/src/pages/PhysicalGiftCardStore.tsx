@@ -376,11 +376,9 @@ const PremiumHeader = () => {
               }}
               className="relative"
             >
-              <img 
-                src="/attached_assets/image_1751306402919.png" 
-                alt="SiZu Logo" 
-                className="w-10 h-10 rounded-full object-cover border-2 border-gradient-to-r from-purple-400 to-pink-400 shadow-lg"
-              />
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center border-2 border-gradient-to-r from-purple-400 to-pink-400 shadow-lg">
+                <Gift className="w-6 h-6 text-white" />
+              </div>
               <motion.div
                 animate={{ scale: [1, 1.2, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}

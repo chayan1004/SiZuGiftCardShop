@@ -209,11 +209,12 @@ class WebhookService {
    */
   async getWebhookLogs(merchantId: string, limit: number = 50): Promise<any[]> {
     try {
+      const { eq, desc } = await import('drizzle-orm');
       const logs = await db
         .select()
         .from(webhook_delivery_logs)
-        .where(db.sql`${webhook_delivery_logs.merchantId} = ${merchantId}`)
-        .orderBy(db.sql`${webhook_delivery_logs.createdAt} DESC`)
+        .where(eq(webhook_delivery_logs.merchantId, merchantId))
+        .orderBy(desc(webhook_delivery_logs.createdAt))
         .limit(limit);
 
       return logs;

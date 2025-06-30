@@ -17,6 +17,7 @@ import { domainAuthentication } from './services/domainAuthentication';
 import { pdfReceiptService } from './services/pdfReceiptService';
 import { ReceiptService } from './services/ReceiptService';
 import { squareWebhookHandler } from './webhooks/squareWebhookHandler';
+import { webhookService, type RedemptionWebhookPayload } from './services/WebhookService';
 import { FraudDetectionService } from './services/FraudDetectionService';
 import { ThreatReplayService } from './services/ThreatReplayService';
 import { AutoDefenseEngine } from './services/AutoDefenseEngine';
@@ -4506,9 +4507,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         giftCardId: card.id,
         type: 'REDEEM',
         amount: redemptionAmount,
-        squareActivityId: `qr-redeem-${Date.now()}`,
-        notes: `QR redemption - ${isFullyRedeemed ? 'Full' : 'Partial'} redemption`
+        squareActivityId: `qr-redeem-${Date.now()}`
       });
+
+      // Trigger merchant webhook for real-time automation
+      if (card.merchantId) {
+        const webhookPayload: RedemptionWebhookPayload = {
+          card_id: card.gan || card.id.toString(),
+          merchant_id: card.merchantId,
+          amount: redemptionAmount,
+          customer_email: req.body.customerEmail || 'anonymous',
+          redemption_time: new Date().toISOString(),
+          gift_card_gan: card.gan,
+          event_type: 'gift_card_redeemed'
+        };
+
+        // Fire webhook asynchronously - don't block response
+        webhookService.sendRedemptionWebhook(card.merchantId, webhookPayload)
+          .then(success => {
+            if (success) {
+              console.log(`✅ Webhook delivered successfully for redemption: ${card.gan}`);
+            } else {
+              console.log(`⚠️ Webhook delivery failed for redemption: ${card.gan}`);
+            }
+          })
+          .catch(error => {
+            console.error(`💥 Webhook error for redemption ${card.gan}:`, error);
+          });
+      }
 
       res.json({
         success: true,

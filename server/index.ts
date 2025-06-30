@@ -74,5 +74,15 @@ app.use((req, res, next) => {
     const retryEngine = WebhookRetryEngine.getInstance();
     retryEngine.start();
     log(`WebhookRetryEngine started with intelligent retry processing`);
+    
+    // Start the ThreatClusterEngine for Phase 19
+    try {
+      const { default: ThreatClusterEngine } = await import('./services/ThreatClusterEngine.js');
+      const threatEngine = ThreatClusterEngine.getInstance();
+      threatEngine.startEngine();
+      log(`🔍 ThreatClusterEngine started with AI-powered fraud pattern analysis`);
+    } catch (error) {
+      console.error('Failed to start ThreatClusterEngine:', error);
+    }
   });
 })();

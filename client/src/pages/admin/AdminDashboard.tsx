@@ -26,6 +26,7 @@ import AdminWebhookFailures from "../../components/admin/AdminWebhookFailures";
 import ThreatFeedPanel from "../../components/admin/ThreatFeedPanel";
 import TransactionExplorerPage from "./TransactionExplorerPage";
 import AdminCommandCenter from "./AdminCommandCenter";
+import FraudClusters from "../../components/admin/FraudClusters";
 import type { FraudAlert } from "../../components/admin/ThreatFeedPanel";
 
 interface DashboardMetrics {
@@ -239,6 +240,7 @@ export default function AdminDashboard() {
     { id: "settings", label: "Merchant Settings", icon: <Settings className="w-5 h-5" /> },
     { id: "webhooks", label: "Webhook Intelligence", icon: <Activity className="w-5 h-5" /> },
     { id: "security", label: "Threat Replay", icon: <Brain className="w-5 h-5" /> },
+    { id: "fraud-clusters", label: "Fraud Pattern Analyzer", icon: <Brain className="w-5 h-5" /> },
     { id: "threats", label: "Live Threat Feed", icon: <Shield className="w-5 h-5" /> },
     { id: "customers", label: "Customer Insights", icon: <Users className="w-5 h-5" /> },
     { id: "marketing", label: "Marketing Tools", icon: <Mail className="w-5 h-5" /> },

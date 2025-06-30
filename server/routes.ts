@@ -3019,6 +3019,120 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Phase 19: Fraud Cluster Management Admin Endpoints
+  
+  // GET /api/admin/fraud-clusters - Get fraud clusters with analytics
+  app.get("/api/admin/fraud-clusters", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 50;
+      
+      const [clusters, stats] = await Promise.all([
+        storage.getFraudClusters(limit),
+        storage.getFraudClusterStats()
+      ]);
+
+      console.log(`📊 Admin retrieved ${clusters.length} fraud clusters`);
+
+      res.json({
+        success: true,
+        clusters,
+        stats
+      });
+    } catch (error) {
+      console.error('Get fraud clusters error:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to retrieve fraud clusters"
+      });
+    }
+  });
+
+  // GET /api/admin/fraud-clusters/:id - Get specific cluster with patterns
+  app.get("/api/admin/fraud-clusters/:id", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const clusterId = req.params.id;
+      
+      const [cluster, patterns] = await Promise.all([
+        storage.getFraudClusterById(clusterId),
+        storage.getClusterPatterns(clusterId)
+      ]);
+
+      if (!cluster) {
+        return res.status(404).json({
+          success: false,
+          error: "Fraud cluster not found"
+        });
+      }
+
+      console.log(`📊 Admin retrieved cluster ${clusterId} with ${patterns.length} patterns`);
+
+      res.json({
+        success: true,
+        cluster: {
+          ...cluster,
+          patterns,
+          metadata: cluster.metadata ? JSON.parse(cluster.metadata) : null
+        }
+      });
+    } catch (error) {
+      console.error('Get fraud cluster error:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to retrieve fraud cluster"
+      });
+    }
+  });
+
+  // POST /api/admin/threat-analysis/trigger - Manual threat analysis trigger
+  app.post("/api/admin/threat-analysis/trigger", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { default: ThreatClusterEngine } = await import('./services/ThreatClusterEngine.js');
+      const engine = ThreatClusterEngine.getInstance();
+      
+      const result = await engine.triggerManualAnalysis();
+      
+      console.log(`🔍 Manual threat analysis completed: ${result.clustersFound} clusters found from ${result.threatsAnalyzed} threats`);
+
+      res.json({
+        success: true,
+        message: "Threat analysis completed",
+        result
+      });
+    } catch (error) {
+      console.error('Manual threat analysis error:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to trigger threat analysis"
+      });
+    }
+  });
+
+  // GET /api/admin/threat-analysis/status - Get threat analysis engine status
+  app.get("/api/admin/threat-analysis/status", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const recentClusters = await storage.getFraudClusters(10);
+      const stats = await storage.getFraudClusterStats();
+      
+      res.json({
+        success: true,
+        status: {
+          engineRunning: true,
+          lastAnalysis: recentClusters[0]?.createdAt || null,
+          totalClusters: stats.totalClusters,
+          recentClusters: stats.recentClusters,
+          avgSeverity: stats.avgSeverity,
+          patternTypes: stats.patternTypes
+        }
+      });
+    } catch (error) {
+      console.error('Get threat analysis status error:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to get threat analysis status"
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   // Phase III-B: Promo Codes API
   app.post("/api/promos", requireAdmin, async (req: Request, res: Response) => {

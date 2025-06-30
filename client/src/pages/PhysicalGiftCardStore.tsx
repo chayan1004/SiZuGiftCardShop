@@ -163,13 +163,13 @@ const PhysicalCardPreview = ({
             </div>
           </div>
           
-          {/* Custom Image Logo - Bottom Right Circle */}
+          {/* Custom Image Logo - Below Card */}
           {customImage && (
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.5 }}
-              className="absolute bottom-4 right-4"
+              className="absolute -bottom-8 right-4"
             >
               <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white/30 bg-white/10 backdrop-blur-sm shadow-lg">
                 <img 

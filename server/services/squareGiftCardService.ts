@@ -1,5 +1,6 @@
 // Square production gift card service using HTTP API directly
 import fetch, { RequestInit } from 'node-fetch';
+import { z } from 'zod';
 
 export interface CreateGiftCardRequest {
   amount: number; // in cents

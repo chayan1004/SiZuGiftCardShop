@@ -199,6 +199,17 @@ export interface IStorage {
   getMerchantCardDesignBySquareId(merchantSquareId: string): Promise<MerchantCardDesign | undefined>;
   createMerchantCardDesign(design: InsertMerchantCardDesign): Promise<MerchantCardDesign>;
   updateMerchantCardDesign(merchantId: number, design: Partial<InsertMerchantCardDesign>): Promise<MerchantCardDesign | undefined>;
+
+  // Webhook delivery logging
+  logWebhookDelivery(log: {
+    merchantId: string;
+    cardId: string;
+    amount: number;
+    status: 'success' | 'failed';
+    errorMessage: string | null;
+    responseTimeMs: number;
+    payload: string;
+  }): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1316,6 +1327,30 @@ export class DatabaseStorage implements IStorage {
         redemptionData: [],
         topRedeemedCards: []
       };
+    }
+  }
+
+  async logWebhookDelivery(log: {
+    merchantId: string;
+    cardId: string;
+    amount: number;
+    status: 'success' | 'failed';
+    errorMessage: string | null;
+    responseTimeMs: number;
+    payload: string;
+  }): Promise<void> {
+    try {
+      await db.insert(webhook_delivery_logs).values({
+        merchantId: log.merchantId,
+        cardId: log.cardId,
+        amount: log.amount,
+        status: log.status,
+        errorMessage: log.errorMessage,
+        responseTimeMs: log.responseTimeMs,
+        payload: log.payload
+      });
+    } catch (error) {
+      console.error('Error logging webhook delivery:', error);
     }
   }
 }

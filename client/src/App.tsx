@@ -15,6 +15,7 @@ import PublicGiftCardStore from "@/pages/PublicGiftCardStore";
 import EmotionalGiftCardStore from "@/pages/EmotionalGiftCardStore";
 import GiftCardPurchase from "@/pages/GiftCardPurchase";
 import PurchaseSuccess from "@/pages/PurchaseSuccess";
+import PhysicalGiftCardStore from "@/pages/PhysicalGiftCardStore";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminGiftCardOrders from "@/pages/AdminGiftCardOrders";
 import AdminMerchantSettings from "@/pages/AdminMerchantSettings";
@@ -46,6 +47,7 @@ function Router() {
       <Route path="/checkout/:merchantId" component={Checkout} />
       <Route path="/check-balance" component={CheckBalance} />
       <Route path="/gift-cards" component={PublicGiftCardStore} />
+      <Route path="/physical-cards" component={PhysicalGiftCardStore} />
       <Route path="/emotional-gifts" component={EmotionalGiftCardStore} />
       <Route path="/gift-cards/purchase/:merchantId?" component={GiftCardPurchase} />
       <Route path="/gift-cards/success/:orderId" component={PurchaseSuccess} />

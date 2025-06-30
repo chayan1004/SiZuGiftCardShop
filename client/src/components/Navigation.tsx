@@ -36,6 +36,13 @@ export default function Navigation({ onOpenPurchaseModal }: NavigationProps) {
       color: 'from-purple-400 to-pink-500'
     },
     { 
+      label: 'Physical Cards', 
+      href: '/physical-cards',
+      icon: CreditCard,
+      description: 'Order physical gift cards',
+      color: 'from-indigo-400 to-purple-500'
+    },
+    { 
       label: 'Store', 
       href: '/store',
       icon: ShoppingBag,

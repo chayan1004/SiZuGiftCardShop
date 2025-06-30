@@ -57,6 +57,13 @@ export default function Navigation({ onOpenPurchaseModal }: NavigationProps) {
       color: 'from-orange-400 to-red-500'
     },
     { 
+      label: 'Customer Portal', 
+      href: '/customer-dashboard',
+      icon: CreditCard,
+      description: 'Manage payment profiles',
+      color: 'from-violet-400 to-purple-500'
+    },
+    { 
       label: 'Features', 
       href: '#features',
       icon: Star,

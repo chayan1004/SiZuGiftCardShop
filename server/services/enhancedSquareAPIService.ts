@@ -572,37 +572,39 @@ class EnhancedSquareAPIService {
             applePay: true,
             googlePay: true,
             afterpayClearpay: true,
-            cashAppPay: true
+            cashApp: true
           },
           allowTipping: false,
           customFields: [],
-          subscriptionPlanId: null,
           redirectUrl: checkoutData.redirectUrl,
           merchantSupportEmail: 'support@sizu-giftcard.com'
         },
         order: {
           locationId: this.locationId,
-          order: {
-            locationId: this.locationId,
-            lineItems: [
-              {
-                quantity: "1",
-                itemType: "ITEM",
-                basePriceMoney: {
-                  amount: BigInt(checkoutData.amount),
-                  currency: checkoutData.currency || 'USD'
-                },
-                name: "Physical Gift Card",
-                note: checkoutData.note || "Custom physical gift card order"
-              }
-            ]
-          }
+          lineItems: [
+            {
+              quantity: "1",
+              itemType: "ITEM",
+              basePriceMoney: {
+                amount: BigInt(checkoutData.amount),
+                currency: checkoutData.currency || 'USD'
+              },
+              name: "Physical Gift Card",
+              note: checkoutData.note || "Custom physical gift card order"
+            }
+          ]
         },
         paymentNote: checkoutData.note,
         prePopulatedData: checkoutData.prePopulatedData ? {
           buyerEmail: checkoutData.prePopulatedData.buyerEmail,
           buyerPhoneNumber: checkoutData.prePopulatedData.buyerPhoneNumber,
-          buyerAddress: checkoutData.prePopulatedData.buyerAddress
+          buyerAddress: checkoutData.prePopulatedData.buyerAddress ? {
+            addressLine1: checkoutData.prePopulatedData.buyerAddress.addressLine1,
+            locality: checkoutData.prePopulatedData.buyerAddress.locality,
+            administrativeDistrictLevel1: checkoutData.prePopulatedData.buyerAddress.administrativeDistrictLevel1,
+            postalCode: checkoutData.prePopulatedData.buyerAddress.postalCode,
+            country: 'US' as const // Use proper Country enum value
+          } : undefined
         } : undefined
       };
 

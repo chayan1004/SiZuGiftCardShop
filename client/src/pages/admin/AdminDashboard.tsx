@@ -34,6 +34,7 @@ import CustomerInsightsAnalytics from "../../components/admin/CustomerInsightsAn
 import LoadingAnimation from "../../components/ui/LoadingAnimation";
 import GDPRComplianceDashboard from "../../components/admin/GDPRComplianceDashboard";
 import PCIDSSComplianceDashboard from "../../components/admin/PCIDSSComplianceDashboard";
+import PricingManagement from "../../components/admin/PricingManagement";
 import type { FraudAlert } from "../../components/admin/ThreatFeedPanel";
 
 interface DashboardMetrics {
@@ -253,6 +254,7 @@ export default function AdminDashboard() {
     { id: "customers", label: "Customer Insights", icon: <Users className="w-5 h-5" /> },
     { id: "email-system", label: "Email System", icon: <Mail className="w-5 h-5" /> },
     { id: "operations", label: "System Operations", icon: <Database className="w-5 h-5" /> },
+    { id: "pricing", label: "Pricing Management", icon: <DollarSign className="w-5 h-5" /> },
     { id: "gdpr", label: "GDPR Compliance", icon: <Shield className="w-5 h-5" /> },
     { id: "pci-dss", label: "PCI DSS Compliance", icon: <Shield className="w-5 h-5" /> },
   ];
@@ -1074,6 +1076,20 @@ export default function AdminDashboard() {
               {activeSection === "operations" && (
                 <div className="space-y-6">
                   <SystemOperationsMonitoring />
+                </div>
+              )}
+
+              {/* Pricing Management Section */}
+              {activeSection === "pricing" && (
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-xl p-6">
+                    <h3 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-2">
+                      Square Gift Card Pricing Management
+                    </h3>
+                    <p className="text-gray-300">Real-time control of buy/sell rates and profit margins for gift card transactions</p>
+                  </div>
+                  
+                  <PricingManagement />
                 </div>
               )}
 

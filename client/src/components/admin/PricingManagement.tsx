@@ -48,16 +48,16 @@ export default function PricingManagement() {
     }
   });
 
-  const config: PricingConfig = pricingData?.config ? {
-    id: pricingData.config.id || 'default',
-    basePrice: parseFloat(pricingData.config.basePrice) || 100,
-    merchantBuyRate: parseFloat(pricingData.config.merchantBuyRate) || 5,
-    merchantSellRate: parseFloat(pricingData.config.merchantSellRate) || -3,
-    individualBuyRate: parseFloat(pricingData.config.individualBuyRate) || 8,
-    individualSellRate: parseFloat(pricingData.config.individualSellRate) || -5,
-    lastUpdated: pricingData.config.updatedAt || new Date().toISOString(),
-    updatedBy: pricingData.config.updatedBy || 'admin',
-    isActive: pricingData.config.isActive || true
+  const config: PricingConfig = (pricingData as any)?.config ? {
+    id: (pricingData as any).config.id || 'default',
+    basePrice: parseFloat((pricingData as any).config.basePrice) || 100,
+    merchantBuyRate: parseFloat((pricingData as any).config.merchantBuyRate) || 5,
+    merchantSellRate: parseFloat((pricingData as any).config.merchantSellRate) || -3,
+    individualBuyRate: parseFloat((pricingData as any).config.individualBuyRate) || 8,
+    individualSellRate: parseFloat((pricingData as any).config.individualSellRate) || -5,
+    lastUpdated: (pricingData as any).config.updatedAt || new Date().toISOString(),
+    updatedBy: (pricingData as any).config.updatedBy || 'admin',
+    isActive: (pricingData as any).config.isActive || true
   } : {
     id: 'default',
     basePrice: 100,
@@ -81,15 +81,15 @@ export default function PricingManagement() {
     }
   });
 
-  const livePricing: LivePricing = livePricingData?.pricing ? {
-    squareBasePrice: livePricingData.pricing.squareBasePrice || config.basePrice,
-    merchantBuyPrice: livePricingData.pricing.merchantBuyPrice || config.basePrice * (1 + config.merchantBuyRate / 100),
-    merchantSellPrice: livePricingData.pricing.merchantSellPrice || config.basePrice * (1 + config.merchantSellRate / 100),
-    individualBuyPrice: livePricingData.pricing.individualBuyPrice || config.basePrice * (1 + config.individualBuyRate / 100),
-    individualSellPrice: livePricingData.pricing.individualSellPrice || config.basePrice * (1 + config.individualSellRate / 100),
-    profitMarginMerchant: livePricingData.pricing.profitMarginMerchant || (config.merchantBuyRate + Math.abs(config.merchantSellRate)),
-    profitMarginIndividual: livePricingData.pricing.profitMarginIndividual || (config.individualBuyRate + Math.abs(config.individualSellRate)),
-    lastRefresh: livePricingData.pricing.lastRefresh || new Date().toISOString()
+  const livePricing: LivePricing = (livePricingData as any)?.pricing ? {
+    squareBasePrice: (livePricingData as any).pricing.squareBasePrice || config.basePrice,
+    merchantBuyPrice: (livePricingData as any).pricing.merchantBuyPrice || config.basePrice * (1 + config.merchantBuyRate / 100),
+    merchantSellPrice: (livePricingData as any).pricing.merchantSellPrice || config.basePrice * (1 + config.merchantSellRate / 100),
+    individualBuyPrice: (livePricingData as any).pricing.individualBuyPrice || config.basePrice * (1 + config.individualBuyRate / 100),
+    individualSellPrice: (livePricingData as any).pricing.individualSellPrice || config.basePrice * (1 + config.individualSellRate / 100),
+    profitMarginMerchant: (livePricingData as any).pricing.profitMarginMerchant || (config.merchantBuyRate + Math.abs(config.merchantSellRate)),
+    profitMarginIndividual: (livePricingData as any).pricing.profitMarginIndividual || (config.individualBuyRate + Math.abs(config.individualSellRate)),
+    lastRefresh: (livePricingData as any).pricing.lastRefresh || new Date().toISOString()
   } : {
     squareBasePrice: config.basePrice,
     merchantBuyPrice: config.basePrice * (1 + config.merchantBuyRate / 100),

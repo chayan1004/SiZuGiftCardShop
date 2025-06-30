@@ -131,10 +131,67 @@ export class FraudDetectionService {
     try {
       await storage.createFraudLog(fraudData);
       
+      // Emit real-time fraud alert via WebSocket
+      await this.emitRealTimeFraudAlert(fraudData);
+      
       // Trigger webhook if configured
       await this.triggerFraudWebhook(fraudData);
     } catch (error) {
       console.error("Failed to log fraud attempt:", error);
+    }
+  }
+
+  private static async emitRealTimeFraudAlert(fraudData: InsertFraudLog): Promise<void> {
+    try {
+      const fraudSocketService = FraudSocketService.getInstance();
+      if (!fraudSocketService) {
+        console.warn("FraudSocketService not initialized, skipping real-time alert");
+        return;
+      }
+
+      // Map fraud reasons to WebSocket alert types
+      const alertTypeMap: Record<string, any> = {
+        'rate_limit_ip_violation': 'rate_limit_ip_violation',
+        'reused_code_attempt': 'reused_code',
+        'rate_limit_merchant_violation': 'merchant_rate_limit',
+        'device_fingerprint_violation': 'device_fingerprint_violation',
+        'suspicious_pattern_multiple_ips': 'suspicious_activity',
+        'invalid_code': 'invalid_code',
+        'redemption_failed': 'invalid_code'
+      };
+
+      const alertType = alertTypeMap[fraudData.reason] || 'suspicious_activity';
+      const severity = calculateThreatSeverity(fraudData.reason, fraudData.ipAddress);
+
+      // Generate human-readable messages
+      const messageMap: Record<string, string> = {
+        'rate_limit_ip_violation': `IP ${fraudData.ipAddress} exceeded rate limit (3 attempts/min)`,
+        'reused_code_attempt': `Attempt to reuse already redeemed gift card: ${fraudData.gan}`,
+        'rate_limit_merchant_violation': `Merchant ${fraudData.merchantId} exceeded rate limit (10 redemptions/5min)`,
+        'device_fingerprint_violation': `Device ${fraudData.ipAddress} exceeded failure threshold (5 attempts/hour)`,
+        'suspicious_pattern_multiple_ips': `Suspicious activity: Gift card ${fraudData.gan} targeted from multiple IPs`,
+        'invalid_code': `Invalid gift card redemption attempt: ${fraudData.gan}`,
+        'redemption_failed': `Failed redemption attempt for gift card: ${fraudData.gan}`
+      };
+
+      const message = messageMap[fraudData.reason] || `Fraud attempt detected: ${fraudData.reason}`;
+
+      fraudSocketService.emitFraudAlert({
+        ip: fraudData.ipAddress,
+        type: alertType,
+        severity,
+        message,
+        userAgent: fraudData.userAgent,
+        additionalData: {
+          gan: fraudData.gan,
+          merchantId: fraudData.merchantId,
+          reason: fraudData.reason
+        }
+      });
+
+      console.log(`Real-time fraud alert emitted: ${alertType} - ${message}`);
+    } catch (error) {
+      console.error("Failed to emit real-time fraud alert:", error);
     }
   }
 

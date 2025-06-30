@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { io, Socket } from 'socket.io-client';
 import { motion } from "framer-motion";
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -21,6 +22,8 @@ import AdminThreatReplay from "../AdminThreatReplay";
 import AdminGiftCardAnalytics from "../AdminGiftCardAnalytics";
 import AdminMerchantSettings from "../AdminMerchantSettings";
 import AdminGiftCardOrders from "../AdminGiftCardOrders";
+import ThreatFeedPanel from "../../components/admin/ThreatFeedPanel";
+import type { FraudAlert } from "../../components/admin/ThreatFeedPanel";
 
 interface DashboardMetrics {
   totalGiftCards: number;
@@ -53,6 +56,12 @@ export default function AdminDashboard() {
   const [activeSection, setActiveSection] = useState("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { toast } = useToast();
+
+  // WebSocket state for real-time fraud alerts
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const [fraudAlerts, setFraudAlerts] = useState<FraudAlert[]>([]);
+  const [isSocketConnected, setIsSocketConnected] = useState(false);
+  const [connectedAdmins, setConnectedAdmins] = useState(0);
 
   const formatTimeAgo = (date: Date) => {
     const now = new Date();
@@ -157,6 +166,58 @@ export default function AdminDashboard() {
     return () => clearInterval(interval);
   }, []);
 
+  // WebSocket connection for real-time fraud alerts
+  useEffect(() => {
+    const newSocket = io('/', {
+      path: '/socket.io',
+      transports: ['websocket', 'polling']
+    });
+
+    newSocket.on('connect', () => {
+      console.log('Connected to fraud monitoring WebSocket');
+      setIsSocketConnected(true);
+      
+      // Join admin room for fraud alerts
+      newSocket.emit('join-admin', {
+        adminToken: localStorage.getItem('adminToken')
+      });
+    });
+
+    newSocket.on('disconnect', () => {
+      console.log('Disconnected from fraud monitoring WebSocket');
+      setIsSocketConnected(false);
+    });
+
+    newSocket.on('fraud-alert', (alert: FraudAlert) => {
+      console.log('Received fraud alert:', alert);
+      setFraudAlerts(prev => [...prev, alert].slice(-50)); // Keep last 50 alerts
+      
+      // Show toast notification for high severity alerts
+      if (alert.severity === 'high') {
+        toast({
+          title: "High Severity Fraud Alert",
+          description: alert.message,
+          variant: "destructive",
+        });
+      }
+    });
+
+    newSocket.on('system-status', (status: any) => {
+      setConnectedAdmins(status.connectedAdmins || 0);
+    });
+
+    newSocket.on('connect_error', (error) => {
+      console.error('WebSocket connection error:', error);
+      setIsSocketConnected(false);
+    });
+
+    setSocket(newSocket);
+
+    return () => {
+      newSocket.disconnect();
+    };
+  }, [toast]);
+
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
     window.location.href = '/admin-login';
@@ -172,6 +233,7 @@ export default function AdminDashboard() {
     { id: "analytics", label: "Gift Card Analytics", icon: <BarChart3 className="w-5 h-5" /> },
     { id: "settings", label: "Merchant Settings", icon: <Settings className="w-5 h-5" /> },
     { id: "security", label: "Threat Replay", icon: <Brain className="w-5 h-5" /> },
+    { id: "threats", label: "Live Threat Feed", icon: <Shield className="w-5 h-5" /> },
     { id: "customers", label: "Customer Insights", icon: <Users className="w-5 h-5" /> },
     { id: "marketing", label: "Marketing Tools", icon: <Mail className="w-5 h-5" /> },
     { id: "email", label: "Email System", icon: <Mail className="w-5 h-5" /> },

@@ -233,11 +233,11 @@ export class WebhookConfigService {
       webhook_id: log.card_id || '',
       event_type: log.event_type || 'unknown',
       status: log.status || 'unknown' as 'success' | 'failed' | 'retry',
-      response_code: log.statusCode,
-      created_at: log.deliveredAt || new Date(),
-      error_message: log.errorMessage || undefined,
-      merchant_id: log.merchantId || 'unknown',
-      webhook_url: log.webhookUrl || 'unknown'
+      response_code: log.response_time_ms || 0,
+      created_at: log.created_at || new Date(),
+      error_message: log.error_message || undefined,
+      merchant_id: log.merchant_id || 'unknown',
+      webhook_url: 'N/A'
     }));
   }
 

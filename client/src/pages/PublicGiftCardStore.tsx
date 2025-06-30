@@ -275,26 +275,26 @@ export default function PublicGiftCardStore() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50 dark:from-gray-900 dark:via-purple-900/20 dark:to-indigo-900/20">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       {/* Navigation Header */}
       <Navigation onOpenPurchaseModal={() => setShowBuyModal(true)} />
       
       {/* Mobile Header Bar */}
-      <div className="sticky top-0 z-40 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-purple-200/50 dark:border-purple-800/50 lg:hidden">
+      <div className="sticky top-16 z-40 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800 lg:hidden">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
-            <Gift className="h-6 w-6 text-purple-600" />
-            <h1 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+            <Gift className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+            <h1 className="text-lg font-bold text-gray-900 dark:text-white">
               Gift Cards
             </h1>
           </div>
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={() => setShowFilters(!showFilters)}
-            className="lg:hidden"
+            className="lg:hidden text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600"
           >
-            <Filter className="h-4 w-4" />
+            <Filter className="h-4 w-4 mr-2" />
             Filters
           </Button>
         </div>
@@ -305,17 +305,17 @@ export default function PublicGiftCardStore() {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8 lg:mb-12 hidden lg:block"
+          className="text-center mb-8 lg:mb-12 hidden lg:block bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-3xl p-8 lg:p-12 border border-purple-200/30 dark:border-purple-800/30"
         >
-          <div className="flex items-center justify-center gap-3 mb-4">
+          <div className="flex items-center justify-center gap-3 mb-6">
             <div className="p-3 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg">
               <Gift className="h-8 w-8" />
             </div>
-            <h1 className="text-4xl lg:text-6xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 bg-clip-text text-transparent">
+            <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 dark:text-white">
               Gift Card Store
             </h1>
           </div>
-          <p className="text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+          <p className="text-lg lg:text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
             Discover premium gift cards from trusted merchants. Perfect for any occasion, designed to create memorable experiences.
           </p>
         </motion.div>
@@ -329,12 +329,12 @@ export default function PublicGiftCardStore() {
         >
           {/* Search Bar */}
           <div className="relative mb-6 lg:mb-8">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 h-5 w-5" />
             <Input
               placeholder="Search gift cards, merchants, or occasions..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-12 h-12 lg:h-14 text-base lg:text-lg rounded-2xl border-2 border-purple-200/50 dark:border-purple-800/50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm focus:border-purple-400 dark:focus:border-purple-600 transition-all duration-300"
+              className="pl-12 h-12 lg:h-14 text-base lg:text-lg rounded-2xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:border-purple-400 dark:focus:border-purple-500 transition-all duration-300 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400"
             />
           </div>
 
@@ -359,15 +359,17 @@ export default function PublicGiftCardStore() {
                     onClick={() => setCategoryFilter(category.id)}
                     className={`w-full h-auto p-4 rounded-xl border-2 transition-all duration-300 ${
                       categoryFilter === category.id
-                        ? `bg-gradient-to-br ${category.gradient} text-white border-transparent shadow-lg transform scale-105`
-                        : 'border-purple-200/50 dark:border-purple-800/50 hover:border-purple-400 dark:hover:border-purple-600 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm hover:shadow-md'
+                        ? 'bg-purple-600 hover:bg-purple-700 text-white border-purple-600 shadow-lg transform scale-105'
+                        : 'border-gray-200 dark:border-gray-700 hover:border-purple-400 dark:hover:border-purple-500 bg-white dark:bg-gray-800 hover:shadow-md text-gray-900 dark:text-white'
                     }`}
                   >
                     <div className="flex flex-col items-center gap-2 text-center">
                       <category.icon className="h-5 w-5 lg:h-6 lg:w-6" />
                       <div>
                         <div className="text-xs lg:text-sm font-medium">{category.name}</div>
-                        <div className="text-xs opacity-75">{category.description}</div>
+                        <div className={`text-xs ${categoryFilter === category.id ? 'opacity-90' : 'opacity-60'}`}>
+                          {category.description}
+                        </div>
                       </div>
                     </div>
                   </Button>
@@ -397,15 +399,17 @@ export default function PublicGiftCardStore() {
                     onClick={() => setOccasionFilter(occasion.id)}
                     className={`w-full h-auto p-4 rounded-xl border-2 transition-all duration-300 ${
                       occasionFilter === occasion.id
-                        ? `bg-gradient-to-br ${occasion.gradient} text-white border-transparent shadow-lg transform scale-105`
-                        : 'border-pink-200/50 dark:border-pink-800/50 hover:border-pink-400 dark:hover:border-pink-600 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm hover:shadow-md'
+                        ? 'bg-pink-600 hover:bg-pink-700 text-white border-pink-600 shadow-lg transform scale-105'
+                        : 'border-gray-200 dark:border-gray-700 hover:border-pink-400 dark:hover:border-pink-500 bg-white dark:bg-gray-800 hover:shadow-md text-gray-900 dark:text-white'
                     }`}
                   >
                     <div className="flex flex-col items-center gap-2 text-center">
                       <occasion.icon className="h-5 w-5 lg:h-6 lg:w-6" />
                       <div>
                         <div className="text-xs lg:text-sm font-medium">{occasion.name}</div>
-                        <div className="text-xs opacity-75">{occasion.description}</div>
+                        <div className={`text-xs ${occasionFilter === occasion.id ? 'opacity-90' : 'opacity-60'}`}>
+                          {occasion.description}
+                        </div>
                       </div>
                     </div>
                   </Button>
@@ -430,12 +434,12 @@ export default function PublicGiftCardStore() {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: i * 0.1 }}
-                  className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-2xl border border-purple-200/50 dark:border-purple-800/50 p-6 animate-pulse"
+                  className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 animate-pulse"
                 >
-                  <div className="h-32 bg-gradient-to-br from-purple-200 to-pink-200 dark:from-purple-800 to-pink-800 rounded-xl mb-4" />
+                  <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl mb-4" />
                   <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
                   <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded mb-4 w-3/4" />
-                  <div className="h-10 bg-purple-200 dark:bg-purple-800 rounded-lg" />
+                  <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-lg" />
                 </motion.div>
               ))}
             </div>
@@ -445,11 +449,11 @@ export default function PublicGiftCardStore() {
               animate={{ opacity: 1, y: 0 }}
               className="text-center py-16 lg:py-24"
             >
-              <div className="p-6 rounded-2xl bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 to-pink-900/30 border border-purple-200/50 dark:border-purple-800/50 backdrop-blur-sm inline-block mb-6">
+              <div className="p-6 rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 inline-block mb-6">
                 <Gift className="h-12 w-12 lg:h-16 lg:w-16 text-purple-600 dark:text-purple-400 mx-auto" />
               </div>
               <h3 className="text-xl lg:text-2xl font-semibold mb-3 text-gray-900 dark:text-white">No gift cards found</h3>
-              <p className="text-muted-foreground text-base lg:text-lg max-w-md mx-auto">Try adjusting your search or filters to discover more gift cards</p>
+              <p className="text-gray-600 dark:text-gray-400 text-base lg:text-lg max-w-md mx-auto">Try adjusting your search or filters to discover more gift cards</p>
               <Button 
                 variant="outline" 
                 onClick={() => {
@@ -457,7 +461,7 @@ export default function PublicGiftCardStore() {
                   setCategoryFilter('all');
                   setOccasionFilter('all');
                 }}
-                className="mt-6"
+                className="mt-6 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300"
               >
                 Clear All Filters
               </Button>
@@ -474,7 +478,7 @@ export default function PublicGiftCardStore() {
                     <h2 className="text-lg lg:text-xl font-semibold text-gray-900 dark:text-white">
                       {filteredCards.length} Gift Card{filteredCards.length !== 1 ? 's' : ''} Available
                     </h2>
-                    <p className="text-sm text-muted-foreground">Premium cards from verified merchants</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Premium cards from verified merchants</p>
                   </div>
                 </div>
               </div>
@@ -488,7 +492,7 @@ export default function PublicGiftCardStore() {
                     transition={{ delay: index * 0.1 }}
                     className="group"
                   >
-                    <Card className="h-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-2 border-purple-200/50 dark:border-purple-800/50 hover:border-purple-400 dark:hover:border-purple-600 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 rounded-2xl overflow-hidden">
+                    <Card className="h-full bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 hover:border-purple-400 dark:hover:border-purple-500 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 rounded-2xl overflow-hidden">
                       <CardHeader className="pb-3 p-4 lg:p-6">
                         <div className="mb-4 relative overflow-hidden rounded-xl">
                           <Card3DDesign 
@@ -501,7 +505,7 @@ export default function PublicGiftCardStore() {
                             <div className="absolute top-2 right-2">
                               <Badge 
                                 variant="secondary" 
-                                className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm text-xs border border-purple-200/50 dark:border-purple-800/50"
+                                className="bg-white dark:bg-gray-900 text-xs border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white"
                               >
                                 {occasions.find(o => o.id === card.occasionTag)?.name || card.occasionTag}
                               </Badge>
@@ -513,7 +517,7 @@ export default function PublicGiftCardStore() {
                           <CardTitle className="text-base lg:text-lg font-semibold text-gray-900 dark:text-white line-clamp-1">
                             {card.merchantName}
                           </CardTitle>
-                          <CardDescription className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                          <CardDescription className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 leading-relaxed">
                             {card.description || 'Premium gift card perfect for any occasion'}
                           </CardDescription>
                         </div>

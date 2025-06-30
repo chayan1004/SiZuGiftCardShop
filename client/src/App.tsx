@@ -12,6 +12,7 @@ import Checkout from "@/pages/Checkout";
 import PublicGiftCard from "@/pages/PublicGiftCard";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminGiftCardOrders from "@/pages/AdminGiftCardOrders";
+import AdminMerchantSettings from "@/pages/AdminMerchantSettings";
 import CheckBalance from "@/pages/CheckBalance";
 import MerchantLogin from "@/pages/MerchantLogin";
 import MerchantRegister from "@/pages/MerchantRegister";
@@ -59,6 +60,11 @@ function Router() {
       <Route path="/admin/giftcard-orders">
         <ProtectedRoute role="admin">
           <AdminGiftCardOrders />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/merchant-settings">
+        <ProtectedRoute role="admin">
+          <AdminMerchantSettings />
         </ProtectedRoute>
       </Route>
       <Route component={NotFound} />

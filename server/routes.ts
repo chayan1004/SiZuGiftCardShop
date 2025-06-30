@@ -1499,6 +1499,173 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin endpoints for merchant management
+  app.get("/api/admin/merchant/:id/branding", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const merchantId = parseInt(req.params.id);
+      const merchant = await storage.getMerchant(merchantId);
+      
+      if (!merchant) {
+        return res.status(404).json({ message: "Merchant not found" });
+      }
+
+      let branding = await storage.getMerchantBranding(merchant.id);
+      
+      // If no branding exists, create default branding
+      if (!branding) {
+        branding = await storage.createMerchantBranding({
+          merchantId: merchant.id,
+          logoUrl: null,
+          themeColor: '#6366f1',
+          tagline: `Gift cards by ${merchant.businessName}`
+        });
+      }
+
+      res.json({
+        success: true,
+        branding
+      });
+    } catch (error) {
+      console.error('Error fetching merchant branding:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch merchant branding"
+      });
+    }
+  });
+
+  app.post("/api/admin/merchant/:id/branding", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const merchantId = parseInt(req.params.id);
+      const merchant = await storage.getMerchant(merchantId);
+      
+      if (!merchant) {
+        return res.status(404).json({ message: "Merchant not found" });
+      }
+
+      const { logoUrl, themeColor, tagline } = req.body;
+      
+      // Check if branding already exists
+      let branding = await storage.getMerchantBranding(merchant.id);
+      
+      if (branding) {
+        // Update existing branding
+        branding = await storage.updateMerchantBranding(merchant.id, {
+          logoUrl,
+          themeColor,
+          tagline
+        });
+      } else {
+        // Create new branding
+        branding = await storage.createMerchantBranding({
+          merchantId: merchant.id,
+          logoUrl,
+          themeColor,
+          tagline
+        });
+      }
+
+      res.json({
+        success: true,
+        branding
+      });
+    } catch (error) {
+      console.error('Error saving merchant branding:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to save merchant branding"
+      });
+    }
+  });
+
+  app.get("/api/admin/merchant/:id/pricing-tiers", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const merchantId = parseInt(req.params.id);
+      const merchant = await storage.getMerchant(merchantId);
+      
+      if (!merchant) {
+        return res.status(404).json({ message: "Merchant not found" });
+      }
+
+      const tiers = await storage.getMerchantPricingTiers(merchant.id);
+      
+      // If no custom tiers exist, create default ones
+      if (tiers.length === 0) {
+        const defaultTiers = [
+          { merchantId: merchant.id, minQuantity: 1, pricePerUnit: 2500 },
+          { merchantId: merchant.id, minQuantity: 10, pricePerUnit: 2300 },
+          { merchantId: merchant.id, minQuantity: 50, pricePerUnit: 2000 },
+        ];
+        
+        for (const tier of defaultTiers) {
+          await storage.createMerchantPricingTier(tier);
+        }
+        
+        const newTiers = await storage.getMerchantPricingTiers(merchant.id);
+        return res.json({
+          success: true,
+          tiers: newTiers
+        });
+      }
+
+      res.json({
+        success: true,
+        tiers
+      });
+    } catch (error) {
+      console.error('Error fetching pricing tiers:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch pricing tiers"
+      });
+    }
+  });
+
+  app.post("/api/admin/merchant/:id/pricing-tiers", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const merchantId = parseInt(req.params.id);
+      const merchant = await storage.getMerchant(merchantId);
+      
+      if (!merchant) {
+        return res.status(404).json({ message: "Merchant not found" });
+      }
+
+      const { tiers } = req.body;
+      
+      if (!Array.isArray(tiers)) {
+        return res.status(400).json({ message: "Tiers must be an array" });
+      }
+
+      // Delete existing tiers for this merchant
+      const existingTiers = await storage.getMerchantPricingTiers(merchant.id);
+      for (const tier of existingTiers) {
+        await storage.deleteMerchantPricingTier(tier.id);
+      }
+
+      // Create new tiers
+      const newTiers = [];
+      for (const tierData of tiers) {
+        const tier = await storage.createMerchantPricingTier({
+          merchantId: merchant.id,
+          minQuantity: tierData.minQuantity,
+          pricePerUnit: tierData.pricePerUnit
+        });
+        newTiers.push(tier);
+      }
+
+      res.json({
+        success: true,
+        tiers: newTiers
+      });
+    } catch (error) {
+      console.error('Error saving pricing tiers:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to save pricing tiers"
+      });
+    }
+  });
+
   // Merchant Bulk Order Routes
   app.post("/api/merchant/bulk-orders", requireMerchant, async (req: Request, res: Response) => {
     try {

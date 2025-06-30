@@ -29,6 +29,13 @@ export default function Navigation({ onOpenPurchaseModal }: NavigationProps) {
 
   const navItems = [
     { 
+      label: 'Gift Cards', 
+      href: '/gift-cards',
+      icon: Gift,
+      description: 'Browse professional gift cards',
+      color: 'from-purple-400 to-pink-500'
+    },
+    { 
       label: 'Store', 
       href: '/store',
       icon: ShoppingBag,
@@ -54,14 +61,14 @@ export default function Navigation({ onOpenPurchaseModal }: NavigationProps) {
       href: '#pricing',
       icon: Zap,
       description: 'Simple plans',
-      color: 'from-purple-400 to-pink-500'
+      color: 'from-cyan-400 to-teal-500'
     },
     { 
       label: 'About', 
       href: '#about',
       icon: Shield,
       description: 'Our story',
-      color: 'from-cyan-400 to-teal-500'
+      color: 'from-slate-400 to-gray-500'
     },
   ];
 

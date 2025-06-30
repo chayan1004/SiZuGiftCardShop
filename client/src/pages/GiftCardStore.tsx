@@ -69,8 +69,8 @@ export default function GiftCardStore() {
       script.src = 'https://sandbox.web.squarecdn.com/v1/square.js';
       script.onload = async () => {
         const payments = (window as any).Square.payments(
-          process.env.VITE_SQUARE_APPLICATION_ID || 'sandbox-sq0idb-your-app-id',
-          process.env.VITE_SQUARE_LOCATION_ID || 'your-location-id'
+          import.meta.env.VITE_SQUARE_APPLICATION_ID || 'sandbox-sq0idb-your-app-id',
+          import.meta.env.VITE_SQUARE_LOCATION_ID || 'your-location-id'
         );
         
         const card = await payments.card();

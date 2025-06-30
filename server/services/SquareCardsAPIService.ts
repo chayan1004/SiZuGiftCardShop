@@ -62,17 +62,22 @@ class SquareCardsAPIService {
     this.accessToken = process.env.SQUARE_ACCESS_TOKEN || '';
     this.environment = process.env.SQUARE_ENVIRONMENT || 'sandbox';
 
-    this.client = new SquareClient({
-      environment: this.environment === 'production' ? SquareEnvironment.Production : SquareEnvironment.Sandbox,
-    });
-    
-    // Set access token via setAccessToken method if available
-    if (this.client.setAccessToken) {
-      this.client.setAccessToken(this.accessToken);
-    }
+    try {
+      // Create Square client with basic configuration
+      this.client = new SquareClient({
+        environment: this.environment === 'production' ? SquareEnvironment.Production : SquareEnvironment.Sandbox,
+      });
 
-    this.customersApi = this.client.customers;
-    this.cardsApi = this.client.cards;
+      this.customersApi = this.client.customers;
+      this.cardsApi = this.client.cards;
+
+      console.log('Square Cards API client initialized successfully');
+      console.log('Access token configured:', this.accessToken ? 'Yes' : 'No');
+    } catch (error) {
+      console.error('Failed to initialize Square client:', error);
+      this.customersApi = null;
+      this.cardsApi = null;
+    }
 
     if (!this.accessToken) {
       console.warn('Square Cards API credentials not configured properly');
@@ -102,7 +107,7 @@ class SquareCardsAPIService {
         }
       };
 
-      const searchResult = await this.customersApi.searchCustomers(searchRequest);
+      const searchResult = await this.customersApi.search(searchRequest);
 
       if (searchResult.result?.customers && searchResult.result.customers.length > 0) {
         const existingCustomer = searchResult.result.customers[0];
@@ -126,7 +131,7 @@ class SquareCardsAPIService {
         note: profileData.note,
       };
 
-      const createResult = await this.customersApi.createCustomer(createRequest);
+      const createResult = await this.customersApi.create(createRequest);
 
       if (createResult.result?.customer) {
         console.log(`Created new Square customer: ${createResult.result.customer.id}`);

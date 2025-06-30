@@ -71,7 +71,7 @@ const physicalCardOrderSchema = z.object({
 type PhysicalCardOrderForm = z.infer<typeof physicalCardOrderSchema>;
 type CustomerInfoForm = z.infer<typeof customerInfoSchema>;
 
-// Premium Physical Card Preview Component
+// Premium Physical Card Preview Component with 3D Effects
 const PhysicalCardPreview = ({ 
   cardType, 
   customDesign, 
@@ -87,24 +87,50 @@ const PhysicalCardPreview = ({
   customText?: string,
   selectedEmoji?: string
 }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [rotateX, setRotateX] = useState(0);
+  const [rotateY, setRotateY] = useState(0);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const rotateXValue = (e.clientY - centerY) / 10;
+    const rotateYValue = (centerX - e.clientX) / 10;
+    
+    setRotateX(rotateXValue);
+    setRotateY(rotateYValue);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    setRotateX(0);
+    setRotateY(0);
+  };
+
   const cardStyles = {
     plastic: {
-      background: `linear-gradient(135deg, ${themeColor}40, ${themeColor}20)`,
-      border: `2px solid ${themeColor}60`,
-      shadow: '0 8px 32px rgba(0,0,0,0.1)',
-      material: 'Durable PVC'
+      background: `linear-gradient(135deg, ${themeColor}60, ${themeColor}30, rgba(255,255,255,0.1))`,
+      border: `2px solid ${themeColor}80`,
+      shadow: '0 20px 60px rgba(0,0,0,0.15)',
+      material: 'Premium PVC',
+      glow: `0 0 30px ${themeColor}40`
     },
     metal: {
-      background: `linear-gradient(135deg, #c0c0c0, #808080, ${themeColor}30)`,
-      border: '2px solid #606060',
-      shadow: '0 12px 40px rgba(0,0,0,0.2)',
-      material: 'Brushed Metal'
+      background: `linear-gradient(135deg, #f0f0f0, #d4d4d4, ${themeColor}15, #b8b8b8)`,
+      border: '3px solid #9ca3af',
+      shadow: '0 30px 100px rgba(0,0,0,0.4)',
+      material: 'Titanium Alloy',
+      glow: `0 0 40px ${themeColor}20`,
+      metallic: true
     },
     premium: {
-      background: `linear-gradient(135deg, #ffd700, ${themeColor}, #ff6b6b)`,
-      border: '3px solid #ffd700',
-      shadow: '0 16px 48px rgba(255,215,0,0.3)',
-      material: 'Premium Composite'
+      background: `linear-gradient(135deg, #ffd700, ${themeColor}80, #ff6b6b, #8b5cf6)`,
+      border: '4px solid #ffd700',
+      shadow: '0 35px 120px rgba(255,215,0,0.4)',
+      material: 'Diamond Composite',
+      glow: `0 0 50px #ffd70060`,
+      holographic: true
     }
   };
 
@@ -112,56 +138,112 @@ const PhysicalCardPreview = ({
 
   return (
     <motion.div
-      initial={{ scale: 0.8, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{ duration: 0.5, type: "spring" }}
-      className="relative w-80 h-48 mx-auto"
+      initial={{ scale: 0.8, opacity: 0, rotateY: -90 }}
+      animate={{ scale: 1, opacity: 1, rotateY: 0 }}
+      transition={{ duration: 0.8, type: "spring", bounce: 0.4 }}
+      className="relative w-80 h-48 mx-auto perspective-1000"
+      style={{ perspective: '1000px' }}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={handleMouseLeave}
     >
       <motion.div
-        whileHover={{ scale: 1.05, rotateY: 5 }}
-        transition={{ duration: 0.3 }}
-        className="w-full h-full rounded-xl p-6 text-white relative overflow-hidden"
+        animate={{ 
+          rotateX: rotateX,
+          rotateY: rotateY,
+          scale: isHovered ? 1.05 : 1
+        }}
+        transition={{ duration: 0.2 }}
+        className="w-full h-full rounded-2xl p-6 text-white relative overflow-hidden cursor-pointer"
         style={{
           background: style.background,
           border: style.border,
-          boxShadow: style.shadow,
+          boxShadow: `${style.shadow}, ${style.glow || ''}`,
+          transformStyle: 'preserve-3d',
+          backdropFilter: 'blur(10px)'
         }}
       >
+        {/* Animated Background Effects */}
         <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          className="absolute -top-10 -right-10 w-32 h-32 opacity-10"
+          animate={{ 
+            rotate: cardType === 'premium' ? 360 : 180,
+            scale: [1, 1.2, 1]
+          }}
+          transition={{ 
+            duration: cardType === 'premium' ? 15 : 25, 
+            repeat: Infinity, 
+            ease: "linear" 
+          }}
+          className="absolute -top-10 -right-10 w-32 h-32 opacity-20"
         >
-          <Sparkles className="w-full h-full" />
+          {cardType === 'premium' ? (
+            <Diamond className="w-full h-full text-yellow-300" />
+          ) : cardType === 'metal' ? (
+            <Hexagon className="w-full h-full text-gray-300" />
+          ) : (
+            <Sparkles className="w-full h-full text-blue-300" />
+          )}
         </motion.div>
+
+        {/* Holographic Effect for Premium Cards */}
+        {cardType === 'premium' && (
+          <motion.div
+            animate={{ 
+              background: [
+                'linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent)',
+                'linear-gradient(45deg, transparent, rgba(255,215,0,0.2), transparent)',
+                'linear-gradient(45deg, transparent, rgba(138,43,226,0.1), transparent)',
+                'linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent)'
+              ]
+            }}
+            transition={{ duration: 3, repeat: Infinity }}
+            className="absolute inset-0 rounded-2xl"
+          />
+        )}
+
+        {/* Metallic Shine Effect */}
+        {cardType === 'metal' && (
+          <motion.div
+            animate={{ 
+              x: [-100, 400],
+              opacity: [0, 0.3, 0]
+            }}
+            transition={{ 
+              duration: 4, 
+              repeat: Infinity,
+              repeatDelay: 2
+            }}
+            className="absolute inset-0 w-20 bg-gradient-to-r from-transparent via-white to-transparent opacity-20 skew-x-12 rounded-2xl"
+          />
+        )}
         
         <div className="relative z-10 h-full flex flex-col justify-between">
           <div className="flex justify-between items-start">
             <div className="flex-1">
-              <motion.h3 
-                initial={{ x: -20, opacity: 0 }}
+              <motion.div 
+                initial={{ x: -30, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="text-lg font-bold"
+                transition={{ delay: 0.3, type: "spring" }}
+                className="flex items-center space-x-2"
               >
-                SiZu GiftCard
-              </motion.h3>
-              <motion.p 
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="text-sm opacity-80"
-              >
-                {style.material}
-              </motion.p>
+                <img 
+                  src="/attached_assets/image_1751306402919.png" 
+                  alt="SiZu Logo" 
+                  className="w-10 h-10 rounded-full object-cover border-2 border-white/30"
+                />
+                <div>
+                  <h3 className="text-xl font-bold tracking-wide">SiZu GiftCard</h3>
+                  <p className="text-xs opacity-80 font-medium">{style.material}</p>
+                </div>
+              </motion.div>
               
               {/* Custom Text Display */}
               {customText && (
                 <motion.p
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="text-xs mt-1 opacity-90 italic"
+                  transition={{ delay: 0.5 }}
+                  className="text-sm mt-3 opacity-90 italic font-light"
                 >
                   "{customText}"
                 </motion.p>
@@ -174,8 +256,8 @@ const PhysicalCardPreview = ({
                 <motion.div
                   initial={{ scale: 0, rotate: -180 }}
                   animate={{ scale: 1, rotate: 0 }}
-                  transition={{ delay: 0.3, type: "spring" }}
-                  className="text-2xl"
+                  transition={{ delay: 0.4, type: "spring", bounce: 0.6 }}
+                  className="text-3xl filter drop-shadow-lg"
                 >
                   {selectedEmoji}
                 </motion.div>
@@ -249,6 +331,7 @@ const PhysicalCardPreview = ({
 const PremiumHeader = () => {
   const [location, setLocation] = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -256,63 +339,206 @@ const PremiumHeader = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const navigationItems = [
+    { name: 'Home', path: '/', icon: Home },
+    { name: 'Gift Cards', path: '/giftcard-store', icon: Gift },
+    { name: 'Physical Cards', path: '/physical-giftcard-store', icon: Package },
+    { name: 'Merchant Portal', path: '/merchant-login', icon: Building2 }
+  ];
+
   return (
     <motion.header
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      transition={{ duration: 0.6, type: "spring" }}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         isScrolled 
-          ? 'bg-black/20 backdrop-blur-xl border-b border-white/10' 
+          ? 'bg-black/30 backdrop-blur-2xl border-b border-gradient-to-r from-purple-500/20 via-pink-500/20 to-blue-500/20 shadow-2xl' 
           : 'bg-transparent'
       }`}
     >
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          <Link href="/">
-            <motion.div 
-              whileHover={{ scale: 1.05 }}
-              className="flex items-center space-x-3 cursor-pointer"
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo Section with Enhanced Animation */}
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            className="flex items-center space-x-3"
+          >
+            <motion.div
+              animate={{ 
+                rotate: [0, 360],
+                scale: [1, 1.1, 1]
+              }}
+              transition={{ 
+                duration: 20, 
+                repeat: Infinity, 
+                ease: "linear" 
+              }}
+              className="relative"
             >
-              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
-                <Package className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-white">Physical Cards</h1>
-                <p className="text-xs text-purple-300">Premium Gift Experience</p>
-              </div>
-            </motion.div>
-          </Link>
-
-          <nav className="hidden md:flex items-center space-x-6">
-            {[
-              { label: 'Home', href: '/', icon: Home },
-              { label: 'Digital Cards', href: '/gift-cards', icon: Gift },
-              { label: 'Store', href: '/store', icon: ShoppingCart },
-            ].map((item, index) => (
+              <img 
+                src="/attached_assets/image_1751306402919.png" 
+                alt="SiZu Logo" 
+                className="w-10 h-10 rounded-full object-cover border-2 border-gradient-to-r from-purple-400 to-pink-400 shadow-lg"
+              />
               <motion.div
-                key={item.href}
-                initial={{ y: -20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: index * 0.1 }}
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-400/20 to-pink-400/20 blur-sm"
+              />
+            </motion.div>
+            <div>
+              <motion.h1 
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="text-2xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent"
               >
-                <Link href={item.href}>
+                SiZu GiftCard
+              </motion.h1>
+              <motion.p
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="text-xs text-gray-400 font-medium"
+              >
+                Physical Cards Store
+              </motion.p>
+            </div>
+          </motion.div>
+
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-8">
+            {navigationItems.map((item, index) => {
+              const IconComponent = item.icon;
+              const isActive = location === item.path;
+              
+              return (
+                <Link key={item.path} href={item.path}>
                   <motion.div
-                    whileHover={{ scale: 1.1 }}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all cursor-pointer ${
-                      location === item.href 
-                        ? 'bg-white/20 text-white' 
-                        : 'text-white/70 hover:text-white hover:bg-white/10'
+                    initial={{ y: -20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.1 * index }}
+                    whileHover={{ 
+                      scale: 1.1,
+                      y: -2
+                    }}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-300 ${
+                      isActive 
+                        ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-white border border-purple-400/30' 
+                        : 'text-gray-300 hover:text-white hover:bg-white/10'
                     }`}
                   >
-                    <item.icon className="w-4 h-4" />
-                    <span className="text-sm font-medium">{item.label}</span>
+                    <IconComponent className="w-4 h-4" />
+                    <span className="font-medium">{item.name}</span>
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeIndicator"
+                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full"
+                      />
+                    )}
                   </motion.div>
                 </Link>
-              </motion.div>
-            ))}
+              );
+            })}
           </nav>
+
+          {/* Enhanced Action Buttons */}
+          <div className="hidden md:flex items-center space-x-4">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="border-gradient-to-r from-purple-400 to-pink-400 text-purple-300 hover:bg-purple-500/10 transition-all duration-300"
+              >
+                <Target className="w-4 h-4 mr-2" />
+                Track Order
+              </Button>
+            </motion.div>
+            
+            <motion.div
+              whileHover={{ scale: 1.05, rotate: 2 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Button 
+                size="sm"
+                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 shadow-lg hover:shadow-purple-500/25 transition-all duration-300"
+              >
+                <Rocket className="w-4 h-4 mr-2" />
+                Order Now
+              </Button>
+            </motion.div>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="md:hidden p-2 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 text-white"
+          >
+            <Menu className="w-5 h-5" />
+          </motion.button>
         </div>
       </div>
+
+      {/* Enhanced Mobile Menu */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="md:hidden bg-black/40 backdrop-blur-2xl border-t border-white/10"
+          >
+            <div className="px-4 py-6 space-y-4">
+              {navigationItems.map((item, index) => {
+                const IconComponent = item.icon;
+                const isActive = location === item.path;
+                
+                return (
+                  <Link key={item.path} href={item.path}>
+                    <motion.div
+                      initial={{ x: -50, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ delay: 0.1 * index }}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 ${
+                        isActive 
+                          ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-white border border-purple-400/30' 
+                          : 'text-gray-300 hover:text-white hover:bg-white/10'
+                      }`}
+                    >
+                      <IconComponent className="w-5 h-5" />
+                      <span className="font-medium">{item.name}</span>
+                    </motion.div>
+                  </Link>
+                );
+              })}
+              
+              {/* Mobile Action Buttons */}
+              <div className="flex flex-col space-y-3 pt-4 border-t border-white/10">
+                <Button 
+                  variant="outline" 
+                  className="w-full border-gradient-to-r from-purple-400 to-pink-400 text-purple-300 hover:bg-purple-500/10"
+                >
+                  <Target className="w-4 h-4 mr-2" />
+                  Track Order
+                </Button>
+                <Button 
+                  className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                >
+                  <Rocket className="w-4 h-4 mr-2" />
+                  Order Now
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.header>
   );
 };

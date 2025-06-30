@@ -2998,7 +2998,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           throw new Error('Square access token not configured');
         }
 
-        const { Client, Environment } = require('squareup');
+        const squareModule = await import('squareup');
+        const { Client, Environment } = squareModule;
         const client = new Client({
           accessToken: process.env.SQUARE_ACCESS_TOKEN,
           environment: process.env.SQUARE_ENVIRONMENT === 'production' 
@@ -3087,7 +3088,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
               // Send gift card email notification
               try {
-                const { emailService } = require('./services/EmailService');
+                // Email service already imported at top of file
                 
                 // Check if email already sent to prevent duplicates
                 const currentOrder = await storage.getPublicGiftCardOrderById(order.id);

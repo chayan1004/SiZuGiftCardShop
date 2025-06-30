@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search, Gift, Gamepad2, Pizza, PartyPopper, Briefcase, Heart, Star, Calendar, Filter, DollarSign, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { Card3DDesign } from '@/components/ui/3d-card-designs';
 
 interface PublicGiftCard {
   id: string;
@@ -253,13 +254,13 @@ export default function PublicGiftCardStore() {
             {filteredCards.map((card: PublicGiftCard) => (
               <Card key={card.id} className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                 <CardHeader className="pb-3">
-                  <div className={`h-32 rounded-lg ${getThemePreview(card.cardDesignTheme)} flex items-center justify-center mb-4 relative overflow-hidden`}>
-                    <div className="absolute inset-0 bg-black/20" />
-                    <div className="relative text-white text-center">
-                      <Gift className="h-8 w-8 mx-auto mb-2" />
-                      <div className="text-sm font-medium">{card.merchantName}</div>
-                      <div className="text-xs opacity-90">Gift Card</div>
-                    </div>
+                  <div className="mb-4">
+                    <Card3DDesign 
+                      category={card.giftCategory}
+                      amount={card.amount}
+                      merchantName={card.merchantName}
+                      className="h-32"
+                    />
                   </div>
                   
                   <div className="flex items-start justify-between">

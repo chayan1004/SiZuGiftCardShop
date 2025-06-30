@@ -159,6 +159,47 @@
   --radius: 0.5rem;
 }
 
+/* 3D Card Animations */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.transform-style-preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.rotate-y-12 {
+  transform: rotateY(12deg);
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%) skewX(-12deg);
+  }
+  100% {
+    transform: translateX(200%) skewX(-12deg);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+/* Card hover effects */
+.card-3d:hover {
+  transform: translateZ(20px) rotateY(5deg) rotateX(5deg);
+  transition: all 0.3s ease-out;
+}
+
+/* Additional 3D utilities */
+.rotate-3d {
+  transform: perspective(1000px) rotateX(10deg) rotateY(10deg);
+}
+
+.rotate-3d-hover:hover {
+  transform: perspective(1000px) rotateX(15deg) rotateY(15deg) translateZ(10px);
+}
+
 @layer base {
   * {
     @apply border-border;

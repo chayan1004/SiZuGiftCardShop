@@ -20,6 +20,35 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 
+const customerInfoSchema = z.object({
+  // Customer Details
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  email: z.string().email("Valid email is required"),
+  phone: z.string().min(10, "Phone number is required"),
+  emailOptIn: z.boolean().default(false),
+  
+  // Shipping Address
+  shippingAddress: z.object({
+    street: z.string().min(1, "Street address is required"),
+    city: z.string().min(1, "City is required"),
+    state: z.string().min(2, "State is required"),
+    zipCode: z.string().min(5, "ZIP code is required"),
+    country: z.string().default('US')
+  }),
+  
+  // Order Details
+  cardType: z.enum(['plastic', 'metal', 'premium']),
+  quantity: z.number().min(1),
+  expeditedShipping: z.boolean().default(false),
+  
+  // Customization
+  customText: z.string().optional(),
+  customImage: z.string().optional(),
+  selectedEmoji: z.string().optional(),
+  themeColor: z.string().optional()
+});
+
 const physicalCardOrderSchema = z.object({
   customerType: z.enum(['merchant', 'individual']),
   businessName: z.string().optional(),
@@ -40,6 +69,7 @@ const physicalCardOrderSchema = z.object({
 });
 
 type PhysicalCardOrderForm = z.infer<typeof physicalCardOrderSchema>;
+type CustomerInfoForm = z.infer<typeof customerInfoSchema>;
 
 // Premium Physical Card Preview Component
 const PhysicalCardPreview = ({ 
@@ -299,6 +329,8 @@ export default function PhysicalGiftCardStore() {
   const [customImage, setCustomImage] = useState<string>('');
   const [customText, setCustomText] = useState<string>('');
   const [selectedEmoji, setSelectedEmoji] = useState<string>('');
+  const [showCustomerForm, setShowCustomerForm] = useState(false);
+  const [orderStep, setOrderStep] = useState<'customization' | 'customer-info' | 'checkout'>('customization');
 
   // Popular emoji options for gift cards
   const emojiOptions = [
@@ -349,6 +381,32 @@ export default function PhysicalGiftCardStore() {
     }
   });
 
+  // Create checkout session mutation for Square Hosted Checkout
+  const createCheckoutMutation = useMutation({
+    mutationFn: async (orderData: CustomerInfoForm) => {
+      const response = await fetch('/api/physical-cards/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData)
+      });
+      if (!response.ok) throw new Error('Failed to create checkout session');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.checkoutUrl) {
+        // Redirect to Square's hosted checkout page
+        window.location.href = data.checkoutUrl;
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Checkout Failed",
+        description: error.message || "Unable to create checkout session. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
   // Submit order mutation
   const submitOrderMutation = useMutation({
     mutationFn: async (orderData: PhysicalCardOrderForm) => {
@@ -379,6 +437,36 @@ export default function PhysicalGiftCardStore() {
 
   const onSubmit = (data: PhysicalCardOrderForm) => {
     submitOrderMutation.mutate(data);
+  };
+
+  // Customer form setup
+  const customerForm = useForm<CustomerInfoForm>({
+    resolver: zodResolver(customerInfoSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      emailOptIn: false,
+      shippingAddress: {
+        street: "",
+        city: "",
+        state: "",
+        zipCode: "",
+        country: "US"
+      },
+      cardType: "plastic",
+      quantity: 1,
+      expeditedShipping: false,
+      customText: customText,
+      customImage: customImage,
+      selectedEmoji: selectedEmoji,
+      themeColor: themeColor
+    }
+  });
+
+  const onCustomerSubmit = (data: CustomerInfoForm) => {
+    createCheckoutMutation.mutate(data);
   };
 
   // Update pricing when form values change
@@ -1080,6 +1168,220 @@ export default function PhysicalGiftCardStore() {
               </TabsContent>
             </Tabs>
           </div>
+
+          {/* Customer Information Form Modal */}
+          <AnimatePresence>
+            {orderStep === 'customer-info' && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              >
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                  className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+                >
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-2xl font-bold text-white">Customer Information</h2>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setOrderStep('customization')}
+                      className="text-white hover:bg-white/10"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                    </Button>
+                  </div>
+
+                  <form onSubmit={customerForm.handleSubmit(onCustomerSubmit)} className="space-y-6">
+                    {/* Personal Information */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-white">Personal Information</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-white">First Name</Label>
+                          <Input
+                            {...customerForm.register('firstName')}
+                            className="bg-white/10 border-white/20 text-white placeholder-gray-400"
+                            placeholder="John"
+                          />
+                          {customerForm.formState.errors.firstName && (
+                            <p className="text-red-400 text-sm">{customerForm.formState.errors.firstName.message}</p>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-white">Last Name</Label>
+                          <Input
+                            {...customerForm.register('lastName')}
+                            className="bg-white/10 border-white/20 text-white placeholder-gray-400"
+                            placeholder="Doe"
+                          />
+                          {customerForm.formState.errors.lastName && (
+                            <p className="text-red-400 text-sm">{customerForm.formState.errors.lastName.message}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-white">Email Address</Label>
+                        <Input
+                          {...customerForm.register('email')}
+                          type="email"
+                          className="bg-white/10 border-white/20 text-white placeholder-gray-400"
+                          placeholder="john.doe@example.com"
+                        />
+                        {customerForm.formState.errors.email && (
+                          <p className="text-red-400 text-sm">{customerForm.formState.errors.email.message}</p>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-white">Phone Number</Label>
+                        <Input
+                          {...customerForm.register('phone')}
+                          type="tel"
+                          className="bg-white/10 border-white/20 text-white placeholder-gray-400"
+                          placeholder="+1 (555) 123-4567"
+                        />
+                        {customerForm.formState.errors.phone && (
+                          <p className="text-red-400 text-sm">{customerForm.formState.errors.phone.message}</p>
+                        )}
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          {...customerForm.register('emailOptIn')}
+                          id="emailOptIn"
+                        />
+                        <Label htmlFor="emailOptIn" className="text-white text-sm">
+                          I want to receive updates and offers via email
+                        </Label>
+                      </div>
+                    </div>
+
+                    {/* Shipping Address */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-white">Shipping Address</h3>
+                      <div className="space-y-2">
+                        <Label className="text-white">Street Address</Label>
+                        <Input
+                          {...customerForm.register('shippingAddress.street')}
+                          className="bg-white/10 border-white/20 text-white placeholder-gray-400"
+                          placeholder="123 Main Street"
+                        />
+                        {customerForm.formState.errors.shippingAddress?.street && (
+                          <p className="text-red-400 text-sm">{customerForm.formState.errors.shippingAddress.street.message}</p>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-white">City</Label>
+                          <Input
+                            {...customerForm.register('shippingAddress.city')}
+                            className="bg-white/10 border-white/20 text-white placeholder-gray-400"
+                            placeholder="New York"
+                          />
+                          {customerForm.formState.errors.shippingAddress?.city && (
+                            <p className="text-red-400 text-sm">{customerForm.formState.errors.shippingAddress.city.message}</p>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-white">State</Label>
+                          <Input
+                            {...customerForm.register('shippingAddress.state')}
+                            className="bg-white/10 border-white/20 text-white placeholder-gray-400"
+                            placeholder="NY"
+                          />
+                          {customerForm.formState.errors.shippingAddress?.state && (
+                            <p className="text-red-400 text-sm">{customerForm.formState.errors.shippingAddress.state.message}</p>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-white">ZIP Code</Label>
+                          <Input
+                            {...customerForm.register('shippingAddress.zipCode')}
+                            className="bg-white/10 border-white/20 text-white placeholder-gray-400"
+                            placeholder="10001"
+                          />
+                          {customerForm.formState.errors.shippingAddress?.zipCode && (
+                            <p className="text-red-400 text-sm">{customerForm.formState.errors.shippingAddress.zipCode.message}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Order Options */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-white">Order Options</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-white">Card Type</Label>
+                          <Select {...customerForm.register('cardType')}>
+                            <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                              <SelectValue placeholder="Select card type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="plastic">Standard Plastic</SelectItem>
+                              <SelectItem value="metal">Premium Metal</SelectItem>
+                              <SelectItem value="premium">Ultra Premium</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-white">Quantity</Label>
+                          <Input
+                            {...customerForm.register('quantity', { valueAsNumber: true })}
+                            type="number"
+                            min="1"
+                            className="bg-white/10 border-white/20 text-white placeholder-gray-400"
+                            placeholder="1"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          {...customerForm.register('expeditedShipping')}
+                          id="expeditedShipping"
+                        />
+                        <Label htmlFor="expeditedShipping" className="text-white text-sm">
+                          Expedited Shipping (+$15)
+                        </Label>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex space-x-4 pt-6">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setOrderStep('customization')}
+                        className="flex-1 border-white/20 text-white hover:bg-white/10"
+                      >
+                        Back to Customization
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={createCheckoutMutation.isPending}
+                        className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                      >
+                        {createCheckoutMutation.isPending ? (
+                          <div className="flex items-center">
+                            <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                            Creating Checkout...
+                          </div>
+                        ) : (
+                          <>
+                            <CreditCard className="w-4 h-4 mr-2" />
+                            Proceed to Payment
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </form>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </>

@@ -19,7 +19,7 @@ import { squareService } from "./services/squareService";
 import { squareAPIService } from './services/squareAPIService';
 import { enhancedSquareAPIService } from './services/enhancedSquareAPIService';
 import { squareGiftCardService } from './services/squareGiftCardService';
-import { squarePaymentService } from './services/squarePaymentService';
+import { squarePaymentService } from './services/SquarePaymentService';
 import { mockPaymentService } from './services/mockPaymentService';
 import { simpleQRService } from './services/simpleQRService';
 import { emailService } from './services/emailService';

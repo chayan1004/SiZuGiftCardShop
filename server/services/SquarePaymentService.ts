@@ -1,20 +1,18 @@
 /**
  * Square Payments API Service - Production Ready Implementation
  * 
- * Comprehensive implementation using official Square SDK:
- * - Create Payment: Process payments with various payment methods
- * - Get Payment: Retrieve payment details and status
- * - Complete Payment: Handle delayed capture scenarios
- * - List Payments: Query payment history with advanced filtering
- * - Webhook Processing: Real-time payment status updates
- * - Error Handling: Comprehensive retry logic and failure management
+ * Uses official Square SDK for:
+ * - Payment processing with various payment methods
+ * - Payment retrieval and status tracking
+ * - Payment listing with advanced filtering
+ * - Webhook processing for real-time updates
+ * - Error handling with comprehensive retry logic
  * 
  * Reference: https://developer.squareup.com/reference/square/payments-api
  */
 
 import crypto from 'crypto';
-import { SquareClient, SquareEnvironment, SquareError } from 'square';
-import { storage } from '../storage';
+import { SquareClient, SquareEnvironment } from 'square';
 
 interface PaymentRequest {
   sourceId: string;
@@ -94,13 +92,6 @@ class SquarePaymentService {
   }
 
   /**
-   * Generate delay for retry logic
-   */
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  /**
    * Create Payment using Square SDK
    * POST /v2/payments
    */
@@ -129,14 +120,11 @@ class SquarePaymentService {
       };
 
       console.log('Creating payment with Square SDK...');
-      const response = await this.client.paymentsApi.createPayment(requestBody);
+      const { result } = await this.client.paymentsApi.createPayment(requestBody);
 
-      if (response.result.payment) {
-        const payment = this.formatPaymentResponse(response.result.payment);
+      if (result.payment) {
+        const payment = this.formatPaymentResponse(result.payment);
         console.log(`Payment created successfully: ${payment.id}`);
-        
-        // Sync to database
-        await this.syncPaymentToDatabase(payment);
         
         return {
           success: true,
@@ -169,10 +157,10 @@ class SquarePaymentService {
   }> {
     try {
       console.log(`Retrieving payment: ${paymentId}`);
-      const response = await this.client.paymentsApi.getPayment({ paymentId });
+      const { result } = await this.client.paymentsApi.getPayment(paymentId);
 
-      if (response.result.payment) {
-        const payment = this.formatPaymentResponse(response.result.payment);
+      if (result.payment) {
+        const payment = this.formatPaymentResponse(result.payment);
         return {
           success: true,
           payment
@@ -227,17 +215,17 @@ class SquarePaymentService {
       };
 
       console.log('Listing payments with filters...');
-      const response = await this.client.paymentsApi.listPayments(requestParams);
+      const { result } = await this.client.paymentsApi.listPayments(requestParams);
 
-      if (response.result.payments) {
-        const payments = response.result.payments.map(payment => 
+      if (result.payments) {
+        const payments = result.payments.map(payment => 
           this.formatPaymentResponse(payment)
         );
 
         return {
           success: true,
           payments,
-          cursor: response.result.cursor
+          cursor: result.cursor
         };
       }
 
@@ -341,9 +329,6 @@ class SquarePaymentService {
   private async handlePaymentCreated(payment: PaymentResponse): Promise<void> {
     console.log(`Payment created: ${payment.id} - Status: ${payment.status}`);
     
-    // Sync to database
-    await this.syncPaymentToDatabase(payment);
-    
     // Handle initial payment status
     if (payment.status === 'COMPLETED') {
       await this.handlePaymentCompleted(payment);
@@ -355,9 +340,6 @@ class SquarePaymentService {
    */
   private async handlePaymentUpdated(payment: PaymentResponse): Promise<void> {
     console.log(`Payment updated: ${payment.id} - Status: ${payment.status}`);
-    
-    // Sync to database
-    await this.syncPaymentToDatabase(payment);
     
     // Handle status changes
     switch (payment.status) {
@@ -410,23 +392,6 @@ class SquarePaymentService {
   }
 
   /**
-   * Sync payment data to database
-   */
-  private async syncPaymentToDatabase(payment: PaymentResponse): Promise<void> {
-    try {
-      // Store/update payment in database
-      // This would integrate with your existing storage layer
-      console.log(`Syncing payment ${payment.id} to database`);
-      
-      // Example implementation would call storage methods
-      // await storage.createOrUpdatePayment(payment);
-      
-    } catch (error) {
-      console.error('Failed to sync payment to database:', error);
-    }
-  }
-
-  /**
    * Create payment for gift card purchase
    */
   async createGiftCardPayment(
@@ -450,6 +415,39 @@ class SquarePaymentService {
       orderId,
       note: note || 'Gift card purchase',
       statementDescriptionIdentifier: 'GIFTCARD',
+      autocomplete: true
+    });
+  }
+
+  /**
+   * Create payment for physical card purchase
+   */
+  async createPhysicalCardPayment(
+    sourceId: string,
+    amountCents: number,
+    customerData: {
+      email: string;
+      firstName: string;
+      lastName: string;
+      phone?: string;
+      address?: any;
+    },
+    orderId?: string
+  ): Promise<{
+    success: boolean;
+    payment?: PaymentResponse;
+    error?: string;
+  }> {
+    return this.createPayment({
+      sourceId,
+      amountMoney: {
+        amount: amountCents,
+        currency: 'USD'
+      },
+      buyerEmailAddress: customerData.email,
+      orderId,
+      note: `Physical gift card for ${customerData.firstName} ${customerData.lastName}`,
+      statementDescriptionIdentifier: 'PHYSCARD',
       autocomplete: true
     });
   }

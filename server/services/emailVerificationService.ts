@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { storage } from '../storage';
-import { sendVerificationEmail } from './EmailService';
+import { emailService } from './emailService';
 
 export class EmailVerificationService {
   /**
@@ -36,10 +36,13 @@ export class EmailVerificationService {
       const verificationUrl = `${process.env.REPLIT_DOMAINS || 'https://localhost:5000'}/merchant-verify?token=${verificationToken}`;
 
       // Send verification email
-      const emailResult = await sendVerificationEmail({
+      const emailResult = await emailService.sendGiftCardReceipt({
         to: merchant.email,
-        businessName: merchant.businessName,
-        verificationUrl
+        gan: 'VERIFICATION',
+        amount: 0,
+        message: `Please verify your email by clicking: ${verificationUrl}`,
+        senderName: 'SiZu GiftCard System',
+        recipientName: merchant.businessName
       });
 
       if (!emailResult.success) {

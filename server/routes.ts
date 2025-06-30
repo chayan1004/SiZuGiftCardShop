@@ -2128,6 +2128,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // === PRICING MANAGEMENT ENDPOINTS ===
+
+  // Get current pricing configuration
+  app.get("/api/admin/pricing-config", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const config = await storage.getActivePricingConfiguration();
+      res.json({
+        success: true,
+        config: config || {
+          id: 'default',
+          basePrice: "100.00",
+          merchantBuyRate: "5.00",
+          merchantSellRate: "-3.00",
+          individualBuyRate: "8.00",
+          individualSellRate: "-5.00",
+          isActive: true,
+          updatedBy: 'system',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      });
+    } catch (error) {
+      console.error('Pricing config error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch pricing configuration'
+      });
+    }
+  });
+
+  // Update pricing configuration
+  app.post("/api/admin/pricing-config", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { basePrice, merchantBuyRate, merchantSellRate, individualBuyRate, individualSellRate, notes } = req.body;
+      
+      // Validation
+      if (typeof basePrice !== 'number' || basePrice <= 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'Base price must be a positive number'
+        });
+      }
+
+      const config = {
+        basePrice: basePrice.toString(),
+        merchantBuyRate: merchantBuyRate?.toString() || "5.00",
+        merchantSellRate: merchantSellRate?.toString() || "-3.00",
+        individualBuyRate: individualBuyRate?.toString() || "8.00",
+        individualSellRate: individualSellRate?.toString() || "-5.00",
+        updatedBy: 'admin',
+        notes: notes || 'Updated via admin dashboard'
+      };
+
+      const newConfig = await storage.createPricingConfiguration(config);
+      
+      res.json({
+        success: true,
+        config: newConfig,
+        message: 'Pricing configuration updated successfully'
+      });
+    } catch (error) {
+      console.error('Pricing config update error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to update pricing configuration'
+      });
+    }
+  });
+
+  // Get live pricing calculations
+  app.get("/api/admin/live-pricing", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const basePrice = req.query.basePrice ? parseFloat(req.query.basePrice as string) : undefined;
+      const livePricing = await storage.calculateLivePricing(basePrice);
+      
+      res.json({
+        success: true,
+        pricing: livePricing
+      });
+    } catch (error) {
+      console.error('Live pricing error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to calculate live pricing'
+      });
+    }
+  });
+
+  // Get pricing history
+  app.get("/api/admin/pricing-history", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+      const history = await storage.getPricingHistory(limit);
+      
+      res.json({
+        success: true,
+        history
+      });
+    } catch (error) {
+      console.error('Pricing history error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch pricing history'
+      });
+    }
+  });
+
   // === MERCHANT DASHBOARD MONITORING ENDPOINTS ===
 
   // Merchant System Health Monitoring

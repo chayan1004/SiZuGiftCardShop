@@ -48,7 +48,17 @@ export default function PricingManagement() {
     }
   });
 
-  const config: PricingConfig = pricingData?.config || {
+  const config: PricingConfig = pricingData?.config ? {
+    id: pricingData.config.id || 'default',
+    basePrice: parseFloat(pricingData.config.basePrice) || 100,
+    merchantBuyRate: parseFloat(pricingData.config.merchantBuyRate) || 5,
+    merchantSellRate: parseFloat(pricingData.config.merchantSellRate) || -3,
+    individualBuyRate: parseFloat(pricingData.config.individualBuyRate) || 8,
+    individualSellRate: parseFloat(pricingData.config.individualSellRate) || -5,
+    lastUpdated: pricingData.config.updatedAt || new Date().toISOString(),
+    updatedBy: pricingData.config.updatedBy || 'admin',
+    isActive: pricingData.config.isActive || true
+  } : {
     id: 'default',
     basePrice: 100,
     merchantBuyRate: 5,
@@ -71,7 +81,16 @@ export default function PricingManagement() {
     }
   });
 
-  const livePricing: LivePricing = livePricingData?.pricing || {
+  const livePricing: LivePricing = livePricingData?.pricing ? {
+    squareBasePrice: livePricingData.pricing.squareBasePrice || config.basePrice,
+    merchantBuyPrice: livePricingData.pricing.merchantBuyPrice || config.basePrice * (1 + config.merchantBuyRate / 100),
+    merchantSellPrice: livePricingData.pricing.merchantSellPrice || config.basePrice * (1 + config.merchantSellRate / 100),
+    individualBuyPrice: livePricingData.pricing.individualBuyPrice || config.basePrice * (1 + config.individualBuyRate / 100),
+    individualSellPrice: livePricingData.pricing.individualSellPrice || config.basePrice * (1 + config.individualSellRate / 100),
+    profitMarginMerchant: livePricingData.pricing.profitMarginMerchant || (config.merchantBuyRate + Math.abs(config.merchantSellRate)),
+    profitMarginIndividual: livePricingData.pricing.profitMarginIndividual || (config.individualBuyRate + Math.abs(config.individualSellRate)),
+    lastRefresh: livePricingData.pricing.lastRefresh || new Date().toISOString()
+  } : {
     squareBasePrice: config.basePrice,
     merchantBuyPrice: config.basePrice * (1 + config.merchantBuyRate / 100),
     merchantSellPrice: config.basePrice * (1 + config.merchantSellRate / 100),
@@ -85,11 +104,7 @@ export default function PricingManagement() {
   // Update pricing configuration
   const updatePricingMutation = useMutation({
     mutationFn: async (newConfig: Partial<PricingConfig>) => {
-      const response = await apiRequest('POST', '/api/admin/pricing-config', newConfig, {
-        headers: {
-          'x-admin-token': localStorage.getItem('adminToken') || ''
-        }
-      });
+      const response = await apiRequest('POST', '/api/admin/pricing-config', newConfig);
       return response.json();
     },
     onSuccess: () => {

@@ -363,6 +363,26 @@ export interface IStorage {
     pendingControlsCount: number;
     overdueScanCount: number;
   }>;
+
+  // Pricing Configuration Management
+  getActivePricingConfiguration(): Promise<PricingConfiguration | undefined>;
+  createPricingConfiguration(config: InsertPricingConfiguration): Promise<PricingConfiguration>;
+  updatePricingConfiguration(id: string, config: Partial<InsertPricingConfiguration>): Promise<PricingConfiguration | undefined>;
+  deactivateAllPricingConfigurations(): Promise<void>;
+  getPricingHistory(limit?: number): Promise<PricingHistory[]>;
+  createPricingHistoryEntry(entry: InsertPricingHistory): Promise<PricingHistory>;
+  
+  // Live Pricing Calculations
+  calculateLivePricing(basePrice?: number): Promise<{
+    squareBasePrice: number;
+    merchantBuyPrice: number;
+    merchantSellPrice: number;
+    individualBuyPrice: number;
+    individualSellPrice: number;
+    profitMarginMerchant: number;
+    profitMarginIndividual: number;
+    lastRefresh: string;
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3045,6 +3065,140 @@ export class DatabaseStorage implements IStorage {
       implementedControlsCount: implementedResult.count,
       pendingControlsCount: pendingResult.count,
       overdueScanCount: overdueScansResult.count,
+    };
+  }
+
+  // Pricing Configuration Management
+  async getActivePricingConfiguration(): Promise<PricingConfiguration | undefined> {
+    const [config] = await db
+      .select()
+      .from(pricingConfigurations)
+      .where(eq(pricingConfigurations.isActive, true))
+      .orderBy(desc(pricingConfigurations.createdAt))
+      .limit(1);
+    return config || undefined;
+  }
+
+  async createPricingConfiguration(config: InsertPricingConfiguration): Promise<PricingConfiguration> {
+    // First deactivate all existing configurations
+    await this.deactivateAllPricingConfigurations();
+    
+    const [newConfig] = await db
+      .insert(pricingConfigurations)
+      .values({
+        ...config,
+        isActive: true,
+        updatedAt: new Date()
+      })
+      .returning();
+    
+    return newConfig;
+  }
+
+  async updatePricingConfiguration(id: string, config: Partial<InsertPricingConfiguration>): Promise<PricingConfiguration | undefined> {
+    // Store current config for history
+    const currentConfig = await db
+      .select()
+      .from(pricingConfigurations)
+      .where(eq(pricingConfigurations.id, id));
+    
+    if (currentConfig[0]) {
+      await this.createPricingHistoryEntry({
+        configurationId: id,
+        basePrice: currentConfig[0].basePrice,
+        merchantBuyRate: currentConfig[0].merchantBuyRate,
+        merchantSellRate: currentConfig[0].merchantSellRate,
+        individualBuyRate: currentConfig[0].individualBuyRate,
+        individualSellRate: currentConfig[0].individualSellRate,
+        changedBy: config.updatedBy || 'admin',
+        changeReason: 'Configuration updated',
+        previousValues: JSON.stringify(currentConfig[0])
+      });
+    }
+
+    const [updated] = await db
+      .update(pricingConfigurations)
+      .set({
+        ...config,
+        updatedAt: new Date()
+      })
+      .where(eq(pricingConfigurations.id, id))
+      .returning();
+    
+    return updated || undefined;
+  }
+
+  async deactivateAllPricingConfigurations(): Promise<void> {
+    await db
+      .update(pricingConfigurations)
+      .set({ isActive: false })
+      .where(eq(pricingConfigurations.isActive, true));
+  }
+
+  async getPricingHistory(limit: number = 50): Promise<PricingHistory[]> {
+    return await db
+      .select()
+      .from(pricingHistory)
+      .orderBy(desc(pricingHistory.createdAt))
+      .limit(limit);
+  }
+
+  async createPricingHistoryEntry(entry: InsertPricingHistory): Promise<PricingHistory> {
+    const [historyEntry] = await db
+      .insert(pricingHistory)
+      .values(entry)
+      .returning();
+    
+    return historyEntry;
+  }
+
+  async calculateLivePricing(basePrice?: number): Promise<{
+    squareBasePrice: number;
+    merchantBuyPrice: number;
+    merchantSellPrice: number;
+    individualBuyPrice: number;
+    individualSellPrice: number;
+    profitMarginMerchant: number;
+    profitMarginIndividual: number;
+    lastRefresh: string;
+  }> {
+    const config = await this.getActivePricingConfiguration();
+    
+    if (!config) {
+      // Return default configuration if none exists
+      const defaultBasePrice = basePrice || 100;
+      return {
+        squareBasePrice: defaultBasePrice,
+        merchantBuyPrice: defaultBasePrice * 1.05, // +5%
+        merchantSellPrice: defaultBasePrice * 0.97, // -3%
+        individualBuyPrice: defaultBasePrice * 1.08, // +8%
+        individualSellPrice: defaultBasePrice * 0.95, // -5%
+        profitMarginMerchant: 8, // 5% + 3%
+        profitMarginIndividual: 13, // 8% + 5%
+        lastRefresh: new Date().toISOString()
+      };
+    }
+
+    const currentBasePrice = basePrice || parseFloat(config.basePrice);
+    const merchantBuyRate = parseFloat(config.merchantBuyRate);
+    const merchantSellRate = parseFloat(config.merchantSellRate);
+    const individualBuyRate = parseFloat(config.individualBuyRate);
+    const individualSellRate = parseFloat(config.individualSellRate);
+
+    const merchantBuyPrice = currentBasePrice * (1 + merchantBuyRate / 100);
+    const merchantSellPrice = currentBasePrice * (1 + merchantSellRate / 100);
+    const individualBuyPrice = currentBasePrice * (1 + individualBuyRate / 100);
+    const individualSellPrice = currentBasePrice * (1 + individualSellRate / 100);
+
+    return {
+      squareBasePrice: currentBasePrice,
+      merchantBuyPrice: Math.round(merchantBuyPrice * 100) / 100,
+      merchantSellPrice: Math.round(merchantSellPrice * 100) / 100,
+      individualBuyPrice: Math.round(individualBuyPrice * 100) / 100,
+      individualSellPrice: Math.round(individualSellPrice * 100) / 100,
+      profitMarginMerchant: merchantBuyRate + Math.abs(merchantSellRate),
+      profitMarginIndividual: individualBuyRate + Math.abs(individualSellRate),
+      lastRefresh: new Date().toISOString()
     };
   }
 }

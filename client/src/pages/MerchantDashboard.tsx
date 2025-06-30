@@ -840,6 +840,24 @@ export default function MerchantDashboard() {
                 <MerchantCardDesign />
               </div>
             )}
+            
+            {activeTab === "analytics" && (
+              <div className="space-y-6">
+                <MerchantBusinessAnalytics />
+              </div>
+            )}
+            
+            {activeTab === "system" && (
+              <div className="space-y-6">
+                <MerchantSystemMonitoring />
+              </div>
+            )}
+            
+            {activeTab === "security" && (
+              <div className="space-y-6">
+                <MerchantSecurityMonitoring />
+              </div>
+            )}
           </div>
           
           {/* Desktop Layout */}

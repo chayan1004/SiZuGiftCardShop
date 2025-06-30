@@ -206,12 +206,16 @@ export interface IStorage {
   createWebhookEvent(webhookEvent: InsertWebhookEvent): Promise<WebhookEvent>;
   getWebhookEventsByMerchant(merchantId: string): Promise<WebhookEvent[]>;
   getWebhookEventsByMerchantAndType(merchantId: string, eventType: string): Promise<WebhookEvent[]>;
+  getWebhookEventById(id: string): Promise<WebhookEvent | undefined>;
+  getAllWebhookEvents(): Promise<WebhookEvent[]>;
   updateWebhookEvent(id: string, updates: Partial<InsertWebhookEvent>): Promise<WebhookEvent | undefined>;
   deleteWebhookEvent(id: string): Promise<boolean>;
   
   // Webhook Delivery Log methods
   createWebhookDeliveryLog(log: InsertWebhookDeliveryLog): Promise<WebhookDeliveryLog>;
+  getWebhookDeliveryLogs(webhookId: string, limit?: number): Promise<WebhookDeliveryLog[]>;
   getWebhookDeliveryLogsByMerchant(merchantId: string, limit?: number): Promise<WebhookDeliveryLog[]>;
+  getAllWebhookDeliveryLogs(limit?: number): Promise<WebhookDeliveryLog[]>;
 
   // Legacy webhook delivery logging (for backward compatibility)
   logWebhookDelivery(log: {
@@ -1405,9 +1409,18 @@ export class DatabaseStorage implements IStorage {
     return updated || undefined;
   }
 
+  async getWebhookEventById(id: string): Promise<WebhookEvent | undefined> {
+    const [webhook] = await db.select().from(webhookEvents).where(eq(webhookEvents.id, id));
+    return webhook || undefined;
+  }
+
+  async getAllWebhookEvents(): Promise<WebhookEvent[]> {
+    return await db.select().from(webhookEvents).orderBy(desc(webhookEvents.createdAt));
+  }
+
   async deleteWebhookEvent(id: string): Promise<boolean> {
     const result = await db.delete(webhookEvents).where(eq(webhookEvents.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
   }
 
   async createWebhookDeliveryLog(log: InsertWebhookDeliveryLog): Promise<WebhookDeliveryLog> {
@@ -1415,11 +1428,28 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
 
+  async getWebhookDeliveryLogs(webhookId: string, limit: number = 10): Promise<WebhookDeliveryLog[]> {
+    return await db
+      .select()
+      .from(webhookDeliveryLogs)
+      .where(eq(webhookDeliveryLogs.webhookEventId, webhookId))
+      .orderBy(desc(webhookDeliveryLogs.deliveredAt))
+      .limit(limit);
+  }
+
   async getWebhookDeliveryLogsByMerchant(merchantId: string, limit: number = 50): Promise<WebhookDeliveryLog[]> {
     return await db
       .select()
       .from(webhookDeliveryLogs)
       .where(eq(webhookDeliveryLogs.merchantId, merchantId))
+      .orderBy(desc(webhookDeliveryLogs.deliveredAt))
+      .limit(limit);
+  }
+
+  async getAllWebhookDeliveryLogs(limit: number = 100): Promise<WebhookDeliveryLog[]> {
+    return await db
+      .select()
+      .from(webhookDeliveryLogs)
       .orderBy(desc(webhookDeliveryLogs.deliveredAt))
       .limit(limit);
   }

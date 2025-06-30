@@ -20,6 +20,7 @@ import { squareWebhookHandler } from './webhooks/squareWebhookHandler';
 import { webhookService, type RedemptionData } from './services/WebhookService';
 import { webhookDispatcher, type RedemptionWebhookPayload as DispatcherPayload } from './services/WebhookDispatcher';
 import { multiEventWebhookDispatcher } from './services/MultiEventWebhookDispatcher';
+import { WebhookConfigService } from './services/WebhookConfigService';
 import { FraudDetectionService } from './services/FraudDetectionService';
 import { ThreatReplayService } from './services/ThreatReplayService';
 import { AutoDefenseEngine } from './services/AutoDefenseEngine';

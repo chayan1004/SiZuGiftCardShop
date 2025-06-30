@@ -5055,7 +5055,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const pricing = await pricingService.PhysicalCardPricingService.calculatePricing(pricingOptions);
 
       // Create Square hosted checkout session
-      const squarePaymentService = await import('./services/enhancedSquareAPIService.js');
+      const { enhancedSquareAPIService } = await import('./services/enhancedSquareAPIService.js');
       const checkoutData = {
         amount: pricing.totalOrder,
         currency: 'USD',
@@ -5076,7 +5076,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       };
 
-      const checkoutSession = await squarePaymentService.enhancedSquareAPIService.createHostedCheckout(checkoutData);
+      const checkoutSession = await enhancedSquareAPIService.createHostedCheckout(checkoutData);
 
       if (!checkoutSession.success) {
         return res.status(400).json({
@@ -5087,22 +5087,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Store pending order in database
       const orderData = {
-        firstName: customerData.firstName,
-        lastName: customerData.lastName,
-        email: customerData.email,
-        phone: customerData.phone,
-        emailOptIn: customerData.emailOptIn || false,
-        shippingAddress: customerData.shippingAddress,
         cardType: customerData.cardType || 'plastic',
+        cardDesign: customerData.customText || null,
+        isCustomDesign: !!(customerData.customText || customerData.customImage || customerData.selectedEmoji),
+        customDesignUrl: customerData.customImage || null,
         quantity: customerData.quantity || 1,
-        expeditedShipping: customerData.expeditedShipping || false,
-        customText: customerData.customText || '',
-        customImage: customerData.customImage || '',
-        selectedEmoji: customerData.selectedEmoji || '',
-        themeColor: customerData.themeColor || '#7c3aed',
+        denomination: 5000, // $50 default
+        squareBasePrice: pricing.squareBaseCost || 350,
+        adminFeePercentage: pricing.adminFeePercentage?.toString() || "10.00",
+        totalCost: pricing.totalOrder,
+        customerType: 'individual',
+        customerEmail: customerData.email,
+        customerName: `${customerData.firstName} ${customerData.lastName}`,
+        shippingAddress: customerData.shippingAddress?.street || '',
+        shippingCity: customerData.shippingAddress?.city || '',
+        shippingState: customerData.shippingAddress?.state || '',
+        shippingZip: customerData.shippingAddress?.zipCode || '',
+        shippingCountry: customerData.shippingAddress?.country || 'US',
         status: 'pending',
-        totalAmount: pricing.totalOrder,
-        squareCheckoutId: checkoutSession.checkoutId
+        paymentStatus: 'pending',
+        squareOrderId: checkoutSession.checkoutId,
+        shippingCost: pricing.breakdown?.shipping || 0,
+        notes: `Theme: ${customerData.themeColor || '#7c3aed'}, Emoji: ${customerData.selectedEmoji || 'none'}, Expedited: ${customerData.expeditedShipping ? 'Yes' : 'No'}, Phone: ${customerData.phone || 'N/A'}`
       };
 
       const order = await storage.createPhysicalGiftCard(orderData);

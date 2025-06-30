@@ -62,25 +62,30 @@ class SquareCardsAPIService {
     this.accessToken = process.env.SQUARE_ACCESS_TOKEN || '';
     this.environment = process.env.SQUARE_ENVIRONMENT || 'sandbox';
 
+    if (!this.accessToken) {
+      throw new Error('SQUARE_ACCESS_TOKEN is required for Square Cards API service');
+    }
+
     try {
-      // Create Square client with basic configuration
+      // Create Square client - access token is passed via request headers automatically
       this.client = new SquareClient({
         environment: this.environment === 'production' ? SquareEnvironment.Production : SquareEnvironment.Sandbox,
       });
+
+      // Override the client's default options to include authorization
+      if (this.client._options) {
+        this.client._options.accessToken = this.accessToken;
+      }
 
       this.customersApi = this.client.customers;
       this.cardsApi = this.client.cards;
 
       console.log('Square Cards API client initialized successfully');
-      console.log('Access token configured:', this.accessToken ? 'Yes' : 'No');
+      console.log(`Environment: ${this.environment}`);
+      console.log(`Access token: ${this.accessToken.substring(0, 10)}...`);
     } catch (error) {
       console.error('Failed to initialize Square client:', error);
-      this.customersApi = null;
-      this.cardsApi = null;
-    }
-
-    if (!this.accessToken) {
-      console.warn('Square Cards API credentials not configured properly');
+      throw error;
     }
   }
 

@@ -1,4 +1,4 @@
-// Square production gift card service using HTTP API directly with proper Zod validation
+// Square production gift card service using HTTP API directly
 import fetch, { RequestInit } from 'node-fetch';
 import { z } from 'zod';
 
@@ -40,10 +40,7 @@ const SquareGiftCardSchema = z.object({
 });
 
 const SquareGiftCardResponseSchema = z.object({
-  gift_card: SquareGiftCardSchema.optional(),
-  errors: z.array(z.object({
-    detail: z.string().optional()
-  })).optional()
+  gift_card: SquareGiftCardSchema.optional()
 });
 
 const SquareGiftCardActivitySchema = z.object({
@@ -60,26 +57,11 @@ const SquareGiftCardActivitySchema = z.object({
 });
 
 const SquareGiftCardActivityResponseSchema = z.object({
-  gift_card_activity: SquareGiftCardActivitySchema.optional(),
-  errors: z.array(z.object({
-    detail: z.string().optional()
-  })).optional()
+  gift_card_activity: SquareGiftCardActivitySchema.optional()
 });
 
 const SquareGiftCardActivitiesResponseSchema = z.object({
-  gift_card_activities: z.array(SquareGiftCardActivitySchema).optional(),
-  errors: z.array(z.object({
-    detail: z.string().optional()
-  })).optional()
-});
-
-// Error response schema for all Square API calls
-const SquareErrorResponseSchema = z.object({
-  errors: z.array(z.object({
-    detail: z.string().optional(),
-    field: z.string().optional(),
-    code: z.string().optional()
-  })).optional()
+  gift_card_activities: z.array(SquareGiftCardActivitySchema).optional()
 });
 
 export interface SquareGiftCard {
@@ -98,14 +80,8 @@ export interface SquareGiftCard {
 export interface SquareGiftCardActivity {
   id: string;
   type: string;
-  gift_card_gan?: string;
-  created_at?: string;
-  location_id?: string;
-  gift_card_id?: string;
-  gift_card_balance_money?: {
-    amount: number;
-    currency: string;
-  };
+  gift_card_gan: string;
+  created_at: string;
   activate_activity_details?: {
     amount_money: {
       amount: number;
@@ -149,14 +125,7 @@ export class SquareGiftCardService {
   }
 
   /**
-   * Generate unique idempotency key for Square API requests
-   */
-  private generateIdempotencyKey(): string {
-    return `sizu_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  }
-
-  /**
-   * Create a new gift card in Square with proper Zod validation
+   * Create a new gift card in Square
    */
   async createGiftCard(request: CreateGiftCardRequest): Promise<{
     success: boolean;
@@ -165,14 +134,18 @@ export class SquareGiftCardService {
     error?: string;
   }> {
     try {
+      const idempotencyKey = this.generateIdempotencyKey();
+      
       const createRequest = {
-        idempotency_key: this.generateIdempotencyKey(),
+        idempotency_key: idempotencyKey,
         location_id: this.locationId,
         gift_card: {
           type: 'DIGITAL'
         }
       };
 
+      console.log('Creating gift card with Square API:', createRequest);
+      
       const response = await fetch(`${this.baseUrl}/v2/gift-cards`, {
         method: 'POST',
         headers: {
@@ -186,7 +159,7 @@ export class SquareGiftCardService {
       const responseData = await response.json();
       
       if (!response.ok) {
-        const errorData = SquareErrorResponseSchema.parse(responseData);
+        const errorData = responseData as { errors?: Array<{ detail?: string }> };
         return {
           success: false,
           error: `Square API error: ${errorData.errors?.[0]?.detail || 'Gift card creation failed'}`
@@ -195,19 +168,35 @@ export class SquareGiftCardService {
 
       const validated = SquareGiftCardResponseSchema.parse(responseData);
       if (validated.gift_card) {
+        const giftCard = validated.gift_card;
+        
+        // Activate the gift card with the specified amount
+        const activationResult = await this.activateGiftCard(
+          giftCard.gan,
+          request.amount
+        );
+
+        if (!activationResult.success) {
+          return {
+            success: false,
+            error: `Gift card created but activation failed: ${activationResult.error}`
+          };
+        }
+
         return {
           success: true,
-          giftCard: validated.gift_card,
-          gan: validated.gift_card.gan
+          giftCard: giftCard,
+          gan: giftCard.gan
         };
       }
 
       return {
         success: false,
-        error: 'No gift card returned from Square API'
+        error: 'Gift card creation failed - no gift card returned'
       };
+
     } catch (error) {
-      console.error('Error creating gift card:', error);
+      console.error('Square gift card creation error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error creating gift card'
@@ -229,6 +218,7 @@ export class SquareGiftCardService {
         gift_card_activity: {
           type: 'ACTIVATE',
           location_id: this.locationId,
+          gift_card_gan: gan,
           activate_activity_details: {
             amount_money: {
               amount: amountCents,
@@ -238,6 +228,8 @@ export class SquareGiftCardService {
         }
       };
 
+      console.log('Activating gift card:', { gan, amount: amountCents });
+      
       const response = await fetch(`${this.baseUrl}/v2/gift-card-activities`, {
         method: 'POST',
         headers: {
@@ -251,7 +243,7 @@ export class SquareGiftCardService {
       const responseData = await response.json();
       
       if (!response.ok) {
-        const errorData = SquareErrorResponseSchema.parse(responseData);
+        const errorData = responseData as { errors?: Array<{ detail?: string }> };
         return {
           success: false,
           error: `Square API error: ${errorData.errors?.[0]?.detail || 'Gift card activation failed'}`
@@ -268,10 +260,11 @@ export class SquareGiftCardService {
 
       return {
         success: false,
-        error: 'No activity returned from Square API'
+        error: 'Gift card activation failed - no activity returned'
       };
+
     } catch (error) {
-      console.error('Error activating gift card:', error);
+      console.error('Square gift card activation error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error activating gift card'
@@ -280,7 +273,7 @@ export class SquareGiftCardService {
   }
 
   /**
-   * Validate gift card and get balance
+   * Validate and get gift card information
    */
   async validateGiftCard(gan: string): Promise<GiftCardValidation> {
     try {
@@ -297,7 +290,7 @@ export class SquareGiftCardService {
       const responseData = await response.json();
 
       if (!response.ok) {
-        const errorData = SquareErrorResponseSchema.parse(responseData);
+        const errorData = responseData as { errors?: Array<{ detail?: string }> };
         return {
           isValid: false,
           error: `Square API error: ${errorData.errors?.[0]?.detail || 'Gift card validation failed'}`
@@ -305,14 +298,15 @@ export class SquareGiftCardService {
       }
 
       const validated = SquareGiftCardResponseSchema.parse(responseData);
-      if (validated.gift_card) {
-        const giftCard = validated.gift_card;
+      const data = validated;
+      if (data.gift_card) {
+        const giftCard = data.gift_card;
         const balance = giftCard.balance_money?.amount ? Number(giftCard.balance_money.amount) : 0;
         
         return {
-          isValid: true,
+          isValid: giftCard.state === 'ACTIVE',
           balance,
-          status: giftCard.state
+          status: giftCard.state || 'UNKNOWN'
         };
       }
 
@@ -320,8 +314,10 @@ export class SquareGiftCardService {
         isValid: false,
         error: 'Gift card not found'
       };
+
     } catch (error) {
-      console.error('Error validating gift card:', error);
+      console.error('Square gift card validation error:', error);
+      
       return {
         isValid: false,
         error: error instanceof Error ? error.message : 'Unknown validation error'
@@ -344,6 +340,7 @@ export class SquareGiftCardService {
         gift_card_activity: {
           type: 'REDEEM',
           location_id: this.locationId,
+          gift_card_gan: gan,
           redeem_activity_details: {
             amount_money: {
               amount: amountCents,
@@ -353,6 +350,8 @@ export class SquareGiftCardService {
         }
       };
 
+      console.log('Redeeming from gift card:', { gan, amount: amountCents });
+      
       const response = await fetch(`${this.baseUrl}/v2/gift-card-activities`, {
         method: 'POST',
         headers: {
@@ -366,16 +365,16 @@ export class SquareGiftCardService {
       const responseData = await response.json();
       
       if (!response.ok) {
-        const errorData = SquareErrorResponseSchema.parse(responseData);
+        const errorData = responseData as { errors?: Array<{ detail?: string }> };
         return {
           success: false,
           error: `Square API error: ${errorData.errors?.[0]?.detail || 'Gift card redemption failed'}`
         };
       }
 
-      const validated = SquareGiftCardActivityResponseSchema.parse(responseData);
-      if (validated.gift_card_activity) {
-        const activity = validated.gift_card_activity as SquareGiftCardActivity;
+      const data = responseData as { gift_card_activity?: any };
+      if (data.gift_card_activity) {
+        const activity = data.gift_card_activity;
         const newBalance = activity.gift_card_balance_money?.amount ? Number(activity.gift_card_balance_money.amount) : 0;
         
         return {
@@ -387,82 +386,15 @@ export class SquareGiftCardService {
 
       return {
         success: false,
-        error: 'No activity returned from Square API'
+        error: 'Gift card redemption failed - no activity returned'
       };
+
     } catch (error) {
-      console.error('Error redeeming gift card:', error);
+      console.error('Square gift card redemption error:', error);
+      
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown redemption error'
-      };
-    }
-  }
-
-  /**
-   * Load additional amount to gift card
-   */
-  async loadGiftCard(gan: string, amountCents: number): Promise<{
-    success: boolean;
-    activity?: any;
-    newBalance?: number;
-    error?: string;
-  }> {
-    try {
-      const loadRequest = {
-        idempotency_key: this.generateIdempotencyKey(),
-        gift_card_activity: {
-          type: 'LOAD',
-          location_id: this.locationId,
-          load_activity_details: {
-            amount_money: {
-              amount: amountCents,
-              currency: 'USD'
-            }
-          }
-        }
-      };
-
-      const response = await fetch(`${this.baseUrl}/v2/gift-card-activities`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.accessToken}`,
-          'Content-Type': 'application/json',
-          'Square-Version': '2023-10-18'
-        },
-        body: JSON.stringify(loadRequest)
-      });
-
-      const responseData = await response.json();
-      
-      if (!response.ok) {
-        const errorData = SquareErrorResponseSchema.parse(responseData);
-        return {
-          success: false,
-          error: `Square API error: ${errorData.errors?.[0]?.detail || 'Gift card load failed'}`
-        };
-      }
-
-      const validated = SquareGiftCardActivityResponseSchema.parse(responseData);
-      if (validated.gift_card_activity) {
-        const activity = validated.gift_card_activity;
-        const newBalance = activity.gift_card_balance_money?.amount ? Number(activity.gift_card_balance_money.amount) : 0;
-        
-        return {
-          success: true,
-          activity,
-          newBalance
-        };
-      }
-
-      return {
-        success: false,
-        error: 'No activity returned from Square API'
-      };
-    } catch (error) {
-      console.error('Error loading gift card:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown load error'
       };
     }
   }
@@ -476,7 +408,7 @@ export class SquareGiftCardService {
     error?: string;
   }> {
     try {
-      const response = await fetch(`${this.baseUrl}/v2/gift-card-activities?gift_card_gan=${encodeURIComponent(gan)}`, {
+      const response = await fetch(`${this.baseUrl}/v2/gift-card-activities?gift_card_gan=${gan}&location_id=${this.locationId}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${this.accessToken}`,
@@ -486,25 +418,26 @@ export class SquareGiftCardService {
       });
 
       const responseData = await response.json();
-      
+
       if (!response.ok) {
-        const errorData = SquareErrorResponseSchema.parse(responseData);
+        const errorData = responseData as { errors?: Array<{ detail?: string }> };
         return {
           success: false,
           error: `Square API error: ${errorData.errors?.[0]?.detail || 'Failed to get gift card activities'}`
         };
       }
 
-      const validated = SquareGiftCardActivitiesResponseSchema.parse(responseData);
-      if (validated.gift_card_activities) {
-        const activities = validated.gift_card_activities.map((activity) => ({
-          id: activity.id,
-          type: activity.type,
-          amount: activity.activate_activity_details?.amount_money?.amount || 
-                 activity.load_activity_details?.amount_money?.amount || 
-                 activity.redeem_activity_details?.amount_money?.amount || 0,
-          createdAt: new Date(activity.created_at || ''),
-          description: `${activity.type} activity`
+      const data = responseData as { gift_card_activities?: any[] };
+      if (data.gift_card_activities) {
+        const activities = data.gift_card_activities.map((activity: SquareGiftCardActivity) => ({
+          id: activity.id || '',
+          type: activity.type || '',
+          amount: activity.activate_activity_details?.amount_money?.amount ? 
+            Number(activity.activate_activity_details.amount_money.amount) :
+            activity.redeem_activity_details?.amount_money?.amount ?
+            Number(activity.redeem_activity_details.amount_money.amount) : 0,
+          createdAt: activity.created_at ? new Date(activity.created_at) : new Date(),
+          description: this.getActivityDescription(activity)
         }));
 
         return {
@@ -517,35 +450,44 @@ export class SquareGiftCardService {
         success: true,
         activities: []
       };
+
     } catch (error) {
-      console.error('Error getting gift card activities:', error);
+      console.error('Square gift card activities error:', error);
+      
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error getting activities'
+        error: error instanceof Error ? error.message : 'Unknown error fetching activities'
       };
     }
   }
 
   /**
-   * Deactivate a gift card
+   * Load additional funds to gift card
    */
-  async deactivateGiftCard(gan: string): Promise<{
+  async loadGiftCard(gan: string, amountCents: number): Promise<{
     success: boolean;
-    activity?: any;
+    activity?: SquareGiftCardActivity;
+    newBalance?: number;
     error?: string;
   }> {
     try {
-      const deactivateRequest = {
+      const loadRequest = {
         idempotency_key: this.generateIdempotencyKey(),
         gift_card_activity: {
-          type: 'BLOCK',
+          type: 'LOAD',
           location_id: this.locationId,
-          block_activity_details: {
-            reason: 'CHARGEBACK'
+          gift_card_gan: gan,
+          load_activity_details: {
+            amount_money: {
+              amount: amountCents,
+              currency: 'USD'
+            }
           }
         }
       };
 
+      console.log('Loading funds to gift card:', { gan, amount: amountCents });
+      
       const response = await fetch(`${this.baseUrl}/v2/gift-card-activities`, {
         method: 'POST',
         headers: {
@@ -553,40 +495,66 @@ export class SquareGiftCardService {
           'Content-Type': 'application/json',
           'Square-Version': '2023-10-18'
         },
-        body: JSON.stringify(deactivateRequest)
+        body: JSON.stringify(loadRequest)
       });
 
       const responseData = await response.json();
       
       if (!response.ok) {
-        const errorData = SquareErrorResponseSchema.parse(responseData);
+        const errorData = responseData as { errors?: Array<{ detail?: string }> };
         return {
           success: false,
-          error: `Square API error: ${errorData.errors?.[0]?.detail || 'Gift card deactivation failed'}`
+          error: `Square API error: ${errorData.errors?.[0]?.detail || 'Gift card load failed'}`
         };
       }
 
-      const validated = SquareGiftCardActivityResponseSchema.parse(responseData);
-      if (validated.gift_card_activity) {
+      const data = responseData as { gift_card_activity?: any };
+      if (data.gift_card_activity) {
+        const activity = data.gift_card_activity;
+        const newBalance = activity.gift_card_balance_money?.amount ? Number(activity.gift_card_balance_money.amount) : 0;
+        
         return {
           success: true,
-          activity: validated.gift_card_activity
+          activity,
+          newBalance
         };
       }
 
       return {
         success: false,
-        error: 'No activity returned from Square API'
+        error: 'Gift card load failed - no activity returned'
       };
+
     } catch (error) {
-      console.error('Error deactivating gift card:', error);
+      console.error('Square gift card load error:', error);
+      
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown deactivation error'
+        error: error instanceof Error ? error.message : 'Unknown load error'
       };
+    }
+  }
+
+  private generateIdempotencyKey(): string {
+    return `giftcard_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  private getActivityDescription(activity: SquareGiftCardActivity): string {
+    switch (activity.type) {
+      case 'ACTIVATE':
+        return 'Gift card activated';
+      case 'LOAD':
+        return 'Funds added to gift card';
+      case 'REDEEM':
+        return 'Gift card redeemed';
+      case 'ADJUST_INCREMENT':
+        return 'Balance adjustment (increase)';
+      case 'ADJUST_DECREMENT':
+        return 'Balance adjustment (decrease)';
+      default:
+        return activity.type || 'Gift card activity';
     }
   }
 }
 
-// Export a singleton instance
 export const squareGiftCardService = new SquareGiftCardService();

@@ -607,7 +607,7 @@ class EnhancedSquareAPIService {
       };
 
       console.log('Creating payment link with Square SDK...');
-      const response = await this.client.checkoutApi.createPaymentLink(requestBody);
+      const response = await this.client.checkout.paymentLinks.create(requestBody);
 
       if (response.result.paymentLink) {
         return {

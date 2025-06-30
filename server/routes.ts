@@ -14,6 +14,7 @@ import { emailService } from './services/emailService';
 import { emailDeliveryMonitor } from './services/emailDeliveryMonitor';
 import { domainAuthentication } from './services/domainAuthentication';
 import { pdfReceiptService } from './services/pdfReceiptService';
+import { ReceiptService } from './services/ReceiptService';
 import { squareWebhookHandler } from './webhooks/squareWebhookHandler';
 import { requireAdmin, requireMerchant, requireMerchantAuth, checkMerchantStatus } from './middleware/authMiddleware';
 import { AuthService } from './services/authService';

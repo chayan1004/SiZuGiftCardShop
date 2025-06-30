@@ -156,6 +156,8 @@ export const publicGiftCardOrders = pgTable("public_giftcard_orders", {
   emailResendCount: integer("email_resend_count").notNull().default(0), // Number of times email was resent
   emailLastResendAt: timestamp("email_last_resend_at"), // Last time email was resent
   manuallyMarkedFailed: boolean("manually_marked_failed").notNull().default(false), // Admin marked as failed
+  pdfReceiptUrl: text("pdf_receipt_url"), // URL to hosted PDF receipt
+  pdfGeneratedAt: timestamp("pdf_generated_at"), // Timestamp when PDF was generated
   createdAt: timestamp("created_at").defaultNow(),
 });
 

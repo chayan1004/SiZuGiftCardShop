@@ -5388,6 +5388,134 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Phase 18: Admin Command Center - Global Settings Management
+
+  // GET /api/admin/settings/global - Get all global settings
+  app.get("/api/admin/settings/global", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const settings = await storage.getGlobalSettings();
+      
+      res.json({
+        success: true,
+        settings: settings.reduce((acc, setting) => {
+          acc[setting.key] = setting.value;
+          return acc;
+        }, {} as Record<string, string>)
+      });
+    } catch (error) {
+      console.error('Error fetching global settings:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch global settings"
+      });
+    }
+  });
+
+  // PUT /api/admin/settings/global/:key - Update global setting
+  app.put("/api/admin/settings/global/:key", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { key } = req.params;
+      const { value } = req.body;
+
+      if (!value && value !== false && value !== 0) {
+        return res.status(400).json({
+          success: false,
+          error: "Value is required"
+        });
+      }
+
+      const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
+      const setting = await storage.updateGlobalSetting(key, stringValue);
+
+      // Emit Socket.IO update for real-time propagation
+      if ((global as any).transactionIO) {
+        (global as any).transactionIO.to('transaction-feed').emit('admin-settings-updated', {
+          type: 'global',
+          key,
+          value: stringValue
+        });
+      }
+
+      console.log(`🔧 Global setting updated: ${key} = ${stringValue}`);
+      res.json({
+        success: true,
+        setting
+      });
+    } catch (error) {
+      console.error('Error updating global setting:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to update global setting"
+      });
+    }
+  });
+
+  // GET /api/admin/settings/gateway - Get all gateway feature toggles
+  app.get("/api/admin/settings/gateway", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const features = await storage.getGatewayFeatures();
+      
+      // Organize by gateway and feature
+      const organized = features.reduce((acc, feature) => {
+        if (!acc[feature.gatewayName]) {
+          acc[feature.gatewayName] = {};
+        }
+        acc[feature.gatewayName][feature.feature] = feature.enabled;
+        return acc;
+      }, {} as Record<string, Record<string, boolean>>);
+
+      res.json({
+        success: true,
+        features: organized
+      });
+    } catch (error) {
+      console.error('Error fetching gateway features:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch gateway features"
+      });
+    }
+  });
+
+  // PUT /api/admin/settings/gateway/:gatewayName/:feature - Update gateway feature toggle
+  app.put("/api/admin/settings/gateway/:gatewayName/:feature", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { gatewayName, feature } = req.params;
+      const { enabled } = req.body;
+
+      if (typeof enabled !== 'boolean') {
+        return res.status(400).json({
+          success: false,
+          error: "Enabled must be a boolean value"
+        });
+      }
+
+      const toggle = await storage.updateGatewayFeature(gatewayName, feature, enabled);
+
+      // Emit Socket.IO update for real-time propagation
+      if ((global as any).transactionIO) {
+        (global as any).transactionIO.to('transaction-feed').emit('admin-settings-updated', {
+          type: 'gateway',
+          gatewayName,
+          feature,
+          enabled
+        });
+      }
+
+      console.log(`🔧 Gateway feature updated: ${gatewayName}.${feature} = ${enabled}`);
+      res.json({
+        success: true,
+        toggle
+      });
+    } catch (error) {
+      console.error('Error updating gateway feature:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to update gateway feature"
+      });
+    }
+  });
+
   // Initialize Socket.IO for real-time transaction monitoring
   const io = new SocketServer(httpServer, {
     cors: {

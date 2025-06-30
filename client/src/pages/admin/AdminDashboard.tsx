@@ -27,6 +27,7 @@ import ThreatFeedPanel from "../../components/admin/ThreatFeedPanel";
 import TransactionExplorerPage from "./TransactionExplorerPage";
 import AdminCommandCenter from "./AdminCommandCenter";
 import FraudClusters from "../../components/admin/FraudClusters";
+import LoadingAnimation from "../../components/ui/LoadingAnimation";
 import type { FraudAlert } from "../../components/admin/ThreatFeedPanel";
 
 interface DashboardMetrics {
@@ -397,11 +398,12 @@ export default function AdminDashboard() {
         {/* Premium Content Area */}
         <div className="p-4 lg:p-8 overflow-y-auto h-full bg-gradient-to-br from-slate-900/10 to-slate-800/5 backdrop-blur-sm">
           {metricsLoading ? (
-            <div className="flex items-center justify-center h-32 lg:h-64">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 lg:h-12 lg:w-12 border-b-2 border-blue-400 mx-auto"></div>
-                <p className="mt-4 text-sm lg:text-base text-gray-300">Loading dashboard data...</p>
-              </div>
+            <div className="flex items-center justify-center h-64 lg:h-96">
+              <LoadingAnimation 
+                variant="full-screen"
+                message="Initializing admin dashboard..."
+                className="scale-75 lg:scale-100"
+              />
             </div>
           ) : metricsError ? (
             <div className="flex items-center justify-center h-32 lg:h-64">

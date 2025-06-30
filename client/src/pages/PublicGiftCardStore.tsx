@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { Card3DDesign } from '@/components/ui/3d-card-designs';
 import { motion, AnimatePresence } from 'framer-motion';
+import LoadingAnimation from '@/components/ui/LoadingAnimation';
 import Navigation from '@/components/Navigation';
 
 interface PublicGiftCard {
@@ -427,21 +428,12 @@ export default function PublicGiftCardStore() {
           className="max-w-7xl mx-auto"
         >
           {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
-              {[...Array(8)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: i * 0.1 }}
-                  className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 animate-pulse"
-                >
-                  <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl mb-4" />
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
-                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded mb-4 w-3/4" />
-                  <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-lg" />
-                </motion.div>
-              ))}
+            <div className="flex items-center justify-center py-24">
+              <LoadingAnimation 
+                size="xl" 
+                message="Discovering premium gift cards..." 
+                className="scale-110"
+              />
             </div>
           ) : filteredCards.length === 0 ? (
             <motion.div 

@@ -3113,8 +3113,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         amountCents, 
         `Refund: ${reason}`,
         {
-          type: 'DIGITAL',
-          locationId: process.env.SQUARE_LOCATION_ID!
+          type: 'DIGITAL'
         }
       );
 
@@ -3497,8 +3496,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 const currentOrder = await storage.getPublicGiftCardOrderById(order.id);
                 if (currentOrder && !currentOrder.emailSent) {
                   const emailResult = await emailService.sendGiftCardEmail({
-                    recipientEmail: recipientEmail,
                     recipientName: recipientEmail.split('@')[0],
+                    recipientEmail: recipientEmail,
                     giftCardId: giftCardId,
                     amount: amount,
                     giftCardGan: gan,
@@ -3508,8 +3507,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   });
 
                   if (emailResult.success) {
-                    await storage.updatePublicGiftCardOrderEmailStatus(order.id, true, emailResult.timestamp);
-                    console.log(`✅ Gift card email sent via ${emailResult.method}: ${emailResult.messageId}`);
+                    await storage.updatePublicGiftCardOrderEmailStatus(order.id, true, new Date());
+                    console.log(`✅ Gift card email sent: ${emailResult.messageId}`);
                   } else {
                     console.error(`❌ Failed to send gift card email: ${emailResult.error}`);
                     // Don't fail the entire transaction if email fails
@@ -3943,7 +3942,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // POST /api/merchant/card-design - Upload and save merchant card design
   app.post("/api/merchant/card-design", requireMerchantAuth, async (req: Request, res: Response) => {
     try {
-      const merchant = req.user as any;
+      const merchant = (req as any).user;
       const { designImageBase64, logoImageBase64, themeColor, customMessage } = req.body;
 
       // Validation schema
@@ -4050,7 +4049,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // GET /api/merchant/card-design - Retrieve merchant card design
   app.get("/api/merchant/card-design", requireMerchantAuth, async (req: Request, res: Response) => {
     try {
-      const merchant = req.user as any;
+      const merchant = (req as any).user;
       
       const cardDesign = await storage.getMerchantCardDesign(merchant.id);
       

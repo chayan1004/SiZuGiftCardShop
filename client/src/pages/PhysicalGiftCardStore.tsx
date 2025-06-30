@@ -273,7 +273,13 @@ export default function PhysicalGiftCardStore() {
       return response.json();
     },
     onSuccess: (data) => {
-      setCurrentPricing(data.pricing);
+      if (data && data.pricing) {
+        setCurrentPricing(data.pricing);
+      }
+    },
+    onError: (error) => {
+      console.error('Pricing calculation error:', error);
+      setCurrentPricing(null);
     }
   });
 
@@ -742,7 +748,12 @@ export default function PhysicalGiftCardStore() {
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        {currentPricing ? (
+                        {calculatePricingMutation.isPending ? (
+                          <div className="text-center text-gray-400">
+                            <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-2" />
+                            Calculating pricing...
+                          </div>
+                        ) : currentPricing && currentPricing.basePrice !== undefined ? (
                           <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -751,24 +762,24 @@ export default function PhysicalGiftCardStore() {
                             <div className="space-y-2">
                               <div className="flex justify-between text-white">
                                 <span>Base Price:</span>
-                                <span>${currentPricing.basePrice.toFixed(2)}</span>
+                                <span>${(currentPricing.basePrice || 0).toFixed(2)}</span>
                               </div>
                               <div className="flex justify-between text-white">
                                 <span>Square Fee:</span>
-                                <span>${currentPricing.squareFee.toFixed(2)}</span>
+                                <span>${(currentPricing.squareFee || 0).toFixed(2)}</span>
                               </div>
                               <div className="flex justify-between text-white">
                                 <span>Our Fee:</span>
-                                <span>${currentPricing.ourFee.toFixed(2)}</span>
+                                <span>${(currentPricing.ourFee || 0).toFixed(2)}</span>
                               </div>
                               <Separator className="bg-white/20" />
                               <div className="flex justify-between text-white font-bold text-lg">
                                 <span>Total:</span>
-                                <span>${currentPricing.totalPrice.toFixed(2)}</span>
+                                <span>${(currentPricing.totalPrice || 0).toFixed(2)}</span>
                               </div>
                             </div>
                             <Badge variant="secondary" className="w-full justify-center bg-green-500/20 text-green-300">
-                              {currentPricing.savings > 0 && `Save $${currentPricing.savings.toFixed(2)} with bulk pricing`}
+                              {currentPricing.savings > 0 && `Save $${(currentPricing.savings || 0).toFixed(2)} with bulk pricing`}
                             </Badge>
                           </motion.div>
                         ) : (

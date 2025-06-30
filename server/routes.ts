@@ -6023,8 +6023,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         // Create gift card through Square
         const giftCardResult = await squareGiftCardService.createGiftCard({
-          amount,
-          locationId: process.env.SQUARE_LOCATION_ID!
+          amount
         });
 
         if (!giftCardResult.success || !giftCardResult.giftCard) {
@@ -6032,15 +6031,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Update order with gift card information
-        await storage.updateGiftCardInfo(order.id, {
-          giftCardId: giftCardResult.giftCard.id,
-          giftCardGan: giftCardResult.giftCard.gan,
-          giftCardState: giftCardResult.giftCard.state,
-          status: "issued"
-        });
+        await storage.updatePublicGiftCardOrderStatus(order.id, "issued");
 
         // Generate PDF receipt with emotional branding
-        const receiptResult = await receiptService.generateReceipt({
+        const receiptResult = await ReceiptService.generateReceiptPDF({
           orderId: order.id,
           amount,
           recipientEmail,
@@ -6069,7 +6063,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
               senderName,
               recipientName,
               message: personalMessage,
-              emotionTheme,
               giftOccasion
             });
 
@@ -6094,7 +6087,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error("Square gift card creation failed:", squareError);
         
         // Mark order as failed
-        await storage.updateOrderStatus(order.id, "failed");
+        await storage.updatePublicGiftCardOrderStatus(order.id, "failed");
         
         res.status(500).json({
           error: "Failed to create gift card",

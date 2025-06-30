@@ -18,6 +18,10 @@ export const merchants = pgTable("merchants", {
   webhookUrl: text("webhook_url"), // General merchant webhook URL
   webhookEnabled: boolean("webhook_enabled").default(false),
   redemptionWebhookUrl: text("redemption_webhook_url"), // Specific redemption webhook URL
+  // Phase 17A: Enhanced merchant settings
+  themeColor: text("theme_color").default("#613791"),
+  supportEmail: text("support_email"),
+  brandName: text("brand_name"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -417,3 +421,23 @@ export const insertWebhookDeliveryLogSchema = createInsertSchema(webhookDelivery
 
 export type WebhookDeliveryLog = typeof webhookDeliveryLogs.$inferSelect;
 export type InsertWebhookDeliveryLog = z.infer<typeof insertWebhookDeliveryLogSchema>;
+
+// Phase 17A: Merchant API Keys Management
+export const merchantApiKeys = pgTable("merchant_api_keys", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  merchantId: text("merchant_id").notNull().references(() => merchants.merchantId),
+  keyHash: text("key_hash").notNull(), // Store hashed API key for security
+  keyPrefix: text("key_prefix").notNull(), // First 8 chars for display
+  name: text("name"), // Optional user-defined name for the key
+  lastUsedAt: timestamp("last_used_at"),
+  revoked: boolean("revoked").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertMerchantApiKeySchema = createInsertSchema(merchantApiKeys).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type MerchantApiKey = typeof merchantApiKeys.$inferSelect;
+export type InsertMerchantApiKey = z.infer<typeof insertMerchantApiKeySchema>;

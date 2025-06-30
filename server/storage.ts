@@ -1,5 +1,5 @@
 import { 
-  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, merchantCardDesigns, fraudLogs, autoDefenseRules, cardRedemptions, webhookEvents, webhookDeliveryLogs, webhookRetryQueue, webhookFailureLog,
+  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, merchantCardDesigns, fraudLogs, autoDefenseRules, cardRedemptions, webhookEvents, webhookDeliveryLogs, webhookRetryQueue, webhookFailureLog, merchantApiKeys,
   type User, type InsertUser,
   type Merchant, type InsertMerchant, 
   type GiftCard, type InsertGiftCard,
@@ -18,7 +18,8 @@ import {
   type WebhookEvent, type InsertWebhookEvent,
   type WebhookDeliveryLog, type InsertWebhookDeliveryLog,
   type WebhookRetryQueue, type InsertWebhookRetryQueue,
-  type WebhookFailureLog, type InsertWebhookFailureLog
+  type WebhookFailureLog, type InsertWebhookFailureLog,
+  type MerchantApiKey, type InsertMerchantApiKey
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, count, sum, and, gte, lte, asc } from "drizzle-orm";
@@ -1582,6 +1583,105 @@ export class DatabaseStorage implements IStorage {
       .update(webhookDeliveryLogs)
       .set(updates)
       .where(eq(webhookDeliveryLogs.id, deliveryId));
+  }
+
+  // Phase 17A: Merchant API Keys Management
+  async createMerchantApiKey(merchantId: string, keyHash: string, keyPrefix: string, name?: string): Promise<string> {
+    const [result] = await db
+      .insert(merchantApiKeys)
+      .values({
+        merchantId,
+        keyHash,
+        keyPrefix,
+        name,
+      })
+      .returning({ id: merchantApiKeys.id });
+    return result.id;
+  }
+
+  async getMerchantApiKeys(merchantId: string): Promise<MerchantApiKey[]> {
+    return await db
+      .select({
+        id: merchantApiKeys.id,
+        merchantId: merchantApiKeys.merchantId,
+        keyPrefix: merchantApiKeys.keyPrefix,
+        name: merchantApiKeys.name,
+        lastUsedAt: merchantApiKeys.lastUsedAt,
+        revoked: merchantApiKeys.revoked,
+        createdAt: merchantApiKeys.createdAt,
+        // Exclude keyHash for security
+      })
+      .from(merchantApiKeys)
+      .where(and(
+        eq(merchantApiKeys.merchantId, merchantId),
+        eq(merchantApiKeys.revoked, false)
+      ))
+      .orderBy(desc(merchantApiKeys.createdAt));
+  }
+
+  async revokeMerchantApiKey(keyId: string, merchantId: string): Promise<boolean> {
+    const result = await db
+      .update(merchantApiKeys)
+      .set({ revoked: true })
+      .where(and(
+        eq(merchantApiKeys.id, keyId),
+        eq(merchantApiKeys.merchantId, merchantId)
+      ));
+    return result.rowCount > 0;
+  }
+
+  async validateApiKey(keyHash: string): Promise<MerchantApiKey | undefined> {
+    const [key] = await db
+      .select()
+      .from(merchantApiKeys)
+      .where(and(
+        eq(merchantApiKeys.keyHash, keyHash),
+        eq(merchantApiKeys.revoked, false)
+      ));
+    
+    if (key) {
+      // Update last used timestamp
+      await db
+        .update(merchantApiKeys)
+        .set({ lastUsedAt: new Date() })
+        .where(eq(merchantApiKeys.id, key.id));
+    }
+    
+    return key;
+  }
+
+  // Phase 17A: Merchant Settings Management
+  async updateMerchantSettings(merchantId: string, updates: {
+    email?: string;
+    themeColor?: string;
+    webhookUrl?: string;
+    supportEmail?: string;
+    brandName?: string;
+  }): Promise<boolean> {
+    const result = await db
+      .update(merchants)
+      .set(updates)
+      .where(eq(merchants.merchantId, merchantId));
+    return result.rowCount > 0;
+  }
+
+  async getMerchantSettings(merchantId: string): Promise<any> {
+    const [merchant] = await db
+      .select({
+        merchantId: merchants.merchantId,
+        businessName: merchants.businessName,
+        email: merchants.email,
+        themeColor: merchants.themeColor,
+        webhookUrl: merchants.webhookUrl,
+        webhookEnabled: merchants.webhookEnabled,
+        supportEmail: merchants.supportEmail,
+        brandName: merchants.brandName,
+        isActive: merchants.isActive,
+        emailVerified: merchants.emailVerified,
+      })
+      .from(merchants)
+      .where(eq(merchants.merchantId, merchantId));
+    return merchant;
   }
 }
 

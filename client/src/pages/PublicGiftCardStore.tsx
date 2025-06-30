@@ -480,7 +480,7 @@ export default function PublicGiftCardStore() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
-                {filteredCards.map((card: PublicGiftCard, index) => (
+                {filteredCards.map((card: PublicGiftCard, index: number) => (
                   <motion.div
                     key={card.id}
                     initial={{ opacity: 0, y: 20 }}

@@ -3740,17 +3740,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
           throw new Error('Square access token not configured');
         }
 
-        // Using Square SDK for proper type safety
-        const { Client } = await import('square');
-        const client = new Client({
-          accessToken: process.env.SQUARE_ACCESS_TOKEN,
-          environment: process.env.SQUARE_ENVIRONMENT === 'production' 
-            ? 'production' 
-            : 'sandbox'
+        // Using enhanced Square service for proper type safety
+        const { enhancedSquareAPIService } = await import('./services/enhancedSquareAPIService.js');
+        
+        // Process payment first, then create gift card
+        const paymentResult = await enhancedSquareAPIService.createPayment({
+          sourceId: paymentToken,
+          amountMoney: {
+            amount: amount,
+            currency: 'USD'
+          },
+          idempotencyKey: `payment_${order.id}_${Date.now()}`
         });
 
-        const paymentsApi = client.paymentsApi;
-        const giftCardsApi = client.giftCardsApi;
+        if (!paymentResult.success) {
+          throw new Error(`Payment failed: ${paymentResult.error}`);
+        }
+
+        const giftCardResult = await enhancedSquareAPIService.createGiftCard({
+          amount: amount,
+          giftCardActivityId: `gc_activity_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        });
 
         // Create payment
         const paymentRequest = {

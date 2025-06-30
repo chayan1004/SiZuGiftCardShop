@@ -1,5 +1,5 @@
 import { 
-  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, fraudLogs,
+  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, fraudLogs, autoDefenseRules,
   type User, type InsertUser,
   type Merchant, type InsertMerchant, 
   type GiftCard, type InsertGiftCard,
@@ -11,7 +11,8 @@ import {
   type PublicGiftCardOrder, type InsertPublicGiftCardOrder,
   type MerchantPricingTier, type InsertMerchantPricingTier,
   type MerchantBranding, type InsertMerchantBranding,
-  type FraudLog, type InsertFraudLog
+  type FraudLog, type InsertFraudLog,
+  type AutoDefenseRule, type InsertAutoDefenseRule
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, count, sum, and, gte } from "drizzle-orm";
@@ -129,6 +130,14 @@ export interface IStorage {
   getFraudLogsByGAN(gan: string): Promise<FraudLog[]>;
   getFraudLogsByMerchant(merchantId: string, timeWindowMinutes?: number): Promise<FraudLog[]>;
   getRecentFraudLogs(limit?: number): Promise<FraudLog[]>;
+
+  // Auto Defense Rules methods
+  createAutoDefenseRule(rule: InsertAutoDefenseRule): Promise<AutoDefenseRule>;
+  getAutoDefenseRules(): Promise<AutoDefenseRule[]>;
+  getAutoDefenseRulesByType(type: string): Promise<AutoDefenseRule[]>;
+  updateAutoDefenseRuleHitCount(id: string): Promise<AutoDefenseRule | undefined>;
+  deactivateAutoDefenseRule(id: string): Promise<AutoDefenseRule | undefined>;  
+  checkAutoDefenseRule(type: string, value: string): Promise<AutoDefenseRule | undefined>;
 
   // Promo Code methods
   getPromoCode(code: string): Promise<PromoCode | undefined>;
@@ -855,6 +864,71 @@ export class DatabaseStorage implements IStorage {
       .from(fraudLogs)
       .orderBy(desc(fraudLogs.createdAt))
       .limit(limit);
+  }
+
+  // Auto Defense Rules methods
+  async createAutoDefenseRule(insertRule: InsertAutoDefenseRule): Promise<AutoDefenseRule> {
+    const [rule] = await db
+      .insert(autoDefenseRules)
+      .values(insertRule)
+      .returning();
+    return rule;
+  }
+
+  async getAutoDefenseRules(): Promise<AutoDefenseRule[]> {
+    const rules = await db.select()
+      .from(autoDefenseRules)
+      .where(eq(autoDefenseRules.isActive, true))
+      .orderBy(desc(autoDefenseRules.createdAt));
+    
+    return rules;
+  }
+
+  async getAutoDefenseRulesByType(type: string): Promise<AutoDefenseRule[]> {
+    const rules = await db.select()
+      .from(autoDefenseRules)
+      .where(and(
+        eq(autoDefenseRules.type, type),
+        eq(autoDefenseRules.isActive, true)
+      ))
+      .orderBy(desc(autoDefenseRules.createdAt));
+    
+    return rules;
+  }
+
+  async updateAutoDefenseRuleHitCount(id: string): Promise<AutoDefenseRule | undefined> {
+    const [rule] = await db
+      .update(autoDefenseRules)
+      .set({
+        hitCount: sql`${autoDefenseRules.hitCount} + 1`,
+        lastTriggered: new Date()
+      })
+      .where(eq(autoDefenseRules.id, id))
+      .returning();
+    
+    return rule || undefined;
+  }
+
+  async deactivateAutoDefenseRule(id: string): Promise<AutoDefenseRule | undefined> {
+    const [rule] = await db
+      .update(autoDefenseRules)
+      .set({ isActive: false })
+      .where(eq(autoDefenseRules.id, id))
+      .returning();
+    
+    return rule || undefined;
+  }
+
+  async checkAutoDefenseRule(type: string, value: string): Promise<AutoDefenseRule | undefined> {
+    const [rule] = await db.select()
+      .from(autoDefenseRules)
+      .where(and(
+        eq(autoDefenseRules.type, type),
+        eq(autoDefenseRules.value, value),
+        eq(autoDefenseRules.isActive, true)
+      ));
+    
+    return rule || undefined;
   }
 }
 

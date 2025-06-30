@@ -242,3 +242,24 @@ export const insertFraudLogSchema = createInsertSchema(fraudLogs).omit({
 
 export type FraudLog = typeof fraudLogs.$inferSelect;
 export type InsertFraudLog = z.infer<typeof insertFraudLogSchema>;
+
+// Auto Defense Rules Schema
+export const autoDefenseRules = pgTable("auto_defense_rules", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  type: text("type").notNull(), // 'ip', 'fingerprint', 'merchant'
+  value: text("value").notNull(),
+  reason: text("reason").notNull(),
+  confidence: integer("confidence").default(100), // 0-100 confidence score
+  hitCount: integer("hit_count").default(0), // Number of times rule was triggered
+  lastTriggered: timestamp("last_triggered"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertAutoDefenseRuleSchema = createInsertSchema(autoDefenseRules).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type AutoDefenseRule = typeof autoDefenseRules.$inferSelect;
+export type InsertAutoDefenseRule = z.infer<typeof insertAutoDefenseRuleSchema>;

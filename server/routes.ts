@@ -17,6 +17,8 @@ import { pdfReceiptService } from './services/pdfReceiptService';
 import { ReceiptService } from './services/ReceiptService';
 import { squareWebhookHandler } from './webhooks/squareWebhookHandler';
 import { FraudDetectionService } from './services/FraudDetectionService';
+import { ThreatReplayService } from './services/ThreatReplayService';
+import { AutoDefenseEngine } from './services/AutoDefenseEngine';
 import { requireAdmin, requireMerchant, requireMerchantAuth, checkMerchantStatus } from './middleware/authMiddleware';
 import { AuthService } from './services/authService';
 import { generateGiftCardQR, generateGiftCardBarcode } from '../utils/qrGenerator';

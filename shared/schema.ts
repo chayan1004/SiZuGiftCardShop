@@ -776,3 +776,202 @@ export type InsertDataBreachIncident = z.infer<typeof insertDataBreachIncidentSc
 
 export type PrivacyImpactAssessment = typeof privacyImpactAssessments.$inferSelect;
 export type InsertPrivacyImpactAssessment = z.infer<typeof insertPrivacyImpactAssessmentSchema>;
+
+// ===== PCI DSS COMPLIANCE TABLES =====
+
+export const pciComplianceAssessments = pgTable("pci_compliance_assessments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  assessmentType: text("assessment_type").notNull(), // 'self_assessment', 'external_audit', 'penetration_test'
+  assessmentDate: timestamp("assessment_date").notNull(),
+  assessmentVersion: text("assessment_version").notNull(), // PCI DSS version (e.g., '4.0')
+  complianceLevel: text("compliance_level").notNull(), // 'level_1', 'level_2', 'level_3', 'level_4'
+  assessorName: text("assessor_name"),
+  assessorCompany: text("assessor_company"),
+  assessmentStatus: text("assessment_status").notNull().default('in_progress'), // 'in_progress', 'completed', 'failed'
+  complianceScore: integer("compliance_score"), // 0-100%
+  findings: text("findings"), // JSON string of findings
+  remediationPlan: text("remediation_plan"), // JSON string of remediation actions
+  nextAssessmentDue: timestamp("next_assessment_due"),
+  certificateNumber: text("certificate_number"),
+  certificateExpiry: timestamp("certificate_expiry"),
+  documentPath: text("document_path"), // Path to assessment documents
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const pciSecurityScans = pgTable("pci_security_scans", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  scanType: text("scan_type").notNull(), // 'quarterly_scan', 'vulnerability_scan', 'penetration_test'
+  scanDate: timestamp("scan_date").notNull(),
+  scanProvider: text("scan_provider").notNull(), // ASV company name
+  scanScope: text("scan_scope"), // JSON string of scanned systems/IPs
+  scanStatus: text("scan_status").notNull().default('scheduled'), // 'scheduled', 'in_progress', 'completed', 'failed'
+  vulnerabilitiesFound: integer("vulnerabilities_found").default(0),
+  criticalVulnerabilities: integer("critical_vulnerabilities").default(0),
+  highVulnerabilities: integer("high_vulnerabilities").default(0),
+  mediumVulnerabilities: integer("medium_vulnerabilities").default(0),
+  lowVulnerabilities: integer("low_vulnerabilities").default(0),
+  scanResults: text("scan_results"), // JSON string of detailed results
+  remediationStatus: text("remediation_status").default('pending'), // 'pending', 'in_progress', 'completed'
+  nextScanDue: timestamp("next_scan_due"),
+  reportPath: text("report_path"), // Path to scan reports
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const pciSecurityControls = pgTable("pci_security_controls", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  requirementNumber: text("requirement_number").notNull(), // e.g., '1.1.1', '2.2.1'
+  requirementTitle: text("requirement_title").notNull(),
+  controlCategory: text("control_category").notNull(), // 'network_security', 'access_control', 'encryption', etc.
+  implementationStatus: text("implementation_status").notNull().default('not_implemented'), // 'not_implemented', 'partially_implemented', 'implemented', 'not_applicable'
+  controlDescription: text("control_description").notNull(),
+  implementationDetails: text("implementation_details"),
+  evidenceDocuments: text("evidence_documents"), // JSON array of document paths
+  testingProcedures: text("testing_procedures"),
+  lastTested: timestamp("last_tested"),
+  testResults: text("test_results"),
+  complianceStatus: text("compliance_status").default('pending'), // 'compliant', 'non_compliant', 'pending', 'not_applicable'
+  riskLevel: text("risk_level").default('medium'), // 'low', 'medium', 'high', 'critical'
+  responsiblePerson: text("responsible_person"),
+  targetCompletionDate: timestamp("target_completion_date"),
+  actualCompletionDate: timestamp("actual_completion_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const pciIncidentResponses = pgTable("pci_incident_responses", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  incidentId: text("incident_id").notNull().unique(),
+  incidentType: text("incident_type").notNull(), // 'data_breach', 'security_incident', 'compliance_violation'
+  discoveryDate: timestamp("discovery_date").notNull(),
+  incidentDate: timestamp("incident_date"),
+  severity: text("severity").notNull(), // 'low', 'medium', 'high', 'critical'
+  affectedSystems: text("affected_systems"), // JSON array of affected systems
+  cardDataInvolved: boolean("card_data_involved").default(false),
+  estimatedRecordsAffected: integer("estimated_records_affected").default(0),
+  incidentDescription: text("incident_description").notNull(),
+  rootCause: text("root_cause"),
+  containmentActions: text("containment_actions"),
+  investigationStatus: text("investigation_status").default('open'), // 'open', 'investigating', 'contained', 'resolved'
+  forensicsRequired: boolean("forensics_required").default(false),
+  forensicsProvider: text("forensics_provider"),
+  brandNotificationRequired: boolean("brand_notification_required").default(false),
+  brandNotificationDate: timestamp("brand_notification_date"),
+  acquirerNotificationRequired: boolean("acquirer_notification_required").default(false),
+  acquirerNotificationDate: timestamp("acquirer_notification_date"),
+  lawEnforcementNotified: boolean("law_enforcement_notified").default(false),
+  lawEnforcementNotificationDate: timestamp("law_enforcement_notification_date"),
+  publicDisclosureRequired: boolean("public_disclosure_required").default(false),
+  publicDisclosureDate: timestamp("public_disclosure_date"),
+  lessonsLearned: text("lessons_learned"),
+  preventiveMeasures: text("preventive_measures"),
+  incidentCost: integer("incident_cost").default(0),
+  resolutionDate: timestamp("resolution_date"),
+  reportPath: text("report_path"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const pciNetworkDiagrams = pgTable("pci_network_diagrams", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  diagramName: text("diagram_name").notNull(),
+  diagramType: text("diagram_type").notNull(), // 'network_topology', 'data_flow', 'system_architecture'
+  diagramVersion: text("diagram_version").notNull().default('1.0'),
+  scope: text("scope").notNull(), // 'full_environment', 'cde_only', 'specific_system'
+  description: text("description"),
+  cardDataEnvironments: text("card_data_environments"), // JSON array of CDE components
+  networkSegmentation: text("network_segmentation"), // JSON description of segmentation
+  firewallRules: text("firewall_rules"), // JSON array of firewall configurations
+  accessPoints: text("access_points"), // JSON array of access points
+  dataFlows: text("data_flows"), // JSON description of data flows
+  approvedBy: text("approved_by"),
+  approvalDate: timestamp("approval_date"),
+  reviewDate: timestamp("review_date"),
+  nextReviewDue: timestamp("next_review_due"),
+  diagramPath: text("diagram_path").notNull(), // Path to diagram file
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const pciAuditLogs = pgTable("pci_audit_logs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  eventType: text("event_type").notNull(), // 'user_access', 'admin_action', 'system_change', 'security_event'
+  eventCategory: text("event_category").notNull(), // 'authentication', 'authorization', 'data_access', 'configuration'
+  userId: text("user_id"),
+  userRole: text("user_role"),
+  sourceIp: text("source_ip"),
+  userAgent: text("user_agent"),
+  eventDescription: text("event_description").notNull(),
+  resourceAccessed: text("resource_accessed"),
+  actionPerformed: text("action_performed"),
+  eventResult: text("event_result").notNull(), // 'success', 'failure', 'blocked'
+  riskLevel: text("risk_level").default('low'), // 'low', 'medium', 'high', 'critical'
+  sessionId: text("session_id"),
+  transactionId: text("transaction_id"),
+  cardDataAccessed: boolean("card_data_accessed").default(false),
+  eventData: text("event_data"), // JSON string of additional event data
+  alertGenerated: boolean("alert_generated").default(false),
+  reviewRequired: boolean("review_required").default(false),
+  reviewedBy: text("reviewed_by"),
+  reviewDate: timestamp("review_date"),
+  reviewNotes: text("review_notes"),
+  timestamp: timestamp("timestamp").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// PCI DSS Insert Schemas
+export const insertPciComplianceAssessmentSchema = createInsertSchema(pciComplianceAssessments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertPciSecurityScanSchema = createInsertSchema(pciSecurityScans).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertPciSecurityControlSchema = createInsertSchema(pciSecurityControls).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertPciIncidentResponseSchema = createInsertSchema(pciIncidentResponses).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertPciNetworkDiagramSchema = createInsertSchema(pciNetworkDiagrams).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertPciAuditLogSchema = createInsertSchema(pciAuditLogs).omit({
+  id: true,
+  createdAt: true
+});
+
+// PCI DSS Types
+export type PciComplianceAssessment = typeof pciComplianceAssessments.$inferSelect;
+export type InsertPciComplianceAssessment = z.infer<typeof insertPciComplianceAssessmentSchema>;
+
+export type PciSecurityScan = typeof pciSecurityScans.$inferSelect;
+export type InsertPciSecurityScan = z.infer<typeof insertPciSecurityScanSchema>;
+
+export type PciSecurityControl = typeof pciSecurityControls.$inferSelect;
+export type InsertPciSecurityControl = z.infer<typeof insertPciSecurityControlSchema>;
+
+export type PciIncidentResponse = typeof pciIncidentResponses.$inferSelect;
+export type InsertPciIncidentResponse = z.infer<typeof insertPciIncidentResponseSchema>;
+
+export type PciNetworkDiagram = typeof pciNetworkDiagrams.$inferSelect;
+export type InsertPciNetworkDiagram = z.infer<typeof insertPciNetworkDiagramSchema>;
+
+export type PciAuditLog = typeof pciAuditLogs.$inferSelect;
+export type InsertPciAuditLog = z.infer<typeof insertPciAuditLogSchema>;

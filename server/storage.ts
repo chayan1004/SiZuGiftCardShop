@@ -35,6 +35,8 @@ export interface IStorage {
   updateMerchantTokens(id: number, accessToken: string, refreshToken?: string): Promise<Merchant | undefined>;
   updateMerchantVerificationToken(id: number, token: string, expiresAt: Date): Promise<Merchant | undefined>;
   markMerchantEmailVerified(id: number): Promise<Merchant | undefined>;
+  updateMerchantWebhookUrl(merchantId: string, webhookUrl: string | null): Promise<Merchant | undefined>;
+  getMerchantByMerchantId(merchantId: string): Promise<Merchant | undefined>;
 
   // Merchant Pricing Tiers methods
   getMerchantPricingTiers(merchantId: number): Promise<MerchantPricingTier[]>;
@@ -276,6 +278,23 @@ export class DatabaseStorage implements IStorage {
       })
       .where(eq(merchants.id, id))
       .returning();
+    return merchant || undefined;
+  }
+
+  async updateMerchantWebhookUrl(merchantId: string, webhookUrl: string | null): Promise<Merchant | undefined> {
+    const [merchant] = await db
+      .update(merchants)
+      .set({ webhookUrl })
+      .where(eq(merchants.merchantId, merchantId))
+      .returning();
+    return merchant || undefined;
+  }
+
+  async getMerchantByMerchantId(merchantId: string): Promise<Merchant | undefined> {
+    const [merchant] = await db
+      .select()
+      .from(merchants)
+      .where(eq(merchants.merchantId, merchantId));
     return merchant || undefined;
   }
 

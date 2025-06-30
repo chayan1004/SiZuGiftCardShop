@@ -15,6 +15,7 @@ export const merchants = pgTable("merchants", {
   emailVerificationToken: text("email_verification_token"),
   emailVerificationExpires: timestamp("email_verification_expires"),
   isActive: boolean("is_active").default(true),
+  webhookUrl: text("webhook_url"), // Merchant automation webhook URL
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -100,6 +101,18 @@ export const merchant_bulk_orders = pgTable("merchant_bulk_orders", {
   total_price: numeric("total_price").notNull(),
   status: text("status").default("pending"), // pending, fulfilled, failed
   created_at: timestamp("created_at").defaultNow(),
+});
+
+export const webhook_delivery_logs = pgTable("webhook_delivery_logs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  merchantId: text("merchant_id").notNull(),
+  cardId: text("card_id"),
+  amount: integer("amount"), // Amount in cents
+  status: text("status").notNull(), // success, fail
+  errorMessage: text("error_message"),
+  responseTimeMs: integer("response_time_ms"),
+  payload: text("payload"), // JSON string of webhook payload
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const insertMerchantSchema = createInsertSchema(merchants).omit({

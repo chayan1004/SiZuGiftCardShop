@@ -116,7 +116,7 @@ export default function AdminDashboard() {
   });
 
   // Fetch email delivery metrics
-  const { data: emailMetrics = {} } = useQuery({
+  const { data: emailMetrics = {} } = useQuery<any>({
     queryKey: ["/api/admin/email/delivery-metrics"],
     refetchInterval: 60000, // Refresh every minute
     meta: {
@@ -127,7 +127,7 @@ export default function AdminDashboard() {
   });
 
   // Fetch domain authentication status
-  const { data: domainAuth = {} } = useQuery({
+  const { data: domainAuth = {} } = useQuery<any>({
     queryKey: ["/api/admin/email/domain-auth-status"],
     refetchInterval: 300000, // Refresh every 5 minutes
     meta: {
@@ -138,7 +138,7 @@ export default function AdminDashboard() {
   });
 
   // Fetch email queue status
-  const { data: queueStatus = {} } = useQuery({
+  const { data: queueStatus = {} } = useQuery<any>({
     queryKey: ["/api/admin/email/queue-status"],
     refetchInterval: 30000, // Refresh every 30 seconds
     meta: {
@@ -377,37 +377,37 @@ export default function AdminDashboard() {
                     {/* Total Gift Cards */}
                     <MetricCard
                       title="Total Gift Cards"
-                      value={metrics.totalGiftCards.toLocaleString()}
+                      value={(metrics?.totalGiftCards || 0).toLocaleString()}
                       icon={<Gift className="text-white" size={24} />}
                       color="blue"
                       subtitle="All time cards issued"
-                      trend={`+${Math.round(metrics.totalGiftCards * 0.12)} this month`}
+                      trend={`+${Math.round((metrics?.totalGiftCards || 0) * 0.12)} this month`}
                     />
 
                     {/* Active Gift Cards */}
                     <MetricCard
                       title="Active Cards"
-                      value={metrics.activeCards.toLocaleString()}
+                      value={(metrics?.activeCards || 0).toLocaleString()}
                       icon={<Activity className="text-white" size={24} />}
                       color="green"
                       subtitle="Currently unredeemed"
-                      trend={`${((metrics.activeCards / metrics.totalGiftCards) * 100).toFixed(1)}% of total`}
+                      trend={`${(((metrics?.activeCards || 0) / Math.max((metrics?.totalGiftCards || 1), 1)) * 100).toFixed(1)}% of total`}
                     />
 
                     {/* Total Value */}
                     <MetricCard
                       title="Total Value"
-                      value={`$${(metrics.totalValue / 100).toLocaleString()}`}
+                      value={`$${((metrics?.totalValue || 0) / 100).toLocaleString()}`}
                       icon={<DollarSign className="text-white" size={24} />}
                       color="purple"
                       subtitle="Outstanding card value"
-                      trend={`$${((metrics.totalValue / 100) * 0.08).toFixed(0)} growth`}
+                      trend={`$${(((metrics?.totalValue || 0) / 100) * 0.08).toFixed(0)} growth`}
                     />
 
                     {/* Conversion Rate */}
                     <MetricCard
                       title="Conversion Rate"
-                      value={metrics.conversionRate}
+                      value={metrics?.conversionRate || "0%"}
                       icon={<TrendingUp className="text-white" size={24} />}
                       color="orange"
                       subtitle="Purchase to redemption"
@@ -947,19 +947,19 @@ export default function AdminDashboard() {
                         <div className="space-y-4">
                           <div className="flex justify-between items-center">
                             <span className="text-gray-300">Delivery Rate</span>
-                            <span className="text-green-400 font-bold">{emailMetrics.deliveryRate || '98.2%'}</span>
+                            <span className="text-green-400 font-bold">{((emailMetrics as any)?.data?.overview?.deliveryRate || 98.2) + '%'}</span>
                           </div>
                           <div className="flex justify-between items-center">
                             <span className="text-gray-300">Bounce Rate</span>
-                            <span className="text-orange-400 font-bold">{emailMetrics.bounceRate || '1.3%'}</span>
+                            <span className="text-orange-400 font-bold">{((emailMetrics as any)?.data?.overview?.bounceRate || 1.3) + '%'}</span>
                           </div>
                           <div className="flex justify-between items-center">
                             <span className="text-gray-300">Open Rate</span>
-                            <span className="text-blue-400 font-bold">{emailMetrics.openRate || '24.7%'}</span>
+                            <span className="text-blue-400 font-bold">{((emailMetrics as any)?.data?.overview?.opens || 24.7) + '%'}</span>
                           </div>
                           <div className="flex justify-between items-center">
                             <span className="text-gray-300">Complaint Rate</span>
-                            <span className="text-red-400 font-bold">{emailMetrics.complaintRate || '0.1%'}</span>
+                            <span className="text-red-400 font-bold">{((emailMetrics as any)?.data?.overview?.complaintRate || 0.1) + '%'}</span>
                           </div>
                         </div>
                       </CardContent>
@@ -978,20 +978,20 @@ export default function AdminDashboard() {
                         <div className="space-y-4">
                           <div className="flex justify-between items-center">
                             <span className="text-gray-300">SPF Record</span>
-                            <Badge className={`${domainAuth.spf ? 'bg-green-500/20 text-green-300 border-green-500/30' : 'bg-red-500/20 text-red-300 border-red-500/30'}`}>
-                              {domainAuth.spf ? 'Valid' : 'Missing'}
+                            <Badge className={`${((domainAuth as any)?.data?.spf) ? 'bg-green-500/20 text-green-300 border-green-500/30' : 'bg-red-500/20 text-red-300 border-red-500/30'}`}>
+                              {((domainAuth as any)?.data?.spf) ? 'Valid' : 'Missing'}
                             </Badge>
                           </div>
                           <div className="flex justify-between items-center">
                             <span className="text-gray-300">DKIM Signing</span>
-                            <Badge className={`${domainAuth.dkim ? 'bg-green-500/20 text-green-300 border-green-500/30' : 'bg-red-500/20 text-red-300 border-red-500/30'}`}>
-                              {domainAuth.dkim ? 'Active' : 'Inactive'}
+                            <Badge className={`${((domainAuth as any)?.data?.dkim) ? 'bg-green-500/20 text-green-300 border-green-500/30' : 'bg-red-500/20 text-red-300 border-red-500/30'}`}>
+                              {((domainAuth as any)?.data?.dkim) ? 'Active' : 'Inactive'}
                             </Badge>
                           </div>
                           <div className="flex justify-between items-center">
                             <span className="text-gray-300">DMARC Policy</span>
-                            <Badge className={`${domainAuth.dmarc ? 'bg-green-500/20 text-green-300 border-green-500/30' : 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30'}`}>
-                              {domainAuth.dmarc || 'None'}
+                            <Badge className={`${((domainAuth as any)?.data?.dmarc) ? 'bg-green-500/20 text-green-300 border-green-500/30' : 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30'}`}>
+                              {((domainAuth as any)?.data?.dmarc) || 'None'}
                             </Badge>
                           </div>
                         </div>
@@ -1011,19 +1011,19 @@ export default function AdminDashboard() {
                         <div className="space-y-4">
                           <div className="flex justify-between items-center">
                             <span className="text-gray-300">Pending</span>
-                            <span className="text-yellow-400 font-bold">{queueStatus.pending || '0'}</span>
+                            <span className="text-yellow-400 font-bold">{((queueStatus as any)?.data?.queueStatus?.pending || 0)}</span>
                           </div>
                           <div className="flex justify-between items-center">
                             <span className="text-gray-300">Sent Today</span>
-                            <span className="text-green-400 font-bold">{queueStatus.sentToday || '0'}</span>
+                            <span className="text-green-400 font-bold">{((queueStatus as any)?.data?.volumeStatus?.sentToday || 0)}</span>
                           </div>
                           <div className="flex justify-between items-center">
                             <span className="text-gray-300">Daily Limit</span>
-                            <span className="text-blue-400 font-bold">{queueStatus.dailyLimit || '10,000'}</span>
+                            <span className="text-blue-400 font-bold">{((queueStatus as any)?.data?.volumeStatus?.dailyLimit || 50)}</span>
                           </div>
                           <div className="flex justify-between items-center">
                             <span className="text-gray-300">Rate Limit</span>
-                            <span className="text-purple-400 font-bold">{queueStatus.rateLimit || '14/sec'}</span>
+                            <span className="text-purple-400 font-bold">{((queueStatus as any)?.data?.volumeStatus?.hourlyLimit || 10)}/hr</span>
                           </div>
                         </div>
                       </CardContent>

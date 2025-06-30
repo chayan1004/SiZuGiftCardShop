@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import fetch from 'node-fetch';
+import fetch, { Response as NodeFetchResponse } from 'node-fetch';
 import { db } from "../db";
 import { webhookEvents, webhookDeliveryLogs } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
@@ -142,7 +142,7 @@ export class MultiEventWebhookDispatcher {
   /**
    * Send HTTP request to webhook URL with HMAC signature
    */
-  private async sendWebhookRequest(webhook: any, payload: WebhookPayload): Promise<Response> {
+  private async sendWebhookRequest(webhook: any, payload: WebhookPayload): Promise<NodeFetchResponse> {
     const payloadString = JSON.stringify(payload);
     const signature = this.generateHMACSignature(payloadString, webhook.secret);
     const timestamp = new Date().toISOString();

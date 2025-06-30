@@ -113,8 +113,8 @@ export default function GlobalSettingsPanel() {
     if (pendingChanges[key] !== undefined) {
       return pendingChanges[key];
     }
-    const currentValue = settingsData?.settings?.[key];
-    const config = SETTING_CONFIGS[key];
+    const currentValue = (settingsData as any)?.settings?.[key];
+    const config = SETTING_CONFIGS[key as keyof typeof SETTING_CONFIGS];
     
     if (!currentValue) {
       return config?.type === 'boolean' ? false : config?.type === 'number' ? 0 : '';
@@ -194,7 +194,7 @@ export default function GlobalSettingsPanel() {
       'Business': 'bg-green-500/10 text-green-700 dark:text-green-300',
       'Emergency': 'bg-orange-500/10 text-orange-700 dark:text-orange-300'
     };
-    return colors[category] || 'bg-gray-500/10 text-gray-700 dark:text-gray-300';
+    return colors[category as keyof typeof colors] || 'bg-gray-500/10 text-gray-700 dark:text-gray-300';
   };
 
   if (isLoading) {

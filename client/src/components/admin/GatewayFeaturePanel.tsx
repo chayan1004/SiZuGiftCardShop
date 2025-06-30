@@ -169,11 +169,11 @@ export default function GatewayFeaturePanel() {
     if (pendingChanges[changeKey] !== undefined) {
       return pendingChanges[changeKey];
     }
-    return featuresData?.features?.[gatewayName]?.[feature] || false;
+    return (featuresData as any)?.features?.[gatewayName]?.[feature] || false;
   };
 
   const getGatewayStatus = (gatewayName: string) => {
-    const gateway = GATEWAY_CONFIGS[gatewayName];
+    const gateway = GATEWAY_CONFIGS[gatewayName as keyof typeof GATEWAY_CONFIGS];
     if (!gateway) return { enabled: 0, total: 0, percentage: 0 };
     
     const features = Object.keys(gateway.features);

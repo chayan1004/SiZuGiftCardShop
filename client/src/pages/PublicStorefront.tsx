@@ -141,8 +141,8 @@ export default function PublicStorefront() {
                   <SelectContent>
                     <SelectItem value="all">All Categories</SelectItem>
                     {categories.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
+                      <SelectItem key={String(category)} value={String(category)}>
+                        {String(category)}
                       </SelectItem>
                     ))}
                   </SelectContent>

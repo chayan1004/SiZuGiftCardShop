@@ -43,7 +43,7 @@ import { AuthService } from './services/authService';
 import { generateGiftCardQR, generateGiftCardBarcode } from '../utils/qrGenerator';
 import { z } from "zod";
 import { db } from "./db";
-import { merchants } from "@shared/schema";
+import { merchants, disputes } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import rateLimit from "express-rate-limit";
 
@@ -8880,6 +8880,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         success: false,
         message: "Failed to fetch dispute"
+      });
+    }
+  });
+
+  // Update dispute status/state (general PUT endpoint)
+  app.put("/api/admin/disputes/:id", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { state, adminNotes, resolution } = req.body;
+
+      if (!state) {
+        return res.status(400).json({
+          success: false,
+          message: "State is required"
+        });
+      }
+
+      const dispute = await storage.getDispute(id);
+      if (!dispute) {
+        return res.status(404).json({
+          success: false,
+          message: "Dispute not found"
+        });
+      }
+
+      const resolvedAt = (state === 'RESOLVED' || state === 'ACCEPTED' || state === 'REJECTED') ? new Date() : undefined;
+      
+      // Update dispute in database
+      const updatedDispute = await storage.updateDisputeState(id, state, resolution, resolvedAt);
+
+      // Update admin notes if provided
+      if (adminNotes && updatedDispute) {
+        const [disputeWithNotes] = await db
+          .update(disputes)
+          .set({ 
+            adminNotes,
+            updatedAt: new Date()
+          })
+          .where(eq(disputes.id, id))
+          .returning();
+        
+        if (disputeWithNotes) {
+          Object.assign(updatedDispute, disputeWithNotes);
+        }
+      }
+
+      // Log activity
+      await storage.createDisputeActivity({
+        disputeId: id,
+        activityType: 'STATUS_UPDATED',
+        performedBy: 'admin',
+        userRole: 'admin',
+        description: `Dispute state updated to ${state}${adminNotes ? ` with notes: ${adminNotes}` : ''}`,
+        previousState: dispute.state,
+        newState: state,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent')
+      });
+
+      res.json({
+        success: true,
+        dispute: updatedDispute,
+        message: "Dispute updated successfully"
+      });
+    } catch (error) {
+      console.error('Error updating dispute:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to update dispute"
       });
     }
   });

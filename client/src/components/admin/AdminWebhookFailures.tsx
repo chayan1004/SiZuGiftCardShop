@@ -25,7 +25,7 @@ interface RetryQueueItem {
   createdAt: string;
 }
 
-export function AdminWebhookFailures() {
+function AdminWebhookFailures() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'failures' | 'queue'>('failures');
@@ -86,8 +86,8 @@ export function AdminWebhookFailures() {
     },
   });
 
-  const failures = failuresData?.failures || [];
-  const queue = queueData?.queue || { totalPending: 0, retries: [] };
+  const failures = (failuresData as any)?.failures || [];
+  const queue = (queueData as any)?.queue || { totalPending: 0, retries: [] };
 
   const getStatusBadge = (statusCode?: number) => {
     if (!statusCode) return <Badge variant="destructive">Unknown</Badge>;
@@ -133,7 +133,7 @@ export function AdminWebhookFailures() {
           <CardContent>
             <div className="text-2xl font-bold">{failures.length}</div>
             <p className="text-xs text-muted-foreground">
-              {failures.filter(f => !f.resolved).length} unresolved
+              {failures.filter((f: any) => !f.resolved).length} unresolved
             </p>
           </CardContent>
         </Card>
@@ -158,7 +158,7 @@ export function AdminWebhookFailures() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {failures.filter(f => f.resolved).length}
+              {failures.filter((f: any) => f.resolved).length}
             </div>
             <p className="text-xs text-muted-foreground">
               Successfully resolved
@@ -218,7 +218,7 @@ export function AdminWebhookFailures() {
               </div>
             ) : (
               <div className="space-y-4">
-                {failures.map((failure: WebhookFailure) => (
+                {failures.map((failure: any) => (
                   <div
                     key={failure.id}
                     className="flex items-center justify-between p-4 border rounded-lg bg-card"
@@ -299,7 +299,7 @@ export function AdminWebhookFailures() {
               </div>
             ) : (
               <div className="space-y-4">
-                {queue.retries.map((retry: RetryQueueItem) => (
+                {queue.retries.map((retry: any) => (
                   <div
                     key={retry.id}
                     className="flex items-center justify-between p-4 border rounded-lg bg-card"
@@ -340,3 +340,5 @@ export function AdminWebhookFailures() {
     </div>
   );
 }
+
+export default AdminWebhookFailures;

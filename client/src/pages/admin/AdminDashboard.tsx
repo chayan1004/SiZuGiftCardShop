@@ -22,7 +22,7 @@ import AdminThreatReplay from "../AdminThreatReplay";
 import AdminGiftCardAnalytics from "../AdminGiftCardAnalytics";
 import AdminMerchantSettings from "../AdminMerchantSettings";
 import AdminGiftCardOrders from "../AdminGiftCardOrders";
-import { AdminWebhookFailures } from "../../components/admin/AdminWebhookFailures";
+import AdminWebhookFailures from "../../components/admin/AdminWebhookFailures";
 import ThreatFeedPanel from "../../components/admin/ThreatFeedPanel";
 import type { FraudAlert } from "../../components/admin/ThreatFeedPanel";
 

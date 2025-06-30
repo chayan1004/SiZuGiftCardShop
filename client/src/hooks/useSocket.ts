@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { io, Socket } from 'socket.io-client';
 
 export interface FraudAlert {
   id: string;
@@ -12,12 +13,9 @@ export interface FraudAlert {
 export function useSocket() {
   const [isConnected, setIsConnected] = useState(false);
   const [fraudAlerts, setFraudAlerts] = useState<FraudAlert[]>([]);
-  const socketRef = useRef<WebSocket | null>(null);
+  const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
-    // Use Socket.IO instead of raw WebSocket
-    const { io } = require('socket.io-client');
-    
     try {
       const socket = io('/', {
         path: '/socket.io',
@@ -36,12 +34,12 @@ export function useSocket() {
         setIsConnected(false);
       });
 
-      socket.on('connect_error', (error) => {
+      socket.on('connect_error', (error: Error) => {
         console.error('Socket.IO connection error:', error);
         setIsConnected(false);
       });
 
-      socket.on('fraud-alert', (data) => {
+      socket.on('fraud-alert', (data: FraudAlert) => {
         try {
           if (data.type === 'fraud_alert' || data.type === 'suspicious_activity') {
             setFraudAlerts(prev => [data, ...prev.slice(0, 49)]); // Keep last 50 alerts

@@ -42,6 +42,11 @@ export default function AdminGiftCardOrders() {
     queryKey: ["/api/admin/giftcard-orders"],
     staleTime: 30000, // 30 seconds
     refetchInterval: 60000, // 1 minute
+    meta: {
+      headers: {
+        'x-admin-token': localStorage.getItem('adminToken') || ''
+      }
+    }
   });
 
   const filteredOrders = orders.filter((order) => {

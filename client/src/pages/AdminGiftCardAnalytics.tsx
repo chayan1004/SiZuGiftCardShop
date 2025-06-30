@@ -83,7 +83,11 @@ export default function AdminGiftCardAnalytics() {
       if (dates.startDate) params.append("startDate", dates.startDate);
       if (dates.endDate) params.append("endDate", dates.endDate);
       
-      const response = await fetch(`/api/admin/gift-card-analytics?${params}`);
+      const response = await fetch(`/api/admin/gift-card-analytics?${params}`, {
+        headers: {
+          'x-admin-token': localStorage.getItem('adminToken') || ''
+        }
+      });
       return response.json();
     },
   });
@@ -91,6 +95,11 @@ export default function AdminGiftCardAnalytics() {
   // Fetch merchants for filter
   const { data: merchantsResponse } = useQuery({
     queryKey: ['/api/admin/merchants'],
+    meta: {
+      headers: {
+        'x-admin-token': localStorage.getItem('adminToken') || ''
+      }
+    }
   });
 
   const analytics: GiftCardAnalytics = analyticsResponse?.analytics || {

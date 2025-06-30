@@ -54,6 +54,11 @@ export default function AdminMerchantSettings() {
   // Fetch all merchants
   const { data: merchantsResponse, isLoading: merchantsLoading } = useQuery({
     queryKey: ['/api/admin/merchants'],
+    meta: {
+      headers: {
+        'x-admin-token': localStorage.getItem('adminToken') || ''
+      }
+    }
   });
 
   const merchants: Merchant[] = merchantsResponse?.merchants || [];
@@ -68,12 +73,22 @@ export default function AdminMerchantSettings() {
   const { data: brandingResponse, isLoading: brandingLoading } = useQuery({
     queryKey: ['/api/admin/merchant', selectedMerchantId, 'branding'],
     enabled: !!selectedMerchantId,
+    meta: {
+      headers: {
+        'x-admin-token': localStorage.getItem('adminToken') || ''
+      }
+    }
   });
 
   // Fetch selected merchant's pricing tiers
   const { data: pricingResponse, isLoading: pricingLoading } = useQuery({
     queryKey: ['/api/admin/merchant', selectedMerchantId, 'pricing-tiers'],
     enabled: !!selectedMerchantId,
+    meta: {
+      headers: {
+        'x-admin-token': localStorage.getItem('adminToken') || ''
+      }
+    }
   });
 
   const selectedMerchant = merchants.find(m => m.id === selectedMerchantId);

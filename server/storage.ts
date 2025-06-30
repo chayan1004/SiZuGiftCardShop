@@ -431,6 +431,56 @@ export interface IStorage {
   getCheckoutConfiguration(): Promise<CheckoutConfiguration | undefined>;
   createCheckoutConfiguration(config: InsertCheckoutConfiguration): Promise<CheckoutConfiguration>;
   updateCheckoutConfiguration(config: Partial<InsertCheckoutConfiguration>): Promise<CheckoutConfiguration | undefined>;
+  
+  // Square Cards API - Customer Profiles
+  createCustomerProfile(profile: {
+    email: string;
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    squareCustomerId: string;
+  }): Promise<any>;
+  getCustomerProfileByEmail(email: string): Promise<any>;
+  getCustomerProfileBySquareId(squareCustomerId: string): Promise<any>;
+  updateCustomerProfile(squareCustomerId: string, updates: {
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+  }): Promise<any>;
+  deleteCustomerProfile(squareCustomerId: string): Promise<void>;
+  
+  // Square Cards API - Saved Cards
+  createSavedCard(card: {
+    customerId: string;
+    squareCardId: string;
+    cardBrand?: string;
+    last4?: string;
+    expMonth?: number;
+    expYear?: number;
+    cardType?: string;
+    fingerprint?: string;
+    billingAddress?: string;
+    cardNickname?: string;
+    isDefault?: boolean;
+    isActive?: boolean;
+  }): Promise<any>;
+  getSavedCardsByCustomer(customerId: string): Promise<any[]>;
+  getSavedCardBySquareId(squareCardId: string): Promise<any>;
+  deactivateSavedCard(squareCardId: string): Promise<void>;
+  
+  // Square Cards API - Token Events
+  createCardTokenEvent(event: {
+    customerId?: string;
+    savedCardId?: string;
+    tokenType: string;
+    tokenId: string;
+    usageType: string;
+    amount?: number;
+    currency?: string;
+    status: string;
+    expiresAt?: Date;
+  }): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3524,6 +3574,153 @@ export class DatabaseStorage implements IStorage {
       .where(eq(checkoutConfigurations.id, activeConfig.id))
       .returning();
     return updatedConfig || undefined;
+  }
+
+  // Square Cards API - Customer Profiles Implementation
+  async createCustomerProfile(profile: {
+    email: string;
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    squareCustomerId: string;
+  }): Promise<any> {
+    const [customerProfile] = await db
+      .insert(customerProfiles)
+      .values({
+        email: profile.email,
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        phone: profile.phone,
+        squareCustomerId: profile.squareCustomerId,
+      })
+      .returning();
+    return customerProfile;
+  }
+
+  async getCustomerProfileByEmail(email: string): Promise<any> {
+    const [profile] = await db
+      .select()
+      .from(customerProfiles)
+      .where(eq(customerProfiles.email, email));
+    return profile || undefined;
+  }
+
+  async getCustomerProfileBySquareId(squareCustomerId: string): Promise<any> {
+    const [profile] = await db
+      .select()
+      .from(customerProfiles)
+      .where(eq(customerProfiles.squareCustomerId, squareCustomerId));
+    return profile || undefined;
+  }
+
+  async updateCustomerProfile(squareCustomerId: string, updates: {
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+  }): Promise<any> {
+    const [updatedProfile] = await db
+      .update(customerProfiles)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(customerProfiles.squareCustomerId, squareCustomerId))
+      .returning();
+    return updatedProfile || undefined;
+  }
+
+  async deleteCustomerProfile(squareCustomerId: string): Promise<void> {
+    await db
+      .delete(customerProfiles)
+      .where(eq(customerProfiles.squareCustomerId, squareCustomerId));
+  }
+
+  // Square Cards API - Saved Cards Implementation
+  async createSavedCard(card: {
+    customerId: string;
+    squareCardId: string;
+    cardBrand?: string;
+    last4?: string;
+    expMonth?: number;
+    expYear?: number;
+    cardType?: string;
+    fingerprint?: string;
+    billingAddress?: string;
+    cardNickname?: string;
+    isDefault?: boolean;
+    isActive?: boolean;
+  }): Promise<any> {
+    const [savedCard] = await db
+      .insert(savedCards)
+      .values({
+        customerId: card.customerId,
+        squareCardId: card.squareCardId,
+        cardBrand: card.cardBrand,
+        last4: card.last4,
+        expMonth: card.expMonth,
+        expYear: card.expYear,
+        cardType: card.cardType,
+        fingerprint: card.fingerprint,
+        billingAddress: card.billingAddress,
+        cardNickname: card.cardNickname,
+        isDefault: card.isDefault || false,
+        isActive: card.isActive !== false,
+      })
+      .returning();
+    return savedCard;
+  }
+
+  async getSavedCardsByCustomer(customerId: string): Promise<any[]> {
+    return await db
+      .select()
+      .from(savedCards)
+      .where(and(
+        eq(savedCards.customerId, customerId),
+        eq(savedCards.isActive, true)
+      ))
+      .orderBy(desc(savedCards.isDefault), desc(savedCards.createdAt));
+  }
+
+  async getSavedCardBySquareId(squareCardId: string): Promise<any> {
+    const [card] = await db
+      .select()
+      .from(savedCards)
+      .where(eq(savedCards.squareCardId, squareCardId));
+    return card || undefined;
+  }
+
+  async deactivateSavedCard(squareCardId: string): Promise<void> {
+    await db
+      .update(savedCards)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(savedCards.squareCardId, squareCardId));
+  }
+
+  // Square Cards API - Token Events Implementation
+  async createCardTokenEvent(event: {
+    customerId?: string;
+    savedCardId?: string;
+    tokenType: string;
+    tokenId: string;
+    usageType: string;
+    amount?: number;
+    currency?: string;
+    status: string;
+    expiresAt?: Date;
+  }): Promise<any> {
+    const [tokenEvent] = await db
+      .insert(cardTokenEvents)
+      .values({
+        customerId: event.customerId,
+        savedCardId: event.savedCardId,
+        tokenType: event.tokenType,
+        tokenId: event.tokenId,
+        usageType: event.usageType,
+        amount: event.amount,
+        currency: event.currency || 'USD',
+        status: event.status,
+        expiresAt: event.expiresAt,
+      })
+      .returning();
+    return tokenEvent;
   }
 }
 

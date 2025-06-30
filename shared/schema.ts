@@ -34,6 +34,53 @@ export const merchants = pgTable("merchants", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Square Cards API - Customer Payment Profiles
+export const customerProfiles = pgTable("customer_profiles", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  email: text("email").notNull().unique(),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  phone: text("phone"),
+  squareCustomerId: text("square_customer_id").unique(), // Square Customer ID
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Square Cards API - Stored Payment Methods (Card-on-File)
+export const savedCards = pgTable("saved_cards", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  customerId: uuid("customer_id").notNull().references(() => customerProfiles.id, { onDelete: 'cascade' }),
+  squareCardId: text("square_card_id").notNull().unique(), // Square Card-on-File ID
+  cardBrand: text("card_brand"), // VISA, MASTERCARD, etc.
+  last4: text("last_4"), // Last 4 digits for display
+  expMonth: integer("exp_month"),
+  expYear: integer("exp_year"),
+  cardType: text("card_type"), // CREDIT, DEBIT
+  fingerprint: text("fingerprint"), // Unique card fingerprint
+  billingAddress: text("billing_address"), // JSON string of address
+  cardNickname: text("card_nickname"), // User-friendly name
+  isDefault: boolean("is_default").default(false),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Square Cards API - Card Tokenization Events
+export const cardTokenEvents = pgTable("card_token_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  customerId: uuid("customer_id").references(() => customerProfiles.id),
+  savedCardId: uuid("saved_card_id").references(() => savedCards.id),
+  tokenType: text("token_type").notNull(), // PAYMENT_TOKEN, CARD_NONCE
+  tokenId: text("token_id").notNull(),
+  usageType: text("usage_type").notNull(), // GIFT_CARD_PURCHASE, RECURRING_PAYMENT
+  amount: integer("amount"), // Amount in cents
+  currency: text("currency").default("USD"),
+  status: text("status").notNull(), // CREATED, USED, EXPIRED
+  expiresAt: timestamp("expires_at"),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const giftCards = pgTable("gift_cards", {
   id: serial("id").primaryKey(),
   merchantId: text("merchant_id").notNull(),

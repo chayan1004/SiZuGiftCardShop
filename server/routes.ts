@@ -8852,6 +8852,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get dispute analytics (MUST be before :id route)
+  app.get("/api/admin/disputes/analytics", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const {
+        merchantId,
+        dateFrom,
+        dateTo
+      } = req.query;
+
+      const filters: any = {};
+      if (merchantId) filters.merchantId = merchantId as string;
+      if (dateFrom) filters.dateFrom = new Date(dateFrom as string);
+      if (dateTo) filters.dateTo = new Date(dateTo as string);
+
+      const analytics = await storage.getDisputeAnalytics(filters);
+
+      res.json({
+        success: true,
+        analytics
+      });
+    } catch (error) {
+      console.error('Error fetching dispute analytics:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch dispute analytics"
+      });
+    }
+  });
+
   // Get dispute by ID
   app.get("/api/admin/disputes/:id", requireAdmin, async (req: Request, res: Response) => {
     try {
@@ -9070,35 +9099,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         success: false,
         message: "Failed to submit evidence"
-      });
-    }
-  });
-
-  // Get dispute analytics
-  app.get("/api/admin/disputes/analytics", requireAdmin, async (req: Request, res: Response) => {
-    try {
-      const {
-        merchantId,
-        dateFrom,
-        dateTo
-      } = req.query;
-
-      const filters: any = {};
-      if (merchantId) filters.merchantId = merchantId as string;
-      if (dateFrom) filters.dateFrom = new Date(dateFrom as string);
-      if (dateTo) filters.dateTo = new Date(dateTo as string);
-
-      const analytics = await storage.getDisputeAnalytics(filters);
-
-      res.json({
-        success: true,
-        analytics
-      });
-    } catch (error) {
-      console.error('Error fetching dispute analytics:', error);
-      res.status(500).json({
-        success: false,
-        message: "Failed to fetch dispute analytics"
       });
     }
   });

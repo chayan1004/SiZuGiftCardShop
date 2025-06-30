@@ -565,10 +565,12 @@ class EnhancedSquareAPIService {
         environment: process.env.SQUARE_ENVIRONMENT === 'production' 
           ? SquareEnvironment.Production 
           : SquareEnvironment.Sandbox,
-        accessToken: process.env.SQUARE_ACCESS_TOKEN || "EAAAlxqLNvlPZ0CtBPELxpPe6Hjq9--DfFPA45gVsXFnhmR4pyHhvqHc79HFaPMn"
+        token: process.env.SQUARE_ACCESS_TOKEN || "EAAAlxqLNvlPZ0CtBPELxpPe6Hjq9--DfFPA45gVsXFnhmR4pyHhvqHc79HFaPMn"
       });
 
-      const result = await client.checkoutApi.createPaymentLink({
+      const { Currency } = await import('square');
+      
+      const result = await client.checkout.paymentLinks.create({
         idempotencyKey: crypto.randomUUID(),
         checkoutOptions: {
           acceptedPaymentMethods: {
@@ -584,13 +586,12 @@ class EnhancedSquareAPIService {
         },
         order: {
           locationId: process.env.SQUARE_LOCATION_ID || "LD50VRHA8P636",
-          state: 'OPEN',
           lineItems: [
             {
               quantity: "1",
               basePriceMoney: {
                 amount: BigInt(paymentData.amount * 100), // Convert to cents
-                currency: paymentData.currency || 'USD'
+                currency: Currency.USD
               },
               name: paymentData.itemName || "SiZu Gift Card",
               note: paymentData.itemDescription || "Digital Gift Card Purchase"
@@ -600,11 +601,11 @@ class EnhancedSquareAPIService {
         paymentNote: paymentData.itemDescription || ""
       });
 
-      if (result.result?.paymentLink) {
+      if (result.paymentLink) {
         return {
           success: true,
-          checkoutUrl: result.result.paymentLink.url,
-          checkoutId: result.result.paymentLink.id
+          checkoutUrl: result.paymentLink.url,
+          checkoutId: result.paymentLink.id
         };
       }
 

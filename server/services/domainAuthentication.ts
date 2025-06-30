@@ -310,7 +310,7 @@ class DomainAuthentication {
    */
   getSetupInstructions(): {
     steps: string[];
-    dnsRecords: ReturnType<typeof this.getDNSRecords>;
+    dnsRecords: ReturnType<DomainAuthentication['getDNSRecords']>;
     verificationUrl: string;
   } {
     return {

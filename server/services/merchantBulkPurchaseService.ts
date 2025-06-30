@@ -149,27 +149,25 @@ export class MerchantBulkPurchaseService {
 
       // Create bulk order record
       const bulkOrder: InsertMerchantBulkOrder = {
-        merchant_id: merchantId,
-        bulkOrderId,
-        totalAmount: pricing.total,
+        merchant_id: parseInt(merchantId),
         quantity,
-        cardAmount: amount,
-        logoUrl,
-        customMessage,
-        status: 'PENDING'
+        unit_price: (amount / 100).toFixed(2),
+        total_price: (pricing.total / 100).toFixed(2),
+        status: 'pending'
       };
 
-      await storage.createMerchantBulkOrder(bulkOrder);
+      const createdOrder = await storage.createMerchantBulkOrder(bulkOrder);
+      const orderId = createdOrder.id;
 
       // Process payment with Square
       const paymentResult = await this.processSquarePayment(sourceId, pricing.total, bulkOrderId);
       if (!paymentResult.success) {
-        await storage.updateMerchantBulkOrderStatus(bulkOrderId, 'FAILED');
+        await storage.updateMerchantBulkOrderStatus(orderId, 'failed');
         return { success: false, error: paymentResult.error };
       }
 
       // Update bulk order with payment ID
-      await storage.updateMerchantBulkOrderPayment(bulkOrderId, paymentResult.paymentId!);
+      await storage.updateMerchantBulkOrderPayment(orderId, paymentResult.paymentId!);
 
       // Create individual gift cards
       const cards = [];

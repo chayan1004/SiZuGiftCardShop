@@ -224,6 +224,28 @@ export type InsertMerchantPricingTier = z.infer<typeof insertMerchantPricingTier
 export type MerchantBranding = typeof merchantBranding.$inferSelect;
 export type InsertMerchantBranding = z.infer<typeof insertMerchantBrandingSchema>;
 
+// Merchant Card Designs Schema
+export const merchantCardDesigns = pgTable("merchant_card_designs", {
+  id: serial("id").primaryKey(),
+  merchantId: integer("merchant_id").notNull(),
+  designUrl: text("design_url"), // Background image URL
+  logoUrl: text("logo_url"), // Logo image URL
+  themeColor: text("theme_color").default("#6366f1"), // Primary theme color
+  customMessage: text("custom_message"), // Custom text message
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertMerchantCardDesignSchema = createInsertSchema(merchantCardDesigns).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type MerchantCardDesign = typeof merchantCardDesigns.$inferSelect;
+export type InsertMerchantCardDesign = z.infer<typeof insertMerchantCardDesignSchema>;
+
 // Fraud Detection Schema
 export const fraudLogs = pgTable("fraud_logs", {
   id: uuid("id").defaultRandom().primaryKey(),

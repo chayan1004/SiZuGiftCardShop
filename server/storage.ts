@@ -1,5 +1,5 @@
 import { 
-  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, fraudLogs, autoDefenseRules,
+  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, merchantCardDesigns, fraudLogs, autoDefenseRules,
   type User, type InsertUser,
   type Merchant, type InsertMerchant, 
   type GiftCard, type InsertGiftCard,
@@ -11,6 +11,7 @@ import {
   type PublicGiftCardOrder, type InsertPublicGiftCardOrder,
   type MerchantPricingTier, type InsertMerchantPricingTier,
   type MerchantBranding, type InsertMerchantBranding,
+  type MerchantCardDesign, type InsertMerchantCardDesign,
   type FraudLog, type InsertFraudLog,
   type AutoDefenseRule, type InsertAutoDefenseRule
 } from "@shared/schema";
@@ -147,6 +148,11 @@ export interface IStorage {
   updatePromoCodeUsage(id: number, increment: number): Promise<PromoCode | undefined>;
   recordPromoUsage(usage: InsertPromoUsage): Promise<PromoUsage>;
   getPromoUsageByCode(promoCodeId: number): Promise<PromoUsage[]>;
+
+  // Merchant Card Design methods
+  getMerchantCardDesign(merchantId: number): Promise<MerchantCardDesign | undefined>;
+  createMerchantCardDesign(design: InsertMerchantCardDesign): Promise<MerchantCardDesign>;
+  updateMerchantCardDesign(merchantId: number, design: Partial<InsertMerchantCardDesign>): Promise<MerchantCardDesign | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -929,6 +935,43 @@ export class DatabaseStorage implements IStorage {
       ));
     
     return rule || undefined;
+  }
+
+  // Merchant Card Design methods
+  async getMerchantCardDesign(merchantId: number): Promise<MerchantCardDesign | undefined> {
+    const [design] = await db.select()
+      .from(merchantCardDesigns)
+      .where(and(
+        eq(merchantCardDesigns.merchantId, merchantId),
+        eq(merchantCardDesigns.isActive, true)
+      ));
+    
+    return design || undefined;
+  }
+
+  async createMerchantCardDesign(insertDesign: InsertMerchantCardDesign): Promise<MerchantCardDesign> {
+    const [design] = await db
+      .insert(merchantCardDesigns)
+      .values(insertDesign)
+      .returning();
+    
+    return design;
+  }
+
+  async updateMerchantCardDesign(merchantId: number, updateData: Partial<InsertMerchantCardDesign>): Promise<MerchantCardDesign | undefined> {
+    const [design] = await db
+      .update(merchantCardDesigns)
+      .set({
+        ...updateData,
+        updatedAt: new Date()
+      })
+      .where(and(
+        eq(merchantCardDesigns.merchantId, merchantId),
+        eq(merchantCardDesigns.isActive, true)
+      ))
+      .returning();
+    
+    return design || undefined;
   }
 }
 

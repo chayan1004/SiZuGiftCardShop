@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'wouter';
+import { useLocation } from 'wouter';
 import { useMutation } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ import LoadingAnimation from '@/components/ui/LoadingAnimation';
 import { 
   Heart, 
   Sparkles, 
-  Gift2, 
+  Gift, 
   ArrowLeft,
   Star,
   Zap
@@ -40,7 +40,7 @@ export default function EmotionalGiftCardStore() {
   const [showWorkflow, setShowWorkflow] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
 
   const purchaseMutation = useMutation({
     mutationFn: async (giftData: any) => {
@@ -52,7 +52,7 @@ export default function EmotionalGiftCardStore() {
         title: "Gift Card Created Successfully!",
         description: "Your emotional gift card has been created and will be delivered.",
       });
-      navigate(`/gift-success/${data.orderId}`);
+      setLocation(`/gift-success/${data.orderId}`);
     },
     onError: (error: any) => {
       toast({
@@ -159,7 +159,7 @@ export default function EmotionalGiftCardStore() {
               <div className="relative bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20">
                 <div className="flex justify-center mb-6">
                   <div className="relative">
-                    <Gift2 className="w-16 h-16 text-purple-600" />
+                    <Gift className="w-16 h-16 text-purple-600" />
                     <motion.div
                       className="absolute -top-2 -right-2"
                       animate={{ 
@@ -293,7 +293,7 @@ export default function EmotionalGiftCardStore() {
                     disabled={!selectedAmount}
                     className="bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 hover:from-purple-700 hover:via-pink-700 hover:to-blue-700 text-white px-12 py-4 text-lg font-semibold rounded-2xl shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Gift2 className="mr-3" size={20} />
+                    <Gift className="mr-3" size={20} />
                     Start Emotional Journey
                     <Sparkles className="ml-3" size={20} />
                   </Button>

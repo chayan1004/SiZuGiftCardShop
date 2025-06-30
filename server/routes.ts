@@ -5940,6 +5940,157 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Emotional Checkout Endpoint
+  app.post("/api/public/emotional-checkout", async (req: Request, res: Response) => {
+    try {
+      const {
+        amount,
+        recipientEmail,
+        recipientName,
+        senderName,
+        personalMessage,
+        emotionTheme,
+        giftOccasion,
+        giftWrapStyle,
+        deliveryDate,
+        isScheduled,
+        personalizedDesign,
+        merchantId
+      } = req.body;
+
+      // Validate required fields
+      if (!amount || !recipientEmail || !senderName || !recipientName) {
+        return res.status(400).json({ 
+          error: "Missing required fields: amount, recipientEmail, senderName, recipientName" 
+        });
+      }
+
+      // Validate amount range
+      if (amount < 500 || amount > 50000) {
+        return res.status(400).json({ 
+          error: "Amount must be between $5.00 and $500.00" 
+        });
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(recipientEmail)) {
+        return res.status(400).json({ 
+          error: "Invalid email format" 
+        });
+      }
+
+      // Create the order record
+      const orderData = {
+        recipientEmail,
+        recipientName,
+        senderName,
+        amount,
+        message: personalMessage || null,
+        merchantId: merchantId || null,
+        isGift: true,
+        emotionTheme: emotionTheme || null,
+        giftOccasion: giftOccasion || null,
+        personalizedDesign: personalizedDesign || null,
+        deliveryDate: isScheduled && deliveryDate ? new Date(deliveryDate) : null,
+        isScheduled: isScheduled || false,
+        giftWrapStyle: giftWrapStyle || null,
+        status: "pending"
+      };
+
+      const order = await storage.createPublicGiftCardOrder(orderData);
+
+      try {
+        // Create gift card through Square
+        const giftCardResult = await squareGiftCardService.createGiftCard({
+          amount,
+          locationId: process.env.SQUARE_LOCATION_ID!
+        });
+
+        if (!giftCardResult.success || !giftCardResult.giftCard) {
+          throw new Error(giftCardResult.error || "Failed to create gift card");
+        }
+
+        // Update order with gift card information
+        await storage.updateGiftCardInfo(order.id, {
+          giftCardId: giftCardResult.giftCard.id,
+          giftCardGan: giftCardResult.giftCard.gan,
+          giftCardState: giftCardResult.giftCard.state,
+          status: "issued"
+        });
+
+        // Generate PDF receipt with emotional branding
+        const receiptResult = await receiptService.generateReceipt({
+          orderId: order.id,
+          amount,
+          recipientEmail,
+          recipientName,
+          senderName,
+          message: personalMessage,
+          giftCardId: giftCardResult.giftCard.id,
+          giftCardGan: giftCardResult.giftCard.gan,
+          emotionTheme,
+          giftOccasion,
+          giftWrapStyle
+        } as any);
+
+        if (receiptResult.success && receiptResult.filePath) {
+          await storage.updateReceiptUrl(order.id, receiptResult.filePath);
+        }
+
+        // Send email notification (if not scheduled)
+        if (!isScheduled) {
+          try {
+            const emailResult = await emailService.sendGiftCardEmail({
+              to: recipientEmail,
+              giftCardId: giftCardResult.giftCard.id,
+              giftCardGan: giftCardResult.giftCard.gan,
+              amount,
+              senderName,
+              recipientName,
+              message: personalMessage,
+              emotionTheme,
+              giftOccasion
+            });
+
+            if (emailResult) {
+              await storage.markEmailAsSent(order.id);
+            }
+          } catch (emailError) {
+            console.error("Email sending failed:", emailError);
+            // Don't fail the entire request if email fails
+          }
+        }
+
+        res.json({
+          success: true,
+          orderId: order.id,
+          giftCardId: giftCardResult.giftCard.id,
+          giftCardGan: giftCardResult.giftCard.gan,
+          receiptUrl: receiptResult.filePath
+        });
+
+      } catch (squareError: any) {
+        console.error("Square gift card creation failed:", squareError);
+        
+        // Mark order as failed
+        await storage.updateOrderStatus(order.id, "failed");
+        
+        res.status(500).json({
+          error: "Failed to create gift card",
+          details: squareError.message
+        });
+      }
+
+    } catch (error: any) {
+      console.error("Emotional checkout error:", error);
+      res.status(500).json({ 
+        error: "Internal server error",
+        details: error.message 
+      });
+    }
+  });
+
   // Initialize Socket.IO for real-time transaction monitoring
   const io = new SocketServer(httpServer, {
     cors: {

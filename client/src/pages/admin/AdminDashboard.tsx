@@ -18,6 +18,9 @@ import { useToast } from "@/hooks/use-toast";
 import GiftCardManagement from "./GiftCardManagement";
 import MerchantManagement from "./UserManagement";
 import AdminThreatReplay from "../AdminThreatReplay";
+import AdminGiftCardAnalytics from "../AdminGiftCardAnalytics";
+import AdminMerchantSettings from "../AdminMerchantSettings";
+import AdminGiftCardOrders from "../AdminGiftCardOrders";
 
 interface DashboardMetrics {
   totalGiftCards: number;
@@ -178,13 +181,13 @@ export default function AdminDashboard() {
     { id: "revenue", label: "Revenue Analytics", icon: <TrendingUp className="w-5 h-5" /> },
     { id: "giftcards", label: "Gift Cards", icon: <Gift className="w-5 h-5" /> },
     { id: "merchants", label: "Merchant Partners", icon: <Users className="w-5 h-5" /> },
+    { id: "orders", label: "Public Orders", icon: <CreditCard className="w-5 h-5" /> },
+    { id: "analytics", label: "Gift Card Analytics", icon: <BarChart3 className="w-5 h-5" /> },
+    { id: "settings", label: "Merchant Settings", icon: <Settings className="w-5 h-5" /> },
+    { id: "security", label: "Threat Replay", icon: <Brain className="w-5 h-5" /> },
     { id: "customers", label: "Customer Insights", icon: <Users className="w-5 h-5" /> },
     { id: "marketing", label: "Marketing Tools", icon: <Mail className="w-5 h-5" /> },
-    { id: "operations", label: "Operations", icon: <Settings className="w-5 h-5" /> },
-    { id: "security", label: "Threat Replay", icon: <Brain className="w-5 h-5" /> },
-    { id: "growth", label: "Growth Strategy", icon: <TrendingUp className="w-5 h-5" /> },
-    { id: "reports", label: "Business Reports", icon: <BarChart3 className="w-5 h-5" /> },
-    { id: "system", label: "System Health", icon: <Settings className="w-5 h-5" /> },
+    { id: "email", label: "Email System", icon: <Mail className="w-5 h-5" /> },
   ];
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
@@ -887,6 +890,10 @@ export default function AdminDashboard() {
 
               {activeSection === "giftcards" && <GiftCardManagement />}
               {activeSection === "merchants" && <MerchantManagement />}
+              {activeSection === "orders" && <AdminGiftCardOrders />}
+              {activeSection === "analytics" && <AdminGiftCardAnalytics />}
+              {activeSection === "settings" && <AdminMerchantSettings />}
+              {activeSection === "security" && <AdminThreatReplay />}
               
               {activeSection === "email" && (
                 <div className="space-y-6">

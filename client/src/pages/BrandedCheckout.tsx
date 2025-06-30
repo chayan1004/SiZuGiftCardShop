@@ -178,6 +178,12 @@ export default function BrandedCheckout() {
   const [orderData, setOrderData] = useState<any>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('creditCard');
 
+  // Fetch checkout configuration
+  const { data: checkoutConfig } = useQuery<CheckoutConfig>({
+    queryKey: ['/api/admin/checkout-config'],
+    enabled: true
+  });
+
   // Form setup
   const form = useForm<CheckoutFormData>({
     resolver: zodResolver(checkoutSchema),
@@ -487,8 +493,93 @@ export default function BrandedCheckout() {
                         exit={{ opacity: 0, y: -20 }}
                         className="space-y-4"
                       >
-                        <div>
-                          <Label className="text-white">Card Number</Label>
+                        {/* Payment Method Selection */}
+                        <div className="space-y-3">
+                          <Label className="text-white font-semibold">Select Payment Method</Label>
+                          <div className="grid grid-cols-2 gap-3">
+                            {config?.acceptedPaymentMethods?.creditCard && (
+                              <Button
+                                type="button"
+                                variant={selectedPaymentMethod === 'creditCard' ? 'default' : 'outline'}
+                                onClick={() => setSelectedPaymentMethod('creditCard')}
+                                className={`${
+                                  selectedPaymentMethod === 'creditCard' 
+                                    ? 'border-white/40 text-white' 
+                                    : 'border-white/20 text-gray-300 hover:bg-white/10'
+                                }`}
+                                style={selectedPaymentMethod === 'creditCard' ? {
+                                  background: checkoutConfig ? `linear-gradient(135deg, ${checkoutConfig.primaryColor}, ${checkoutConfig.secondaryColor})` : 'linear-gradient(135deg, #7c3aed, #ec4899)',
+                                  border: 'none'
+                                } : {}}
+                              >
+                                <CreditCard className="w-4 h-4 mr-2" />
+                                Credit Card
+                              </Button>
+                            )}
+
+                            {checkoutConfig?.acceptedPaymentMethods?.applePay && (
+                              <Button
+                                type="button"
+                                variant={selectedPaymentMethod === 'applePay' ? 'default' : 'outline'}
+                                onClick={() => setSelectedPaymentMethod('applePay')}
+                                className={`${
+                                  selectedPaymentMethod === 'applePay' 
+                                    ? 'border-white/40 text-white' 
+                                    : 'border-white/20 text-gray-300 hover:bg-white/10'
+                                }`}
+                                style={selectedPaymentMethod === 'applePay' ? {
+                                  background: checkoutConfig ? `linear-gradient(135deg, ${checkoutConfig.primaryColor}, ${checkoutConfig.secondaryColor})` : 'linear-gradient(135deg, #7c3aed, #ec4899)',
+                                  border: 'none'
+                                } : {}}
+                              >
+                                🍎 Apple Pay
+                              </Button>
+                            )}
+
+                            {checkoutConfig?.acceptedPaymentMethods?.googlePay && (
+                              <Button
+                                type="button"
+                                variant={selectedPaymentMethod === 'googlePay' ? 'default' : 'outline'}
+                                onClick={() => setSelectedPaymentMethod('googlePay')}
+                                className={`${
+                                  selectedPaymentMethod === 'googlePay' 
+                                    ? 'border-white/40 text-white' 
+                                    : 'border-white/20 text-gray-300 hover:bg-white/10'
+                                }`}
+                                style={selectedPaymentMethod === 'googlePay' ? {
+                                  background: checkoutConfig ? `linear-gradient(135deg, ${checkoutConfig.primaryColor}, ${checkoutConfig.secondaryColor})` : 'linear-gradient(135deg, #7c3aed, #ec4899)',
+                                  border: 'none'
+                                } : {}}
+                              >
+                                🟡 Google Pay
+                              </Button>
+                            )}
+
+                            {checkoutConfig?.acceptedPaymentMethods?.cashApp && (
+                              <Button
+                                type="button"
+                                variant={selectedPaymentMethod === 'cashApp' ? 'default' : 'outline'}
+                                onClick={() => setSelectedPaymentMethod('cashApp')}
+                                className={`${
+                                  selectedPaymentMethod === 'cashApp' 
+                                    ? 'border-white/40 text-white' 
+                                    : 'border-white/20 text-gray-300 hover:bg-white/10'
+                                }`}
+                                style={selectedPaymentMethod === 'cashApp' ? {
+                                  background: checkoutConfig ? `linear-gradient(135deg, ${checkoutConfig.primaryColor}, ${checkoutConfig.secondaryColor})` : 'linear-gradient(135deg, #7c3aed, #ec4899)',
+                                  border: 'none'
+                                } : {}}
+                              >
+                                💵 Cash App
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+
+                        {selectedPaymentMethod === 'creditCard' && (
+                          <div className="space-y-4">
+                            <div>
+                              <Label className="text-white">Card Number</Label>
                           <Input
                             {...form.register('cardNumber')}
                             className="bg-white/10 border-white/20 text-white font-mono"
@@ -556,7 +647,7 @@ export default function BrandedCheckout() {
                             disabled={processPaymentMutation.isPending}
                             className="flex-1 text-white font-semibold transition-all duration-200"
                             style={{
-                              background: config ? `linear-gradient(135deg, ${config.primaryColor}, ${config.secondaryColor})` : 'linear-gradient(135deg, #7c3aed, #ec4899)',
+                              background: checkoutConfig ? `linear-gradient(135deg, ${checkoutConfig.primaryColor}, ${checkoutConfig.secondaryColor})` : 'linear-gradient(135deg, #7c3aed, #ec4899)',
                               border: 'none'
                             }}
                           >
@@ -604,7 +695,7 @@ export default function BrandedCheckout() {
                           onClick={() => setLocation('/')}
                           className="text-white font-semibold transition-all duration-200"
                           style={{
-                            background: config ? `linear-gradient(135deg, ${config.primaryColor}, ${config.secondaryColor})` : 'linear-gradient(135deg, #7c3aed, #ec4899)',
+                            background: checkoutConfig ? `linear-gradient(135deg, ${checkoutConfig.primaryColor}, ${checkoutConfig.secondaryColor})` : 'linear-gradient(135deg, #7c3aed, #ec4899)',
                             border: 'none'
                           }}
                         >

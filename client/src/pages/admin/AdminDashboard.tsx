@@ -742,6 +742,20 @@ export default function AdminDashboard() {
                 </div>
               )}
 
+              {/* Webhook Intelligence Section */}
+              {activeSection === "webhooks" && (
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-xl p-6">
+                    <h3 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-2">
+                      Webhook Intelligence Center
+                    </h3>
+                    <p className="text-gray-300">Advanced webhook delivery monitoring with intelligent retry analytics</p>
+                  </div>
+                  
+                  <AdminWebhookFailures />
+                </div>
+              )}
+
               {/* Merchant Settings Section */}
               {activeSection === "settings" && (
                 <div className="space-y-6">

@@ -20,6 +20,7 @@ import MerchantRegister from "@/pages/MerchantRegister";
 import MerchantDashboard from "@/pages/MerchantDashboard";
 import MerchantBulkPurchase from "@/pages/MerchantBulkPurchase";
 import MerchantGiftCardAnalytics from "@/pages/MerchantGiftCardAnalytics";
+import MerchantQRScanner from "@/pages/MerchantQRScanner";
 import MerchantVerify from "@/pages/MerchantVerify";
 import AdminLogin from "@/pages/admin/AdminLogin";
 import TestModal from "@/pages/TestModal";
@@ -77,6 +78,11 @@ function Router() {
       <Route path="/merchant-analytics">
         <ProtectedRoute role="merchant">
           <MerchantGiftCardAnalytics />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/merchant-qr">
+        <ProtectedRoute role="merchant">
+          <MerchantQRScanner />
         </ProtectedRoute>
       </Route>
       <Route component={NotFound} />

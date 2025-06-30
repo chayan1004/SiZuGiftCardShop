@@ -53,6 +53,8 @@
     "@types/node-fetch": "^2.6.12",
     "@types/nodemailer": "^6.4.17",
     "@types/qrcode": "^1.5.5",
+    "@zxing/browser": "^0.1.5",
+    "@zxing/library": "^0.21.3",
     "axios": "^1.10.0",
     "bcryptjs": "^3.0.2",
     "bwip-js": "^4.6.0",

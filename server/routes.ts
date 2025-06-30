@@ -18,6 +18,7 @@ import { pdfReceiptService } from './services/pdfReceiptService';
 import { ReceiptService } from './services/ReceiptService';
 import { squareWebhookHandler } from './webhooks/squareWebhookHandler';
 import { webhookService, type RedemptionWebhookPayload } from './services/WebhookService';
+import { webhookDispatcher, type RedemptionWebhookPayload as DispatcherPayload } from './services/WebhookDispatcher';
 import { FraudDetectionService } from './services/FraudDetectionService';
 import { ThreatReplayService } from './services/ThreatReplayService';
 import { AutoDefenseEngine } from './services/AutoDefenseEngine';
@@ -4510,30 +4511,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         squareActivityId: `qr-redeem-${Date.now()}`
       });
 
-      // Trigger merchant webhook for real-time automation
+      // Trigger merchant webhook for real-time automation with HMAC security
       if (card.merchantId) {
-        const webhookPayload: RedemptionWebhookPayload = {
-          card_id: card.gan || card.id.toString(),
-          merchant_id: card.merchantId,
-          amount: redemptionAmount,
-          customer_email: req.body.customerEmail || 'anonymous',
-          redemption_time: new Date().toISOString(),
-          gift_card_gan: card.gan,
-          event_type: 'gift_card_redeemed'
-        };
+        const clientIp = req.ip || req.connection.remoteAddress || '127.0.0.1';
+        const userAgent = req.get('User-Agent') || 'unknown';
+        
+        const webhookPayload = webhookDispatcher.createRedemptionPayload(
+          card.merchantId,
+          card.gan || card.id.toString(),
+          redemptionAmount,
+          { ip: clientIp, userAgent }
+        );
 
         // Fire webhook asynchronously - don't block response
-        webhookService.sendRedemptionWebhook(card.merchantId, webhookPayload)
-          .then(success => {
-            if (success) {
-              console.log(`✅ Webhook delivered successfully for redemption: ${card.gan}`);
-            } else {
-              console.log(`⚠️ Webhook delivery failed for redemption: ${card.gan}`);
-            }
-          })
-          .catch(error => {
-            console.error(`💥 Webhook error for redemption ${card.gan}:`, error);
-          });
+        webhookDispatcher.dispatchRedemptionWebhook(card.merchantId, webhookPayload);
+        console.log(`🎯 Webhook dispatched for redemption: ${card.gan}`);
       }
 
       res.json({

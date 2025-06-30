@@ -16,6 +16,7 @@ export const merchants = pgTable("merchants", {
   emailVerificationExpires: timestamp("email_verification_expires"),
   isActive: boolean("is_active").default(true),
   webhookUrl: text("webhook_url"), // Merchant automation webhook URL
+  webhookEnabled: boolean("webhook_enabled").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

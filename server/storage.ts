@@ -36,6 +36,7 @@ export interface IStorage {
   updateMerchantVerificationToken(id: number, token: string, expiresAt: Date): Promise<Merchant | undefined>;
   markMerchantEmailVerified(id: number): Promise<Merchant | undefined>;
   updateMerchantWebhookUrl(merchantId: string, webhookUrl: string | null): Promise<Merchant | undefined>;
+  updateMerchantWebhookSettings(merchantId: string, webhookUrl: string | null, enabled: boolean): Promise<Merchant | undefined>;
   getMerchantByMerchantId(merchantId: string): Promise<Merchant | undefined>;
 
   // Merchant Pricing Tiers methods
@@ -285,6 +286,18 @@ export class DatabaseStorage implements IStorage {
     const [merchant] = await db
       .update(merchants)
       .set({ webhookUrl })
+      .where(eq(merchants.merchantId, merchantId))
+      .returning();
+    return merchant || undefined;
+  }
+
+  async updateMerchantWebhookSettings(merchantId: string, webhookUrl: string | null, enabled: boolean): Promise<Merchant | undefined> {
+    const [merchant] = await db
+      .update(merchants)
+      .set({ 
+        webhookUrl,
+        webhookEnabled: enabled 
+      })
       .where(eq(merchants.merchantId, merchantId))
       .returning();
     return merchant || undefined;

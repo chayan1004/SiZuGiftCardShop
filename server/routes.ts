@@ -4233,8 +4233,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Import fraud detection middleware
+  const fraudMiddleware = await import('./middleware/fraudDetectionMiddleware.js');
+  const { 
+    rateLimitRedemptionAttempts, 
+    preventReplayRedemption, 
+    validateQRPayloadIntegrity,
+    logRedemptionAttempt 
+  } = fraudMiddleware;
+
   // QR Code Validation Endpoint
-  app.post("/api/merchant/validate-qr", requireMerchantAuth, async (req, res) => {
+  app.post("/api/merchant/validate-qr", requireMerchantAuth, validateQRPayloadIntegrity, async (req, res) => {
     try {
       const { qrData } = req.body;
       const merchantId = (req as any).merchant.merchantId;
@@ -4290,7 +4299,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // QR Code Redemption Endpoint
-  app.post("/api/merchant/redeem-qr", requireMerchantAuth, async (req, res) => {
+  app.post("/api/merchant/redeem-qr", 
+    requireMerchantAuth, 
+    validateQRPayloadIntegrity, 
+    rateLimitRedemptionAttempts, 
+    preventReplayRedemption, 
+    async (req, res) => {
     try {
       const { qrData, amount } = req.body;
       const merchantId = (req as any).merchant.merchantId;
@@ -4425,17 +4439,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.updateGiftCard(card.id, updateData);
 
       // Log successful redemption
-      await storage.createCardRedemption({
-        cardId: card.id,
-        merchantId,
-        giftCardGan: gan,
-        amount: redemptionAmount,
-        ipAddress,
-        deviceFingerprint,
-        userAgent,
-        success: true,
-        failureReason: null
-      });
+      await logRedemptionAttempt(card.id, 'success', null, req);
 
       // Create gift card activity record
       await storage.createGiftCardActivity({

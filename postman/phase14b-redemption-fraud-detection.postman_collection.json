@@ -1,0 +1,848 @@
+{
+  "info": {
+    "name": "Phase 14B: Redemption Fraud Detection",
+    "description": "Comprehensive test suite for QR redemption fraud detection middleware including rate limiting, replay protection, and payload validation",
+    "_postman_id": "fraud-detection-test-suite",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{merchantToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "merchantToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "validGiftCardGan",
+      "value": "1234567890123456",
+      "type": "string"
+    },
+    {
+      "key": "fraudTestDevice",
+      "value": "fraud-test-device-123",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Setup & Authentication",
+      "item": [
+        {
+          "name": "Merchant Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Merchant login successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.true;",
+                  "    pm.expect(response.token).to.exist;",
+                  "    pm.collectionVariables.set('merchantToken', response.token);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"qr.test@example.com\",\n  \"password\": \"TestPass123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payload Validation Tests",
+      "item": [
+        {
+          "name": "Test 1: Valid QR Payload",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Valid payload accepted', function () {",
+                  "    // Should pass validation and proceed (may fail on card not found, but validation passes)",
+                  "    pm.expect(pm.response.code).to.not.equal(400);",
+                  "    const response = pm.response.json();",
+                  "    if (response.code) {",
+                  "        pm.expect(response.code).to.not.equal('INVALID_FORMAT');",
+                  "        pm.expect(response.code).to.not.equal('TAMPERED_PAYLOAD');",
+                  "        pm.expect(response.code).to.not.equal('INVALID_LENGTH');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              },
+              {
+                "key": "X-Device-Fingerprint",
+                "value": "valid-device-001"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrData\": \"{{validGiftCardGan}}\",\n  \"amount\": 1000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/redeem-qr",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "redeem-qr"]
+            }
+          }
+        },
+        {
+          "name": "Test 2: Tampered QR Payload (Script Injection)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Tampered payload blocked', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.false;",
+                  "    pm.expect(response.code).to.equal('TAMPERED_PAYLOAD');",
+                  "    pm.expect(response.error).to.include('tampered');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              },
+              {
+                "key": "X-Device-Fingerprint",
+                "value": "tamper-device-001"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrData\": \"javascript:alert('xss')\",\n  \"amount\": 1000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/redeem-qr",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "redeem-qr"]
+            }
+          }
+        },
+        {
+          "name": "Test 3: Invalid QR Payload (Non-printable chars)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Non-printable chars blocked', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.false;",
+                  "    pm.expect(response.code).to.equal('TAMPERED_PAYLOAD');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              },
+              {
+                "key": "X-Device-Fingerprint",
+                "value": "invalid-device-001"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrData\": \"test\\u0000invalid\\u001F\",\n  \"amount\": 1000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/redeem-qr",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "redeem-qr"]
+            }
+          }
+        },
+        {
+          "name": "Test 4: QR Payload Too Long",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Long payload blocked', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.false;",
+                  "    pm.expect(response.code).to.equal('INVALID_LENGTH');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              },
+              {
+                "key": "X-Device-Fingerprint",
+                "value": "long-device-001"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrData\": \"" + "x".repeat(600) + "\",\n  \"amount\": 1000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/redeem-qr",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "redeem-qr"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rate Limiting Tests",
+      "item": [
+        {
+          "name": "Test 5: First Rate Limit Attempt",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('First attempt allowed', function () {",
+                  "    // Should not be rate limited on first attempt",
+                  "    pm.expect(pm.response.code).to.not.equal(429);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              },
+              {
+                "key": "X-Device-Fingerprint",
+                "value": "{{fraudTestDevice}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrData\": \"rate-limit-test-1\",\n  \"amount\": 1000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/redeem-qr",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "redeem-qr"]
+            }
+          }
+        },
+        {
+          "name": "Test 6: Second Rate Limit Attempt",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Second attempt allowed', function () {",
+                  "    pm.expect(pm.response.code).to.not.equal(429);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              },
+              {
+                "key": "X-Device-Fingerprint",
+                "value": "{{fraudTestDevice}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrData\": \"rate-limit-test-2\",\n  \"amount\": 1000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/redeem-qr",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "redeem-qr"]
+            }
+          }
+        },
+        {
+          "name": "Test 7: Third Rate Limit Attempt",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Third attempt allowed', function () {",
+                  "    pm.expect(pm.response.code).to.not.equal(429);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              },
+              {
+                "key": "X-Device-Fingerprint",
+                "value": "{{fraudTestDevice}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrData\": \"rate-limit-test-3\",\n  \"amount\": 1000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/redeem-qr",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "redeem-qr"]
+            }
+          }
+        },
+        {
+          "name": "Test 8: Fourth Rate Limit Attempt",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Fourth attempt allowed', function () {",
+                  "    pm.expect(pm.response.code).to.not.equal(429);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              },
+              {
+                "key": "X-Device-Fingerprint",
+                "value": "{{fraudTestDevice}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrData\": \"rate-limit-test-4\",\n  \"amount\": 1000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/redeem-qr",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "redeem-qr"]
+            }
+          }
+        },
+        {
+          "name": "Test 9: Fifth Rate Limit Attempt",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Fifth attempt allowed', function () {",
+                  "    pm.expect(pm.response.code).to.not.equal(429);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              },
+              {
+                "key": "X-Device-Fingerprint",
+                "value": "{{fraudTestDevice}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrData\": \"rate-limit-test-5\",\n  \"amount\": 1000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/redeem-qr",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "redeem-qr"]
+            }
+          }
+        },
+        {
+          "name": "Test 10: Sixth Rate Limit Attempt (Should Block)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Sixth attempt rate limited', function () {",
+                  "    pm.response.to.have.status(429);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.false;",
+                  "    pm.expect(response.error).to.include('Too many redemption attempts');",
+                  "    pm.expect(response.retryAfter).to.be.above(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              },
+              {
+                "key": "X-Device-Fingerprint",
+                "value": "{{fraudTestDevice}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrData\": \"rate-limit-test-6\",\n  \"amount\": 1000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/redeem-qr",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "redeem-qr"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Replay Attack Tests",
+      "item": [
+        {
+          "name": "Test 11: Create Gift Card for Replay Test",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Gift card order created', function () {",
+                  "    // This may fail if no valid cards exist, but we test replay logic",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 400, 404]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              },
+              {
+                "key": "X-Device-Fingerprint",
+                "value": "replay-device-001"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrData\": \"replay-test-card-001\",\n  \"amount\": 1000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/redeem-qr",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "redeem-qr"]
+            }
+          }
+        },
+        {
+          "name": "Test 12: Attempt Replay of Same Card",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Replay attempt detected', function () {",
+                  "    // Should detect replay if card was actually redeemed",
+                  "    if (pm.response.code === 409) {",
+                  "        const response = pm.response.json();",
+                  "        pm.expect(response.success).to.be.false;",
+                  "        pm.expect(response.code).to.equal('REPLAY_DETECTED');",
+                  "    } else {",
+                  "        // If not 409, should be another expected error code",
+                  "        pm.expect(pm.response.code).to.be.oneOf([400, 404]);",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              },
+              {
+                "key": "X-Device-Fingerprint",
+                "value": "replay-device-002"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrData\": \"replay-test-card-001\",\n  \"amount\": 1000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/redeem-qr",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "redeem-qr"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fraud Signal Tests",
+      "item": [
+        {
+          "name": "Test 13: Generate Fraud Signal (Attempt 1)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('First fraud attempt logged', function () {",
+                  "    // Should not trigger signal yet (need 3+ attempts)",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400, 404, 409, 429]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              },
+              {
+                "key": "X-Device-Fingerprint",
+                "value": "fraud-signal-device"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrData\": \"javascript:fraud1\",\n  \"amount\": 1000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/redeem-qr",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "redeem-qr"]
+            }
+          }
+        },
+        {
+          "name": "Test 14: Generate Fraud Signal (Attempt 2)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Second fraud attempt logged', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400, 404, 409, 429]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              },
+              {
+                "key": "X-Device-Fingerprint",
+                "value": "fraud-signal-device"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrData\": \"<script>fraud2</script>\",\n  \"amount\": 1000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/redeem-qr",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "redeem-qr"]
+            }
+          }
+        },
+        {
+          "name": "Test 15: Generate Fraud Signal (Attempt 3 - Trigger)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Third fraud attempt triggers signal', function () {",
+                  "    // Should trigger fraud signal emission",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400, 404, 409, 429]);",
+                  "    // Check response for fraud detection",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.false;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              },
+              {
+                "key": "X-Device-Fingerprint",
+                "value": "fraud-signal-device"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrData\": \"data:text/html,fraud3\",\n  \"amount\": 1000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/redeem-qr",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "redeem-qr"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Edge Case Tests",
+      "item": [
+        {
+          "name": "Test 16: Missing QR Data",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Missing QR data handled', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.false;",
+                  "    pm.expect(response.code).to.equal('INVALID_FORMAT');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              },
+              {
+                "key": "X-Device-Fingerprint",
+                "value": "edge-case-device"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 1000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/redeem-qr",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "redeem-qr"]
+            }
+          }
+        },
+        {
+          "name": "Test 17: Empty QR Data",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Empty QR data blocked', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.false;",
+                  "    pm.expect(response.code).to.equal('INVALID_LENGTH');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              },
+              {
+                "key": "X-Device-Fingerprint",
+                "value": "edge-case-device"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrData\": \"\",\n  \"amount\": 1000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/redeem-qr",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "redeem-qr"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

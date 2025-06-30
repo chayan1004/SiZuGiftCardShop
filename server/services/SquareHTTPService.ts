@@ -247,6 +247,59 @@ class SquareHTTPService {
   }
 
   /**
+   * Create payment token for stored card
+   */
+  async createPaymentToken(request: {
+    cardId: string;
+    customerId: string;
+    amount?: number;
+    currency?: string;
+    verificationToken?: string;
+  }): Promise<{
+    success: boolean;
+    token?: string;
+    error?: string;
+  }> {
+    try {
+      const tokenBody: any = {
+        card_id: request.cardId,
+        customer_id: request.customerId,
+      };
+
+      if (request.amount) {
+        tokenBody.amount = request.amount;
+      }
+
+      if (request.currency) {
+        tokenBody.currency = request.currency;
+      }
+
+      if (request.verificationToken) {
+        tokenBody.verification_token = request.verificationToken;
+      }
+
+      console.log('Creating payment token...');
+      const result = await this.makeRequest('/v2/cards/tokens', 'POST', tokenBody);
+
+      if (result.token) {
+        console.log(`Created payment token: ${result.token}`);
+        return {
+          success: true,
+          token: result.token
+        };
+      }
+
+      throw new Error('Failed to create payment token');
+    } catch (error: any) {
+      console.error('Square Cards API Error:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
    * Disable a saved card
    */
   async disableCard(cardId: string): Promise<{

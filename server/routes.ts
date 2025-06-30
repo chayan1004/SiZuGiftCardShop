@@ -8405,8 +8405,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { customerId, cardId } = req.params;
       const { amount, currency } = req.body;
       
-      const { squareCardsAPIService } = await import('./services/SquareCardsAPIService');
-      const tokenResult = await squareCardsAPIService.createPaymentToken({
+      const { squareHTTPService } = await import('./services/SquareHTTPService');
+      const tokenResult = await squareHTTPService.createPaymentToken({
         cardId,
         customerId,
         amount,
@@ -8438,8 +8438,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { cardId } = req.params;
       
-      const { squareCardsAPIService } = await import('./services/SquareCardsAPIService');
-      const result = await squareCardsAPIService.disableCard(cardId);
+      const { squareHTTPService } = await import('./services/SquareHTTPService');
+      const result = await squareHTTPService.disableCard(cardId);
 
       if (!result.success) {
         return res.status(500).json({
@@ -8477,8 +8477,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create or get customer profile if saving payment method
       if (savePaymentMethod) {
-        const { squareCardsAPIService } = await import('./services/SquareCardsAPIService');
-        const customerResult = await squareCardsAPIService.createOrGetCustomer({
+        const { squareHTTPService } = await import('./services/SquareHTTPService');
+        const customerResult = await squareHTTPService.createOrGetCustomer({
           email,
           firstName: customerData?.firstName,
           lastName: customerData?.lastName,
@@ -8511,8 +8511,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Save card if requested and payment successful
       if (savePaymentMethod && customerProfile && paymentSource.cardNonce) {
-        const { squareCardsAPIService } = await import('./services/SquareCardsAPIService');
-        await squareCardsAPIService.saveCardOnFile({
+        const { squareHTTPService } = await import('./services/SquareHTTPService');
+        await squareHTTPService.saveCardOnFile({
           customerId: customerProfile.squareCustomerId,
           cardNonce: paymentSource.cardNonce,
           cardNickname: paymentSource.nickname,

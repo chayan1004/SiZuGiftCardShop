@@ -345,6 +345,44 @@ export const insertWebhookEventSchema = createInsertSchema(webhookEvents).omit({
 export type WebhookEvent = typeof webhookEvents.$inferSelect;
 export type InsertWebhookEvent = z.infer<typeof insertWebhookEventSchema>;
 
+// Webhook Retry Queue Schema - Phase 16A
+export const webhookRetryQueue = pgTable("webhook_retry_queue", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  deliveryId: uuid("delivery_id").notNull(),
+  retryCount: integer("retry_count").default(0),
+  nextRetryAt: timestamp("next_retry_at").notNull(),
+  lastStatus: text("last_status"), // e.g., "timeout", "500", "network_error"
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertWebhookRetryQueueSchema = createInsertSchema(webhookRetryQueue).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type WebhookRetryQueue = typeof webhookRetryQueue.$inferSelect;
+export type InsertWebhookRetryQueue = z.infer<typeof insertWebhookRetryQueueSchema>;
+
+// Webhook Failure Log Schema - Phase 16A
+export const webhookFailureLog = pgTable("webhook_failure_log", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  deliveryId: uuid("delivery_id").notNull(),
+  statusCode: integer("status_code"),
+  errorMessage: text("error_message"),
+  failedAt: timestamp("failed_at").defaultNow(),
+  resolved: boolean("resolved").default(false),
+});
+
+export const insertWebhookFailureLogSchema = createInsertSchema(webhookFailureLog).omit({
+  id: true,
+  failedAt: true,
+});
+
+export type WebhookFailureLog = typeof webhookFailureLog.$inferSelect;
+export type InsertWebhookFailureLog = z.infer<typeof insertWebhookFailureLogSchema>;
+
 // Enhanced Webhook Delivery Logs
 export const webhookDeliveryLogs = pgTable("webhook_delivery_logs", {
   id: uuid("id").defaultRandom().primaryKey(),

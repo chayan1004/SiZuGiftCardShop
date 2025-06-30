@@ -1453,6 +1453,95 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(webhookDeliveryLogs.deliveredAt))
       .limit(limit);
   }
+
+  // Webhook Retry Queue Methods - Phase 16A
+  async createWebhookRetry(retry: InsertWebhookRetryQueue): Promise<WebhookRetryQueue> {
+    const [created] = await db.insert(webhookRetryQueue).values(retry).returning();
+    return created;
+  }
+
+  async getReadyWebhookRetries(): Promise<WebhookRetryQueue[]> {
+    return await db
+      .select()
+      .from(webhookRetryQueue)
+      .where(lte(webhookRetryQueue.nextRetryAt, new Date()))
+      .orderBy(asc(webhookRetryQueue.nextRetryAt));
+  }
+
+  async getWebhookRetryByDeliveryId(deliveryId: string): Promise<WebhookRetryQueue | undefined> {
+    const [retry] = await db
+      .select()
+      .from(webhookRetryQueue)
+      .where(eq(webhookRetryQueue.deliveryId, deliveryId));
+    return retry;
+  }
+
+  async updateWebhookRetry(retryId: string, updates: Partial<WebhookRetryQueue>): Promise<void> {
+    await db
+      .update(webhookRetryQueue)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(webhookRetryQueue.id, retryId));
+  }
+
+  async deleteWebhookRetry(retryId: string): Promise<void> {
+    await db.delete(webhookRetryQueue).where(eq(webhookRetryQueue.id, retryId));
+  }
+
+  // Webhook Failure Log Methods - Phase 16A
+  async createWebhookFailureLog(failure: InsertWebhookFailureLog): Promise<WebhookFailureLog> {
+    const [created] = await db.insert(webhookFailureLog).values(failure).returning();
+    return created;
+  }
+
+  async getWebhookFailures(limit: number = 50): Promise<WebhookFailureLog[]> {
+    return await db
+      .select()
+      .from(webhookFailureLog)
+      .orderBy(desc(webhookFailureLog.failedAt))
+      .limit(limit);
+  }
+
+  async getWebhookFailuresSince(merchantId: string, since: Date): Promise<WebhookFailureLog[]> {
+    return await db
+      .select({
+        id: webhookFailureLog.id,
+        deliveryId: webhookFailureLog.deliveryId,
+        statusCode: webhookFailureLog.statusCode,
+        errorMessage: webhookFailureLog.errorMessage,
+        failedAt: webhookFailureLog.failedAt,
+        resolved: webhookFailureLog.resolved
+      })
+      .from(webhookFailureLog)
+      .innerJoin(webhookDeliveryLogs, eq(webhookFailureLog.deliveryId, webhookDeliveryLogs.id))
+      .where(
+        and(
+          eq(webhookDeliveryLogs.merchantId, merchantId),
+          gte(webhookFailureLog.failedAt, since)
+        )
+      );
+  }
+
+  async markWebhookFailureResolved(failureId: string): Promise<void> {
+    await db
+      .update(webhookFailureLog)
+      .set({ resolved: true })
+      .where(eq(webhookFailureLog.id, failureId));
+  }
+
+  async getWebhookDeliveryLogById(deliveryId: string): Promise<any | undefined> {
+    const [log] = await db
+      .select()
+      .from(webhookDeliveryLogs)
+      .where(eq(webhookDeliveryLogs.id, deliveryId));
+    return log;
+  }
+
+  async updateWebhookDeliveryLog(deliveryId: string, updates: any): Promise<void> {
+    await db
+      .update(webhookDeliveryLogs)
+      .set(updates)
+      .where(eq(webhookDeliveryLogs.id, deliveryId));
+  }
 }
 
 export const storage = new DatabaseStorage();

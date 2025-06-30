@@ -562,6 +562,56 @@ CREATE TABLE public_giftcard_orders (
 - **Customer Insights**: Redemption behavior analysis for marketing strategies
 - **Performance Monitoring**: Real-time tracking of gift card program effectiveness
 
+## Phase 14C: Adaptive Threat Replay Engine (June 30, 2025)
+
+### Enterprise-Grade Threat Learning System
+- **ThreatReplayService**: Advanced replay engine that simulates historical fraud attempts against current defense systems
+- **AutoDefenseEngine**: AI-driven rule generation system that learns from attack patterns and creates adaptive firewall rules
+- **Database Architecture**: New `auto_defense_rules` table with UUID tracking, confidence scoring, and hit count analytics
+- **Learning Algorithms**: Multi-layer pattern recognition for IP addresses, device fingerprints, and merchant-specific threats
+
+### Comprehensive Admin Interface
+- **AdminThreatReplay.tsx**: Full-featured admin dashboard with tabbed interface for threat analysis
+- **Real-time Analytics**: Live statistics showing blocked vs allowed threats, learning effectiveness scoring
+- **Rule Management**: Visual interface for viewing, analyzing, and deactivating auto-generated defense rules
+- **Interactive Charts**: Progress bars, confidence meters, and rule type categorization with color coding
+
+### CLI Testing Utility
+- **scripts/replay-threats.js**: Terminal-based threat replay testing with comprehensive output formatting
+- **Command-line Analysis**: Configurable threat log analysis (1-200 historical records)
+- **Detailed Reporting**: Outcome symbols, rule suggestions, and effectiveness metrics
+- **Environment Configuration**: Flexible API endpoint and authentication token management
+
+### Adaptive Learning Capabilities
+- **Threat Pattern Recognition**: Automatic identification of IP-based, device fingerprint, and merchant-specific attack patterns
+- **Confidence Scoring**: AI-generated confidence levels (0-100%) for each auto-defense rule
+- **Rule Type Classification**: Categorized defense rules (IP blocking, device fingerprinting, merchant throttling)
+- **Hit Count Analytics**: Real-time tracking of rule effectiveness with last triggered timestamps
+
+### API Integration
+- **Threat Replay Endpoints**: POST `/api/admin/replay-threats` for triggering analysis with configurable limits
+- **Defense Rules API**: GET `/api/admin/defense-rules` for comprehensive rule and statistics retrieval
+- **Rule Management**: DELETE `/api/admin/defense-rules/:id` for deactivating ineffective rules
+- **Admin Authentication**: Secure endpoint protection with requireAdmin middleware
+
+### Learning Outcome Classification
+- **Blocked Correctly**: Threats properly blocked by current defense systems
+- **Should Have Blocked**: Missed threats that would trigger new rule creation
+- **False Positives**: Legitimate requests incorrectly flagged as threats
+- **Ignored**: Low-confidence threats not requiring immediate action
+
+### Technical Architecture
+- **Database Storage**: Auto-defense rules with type classification, value patterns, confidence scores, and activation status
+- **Real-time Processing**: Live threat simulation with immediate rule generation and database updates
+- **Pattern Analysis**: Advanced algorithms for IP clustering, device fingerprint matching, and merchant behavior analysis
+- **Performance Optimization**: Efficient batch processing with configurable analysis limits
+
+### Security Intelligence Features
+- **Threat Effectiveness Scoring**: 0-100% learning effectiveness calculation based on successful rule generation
+- **Adaptive Recommendations**: AI-generated suggestions for improving defense system coverage
+- **Historical Analysis**: Comprehensive review of past fraud attempts with outcome classification
+- **Defense Statistics**: Total rules, active rules, recently triggered rules, and average confidence metrics
+
 ## Phase 14A: Mobile QR Scanner for In-Store Redemption (June 30, 2025)
 
 ### Mobile QR Scanner Implementation

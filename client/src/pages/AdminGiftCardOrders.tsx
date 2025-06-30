@@ -2,10 +2,13 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Filter, Calendar, Mail, CreditCard, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Search, Filter, Calendar, Mail, CreditCard, CheckCircle, XCircle, Clock, RefreshCw, AlertTriangle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface PublicGiftCardOrder {
   id: string;
@@ -30,6 +33,8 @@ export default function AdminGiftCardOrders() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [emailFilter, setEmailFilter] = useState("all");
+  const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
+  const { toast } = useToast();
 
   const { data: orders = [], isLoading, error } = useQuery<PublicGiftCardOrder[]>({
     queryKey: ["/api/admin/giftcard-orders"],
@@ -85,6 +90,78 @@ export default function AdminGiftCardOrders() {
     ) : (
       <Badge variant="outline">Not Sent</Badge>
     );
+  };
+
+  const handleResendEmail = async (orderId: string) => {
+    setLoadingActions(prev => ({ ...prev, [`resend-${orderId}`]: true }));
+    
+    try {
+      const response = await apiRequest("POST", `/api/admin/giftcard-orders/${orderId}/resend-email`);
+      
+      if (response.ok) {
+        const result = await response.json();
+        toast({
+          title: "Email Resent",
+          description: result.message || "Gift card email has been resent successfully",
+        });
+        
+        queryClient.invalidateQueries({ queryKey: ["/api/admin/giftcard-orders"] });
+      } else {
+        const error = await response.json();
+        toast({
+          title: "Resend Failed",
+          description: error.message || "Failed to resend email",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error resending email:', error);
+      toast({
+        title: "Error",
+        description: "An error occurred while resending the email",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingActions(prev => ({ ...prev, [`resend-${orderId}`]: false }));
+    }
+  };
+
+  const handleMarkAsFailed = async (orderId: string) => {
+    if (!confirm("Are you sure you want to mark this order as failed? This action cannot be undone.")) {
+      return;
+    }
+    
+    setLoadingActions(prev => ({ ...prev, [`fail-${orderId}`]: true }));
+    
+    try {
+      const response = await apiRequest("POST", `/api/admin/giftcard-orders/${orderId}/mark-failed`);
+      
+      if (response.ok) {
+        const result = await response.json();
+        toast({
+          title: "Order Updated",
+          description: result.message || "Order has been marked as failed",
+        });
+        
+        queryClient.invalidateQueries({ queryKey: ["/api/admin/giftcard-orders"] });
+      } else {
+        const error = await response.json();
+        toast({
+          title: "Update Failed",
+          description: error.message || "Failed to update order status",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error marking order as failed:', error);
+      toast({
+        title: "Error",
+        description: "An error occurred while updating the order",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingActions(prev => ({ ...prev, [`fail-${orderId}`]: false }));
+    }
   };
 
   if (isLoading) {
@@ -258,12 +335,13 @@ export default function AdminGiftCardOrders() {
                     <TableHead className="text-slate-300">Gift Card ID</TableHead>
                     <TableHead className="text-slate-300">Email Status</TableHead>
                     <TableHead className="text-slate-300">Created</TableHead>
+                    <TableHead className="text-slate-300">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredOrders.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center text-slate-400 py-8">
+                      <TableCell colSpan={8} className="text-center text-slate-400 py-8">
                         No orders found matching your filters
                       </TableCell>
                     </TableRow>
@@ -309,6 +387,52 @@ export default function AdminGiftCardOrders() {
                         </TableCell>
                         <TableCell className="text-slate-300 text-sm">
                           {formatDate(order.createdAt)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            {/* Resend Email Button */}
+                            {order.status === 'issued' && order.giftCardGan && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleResendEmail(order.id)}
+                                disabled={loadingActions[`resend-${order.id}`]}
+                                className="h-8 px-2 text-xs bg-blue-600/20 border-blue-500/30 hover:bg-blue-600/30 text-blue-300"
+                              >
+                                {loadingActions[`resend-${order.id}`] ? (
+                                  <div className="animate-spin w-3 h-3 border border-blue-300 border-t-transparent rounded-full" />
+                                ) : (
+                                  <RefreshCw className="w-3 h-3" />
+                                )}
+                                <span className="ml-1">Resend</span>
+                              </Button>
+                            )}
+                            
+                            {/* Mark Failed Button */}
+                            {order.status !== 'failed' && !order.manuallyMarkedFailed && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleMarkAsFailed(order.id)}
+                                disabled={loadingActions[`fail-${order.id}`]}
+                                className="h-8 px-2 text-xs bg-red-600/20 border-red-500/30 hover:bg-red-600/30 text-red-300"
+                              >
+                                {loadingActions[`fail-${order.id}`] ? (
+                                  <div className="animate-spin w-3 h-3 border border-red-300 border-t-transparent rounded-full" />
+                                ) : (
+                                  <AlertTriangle className="w-3 h-3" />
+                                )}
+                                <span className="ml-1">Mark Failed</span>
+                              </Button>
+                            )}
+
+                            {/* Show resend count if > 0 */}
+                            {order.emailResendCount > 0 && (
+                              <div className="text-xs text-slate-400 self-center">
+                                Resent: {order.emailResendCount}x
+                              </div>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))

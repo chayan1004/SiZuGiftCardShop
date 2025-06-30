@@ -188,12 +188,16 @@ export default function MerchantSettingsPage() {
         </div>
 
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 bg-white/10 backdrop-blur-sm">
+          <TabsList className="grid w-full grid-cols-3 bg-white/10 backdrop-blur-sm">
             <TabsTrigger value="profile" className="data-[state=active]:bg-white/20 text-white">
               Profile Settings
             </TabsTrigger>
             <TabsTrigger value="api-keys" className="data-[state=active]:bg-white/20 text-white">
               API Keys
+            </TabsTrigger>
+            <TabsTrigger value="gdpr" className="data-[state=active]:bg-white/20 text-white">
+              <Shield className="w-4 h-4 mr-2" />
+              Privacy & GDPR
             </TabsTrigger>
           </TabsList>
 
@@ -417,6 +421,10 @@ export default function MerchantSettingsPage() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="gdpr">
+            <GDPRConsentManager />
           </TabsContent>
         </Tabs>
 

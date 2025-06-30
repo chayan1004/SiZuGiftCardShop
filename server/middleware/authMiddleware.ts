@@ -69,33 +69,7 @@ export const requireMerchant = (req: Request, res: Response, next: NextFunction)
       return next();
     }
 
-    // Fallback to legacy token format for compatibility
-    if (merchantToken.startsWith('merchant-') || merchantToken === 'test-merchant-token-123') {
-      let merchantId;
-      
-      if (merchantToken === 'test-merchant-token-123') {
-        // Test token for Phase 15B webhook configuration testing
-        merchantId = 'test-merchant-001';
-        console.log(`🧪 Using test token for merchant: ${merchantId}`);
-      } else {
-        merchantId = merchantToken.replace('merchant-', '');
-        console.log(`⚠️ Using legacy token format for merchant: ${merchantId}`);
-      }
-      
-      // Validate merchant ID from token matches route parameter (if exists)
-      const routeMerchantId = req.params.merchantId;
-      if (routeMerchantId && routeMerchantId !== merchantId) {
-        return res.status(403).json({ 
-          success: false, 
-          error: 'Merchant ID mismatch. Cannot access another merchant\'s data.' 
-        });
-      }
-
-      (req as any).merchantId = merchantId;
-      (req as any).user = { merchantId }; // Add user object for compatibility
-      (req as any).isMerchant = true;
-      return next();
-    }
+    // Security: Removed insecure fallback authentication - only verified JWTs allowed
 
     console.log('❌ Invalid merchant token format for route:', req.path);
     return res.status(403).json({ 

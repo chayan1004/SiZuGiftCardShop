@@ -645,7 +645,6 @@ export class DatabaseStorage implements IStorage {
       createdAt: Date;
     }> = [];
 
-    // Add gift card purchases
     merchantCards.forEach(card => {
       transactions.push({
         type: 'PURCHASE',
@@ -656,7 +655,6 @@ export class DatabaseStorage implements IStorage {
       });
     });
 
-    // Add redemptions from activities
     const allActivities = await db.select().from(giftCardActivities);
     allActivities.forEach(activity => {
       const card = merchantCards.find(c => c.id === activity.giftCardId);

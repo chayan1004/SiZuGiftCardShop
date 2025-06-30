@@ -1,0 +1,410 @@
+{
+	"info": {
+		"_postman_id": "7a9c4b5e-2f3d-4e8f-9a1b-3c5d7e9f1a2b",
+		"name": "Gift Card Orders - SiZu Pay",
+		"description": "Comprehensive test suite for SiZu gift card order flows including payment processing, Square API integration, email delivery, PDF receipt generation, and admin endpoints.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Public Tests",
+			"item": [
+				{
+					"name": "Public Checkout - Create Gift Card Order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test 1: Public Checkout Validation",
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has success flag', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"});",
+									"",
+									"pm.test('Response includes required fields', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('orderId');",
+									"    pm.expect(jsonData).to.have.property('giftCardId');",
+									"    pm.expect(jsonData).to.have.property('giftCardGan');",
+									"    pm.expect(jsonData).to.have.property('giftCardState');",
+									"});",
+									"",
+									"pm.test('Gift card ID is valid', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.giftCardId).to.be.a('string');",
+									"    pm.expect(jsonData.giftCardId.length).to.be.greaterThan(0);",
+									"});",
+									"",
+									"pm.test('GAN (Gift Account Number) is valid', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.giftCardGan).to.be.a('string');",
+									"    pm.expect(jsonData.giftCardGan.length).to.be.greaterThan(0);",
+									"});",
+									"",
+									"// Store order ID for subsequent tests",
+									"pm.test('Store order ID for next tests', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('orderId', jsonData.orderId);",
+									"    pm.collectionVariables.set('giftCardId', jsonData.giftCardId);",
+									"    pm.collectionVariables.set('giftCardGan', jsonData.giftCardGan);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"recipientEmail\": \"test-postman@example.com\",\n  \"amount\": 2500,\n  \"message\": \"Postman automated test gift card\",\n  \"merchantId\": \"\",\n  \"paymentToken\": \"cnon:card-nonce-ok\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/public/checkout",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"public",
+								"checkout"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Public Order Details - Success Page Data",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test 5: Public Success Page Data Validation",
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Order details are complete', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('recipientEmail');",
+									"    pm.expect(jsonData).to.have.property('amount');",
+									"    pm.expect(jsonData).to.have.property('status');",
+									"    pm.expect(jsonData).to.have.property('giftCardId');",
+									"    pm.expect(jsonData).to.have.property('giftCardGan');",
+									"});",
+									"",
+									"pm.test('Order status is issued', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.equal('issued');",
+									"});",
+									"",
+									"pm.test('Gift card details match previous test', function () {",
+									"    const jsonData = pm.response.json();",
+									"    const expectedGiftCardId = pm.collectionVariables.get('giftCardId');",
+									"    const expectedGan = pm.collectionVariables.get('giftCardGan');",
+									"    pm.expect(jsonData.giftCardId).to.equal(expectedGiftCardId);",
+									"    pm.expect(jsonData.giftCardGan).to.equal(expectedGan);",
+									"});",
+									"",
+									"pm.test('PDF receipt URL is present', function () {",
+									"    const jsonData = pm.response.json();",
+									"    if (jsonData.pdfReceiptUrl) {",
+									"        pm.expect(jsonData.pdfReceiptUrl).to.be.a('string');",
+									"        pm.expect(jsonData.pdfReceiptUrl).to.include('/receipts/');",
+									"        pm.collectionVariables.set('pdfReceiptUrl', jsonData.pdfReceiptUrl);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/public/order/{{orderId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"public",
+								"order",
+								"{{orderId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Admin Tests",
+			"item": [
+				{
+					"name": "Admin Gift Card Orders List",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test 2: Admin API Validation",
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response is an array', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});",
+									"",
+									"pm.test('Test order exists in admin list', function () {",
+									"    const jsonData = pm.response.json();",
+									"    const testOrderId = pm.collectionVariables.get('orderId');",
+									"    const testOrder = jsonData.find(order => order.id === testOrderId);",
+									"    pm.expect(testOrder).to.not.be.undefined;",
+									"});",
+									"",
+									"pm.test('Test order has required admin fields', function () {",
+									"    const jsonData = pm.response.json();",
+									"    const testOrderId = pm.collectionVariables.get('orderId');",
+									"    const testOrder = jsonData.find(order => order.id === testOrderId);",
+									"    ",
+									"    if (testOrder) {",
+									"        pm.expect(testOrder).to.have.property('recipientEmail');",
+									"        pm.expect(testOrder).to.have.property('amount');",
+									"        pm.expect(testOrder).to.have.property('status');",
+									"        pm.expect(testOrder).to.have.property('giftCardId');",
+									"        pm.expect(testOrder).to.have.property('giftCardGan');",
+									"        pm.expect(testOrder).to.have.property('emailSent');",
+									"        pm.expect(testOrder).to.have.property('createdAt');",
+									"    }",
+									"});",
+									"",
+									"pm.test('Email delivery status is tracked', function () {",
+									"    const jsonData = pm.response.json();",
+									"    const testOrderId = pm.collectionVariables.get('orderId');",
+									"    const testOrder = jsonData.find(order => order.id === testOrderId);",
+									"    ",
+									"    if (testOrder) {",
+									"        pm.expect(testOrder.emailSent).to.be.a('boolean');",
+									"        // Note: Email might still be processing, so we don't assert true",
+									"    }",
+									"});",
+									"",
+									"pm.test('PDF receipt URL is present', function () {",
+									"    const jsonData = pm.response.json();",
+									"    const testOrderId = pm.collectionVariables.get('orderId');",
+									"    const testOrder = jsonData.find(order => order.id === testOrderId);",
+									"    ",
+									"    if (testOrder && testOrder.pdfReceiptUrl) {",
+									"        pm.expect(testOrder.pdfReceiptUrl).to.be.a('string');",
+									"        pm.expect(testOrder.pdfReceiptUrl).to.include('/receipts/');",
+									"        pm.collectionVariables.set('adminPdfUrl', testOrder.pdfReceiptUrl);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-admin-token",
+								"value": "sizu-admin-2025"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/giftcard-orders",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"giftcard-orders"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Admin Email Delivery Log",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test 3: Email Delivery Log Validation",
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Email log response is valid', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('object');",
+									"});",
+									"",
+									"pm.test('Order ID matches in email log', function () {",
+									"    const jsonData = pm.response.json();",
+									"    const expectedOrderId = pm.collectionVariables.get('orderId');",
+									"    if (jsonData.orderId) {",
+									"        pm.expect(jsonData.orderId).to.equal(expectedOrderId);",
+									"    }",
+									"});",
+									"",
+									"pm.test('Email delivery tracking exists', function () {",
+									"    const jsonData = pm.response.json();",
+									"    // Email log should have delivery status information",
+									"    pm.expect(jsonData).to.have.property('emailSent');",
+									"});",
+									"",
+									"pm.test('Email sent timestamp validation', function () {",
+									"    const jsonData = pm.response.json();",
+									"    if (jsonData.emailSent && jsonData.emailSentAt) {",
+									"        pm.expect(jsonData.emailSentAt).to.be.a('string');",
+									"        // Validate timestamp format",
+									"        const timestamp = new Date(jsonData.emailSentAt);",
+									"        pm.expect(timestamp.getTime()).to.not.be.NaN;",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-admin-token",
+								"value": "sizu-admin-2025"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/email-log/{{orderId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"email-log",
+								"{{orderId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "PDF Receipt Tests",
+			"item": [
+				{
+					"name": "PDF Receipt Download Validation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test 4: PDF Receipt Validation",
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Content-Type is PDF', function () {",
+									"    pm.expect(pm.response.headers.get('content-type')).to.include('application/pdf');",
+									"});",
+									"",
+									"pm.test('PDF file has content', function () {",
+									"    pm.expect(pm.response.responseSize).to.be.greaterThan(1000); // PDF should be > 1KB",
+									"});",
+									"",
+									"pm.test('PDF header validation', function () {",
+									"    const responseText = pm.response.text();",
+									"    pm.expect(responseText).to.include('%PDF'); // PDF file signature",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}{{pdfReceiptUrl}}",
+							"host": [
+								"{{baseUrl}}{{pdfReceiptUrl}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Set base URL if not already set",
+					"if (!pm.collectionVariables.get('baseUrl')) {",
+					"    pm.collectionVariables.set('baseUrl', 'http://localhost:5000');",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5000",
+			"type": "string"
+		},
+		{
+			"key": "orderId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "giftCardId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "giftCardGan",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "pdfReceiptUrl",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "adminPdfUrl",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

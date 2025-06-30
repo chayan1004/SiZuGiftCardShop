@@ -1819,7 +1819,7 @@ export class DatabaseStorage implements IStorage {
     }
     
     if (filters.type) {
-      conditions.push(eq(giftCardTransactions.type, filters.type));
+      conditions.push(eq(giftCardTransactions.type, filters.type as any));
     }
     
     if (filters.status) {
@@ -1854,33 +1854,12 @@ export class DatabaseStorage implements IStorage {
 
   async getTransactionDetail(id: string): Promise<any> {
     const [transaction] = await db
-      .select({
-        transaction: giftCardTransactions,
-        merchant: {
-          merchantId: merchants.merchantId,
-          businessName: merchants.businessName,
-          email: merchants.email
-        }
-      })
+      .select()
       .from(giftCardTransactions)
       .leftJoin(merchants, eq(giftCardTransactions.merchantId, merchants.merchantId))
       .where(eq(giftCardTransactions.id, id));
-
-    if (!transaction) return null;
-
-    // Get related fraud logs
-    const relatedFraudLogs = await db
-      .select()
-      .from(fraudLogs)
-      .where(eq(fraudLogs.ipAddress, transaction.transaction.ipAddress || ''))
-      .orderBy(desc(fraudLogs.createdAt))
-      .limit(10);
-
-    return {
-      ...transaction.transaction,
-      merchant: transaction.merchant,
-      fraudLogs: relatedFraudLogs
-    };
+    
+    return transaction;
   }
 
   async getTransactionStats(): Promise<any> {

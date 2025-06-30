@@ -113,16 +113,18 @@ export class ThreatClusterEngine {
       .orderBy(desc(fraudLogs.createdAt))
       .limit(1000); // Limit to prevent memory issues
 
-    return results.map(result => ({
-      id: result.id,
-      ipAddress: result.ipAddress,
-      userAgent: result.userAgent,
-      deviceFingerprint: result.deviceFingerprint,
-      merchantId: result.merchantId,
-      timestamp: result.timestamp,
-      threatType: result.threatType,
-      metadata: result.metadata ? JSON.parse(result.metadata) : null,
-    }));
+    return results
+      .filter(result => result.timestamp !== null)
+      .map(result => ({
+        id: result.id,
+        ipAddress: result.ipAddress,
+        userAgent: result.userAgent,
+        deviceFingerprint: result.deviceFingerprint,
+        merchantId: result.merchantId,
+        timestamp: result.timestamp!,
+        threatType: result.threatType,
+        metadata: result.metadata ? JSON.parse(result.metadata) : null,
+      }));
   }
 
   /**

@@ -66,7 +66,7 @@ export default function QRCodeScanner() {
         
         try {
           const result = await readerRef.current.decodeFromVideoDevice(
-            undefined, // Use default camera
+            null, // Use default camera
             videoRef.current,
             (result: Result | null, error: Error | undefined) => {
               if (result) {

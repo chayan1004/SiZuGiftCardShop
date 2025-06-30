@@ -1860,10 +1860,19 @@ export class DatabaseStorage implements IStorage {
     }
 
     if (conditions.length > 0) {
-      query = query.where(and(...conditions));
+      const result = await db
+        .select()
+        .from(giftCardTransactions)
+        .where(and(...conditions))
+        .orderBy(desc(giftCardTransactions.createdAt))
+        .limit(filters.limit || 50)
+        .offset(filters.offset || 0);
+      return result;
     }
 
-    return await query
+    return await db
+      .select()
+      .from(giftCardTransactions)
       .orderBy(desc(giftCardTransactions.createdAt))
       .limit(filters.limit || 50)
       .offset(filters.offset || 0);
@@ -2407,9 +2416,10 @@ export class DatabaseStorage implements IStorage {
 
     // Category filter
     if (filters?.category && filters.category !== 'all') {
+      const category = filters.category;
       filteredCards = filteredCards.filter(card => 
-        card.giftCategory === filters.category || 
-        card.businessType.toLowerCase().includes(filters.category.toLowerCase())
+        card.giftCategory === category || 
+        card.businessType.toLowerCase().includes(category.toLowerCase())
       );
     }
 

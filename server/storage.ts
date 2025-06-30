@@ -2217,6 +2217,95 @@ export class DatabaseStorage implements IStorage {
 
     return result.rowCount || 0;
   }
+
+  // Public storefront methods
+  async getActiveMerchants(): Promise<any[]> {
+    const activeMerchants = await db
+      .select({
+        id: merchants.id,
+        businessName: merchants.businessName,
+        businessType: merchants.businessType,
+        isActive: merchants.isActive,
+        createdAt: merchants.createdAt
+      })
+      .from(merchants)
+      .where(eq(merchants.isActive, true))
+      .orderBy(merchants.businessName);
+    
+    return activeMerchants.map(merchant => ({
+      ...merchant,
+      giftCardCount: 5, // Mock count for now
+      avgRating: 4.8
+    }));
+  }
+
+  async getPublicGiftCards(): Promise<any[]> {
+    const activeMerchants = await this.getActiveMerchants();
+    
+    const giftCards = await Promise.all(
+      activeMerchants.map(async (merchant) => {
+        // Get merchant branding
+        const branding = await this.getMerchantBranding(merchant.id);
+        
+        return {
+          merchantId: merchant.id,
+          merchantName: merchant.businessName,
+          businessType: merchant.businessType,
+          logo: branding?.logoUrl,
+          themeColor: branding?.themeColor || '#6366f1',
+          minAmount: 1000, // $10
+          maxAmount: 50000, // $500
+          isActive: merchant.isActive,
+          popularAmounts: [2500, 5000, 10000, 15000, 25000],
+          description: branding?.description || `Gift cards for ${merchant.businessName}`
+        };
+      })
+    );
+    
+    return giftCards;
+  }
+
+  async createPublicGiftCardOrder(orderData: any): Promise<any> {
+    const [order] = await db
+      .insert(publicGiftcardOrders)
+      .values({
+        id: crypto.randomUUID(),
+        recipientEmail: orderData.recipientEmail,
+        merchantId: orderData.merchantId,
+        amount: orderData.amount,
+        message: orderData.message,
+        status: orderData.status || 'pending',
+        squarePaymentId: orderData.squarePaymentId,
+        giftCardId: orderData.giftCardId,
+        giftCardGan: orderData.giftCardGan,
+        senderName: orderData.senderName,
+        recipientName: orderData.recipientName,
+        isGift: orderData.isGift || false,
+        createdAt: new Date()
+      })
+      .returning();
+    
+    return order;
+  }
+
+  async getPublicGiftCardOrderById(orderId: string): Promise<any> {
+    const [order] = await db
+      .select()
+      .from(publicGiftcardOrders)
+      .where(eq(publicGiftcardOrders.id, orderId));
+    
+    return order;
+  }
+
+  async markEmailAsSent(orderId: string): Promise<void> {
+    await db
+      .update(publicGiftcardOrders)
+      .set({ 
+        emailSent: true,
+        emailSentAt: new Date()
+      })
+      .where(eq(publicGiftcardOrders.id, orderId));
+  }
 }
 
 export const storage = new DatabaseStorage();

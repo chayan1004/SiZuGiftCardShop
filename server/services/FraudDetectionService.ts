@@ -160,7 +160,7 @@ export class FraudDetectionService {
         'redemption_failed': 'invalid_code'
       };
 
-      const alertType = alertTypeMap[fraudData.reason] || 'suspicious_activity';
+      const alertType = (alertTypeMap[fraudData.reason] || 'suspicious_activity') as 'invalid_code' | 'rate_limit_ip_violation' | 'device_fingerprint_violation' | 'reused_code' | 'merchant_rate_limit' | 'suspicious_activity';
       const severity = calculateThreatSeverity(fraudData.reason, fraudData.ipAddress);
 
       // Generate human-readable messages
@@ -181,7 +181,7 @@ export class FraudDetectionService {
         type: alertType,
         severity,
         message,
-        userAgent: fraudData.userAgent,
+        userAgent: fraudData.userAgent || undefined,
         additionalData: {
           gan: fraudData.gan,
           merchantId: fraudData.merchantId,

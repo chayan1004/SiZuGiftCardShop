@@ -529,20 +529,20 @@ export default function AdminThreatReplay() {
             )}
           </div>
 
-          {defenseData?.statistics?.rulesByType && (
+          {(defenseData as any)?.statistics?.rulesByType && (
             <Card>
               <CardHeader>
                 <CardTitle>Defense Rules by Type</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {Object.entries(defenseData.statistics.rulesByType).map(([type, count]) => (
+                  {Object.entries((defenseData as any).statistics.rulesByType).map(([type, count]) => (
                     <div key={type} className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         {getRuleTypeBadge(type)}
                         <span className="font-medium capitalize">{type} Rules</span>
                       </div>
-                      <span className="text-2xl font-bold">{count}</span>
+                      <span className="text-2xl font-bold">{count as number}</span>
                     </div>
                   ))}
                 </div>

@@ -230,9 +230,9 @@ export class WebhookConfigService {
 
     return logs.map(log => ({
       id: log.id,
-      webhook_id: log.webhookEventId || '',
-      event_type: log.eventType || 'unknown',
-      status: log.success ? 'success' : 'failed' as 'success' | 'failed' | 'retry',
+      webhook_id: log.card_id || '',
+      event_type: log.event_type || 'unknown',
+      status: log.status || 'unknown' as 'success' | 'failed' | 'retry',
       response_code: log.statusCode,
       created_at: log.deliveredAt || new Date(),
       error_message: log.errorMessage || undefined,

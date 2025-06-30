@@ -1482,12 +1482,21 @@ export class DatabaseStorage implements IStorage {
       .limit(limit);
   }
 
-  async getAllWebhookDeliveryLogs(limit: number = 100): Promise<WebhookDeliveryLog[]> {
-    return await db
-      .select()
-      .from(webhookDeliveryLogs)
-      .orderBy(desc(webhookDeliveryLogs.deliveredAt))
-      .limit(limit);
+  async getAllWebhookDeliveryLogs(limit: number = 100): Promise<any[]> {
+    try {
+      // Query actual webhook_delivery_logs table structure
+      const result = await db.execute(sql`
+        SELECT id, merchant_id, card_id, amount, status, error_message, 
+               response_time_ms, payload, created_at
+        FROM webhook_delivery_logs 
+        ORDER BY created_at DESC 
+        LIMIT ${limit}
+      `);
+      return result.rows || [];
+    } catch (error) {
+      console.error('Error fetching webhook logs:', error);
+      return [];
+    }
   }
 
   // Webhook Retry Queue Methods - Phase 16A

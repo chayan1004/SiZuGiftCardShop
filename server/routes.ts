@@ -3362,6 +3362,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get merchant card design for public checkout
+  app.get("/api/public/merchant-design/:merchantId", async (req: Request, res: Response) => {
+    try {
+      const { merchantId } = req.params;
+      
+      // Fetch merchant card design by square ID
+      const design = await storage.getMerchantCardDesignBySquareId(merchantId);
+      
+      if (!design) {
+        // Return default/fallback design
+        return res.json({
+          success: true,
+          design: {
+            hasCustomDesign: false,
+            backgroundImageUrl: null,
+            logoUrl: null,
+            themeColor: '#613791',
+            customMessage: 'Thank you for choosing our gift card!'
+          }
+        });
+      }
+
+      // Return merchant's custom design
+      res.json({
+        success: true,
+        design: {
+          hasCustomDesign: true,
+          backgroundImageUrl: design.backgroundImageUrl,
+          logoUrl: design.logoUrl,
+          themeColor: design.themeColor || '#613791',
+          customMessage: design.customMessage || 'Thank you for choosing our gift card!'
+        }
+      });
+    } catch (error) {
+      console.error('Merchant design fetch error:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to fetch merchant design',
+        design: {
+          hasCustomDesign: false,
+          backgroundImageUrl: null,
+          logoUrl: null,
+          themeColor: '#613791',
+          customMessage: 'Thank you for choosing our gift card!'
+        }
+      });
+    }
+  });
+
   // Public gift card checkout with Square payment processing
   app.post("/api/public/checkout", async (req: Request, res: Response) => {
     try {

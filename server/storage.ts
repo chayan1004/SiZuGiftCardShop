@@ -151,6 +151,7 @@ export interface IStorage {
 
   // Merchant Card Design methods
   getMerchantCardDesign(merchantId: number): Promise<MerchantCardDesign | undefined>;
+  getMerchantCardDesignBySquareId(merchantSquareId: string): Promise<MerchantCardDesign | undefined>;
   createMerchantCardDesign(design: InsertMerchantCardDesign): Promise<MerchantCardDesign>;
   updateMerchantCardDesign(merchantId: number, design: Partial<InsertMerchantCardDesign>): Promise<MerchantCardDesign | undefined>;
 }
@@ -947,6 +948,28 @@ export class DatabaseStorage implements IStorage {
       .from(merchantCardDesigns)
       .where(and(
         eq(merchantCardDesigns.merchantId, merchantId),
+        eq(merchantCardDesigns.isActive, true)
+      ));
+    
+    return design || undefined;
+  }
+
+  async getMerchantCardDesignBySquareId(merchantSquareId: string): Promise<MerchantCardDesign | undefined> {
+    const [design] = await db.select({
+      id: merchantCardDesigns.id,
+      merchantId: merchantCardDesigns.merchantId,
+      backgroundImageUrl: merchantCardDesigns.backgroundImageUrl,
+      logoUrl: merchantCardDesigns.logoUrl,
+      themeColor: merchantCardDesigns.themeColor,
+      customMessage: merchantCardDesigns.customMessage,
+      isActive: merchantCardDesigns.isActive,
+      createdAt: merchantCardDesigns.createdAt,
+      updatedAt: merchantCardDesigns.updatedAt
+    })
+      .from(merchantCardDesigns)
+      .innerJoin(merchants, eq(merchantCardDesigns.merchantId, merchants.id))
+      .where(and(
+        eq(merchants.squareId, merchantSquareId),
         eq(merchantCardDesigns.isActive, true)
       ));
     

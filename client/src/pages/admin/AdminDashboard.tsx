@@ -8,7 +8,7 @@ import {
 import { 
   TrendingUp, CreditCard, Users, DollarSign, Activity, 
   Mail, QrCode, Calendar, Download, RefreshCw, Settings,
-  Home, LogOut, Shield, Database, BarChart3, Gift, Menu, X
+  Home, LogOut, Shield, Database, BarChart3, Gift, Menu, X, Brain
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import GiftCardManagement from "./GiftCardManagement";
 import MerchantManagement from "./UserManagement";
+import AdminThreatReplay from "../AdminThreatReplay";
 
 interface DashboardMetrics {
   totalGiftCards: number;
@@ -180,6 +181,7 @@ export default function AdminDashboard() {
     { id: "customers", label: "Customer Insights", icon: <Users className="w-5 h-5" /> },
     { id: "marketing", label: "Marketing Tools", icon: <Mail className="w-5 h-5" /> },
     { id: "operations", label: "Operations", icon: <Settings className="w-5 h-5" /> },
+    { id: "security", label: "Threat Replay", icon: <Brain className="w-5 h-5" /> },
     { id: "growth", label: "Growth Strategy", icon: <TrendingUp className="w-5 h-5" /> },
     { id: "reports", label: "Business Reports", icon: <BarChart3 className="w-5 h-5" /> },
     { id: "system", label: "System Health", icon: <Settings className="w-5 h-5" /> },
@@ -1714,7 +1716,14 @@ export default function AdminDashboard() {
                 </div>
               )}
               
-              {!["overview", "giftcards", "merchants", "email", "analytics", "settings"].includes(activeSection) && (
+              {/* Security/Threat Replay Section */}
+              {activeSection === "security" && (
+                <div className="space-y-6">
+                  <AdminThreatReplay />
+                </div>
+              )}
+
+              {!["overview", "giftcards", "merchants", "email", "analytics", "settings", "security"].includes(activeSection) && (
                 <div className="text-center py-16">
                   <h3 className="text-xl font-semibold text-white mb-2 capitalize">
                     {activeSection} Section

@@ -163,21 +163,21 @@ const PhysicalCardPreview = ({
             </div>
           </div>
           
-          {/* Custom Image Display - Fill Whole Card */}
+          {/* Custom Image Logo - Bottom Right Circle */}
           {customImage && (
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.5 }}
-              className="absolute inset-0 rounded-2xl overflow-hidden"
+              className="absolute bottom-4 right-4"
             >
-              <img 
-                src={customImage} 
-                alt="Custom design" 
-                className="w-full h-full object-cover opacity-80"
-              />
-              {/* Dark overlay to maintain text readability */}
-              <div className="absolute inset-0 bg-black/40 rounded-2xl"></div>
+              <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white/30 bg-white/10 backdrop-blur-sm shadow-lg">
+                <img 
+                  src={customImage} 
+                  alt="Custom logo" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
             </motion.div>
           )}
           

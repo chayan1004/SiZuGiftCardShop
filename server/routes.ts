@@ -5093,7 +5093,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         customDesignUrl: customerData.customImage || null,
         quantity: customerData.quantity || 1,
         denomination: 5000, // $50 default
-        squareBasePrice: pricing.squareBaseCost || 350,
+        squareBasePrice: pricing.breakdown?.squareBaseCost || pricing.squareBasePrice || 350,
         adminFeePercentage: pricing.adminFeePercentage?.toString() || "10.00",
         totalCost: pricing.totalOrder,
         customerType: 'individual',

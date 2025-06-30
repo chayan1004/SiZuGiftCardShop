@@ -48,6 +48,7 @@ function Router() {
       <Route path="/check-balance" component={CheckBalance} />
       <Route path="/gift-cards" component={PublicGiftCardStore} />
       <Route path="/physical-cards" component={PhysicalGiftCardStore} />
+      <Route path="/physical-giftcard-store" component={PhysicalGiftCardStore} />
       <Route path="/emotional-gifts" component={EmotionalGiftCardStore} />
       <Route path="/gift-cards/purchase/:merchantId?" component={GiftCardPurchase} />
       <Route path="/gift-cards/success/:orderId" component={PurchaseSuccess} />

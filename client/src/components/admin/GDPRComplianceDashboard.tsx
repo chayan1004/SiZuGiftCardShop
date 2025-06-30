@@ -1,37 +1,18 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Progress } from "@/components/ui/progress";
-import { 
-  Shield, 
-  FileText, 
-  Users, 
-  AlertTriangle, 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
-  Download,
-  Trash2,
-  Eye,
-  Calendar,
-  BarChart3,
-  Database,
-  Lock,
-  AlertCircle,
-  UserCheck,
-  FileWarning
-} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { AlertCircle, Calendar, Clock, Eye, FileText, Shield, Users, Database } from "lucide-react";
 
 interface GDPROverview {
   dataProcessing: {
@@ -97,135 +78,91 @@ interface PrivacyImpactAssessment {
   createdAt: string;
 }
 
+// Badge variant helper
+function getStatusBadge(status: string) {
+  const variants: Record<string, "default" | "destructive" | "secondary" | "outline"> = {
+    pending: "outline",
+    processing: "secondary",
+    completed: "default",
+    rejected: "destructive",
+    draft: "outline",
+    approved: "default",
+    high: "destructive",
+    medium: "secondary",
+    low: "outline"
+  };
+  
+  return <Badge variant={variants[status] || "outline"}>{status}</Badge>;
+}
+
+// Date formatting helper
+function formatDate(dateString: string): string {
+  return new Date(dateString).toLocaleDateString();
+}
+
+// Check if request is overdue
+function isOverdue(deadlineDate: string, status: string): boolean {
+  if (status === 'completed') return false;
+  return new Date(deadlineDate) < new Date();
+}
+
 export default function GDPRComplianceDashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedRequest, setSelectedRequest] = useState<DataSubjectRequest | null>(null);
-  const [newBreachDialog, setNewBreachDialog] = useState(false);
 
-  // Fetch GDPR compliance overview
+  // Fetch GDPR overview data
   const { data: overview, isLoading: overviewLoading } = useQuery({
-    queryKey: ["/api/admin/gdpr/compliance-overview"],
-    queryFn: () => apiRequest("GET", "/api/admin/gdpr/compliance-overview").then(res => res.json()),
+    queryKey: ['/api/admin/gdpr/overview'],
   });
 
   // Fetch data subject requests
   const { data: dataSubjectRequests, isLoading: requestsLoading } = useQuery({
-    queryKey: ["/api/admin/gdpr/data-subject-requests"],
-    queryFn: () => apiRequest("GET", "/api/admin/gdpr/data-subject-requests").then(res => res.json()),
+    queryKey: ['/api/admin/gdpr/data-subject-requests'],
   });
 
   // Fetch data breaches
   const { data: dataBreaches, isLoading: breachesLoading } = useQuery({
-    queryKey: ["/api/admin/gdpr/data-breaches"],
-    queryFn: () => apiRequest("GET", "/api/admin/gdpr/data-breaches").then(res => res.json()),
+    queryKey: ['/api/admin/gdpr/data-breaches'],
   });
 
   // Fetch privacy assessments
   const { data: privacyAssessments, isLoading: assessmentsLoading } = useQuery({
-    queryKey: ["/api/admin/gdpr/privacy-impact-assessments"],
-    queryFn: () => apiRequest("GET", "/api/admin/gdpr/privacy-impact-assessments").then(res => res.json()),
+    queryKey: ['/api/admin/gdpr/privacy-assessments'],
   });
 
-  // Update data subject request mutation
+  // Update request status mutation
   const updateRequestMutation = useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: any }) =>
-      apiRequest("PUT", `/api/admin/gdpr/data-subject-requests/${id}`, updates),
+    mutationFn: async ({ id, updates }: { id: string; updates: any }) => {
+      return apiRequest('PUT', `/api/admin/gdpr/data-subject-requests/${id}`, updates);
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/gdpr/data-subject-requests"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/gdpr/compliance-overview"] });
-      toast({
-        title: "Request Updated",
-        description: "Data subject request has been updated successfully.",
-      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/gdpr/data-subject-requests'] });
+      toast({ title: "Request updated successfully" });
     },
     onError: () => {
-      toast({
-        title: "Update Failed",
-        description: "Failed to update data subject request.",
-        variant: "destructive",
+      toast({ 
+        title: "Error updating request", 
+        variant: "destructive" 
       });
     },
   });
 
-  // Create data breach mutation
+  // Create breach incident mutation
   const createBreachMutation = useMutation({
-    mutationFn: (incidentData: any) =>
-      apiRequest("POST", "/api/admin/gdpr/data-breach", incidentData),
+    mutationFn: async (data: any) => {
+      return apiRequest('POST', '/api/admin/gdpr/data-breaches', data);
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/gdpr/data-breaches"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/gdpr/compliance-overview"] });
-      setNewBreachDialog(false);
-      toast({
-        title: "Breach Reported",
-        description: "Data breach incident has been recorded successfully.",
-      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/gdpr/data-breaches'] });
+      toast({ title: "Breach incident created successfully" });
     },
     onError: () => {
-      toast({
-        title: "Report Failed",
-        description: "Failed to create data breach incident.",
-        variant: "destructive",
+      toast({ 
+        title: "Error creating breach incident", 
+        variant: "destructive" 
       });
     },
   });
-
-  const getStatusBadge = (status: string) => {
-    const variants = {
-      pending: "secondary",
-      processing: "default",
-      completed: "success",
-      rejected: "destructive",
-      verified: "success",
-      draft: "secondary",
-      approved: "success",
-      investigating: "default",
-      contained: "default",
-      resolved: "success"
-    } as const;
-
-    return (
-      <Badge variant={variants[status as keyof typeof variants] || "secondary"}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </Badge>
-    );
-  };
-
-  const getRiskBadge = (risk: string) => {
-    const variants = {
-      low: "success",
-      medium: "default",
-      high: "destructive"
-    } as const;
-
-    return (
-      <Badge variant={variants[risk as keyof typeof variants] || "secondary"}>
-        {risk.toUpperCase()} RISK
-      </Badge>
-    );
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const isOverdue = (deadlineDate: string, status: string) => {
-    return new Date(deadlineDate) < new Date() && status !== 'completed';
-  };
-
-  if (overviewLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
-      </div>
-    );
-  }
 
   const overviewData: GDPROverview = overview?.overview || {
     dataProcessing: { total: 0, byLegalBasis: {} },
@@ -235,527 +172,245 @@ export default function GDPRComplianceDashboard() {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 lg:p-6">
-      {/* Mobile-First Header */}
-      <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-700 p-3 sm:p-6">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+        {/* Header */}
         <div className="text-center sm:text-left">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight flex items-center justify-center sm:justify-start gap-2">
-            <Shield className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-primary" />
-            <span className="break-words">GDPR Compliance Center</span>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+            GDPR Compliance Center
           </h1>
-          <p className="text-xs sm:text-sm lg:text-base text-muted-foreground mt-1 sm:mt-2 px-2 sm:px-0">
-            Comprehensive data protection and privacy compliance management
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+            Complete data protection compliance monitoring and management
           </p>
         </div>
-      </div>
 
-      {/* Mobile-First Overview Cards */}
-      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="hover:shadow-lg transition-shadow duration-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
-            <CardTitle className="text-xs sm:text-sm font-medium truncate">Data Processing</CardTitle>
-            <Database className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
-          </CardHeader>
-          <CardContent className="pt-1 sm:pt-2">
-            <div className="text-xl sm:text-2xl font-bold">{overviewData.dataProcessing.total}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Active processing activities
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-lg transition-shadow duration-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
-            <CardTitle className="text-xs sm:text-sm font-medium truncate">Subject Requests</CardTitle>
-            <Users className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
-          </CardHeader>
-          <CardContent className="pt-1 sm:pt-2">
-            <div className="text-xl sm:text-2xl font-bold">{overviewData.dataSubjectRequests.total}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {overviewData.dataSubjectRequests.pending} pending • {overviewData.dataSubjectRequests.overdue} overdue
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-lg transition-shadow duration-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
-            <CardTitle className="text-xs sm:text-sm font-medium truncate">Data Breaches</CardTitle>
-            <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
-          </CardHeader>
-          <CardContent className="pt-1 sm:pt-2">
-            <div className="text-xl sm:text-2xl font-bold">{overviewData.dataBreaches.total}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {overviewData.dataBreaches.highRisk} high risk • {overviewData.dataBreaches.resolved} resolved
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-lg transition-shadow duration-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
-            <CardTitle className="text-xs sm:text-sm font-medium truncate">Privacy Assessments</CardTitle>
-            <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
-          </CardHeader>
-          <CardContent className="pt-1 sm:pt-2">
-            <div className="text-xl sm:text-2xl font-bold">{overviewData.privacyAssessments.total}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {overviewData.privacyAssessments.approved} approved • {overviewData.privacyAssessments.highRisk} high risk
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Mobile-First Content Tabs */}
-      <Tabs defaultValue="requests" className="space-y-4 sm:space-y-6">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
-          <TabsTrigger value="requests" className="text-xs sm:text-sm px-1 sm:px-3 py-2">
-            <span className="hidden sm:inline">Data Subject Requests</span>
-            <span className="sm:hidden">Requests</span>
-          </TabsTrigger>
-          <TabsTrigger value="breaches" className="text-xs sm:text-sm px-1 sm:px-3 py-2">
-            <span className="hidden sm:inline">Data Breaches</span>
-            <span className="sm:hidden">Breaches</span>
-          </TabsTrigger>
-          <TabsTrigger value="assessments" className="text-xs sm:text-sm px-1 sm:px-3 py-2">
-            <span className="hidden sm:inline">Privacy Assessments</span>
-            <span className="sm:hidden">Assessments</span>
-          </TabsTrigger>
-          <TabsTrigger value="processing" className="text-xs sm:text-sm px-1 sm:px-3 py-2">
-            <span className="hidden sm:inline">Data Processing</span>
-            <span className="sm:hidden">Processing</span>
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Data Subject Requests */}
-        <TabsContent value="requests" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Data Subject Rights Requests</CardTitle>
-              <CardDescription>
-                Manage access, portability, rectification, erasure, and other GDPR requests
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {requestsLoading ? (
-                <div className="flex justify-center py-8">
-                  <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full" />
+        {/* Overview Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+          <Card className="glass-card border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+            <CardHeader className="p-3 sm:p-6 pb-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg sm:text-xl text-gray-900 dark:text-gray-100">
+                    Data Requests
+                  </CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
+                    Total subject requests
+                  </CardDescription>
                 </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Request Type</TableHead>
-                      <TableHead>Requester</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Submitted</TableHead>
-                      <TableHead>Deadline</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {dataSubjectRequests?.requests?.map((request: DataSubjectRequest) => (
-                      <TableRow key={request.id}>
-                        <TableCell className="font-medium">
-                          {request.requestType.replace('_', ' ').toUpperCase()}
-                        </TableCell>
-                        <TableCell>ID: {request.requesterId}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            {getStatusBadge(request.requestStatus)}
-                            {isOverdue(request.deadlineDate, request.requestStatus) && (
-                              <AlertCircle className="w-4 h-4 text-destructive" />
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>{formatDate(request.requestDate)}</TableCell>
-                        <TableCell className={isOverdue(request.deadlineDate, request.requestStatus) ? "text-destructive font-medium" : ""}>
-                          {formatDate(request.deadlineDate)}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setSelectedRequest(request)}
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            {request.requestStatus === 'pending' && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => updateRequestMutation.mutate({
-                                  id: request.id,
-                                  updates: { requestStatus: 'processing' }
-                                })}
-                              >
-                                Process
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
+                <Users className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500" />
+              </div>
+            </CardHeader>
+            <CardContent className="p-3 sm:p-6 pt-0">
+              <div className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
+                {overviewData.dataSubjectRequests.total}
+              </div>
+              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
+                {overviewData.dataSubjectRequests.overdue} overdue
+              </div>
             </CardContent>
           </Card>
-        </TabsContent>
 
-        {/* Data Breaches */}
-        <TabsContent value="breaches" className="space-y-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Data Breach Incidents</CardTitle>
-                <CardDescription>
-                  Track and manage data breach incidents per Articles 33-34 GDPR
-                </CardDescription>
+          <Card className="glass-card border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+            <CardHeader className="p-3 sm:p-6 pb-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg sm:text-xl text-gray-900 dark:text-gray-100">
+                    Data Breaches
+                  </CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
+                    Security incidents
+                  </CardDescription>
+                </div>
+                <AlertCircle className="w-6 h-6 sm:w-8 sm:h-8 text-red-500" />
               </div>
-              <Dialog open={newBreachDialog} onOpenChange={setNewBreachDialog}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <AlertTriangle className="w-4 h-4 mr-2" />
-                    Report Breach
+            </CardHeader>
+            <CardContent className="p-3 sm:p-6 pt-0">
+              <div className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
+                {overviewData.dataBreaches.total}
+              </div>
+              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
+                {overviewData.dataBreaches.highRisk} high risk
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="glass-card border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+            <CardHeader className="p-3 sm:p-6 pb-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg sm:text-xl text-gray-900 dark:text-gray-100">
+                    Data Processing
+                  </CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
+                    Total records
+                  </CardDescription>
+                </div>
+                <Database className="w-6 h-6 sm:w-8 sm:h-8 text-green-500" />
+              </div>
+            </CardHeader>
+            <CardContent className="p-3 sm:p-6 pt-0">
+              <div className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
+                {overviewData.dataProcessing.total}
+              </div>
+              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
+                Active records
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="glass-card border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+            <CardHeader className="p-3 sm:p-6 pb-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg sm:text-xl text-gray-900 dark:text-gray-100">
+                    Assessments
+                  </CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
+                    Privacy impact
+                  </CardDescription>
+                </div>
+                <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-purple-500" />
+              </div>
+            </CardHeader>
+            <CardContent className="p-3 sm:p-6 pt-0">
+              <div className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
+                {overviewData.privacyAssessments.total}
+              </div>
+              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
+                {overviewData.privacyAssessments.approved} approved
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content Tabs */}
+        <Card className="glass-card border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+          <CardContent className="p-3 sm:p-6">
+            <Tabs defaultValue="requests" className="w-full">
+              <div className="overflow-x-auto mb-4">
+                <TabsList className="grid w-full grid-cols-4 min-w-max sm:min-w-0">
+                  <TabsTrigger value="requests" className="text-xs sm:text-sm whitespace-nowrap">
+                    Data Requests
+                  </TabsTrigger>
+                  <TabsTrigger value="breaches" className="text-xs sm:text-sm whitespace-nowrap">
+                    Data Breaches
+                  </TabsTrigger>
+                  <TabsTrigger value="assessments" className="text-xs sm:text-sm whitespace-nowrap">
+                    Privacy Assessments
+                  </TabsTrigger>
+                  <TabsTrigger value="processing" className="text-xs sm:text-sm whitespace-nowrap">
+                    Data Processing
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+
+              {/* Data Subject Requests */}
+              <TabsContent value="requests" className="space-y-3 sm:space-y-4 mt-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">
+                    Data Subject Rights Requests
+                  </h3>
+                  <Button size="sm" className="w-full sm:w-auto">
+                    <FileText className="w-4 h-4 mr-2" />
+                    Export Report
                   </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle>Report Data Breach Incident</DialogTitle>
-                    <DialogDescription>
-                      Create a new data breach incident record per GDPR Article 33
-                    </DialogDescription>
-                  </DialogHeader>
-                  <DataBreachForm onSubmit={(data) => createBreachMutation.mutate(data)} />
-                </DialogContent>
-              </Dialog>
-            </CardHeader>
-            <CardContent>
-              {breachesLoading ? (
-                <div className="flex justify-center py-8">
-                  <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full" />
                 </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Incident Reference</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Risk Level</TableHead>
-                      <TableHead>Affected Records</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Discovery Date</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {dataBreaches?.incidents?.map((incident: DataBreachIncident) => (
-                      <TableRow key={incident.id}>
-                        <TableCell className="font-medium">
-                          {incident.incidentReference}
-                        </TableCell>
-                        <TableCell>{incident.breachType}</TableCell>
-                        <TableCell>{getRiskBadge(incident.riskLevel)}</TableCell>
-                        <TableCell>
-                          {incident.affectedRecords.toLocaleString()} records / {incident.affectedIndividuals.toLocaleString()} individuals
-                        </TableCell>
-                        <TableCell>{getStatusBadge(incident.incidentStatus)}</TableCell>
-                        <TableCell>{formatDate(incident.discoveryDate)}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
 
-        {/* Privacy Assessments */}
-        <TabsContent value="assessments" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Privacy Impact Assessments</CardTitle>
-              <CardDescription>
-                Manage Data Protection Impact Assessments (DPIA) per Article 35 GDPR
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {assessmentsLoading ? (
-                <div className="flex justify-center py-8">
-                  <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full" />
+                {requestsLoading ? (
+                  <div className="flex justify-center py-8">
+                    <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full" />
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <div className="min-w-full rounded-md border">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="text-xs sm:text-sm">Type</TableHead>
+                            <TableHead className="text-xs sm:text-sm">Requester</TableHead>
+                            <TableHead className="text-xs sm:text-sm">Status</TableHead>
+                            <TableHead className="text-xs sm:text-sm hidden sm:table-cell">Submitted</TableHead>
+                            <TableHead className="text-xs sm:text-sm">Deadline</TableHead>
+                            <TableHead className="text-xs sm:text-sm">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {dataSubjectRequests?.requests?.map((request: DataSubjectRequest) => (
+                            <TableRow key={request.id}>
+                              <TableCell className="font-medium text-xs sm:text-sm">
+                                {request.requestType.replace('_', ' ').toUpperCase()}
+                              </TableCell>
+                              <TableCell className="text-xs sm:text-sm">
+                                ID: {request.requesterId}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  {getStatusBadge(request.requestStatus)}
+                                  {isOverdue(request.deadlineDate, request.requestStatus) && (
+                                    <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 text-destructive" />
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-xs sm:text-sm hidden sm:table-cell">
+                                {formatDate(request.requestDate)}
+                              </TableCell>
+                              <TableCell className={`text-xs sm:text-sm ${isOverdue(request.deadlineDate, request.requestStatus) ? "text-destructive font-medium" : ""}`}>
+                                {formatDate(request.deadlineDate)}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-1 sm:gap-2">
+                                  <Button variant="outline" size="sm" className="text-xs px-2 py-1">
+                                    <Eye className="w-3 h-3" />
+                                  </Button>
+                                  {request.requestStatus === 'pending' && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="text-xs px-2 py-1"
+                                      onClick={() => updateRequestMutation.mutate({
+                                        id: request.id,
+                                        updates: { requestStatus: 'processing' }
+                                      })}
+                                    >
+                                      Process
+                                    </Button>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* Other tabs would follow similar mobile-first responsive patterns */}
+              <TabsContent value="breaches" className="space-y-3 sm:space-y-4 mt-4">
+                <div className="text-center py-8">
+                  <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">Data breaches section coming soon</p>
                 </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Assessment Title</TableHead>
-                      <TableHead>Assessor</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Risk Level</TableHead>
-                      <TableHead>Created</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {privacyAssessments?.assessments?.map((assessment: PrivacyImpactAssessment) => (
-                      <TableRow key={assessment.id}>
-                        <TableCell className="font-medium">
-                          {assessment.assessmentTitle}
-                        </TableCell>
-                        <TableCell>{assessment.assessorName}</TableCell>
-                        <TableCell>{getStatusBadge(assessment.assessmentStatus)}</TableCell>
-                        <TableCell>{getRiskBadge(assessment.residualRisk)}</TableCell>
-                        <TableCell>{formatDate(assessment.createdAt)}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+              </TabsContent>
 
-        {/* Data Processing */}
-        <TabsContent value="processing" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Data Processing Activities</CardTitle>
-              <CardDescription>
-                Records of Processing Activities (ROPA) per Article 30 GDPR
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <Database className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Data processing records management interface will be displayed here.</p>
-                <p className="text-sm mt-2">
-                  Total: {overviewData.dataProcessing.total} processing activities
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+              <TabsContent value="assessments" className="space-y-3 sm:space-y-4 mt-4">
+                <div className="text-center py-8">
+                  <Shield className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">Privacy assessments section coming soon</p>
+                </div>
+              </TabsContent>
 
-      {/* Request Details Dialog */}
-      {selectedRequest && (
-        <RequestDetailsDialog
-          request={selectedRequest}
-          onClose={() => setSelectedRequest(null)}
-          onUpdate={(updates) => {
-            updateRequestMutation.mutate({
-              id: selectedRequest.id,
-              updates
-            });
-            setSelectedRequest(null);
-          }}
-        />
-      )}
+              <TabsContent value="processing" className="space-y-3 sm:space-y-4 mt-4">
+                <div className="text-center py-8">
+                  <Database className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">Data processing records coming soon</p>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </div>
     </div>
-  );
-}
-
-// Data Breach Form Component
-function DataBreachForm({ onSubmit }: { onSubmit: (data: any) => void }) {
-  const [formData, setFormData] = useState({
-    discoveryDate: '',
-    incidentDate: '',
-    breachType: '',
-    affectedDataTypes: '',
-    affectedRecords: 0,
-    affectedIndividuals: 0,
-    riskLevel: '',
-    containmentMeasures: '',
-    supervisoryAuthorityNotified: false,
-    individualNotificationRequired: false
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit({
-      ...formData,
-      affectedDataTypes: JSON.stringify([formData.affectedDataTypes])
-    });
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="discoveryDate">Discovery Date</Label>
-          <Input
-            id="discoveryDate"
-            type="datetime-local"
-            value={formData.discoveryDate}
-            onChange={(e) => setFormData({ ...formData, discoveryDate: e.target.value })}
-            required
-          />
-        </div>
-        <div>
-          <Label htmlFor="incidentDate">Incident Date</Label>
-          <Input
-            id="incidentDate"
-            type="datetime-local"
-            value={formData.incidentDate}
-            onChange={(e) => setFormData({ ...formData, incidentDate: e.target.value })}
-            required
-          />
-        </div>
-      </div>
-
-      <div>
-        <Label htmlFor="breachType">Breach Type</Label>
-        <Select value={formData.breachType} onValueChange={(value) => setFormData({ ...formData, breachType: value })}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select breach type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="confidentiality">Confidentiality Breach</SelectItem>
-            <SelectItem value="integrity">Integrity Breach</SelectItem>
-            <SelectItem value="availability">Availability Breach</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="affectedRecords">Affected Records</Label>
-          <Input
-            id="affectedRecords"
-            type="number"
-            value={formData.affectedRecords}
-            onChange={(e) => setFormData({ ...formData, affectedRecords: Number(e.target.value) })}
-            required
-          />
-        </div>
-        <div>
-          <Label htmlFor="affectedIndividuals">Affected Individuals</Label>
-          <Input
-            id="affectedIndividuals"
-            type="number"
-            value={formData.affectedIndividuals}
-            onChange={(e) => setFormData({ ...formData, affectedIndividuals: Number(e.target.value) })}
-            required
-          />
-        </div>
-      </div>
-
-      <div>
-        <Label htmlFor="riskLevel">Risk Level</Label>
-        <Select value={formData.riskLevel} onValueChange={(value) => setFormData({ ...formData, riskLevel: value })}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select risk level" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="low">Low Risk</SelectItem>
-            <SelectItem value="medium">Medium Risk</SelectItem>
-            <SelectItem value="high">High Risk</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <Label htmlFor="containmentMeasures">Containment Measures</Label>
-        <Textarea
-          id="containmentMeasures"
-          value={formData.containmentMeasures}
-          onChange={(e) => setFormData({ ...formData, containmentMeasures: e.target.value })}
-          placeholder="Describe the immediate actions taken to contain the breach..."
-        />
-      </div>
-
-      <DialogFooter>
-        <Button type="submit">Report Breach</Button>
-      </DialogFooter>
-    </form>
-  );
-}
-
-// Request Details Dialog Component
-function RequestDetailsDialog({ 
-  request, 
-  onClose, 
-  onUpdate 
-}: { 
-  request: DataSubjectRequest;
-  onClose: () => void;
-  onUpdate: (updates: any) => void;
-}) {
-  const [status, setStatus] = useState(request.requestStatus);
-  const [response, setResponse] = useState('');
-
-  return (
-    <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Data Subject Request Details</DialogTitle>
-          <DialogDescription>
-            Review and process data subject rights request
-          </DialogDescription>
-        </DialogHeader>
-        
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Request Type</Label>
-              <p className="text-sm font-medium">{request.requestType.replace('_', ' ').toUpperCase()}</p>
-            </div>
-            <div>
-              <Label>Current Status</Label>
-              <p className="text-sm">{request.requestStatus}</p>
-            </div>
-          </div>
-
-          <div>
-            <Label>Request Details</Label>
-            <p className="text-sm bg-muted p-3 rounded-md">{request.requestDetails}</p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Submitted</Label>
-              <p className="text-sm">{new Date(request.requestDate).toLocaleDateString()}</p>
-            </div>
-            <div>
-              <Label>Deadline</Label>
-              <p className="text-sm">{new Date(request.deadlineDate).toLocaleDateString()}</p>
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor="status">Update Status</Label>
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="processing">Processing</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label htmlFor="response">Response/Notes</Label>
-            <Textarea
-              id="response"
-              value={response}
-              onChange={(e) => setResponse(e.target.value)}
-              placeholder="Add response or notes about this request..."
-            />
-          </div>
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={() => onUpdate({ 
-            requestStatus: status, 
-            responseData: response ? JSON.stringify({ response }) : undefined 
-          })}>
-            Update Request
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }

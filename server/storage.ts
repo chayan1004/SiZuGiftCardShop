@@ -1,5 +1,5 @@
 import { 
-  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, merchantCardDesigns, fraudLogs, autoDefenseRules, cardRedemptions, webhookEvents, webhookDeliveryLogs, webhookRetryQueue, webhookFailureLog, merchantApiKeys, giftCardTransactions,
+  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, merchantCardDesigns, fraudLogs, autoDefenseRules, cardRedemptions, webhookEvents, webhookDeliveryLogs, webhookRetryQueue, webhookFailureLog, merchantApiKeys, giftCardTransactions, globalSettings, gatewayFeatureToggles,
   type User, type InsertUser,
   type Merchant, type InsertMerchant, 
   type GiftCard, type InsertGiftCard,
@@ -20,7 +20,9 @@ import {
   type WebhookRetryQueue, type InsertWebhookRetryQueue,
   type WebhookFailureLog, type InsertWebhookFailureLog,
   type MerchantApiKey, type InsertMerchantApiKey,
-  type GiftCardTransaction, type InsertGiftCardTransaction
+  type GiftCardTransaction, type InsertGiftCardTransaction,
+  type GlobalSetting, type InsertGlobalSetting,
+  type GatewayFeatureToggle, type InsertGatewayFeatureToggle
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, count, sum, and, gte, lte, asc } from "drizzle-orm";
@@ -1649,6 +1651,77 @@ export class DatabaseStorage implements IStorage {
     }
     
     return key;
+  }
+
+  // Phase 18: Admin Command Center - Global Settings Management
+  async getGlobalSettings(): Promise<GlobalSetting[]> {
+    return await db.select().from(globalSettings).orderBy(asc(globalSettings.key));
+  }
+
+  async getGlobalSetting(key: string): Promise<GlobalSetting | undefined> {
+    const [setting] = await db.select().from(globalSettings).where(eq(globalSettings.key, key));
+    return setting || undefined;
+  }
+
+  async updateGlobalSetting(key: string, value: string): Promise<GlobalSetting> {
+    // Try to update first
+    const [updated] = await db
+      .update(globalSettings)
+      .set({ value, updatedAt: new Date() })
+      .where(eq(globalSettings.key, key))
+      .returning();
+
+    if (updated) {
+      return updated;
+    }
+
+    // If not found, create new setting
+    const [created] = await db
+      .insert(globalSettings)
+      .values({ key, value })
+      .returning();
+    
+    return created;
+  }
+
+  // Phase 18: Gateway Feature Toggles Management
+  async getGatewayFeatures(): Promise<GatewayFeatureToggle[]> {
+    return await db.select().from(gatewayFeatureToggles).orderBy(asc(gatewayFeatureToggles.gatewayName), asc(gatewayFeatureToggles.feature));
+  }
+
+  async getGatewayFeature(gatewayName: string, feature: string): Promise<GatewayFeatureToggle | undefined> {
+    const [toggle] = await db
+      .select()
+      .from(gatewayFeatureToggles)
+      .where(and(
+        eq(gatewayFeatureToggles.gatewayName, gatewayName),
+        eq(gatewayFeatureToggles.feature, feature)
+      ));
+    return toggle || undefined;
+  }
+
+  async updateGatewayFeature(gatewayName: string, feature: string, enabled: boolean): Promise<GatewayFeatureToggle> {
+    // Try to update first
+    const [updated] = await db
+      .update(gatewayFeatureToggles)
+      .set({ enabled, updatedAt: new Date() })
+      .where(and(
+        eq(gatewayFeatureToggles.gatewayName, gatewayName),
+        eq(gatewayFeatureToggles.feature, feature)
+      ))
+      .returning();
+
+    if (updated) {
+      return updated;
+    }
+
+    // If not found, create new toggle
+    const [created] = await db
+      .insert(gatewayFeatureToggles)
+      .values({ gatewayName, feature, enabled })
+      .returning();
+    
+    return created;
   }
 
   // Phase 17A: Merchant Settings Management

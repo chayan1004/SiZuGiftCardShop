@@ -469,3 +469,36 @@ export const insertGiftCardTransactionSchema = createInsertSchema(giftCardTransa
 
 export type GiftCardTransaction = typeof giftCardTransactions.$inferSelect;
 export type InsertGiftCardTransaction = z.infer<typeof insertGiftCardTransactionSchema>;
+
+// Phase 18: Admin Command Center - Global Settings Management
+export const globalSettings = pgTable("global_settings", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  key: text("key").notNull().unique(),
+  value: text("value").notNull(), // JSON string for complex values
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertGlobalSettingSchema = createInsertSchema(globalSettings).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export type GlobalSetting = typeof globalSettings.$inferSelect;
+export type InsertGlobalSetting = z.infer<typeof insertGlobalSettingSchema>;
+
+// Phase 18: Gateway Feature Toggles
+export const gatewayFeatureToggles = pgTable("gateway_feature_toggles", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  gatewayName: text("gateway_name").notNull(), // 'square', 'stripe', 'paypal', etc.
+  feature: text("feature").notNull(), // 'ach', 'refunds', 'crypto', 'giftcards', etc.
+  enabled: boolean("enabled").notNull().default(true),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertGatewayFeatureToggleSchema = createInsertSchema(gatewayFeatureToggles).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export type GatewayFeatureToggle = typeof gatewayFeatureToggles.$inferSelect;
+export type InsertGatewayFeatureToggle = z.infer<typeof insertGatewayFeatureToggleSchema>;

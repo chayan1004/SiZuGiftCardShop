@@ -1112,6 +1112,53 @@ export const customCardDesigns = pgTable("custom_card_designs", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Checkout Configuration Table
+export const checkoutConfigurations = pgTable("checkout_configurations", {
+  id: serial("id").primaryKey(),
+  // Branding
+  brandName: text("brand_name").notNull().default("SiZu GiftCard"),
+  brandLogo: text("brand_logo"),
+  tagline: text("tagline"),
+  
+  // Colors & Theme
+  primaryColor: text("primary_color").notNull().default("#7c3aed"),
+  secondaryColor: text("secondary_color").notNull().default("#ec4899"),
+  accentColor: text("accent_color").notNull().default("#3b82f6"),
+  backgroundColor: text("background_color").notNull().default("#0f0a19"),
+  textColor: text("text_color").notNull().default("#ffffff"),
+  
+  // Layout Options
+  layout: text("layout").notNull().default("multi-step"), // 'single-page', 'multi-step', 'sidebar'
+  theme: text("theme").notNull().default("dark"), // 'dark', 'light', 'auto'
+  animation: text("animation").notNull().default("enhanced"), // 'minimal', 'standard', 'enhanced'
+  
+  // Payment Options (JSON stored as text)
+  acceptedPaymentMethods: text("accepted_payment_methods").notNull().default('{"creditCard":true,"debitCard":true,"applePay":true,"googlePay":true,"paypal":false,"bankTransfer":false}'),
+  
+  // Security Features
+  requireCVV: boolean("require_cvv").notNull().default(true),
+  requireBillingAddress: boolean("require_billing_address").notNull().default(true),
+  enableSavePayment: boolean("enable_save_payment").notNull().default(true),
+  enableGuestCheckout: boolean("enable_guest_checkout").notNull().default(true),
+  
+  // Content Customization
+  welcomeMessage: text("welcome_message"),
+  footerText: text("footer_text"),
+  privacyPolicyUrl: text("privacy_policy_url"),
+  termsOfServiceUrl: text("terms_of_service_url"),
+  
+  // Advanced Settings
+  sessionTimeout: integer("session_timeout").notNull().default(30),
+  enableAnalytics: boolean("enable_analytics").notNull().default(true),
+  enableA11y: boolean("enable_a11y").notNull().default(true),
+  enablePWA: boolean("enable_pwa").notNull().default(false),
+  
+  // System tracking
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertPhysicalGiftCardSchema = createInsertSchema(physicalGiftCards).omit({
   id: true,
@@ -1139,6 +1186,12 @@ export const insertCustomCardDesignSchema = createInsertSchema(customCardDesigns
   createdAt: true,
 });
 
+export const insertCheckoutConfigurationSchema = createInsertSchema(checkoutConfigurations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type PhysicalGiftCard = typeof physicalGiftCards.$inferSelect;
 export type InsertPhysicalGiftCard = z.infer<typeof insertPhysicalGiftCardSchema>;
@@ -1150,3 +1203,5 @@ export type CardBalanceCheck = typeof cardBalanceChecks.$inferSelect;
 export type InsertCardBalanceCheck = z.infer<typeof insertCardBalanceCheckSchema>;
 export type CustomCardDesign = typeof customCardDesigns.$inferSelect;
 export type InsertCustomCardDesign = z.infer<typeof insertCustomCardDesignSchema>;
+export type CheckoutConfiguration = typeof checkoutConfigurations.$inferSelect;
+export type InsertCheckoutConfiguration = z.infer<typeof insertCheckoutConfigurationSchema>;

@@ -1,5 +1,5 @@
 import { 
-  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, merchantCardDesigns, fraudLogs, autoDefenseRules, cardRedemptions, webhookEvents, webhookDeliveryLogs, webhookRetryQueue, webhookFailureLog, merchantApiKeys, giftCardTransactions, globalSettings, gatewayFeatureToggles, fraudClusters, clusterPatterns, defenseActions, actionRules, defenseHistory, dataProcessingRecords, userConsentRecords, dataSubjectRequests, dataBreachIncidents, privacyImpactAssessments, pciComplianceAssessments, pciSecurityScans, pciSecurityControls, pciIncidentResponses, pciNetworkDiagrams, pciAuditLogs, pricingConfigurations, pricingHistory, physicalGiftCards, physicalCardActivations, cardReloadTransactions, cardBalanceChecks, customCardDesigns,
+  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, merchantCardDesigns, fraudLogs, autoDefenseRules, cardRedemptions, webhookEvents, webhookDeliveryLogs, webhookRetryQueue, webhookFailureLog, merchantApiKeys, giftCardTransactions, globalSettings, gatewayFeatureToggles, fraudClusters, clusterPatterns, defenseActions, actionRules, defenseHistory, dataProcessingRecords, userConsentRecords, dataSubjectRequests, dataBreachIncidents, privacyImpactAssessments, pciComplianceAssessments, pciSecurityScans, pciSecurityControls, pciIncidentResponses, pciNetworkDiagrams, pciAuditLogs, pricingConfigurations, pricingHistory, physicalGiftCards, physicalCardActivations, cardReloadTransactions, cardBalanceChecks, customCardDesigns, checkoutConfigurations,
   type User, type InsertUser,
   type Merchant, type InsertMerchant, 
   type GiftCard, type InsertGiftCard,
@@ -45,7 +45,8 @@ import {
   type PhysicalCardActivation, type InsertPhysicalCardActivation,
   type CardReloadTransaction, type InsertCardReloadTransaction,
   type CardBalanceCheck, type InsertCardBalanceCheck,
-  type CustomCardDesign, type InsertCustomCardDesign
+  type CustomCardDesign, type InsertCustomCardDesign,
+  type CheckoutConfiguration, type InsertCheckoutConfiguration
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, count, sum, and, gte, lte, asc, or, isNull, isNotNull } from "drizzle-orm";

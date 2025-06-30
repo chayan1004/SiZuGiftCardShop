@@ -45,6 +45,11 @@ export const giftCards = pgTable("gift_cards", {
   redeemedBy: text("redeemed_by"), // Customer email or ID who redeemed
   lastRedemptionAmount: integer("last_redemption_amount"), // Last redemption amount in cents
   expiresAt: timestamp("expires_at"),
+  // Phase 21B: Enhanced public storefront fields
+  publicVisible: boolean("public_visible").default(true),
+  cardDesignTheme: text("card_design_theme").default("classic"),
+  giftCategory: text("gift_category").default("general"), // Gaming, Food, Event Gifts, Productivity, Wellness
+  occasionTag: text("occasion_tag"), // Christmas, Birthday, Graduation, Valentine's
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

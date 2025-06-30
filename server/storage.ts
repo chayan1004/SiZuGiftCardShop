@@ -2238,30 +2238,81 @@ export class DatabaseStorage implements IStorage {
     }));
   }
 
-  async getPublicGiftCards(): Promise<any[]> {
-    const activeMerchants = await this.getActiveMerchants();
+  async getPublicGiftCards(filters?: { 
+    category?: string; 
+    occasion?: string; 
+    search?: string; 
+  }): Promise<any[]> {
+    // Base query for public-visible gift cards
+    let query = db
+      .select({
+        id: giftCards.id,
+        merchantId: giftCards.merchantId,
+        amount: giftCards.amount,
+        cardDesignTheme: giftCards.cardDesignTheme,
+        giftCategory: giftCards.giftCategory,
+        occasionTag: giftCards.occasionTag,
+        publicVisible: giftCards.publicVisible,
+        status: giftCards.status,
+        createdAt: giftCards.createdAt
+      })
+      .from(giftCards)
+      .where(and(
+        eq(giftCards.publicVisible, true),
+        eq(giftCards.status, 'ACTIVE')
+      ));
+
+    // Apply filters
+    if (filters?.category && filters.category !== 'all') {
+      query = query.where(eq(giftCards.giftCategory, filters.category));
+    }
     
-    const giftCards = await Promise.all(
-      activeMerchants.map(async (merchant) => {
-        // Get merchant branding
-        const branding = await this.getMerchantBranding(merchant.id);
+    if (filters?.occasion && filters.occasion !== 'all') {
+      query = query.where(eq(giftCards.occasionTag, filters.occasion));
+    }
+
+    const cards = await query;
+    
+    // Enrich with merchant data
+    const enrichedCards = await Promise.all(
+      cards.map(async (card) => {
+        const merchant = await this.getMerchant(parseInt(card.merchantId));
+        const branding = await this.getMerchantBranding(parseInt(card.merchantId));
         
-        return {
-          merchantId: merchant.id,
+        if (!merchant || !merchant.isActive) return null;
+
+        const cardData = {
+          id: card.id.toString(),
+          merchantId: card.merchantId,
           merchantName: merchant.businessName,
-          businessType: merchant.businessType,
+          businessType: 'Retail',
           logo: branding?.logoUrl,
           themeColor: branding?.themeColor || '#6366f1',
-          minAmount: 1000, // $10
-          maxAmount: 50000, // $500
-          isActive: merchant.isActive,
-          popularAmounts: [2500, 5000, 10000, 15000, 25000],
-          description: branding?.description || `Gift cards for ${merchant.businessName}`
+          amount: card.amount,
+          cardDesignTheme: card.cardDesignTheme || 'classic',
+          giftCategory: card.giftCategory || 'general',
+          occasionTag: card.occasionTag,
+          description: branding?.tagline || `Gift cards for ${merchant.businessName}`,
+          isActive: true,
+          publicVisible: card.publicVisible
         };
+
+        // Apply search filter if provided
+        if (filters?.search) {
+          const searchLower = filters.search.toLowerCase();
+          const matchesSearch = 
+            merchant.businessName.toLowerCase().includes(searchLower) ||
+            (branding?.tagline || '').toLowerCase().includes(searchLower) ||
+            card.giftCategory.toLowerCase().includes(searchLower);
+          
+          if (!matchesSearch) return null;
+        }
+
+        return cardData;
       })
     );
     
-    return giftCards;
+    return enrichedCards.filter(card => card !== null);
   }
 
   async createPublicGiftCardOrder(orderData: any): Promise<any> {

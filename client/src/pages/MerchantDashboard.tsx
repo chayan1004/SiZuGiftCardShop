@@ -5,7 +5,7 @@ import {
   CreditCard, Package, TrendingUp, DollarSign, Users, 
   RefreshCw, Settings, LogOut, Plus, Eye, Download,
   Calendar, Filter, Search, AlertCircle, Menu, X,
-  ShoppingCart, Activity, Bell, Home, BarChart3, QrCode, Palette
+  ShoppingCart, Activity, Bell, Home, BarChart3, QrCode, Palette, Shield
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import MerchantCardDesign from "@/components/merchant/MerchantCardDesign";
+import MerchantSystemMonitoring from "@/components/merchant/MerchantSystemMonitoring";
+import MerchantSecurityMonitoring from "@/components/merchant/MerchantSecurityMonitoring";
+import MerchantBusinessAnalytics from "@/components/merchant/MerchantBusinessAnalytics";
 import LoadingAnimation from "@/components/ui/LoadingAnimation";
 
 interface MerchantGiftCard {
@@ -281,6 +284,42 @@ export default function MerchantDashboard() {
                 >
                   <Palette className="w-4 h-4 mr-2" />
                   Card Design
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  className="justify-start text-white hover:bg-white/10"
+                  onClick={() => {
+                    setActiveTab("analytics");
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  Business Analytics
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  className="justify-start text-white hover:bg-white/10"
+                  onClick={() => {
+                    setActiveTab("system");
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  <Activity className="w-4 h-4 mr-2" />
+                  System Health
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  className="justify-start text-white hover:bg-white/10"
+                  onClick={() => {
+                    setActiveTab("security");
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  <Shield className="w-4 h-4 mr-2" />
+                  Security Monitor
                 </Button>
                 
                 <Button

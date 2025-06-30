@@ -3213,6 +3213,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // QR Code generation endpoint for order receipts
+  app.get("/api/public/qr/:orderId", async (req: Request, res: Response) => {
+    try {
+      const { orderId } = req.params;
+      const { QRCodeUtil } = await import('./utils/QRCodeUtil');
+      
+      // Verify order exists
+      const order = await storage.getPublicGiftCardOrderById(orderId);
+      if (!order) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+
+      // Generate QR code data URI
+      const receiptURL = QRCodeUtil.generateReceiptURL(orderId);
+      const qrCodeDataURI = await QRCodeUtil.generateQRCodeDataURI(receiptURL, {
+        width: 200,
+        margin: 2
+      });
+
+      res.json({
+        success: true,
+        qrCodeDataURI,
+        receiptURL
+      });
+    } catch (error) {
+      console.error('Error generating QR code:', error);
+      res.status(500).json({ message: "Failed to generate QR code" });
+    }
+  });
+
   // Admin endpoint for public gift card orders
   app.get("/api/admin/giftcard-orders", requireAdmin, async (req: Request, res: Response) => {
     try {

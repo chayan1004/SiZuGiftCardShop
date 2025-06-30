@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Filter, Calendar, Mail, CreditCard, CheckCircle, XCircle, Clock, RefreshCw, AlertTriangle, Download } from "lucide-react";
+import { Search, Filter, Calendar, Mail, CreditCard, CheckCircle, XCircle, Clock, RefreshCw, AlertTriangle, Download, QrCode } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 

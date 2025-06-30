@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { SquareClient, SquareEnvironment } from 'square';
+import { Client } from 'squareup';
 import { storage } from '../storage';
 
 /**
@@ -52,7 +52,7 @@ interface PaymentTokenRequest {
 }
 
 class SquareCardsAPIService {
-  private client: SquareClient;
+  private client: any;
   private customersApi: any;
   private cardsApi: any;
   private accessToken: string;
@@ -62,11 +62,10 @@ class SquareCardsAPIService {
     this.accessToken = process.env.SQUARE_ACCESS_TOKEN || '';
     this.environment = process.env.SQUARE_ENVIRONMENT || 'sandbox';
 
-    this.client = new SquareClient({
-      environment: this.environment === 'production' 
-        ? SquareEnvironment.Production 
-        : SquareEnvironment.Sandbox,
-      squareVersion: '2023-10-18',
+    this.client = Client({
+      applicationId: process.env.SQUARE_APPLICATION_ID || '',
+      accessToken: this.accessToken,
+      environment: this.environment === 'production' ? 'production' : 'sandbox',
     });
 
     this.customersApi = this.client.customers;
@@ -82,7 +81,7 @@ class SquareCardsAPIService {
    */
   async createOrGetCustomer(profileData: CustomerProfileRequest): Promise<{
     success: boolean;
-    customer?: Customer;
+    customer?: any;
     squareCustomerId?: string;
     error?: string;
   }> {

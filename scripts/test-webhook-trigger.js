@@ -26,12 +26,14 @@ const CONFIG = {
   }
 };
 
-console.log('\n🎯 Phase 14D: Webhook Trigger on Redemption Test Suite');
-console.log('='.repeat(60));
+console.log('\n🎯 Phase 14D: Secure Webhook Trigger with HMAC-SHA256 Test Suite');
+console.log('='.repeat(70));
 console.log(`📍 Base URL: ${CONFIG.baseUrl}`);
 console.log(`📋 Collection: ${CONFIG.collection}`);
 console.log(`⏱️  Request Delay: ${CONFIG.delayRequest}ms`);
-console.log('='.repeat(60));
+console.log(`🔐 Security: HMAC-SHA256 signature verification`);
+console.log(`🧪 Mock Endpoint: /api/test/mock-webhook`);
+console.log('='.repeat(70));
 
 // Run Newman tests
 newman.run({

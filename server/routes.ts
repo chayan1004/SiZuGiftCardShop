@@ -4545,5 +4545,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Mock webhook endpoint for testing secure HMAC signatures
+  app.post("/api/test/mock-webhook", async (req: Request, res: Response) => {
+    try {
+      const signature = req.get('X-Sizu-Signature');
+      const payload = JSON.stringify(req.body);
+      
+      console.log('🧪 Mock webhook received:');
+      console.log('- Headers:', {
+        'content-type': req.get('Content-Type'),
+        'x-sizu-signature': signature,
+        'x-webhook-source': req.get('X-Webhook-Source'),
+        'x-webhook-event': req.get('X-Webhook-Event')
+      });
+      console.log('- Payload:', payload);
+      
+      // Verify signature if present
+      if (signature) {
+        const isValid = webhookDispatcher.verifyWebhookSignature(payload, signature);
+        console.log('- Signature Valid:', isValid);
+        
+        if (!isValid) {
+          return res.status(401).json({
+            success: false,
+            error: "Invalid webhook signature"
+          });
+        }
+      }
+
+      // Simulate processing delay
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      res.json({
+        success: true,
+        message: "Mock webhook received successfully",
+        receivedAt: new Date().toISOString(),
+        payloadSize: payload.length,
+        signatureVerified: Boolean(signature)
+      });
+    } catch (error) {
+      console.error('Mock webhook error:', error);
+      res.status(500).json({
+        success: false,
+        error: "Mock webhook processing failed"
+      });
+    }
+  });
+
+  // Enhanced webhook configuration with enabled toggle
+  app.post("/api/merchant/webhook/settings", requireMerchant, async (req: Request, res: Response) => {
+    try {
+      const { webhookUrl, enabled } = req.body;
+      
+      // Validate webhook URL format if provided
+      if (webhookUrl && typeof webhookUrl === 'string') {
+        try {
+          new URL(webhookUrl);
+        } catch {
+          return res.status(400).json({
+            success: false,
+            error: "Invalid webhook URL format"
+          });
+        }
+      }
+
+      const updatedMerchant = await storage.updateMerchantWebhookSettings(
+        req.user.merchantId, 
+        webhookUrl || null,
+        Boolean(enabled)
+      );
+
+      if (!updatedMerchant) {
+        return res.status(404).json({
+          success: false,
+          error: "Merchant not found"
+        });
+      }
+
+      console.log(`🔗 Webhook settings updated for merchant: ${req.user.merchantId} - URL: ${webhookUrl || 'none'}, Enabled: ${enabled}`);
+      
+      res.json({
+        success: true,
+        message: "Webhook settings updated successfully",
+        webhookUrl: updatedMerchant.webhookUrl,
+        webhookEnabled: updatedMerchant.webhookEnabled
+      });
+    } catch (error) {
+      console.error('Update webhook settings error:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to update webhook settings"
+      });
+    }
+  });
+
   return httpServer;
 }

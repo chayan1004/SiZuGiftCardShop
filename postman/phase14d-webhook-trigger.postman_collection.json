@@ -22,7 +22,7 @@
     },
     {
       "key": "testWebhookUrl",
-      "value": "https://webhook.site/unique-id",
+      "value": "{{baseUrl}}/api/test/mock-webhook",
       "type": "string"
     },
     {

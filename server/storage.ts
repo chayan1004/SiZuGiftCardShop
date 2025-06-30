@@ -75,6 +75,7 @@ export interface IStorage {
   
   // Public Gift Card Order methods
   createPublicGiftCardOrder(order: InsertPublicGiftCardOrder): Promise<PublicGiftCardOrder>;
+  getPublicGiftCardOrderById(orderId: string): Promise<PublicGiftCardOrder | undefined>;
   updatePublicGiftCardOrderStatus(orderId: string, status: string, squarePaymentId?: string, giftCardGan?: string, giftCardId?: string, giftCardState?: string): Promise<PublicGiftCardOrder | undefined>;
   updatePublicGiftCardOrderEmailStatus(orderId: string, emailSent: boolean, emailSentAt?: Date): Promise<PublicGiftCardOrder | undefined>;
   markEmailAsResent(orderId: string): Promise<PublicGiftCardOrder | undefined>;
@@ -941,6 +942,7 @@ export class DatabaseStorage implements IStorage {
     return updated || undefined;
   }
 
+
   async getPublicGiftCardOrderById(orderId: string): Promise<PublicGiftCardOrder | undefined> {
     const [order] = await db
       .select()
@@ -1641,7 +1643,7 @@ export class DatabaseStorage implements IStorage {
         lastUsedAt: merchantApiKeys.lastUsedAt,
         revoked: merchantApiKeys.revoked,
         createdAt: merchantApiKeys.createdAt,
-        // Exclude keyHash for security
+        keyHash: merchantApiKeys.keyHash,
       })
       .from(merchantApiKeys)
       .where(and(
@@ -2434,37 +2436,7 @@ export class DatabaseStorage implements IStorage {
     return filteredCards;
   }
 
-  async createPublicGiftCardOrder(orderData: any): Promise<any> {
-    const [order] = await db
-      .insert(publicGiftCardOrders)
-      .values({
-        id: crypto.randomUUID(),
-        recipientEmail: orderData.recipientEmail,
-        merchantId: orderData.merchantId,
-        amount: orderData.amount,
-        message: orderData.message,
-        status: orderData.status || 'pending',
-        squarePaymentId: orderData.squarePaymentId,
-        giftCardId: orderData.giftCardId,
-        giftCardGan: orderData.giftCardGan,
-        senderName: orderData.senderName,
-        recipientName: orderData.recipientName,
-        isGift: orderData.isGift || false,
-        createdAt: new Date()
-      })
-      .returning();
-    
-    return order;
-  }
 
-  async getPublicGiftCardOrderById(orderId: string): Promise<any> {
-    const [order] = await db
-      .select()
-      .from(publicGiftCardOrders)
-      .where(eq(publicGiftCardOrders.id, orderId));
-    
-    return order;
-  }
 
   async updatePublicGiftCardOrder(orderId: string, updateData: any): Promise<any> {
     const [updated] = await db

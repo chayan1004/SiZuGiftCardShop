@@ -208,6 +208,13 @@ export const publicGiftCardOrders = pgTable("public_giftcard_orders", {
   manuallyMarkedFailed: boolean("manually_marked_failed").notNull().default(false), // Admin marked as failed
   pdfReceiptUrl: text("pdf_receipt_url"), // URL to hosted PDF receipt
   pdfGeneratedAt: timestamp("pdf_generated_at"), // Timestamp when PDF was generated
+  // Interactive Gifting Workflow Fields
+  emotionTheme: text("emotion_theme"), // love, celebration, gratitude, friendship, achievement, comfort
+  giftOccasion: text("gift_occasion"), // birthday, anniversary, graduation, holiday, just_because
+  personalizedDesign: text("personalized_design"), // JSON string with design preferences
+  deliveryDate: timestamp("delivery_date"), // Scheduled delivery date
+  isScheduled: boolean("is_scheduled").default(false), // Whether delivery is scheduled
+  giftWrapStyle: text("gift_wrap_style"), // elegant, festive, minimal, romantic, playful
   createdAt: timestamp("created_at").defaultNow(),
 });
 

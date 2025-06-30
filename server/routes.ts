@@ -5135,5 +5135,164 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Phase 17A: Merchant Settings and API Keys Management
+
+  // GET /api/merchant/settings - Get merchant settings
+  app.get("/api/merchant/settings", requireMerchant, async (req: Request, res: Response) => {
+    try {
+      const merchantId = (req as any).merchant.merchantId;
+      const settings = await storage.getMerchantSettings(merchantId);
+
+      if (!settings) {
+        return res.status(404).json({
+          success: false,
+          error: "Merchant not found"
+        });
+      }
+
+      res.json({
+        success: true,
+        settings
+      });
+    } catch (error) {
+      console.error('Get merchant settings error:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch merchant settings"
+      });
+    }
+  });
+
+  // PUT /api/merchant/settings - Update merchant settings
+  app.put("/api/merchant/settings", requireMerchant, async (req: Request, res: Response) => {
+    try {
+      const merchantId = (req as any).merchant.merchantId;
+      const { email, themeColor, webhookUrl, supportEmail, brandName } = req.body;
+
+      const updated = await storage.updateMerchantSettings(merchantId, {
+        email,
+        themeColor,
+        webhookUrl,
+        supportEmail,
+        brandName
+      });
+
+      if (!updated) {
+        return res.status(404).json({
+          success: false,
+          error: "Merchant not found"
+        });
+      }
+
+      console.log(`🔧 Merchant settings updated: ${merchantId}`);
+      res.json({
+        success: true,
+        message: "Settings updated successfully"
+      });
+    } catch (error) {
+      console.error('Update merchant settings error:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to update settings"
+      });
+    }
+  });
+
+  // GET /api/merchant/api-keys - Get merchant API keys
+  app.get("/api/merchant/api-keys", requireMerchant, async (req: Request, res: Response) => {
+    try {
+      const merchantId = (req as any).merchant.merchantId;
+      const apiKeys = await storage.getMerchantApiKeys(merchantId);
+
+      res.json({
+        success: true,
+        apiKeys: apiKeys.map(key => ({
+          id: key.id,
+          name: key.name,
+          keyPrefix: key.keyPrefix,
+          lastUsedAt: key.lastUsedAt,
+          createdAt: key.createdAt,
+          revoked: key.revoked
+        }))
+      });
+    } catch (error) {
+      console.error('Get merchant API keys error:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch API keys"
+      });
+    }
+  });
+
+  // POST /api/merchant/api-keys - Create new API key
+  app.post("/api/merchant/api-keys", requireMerchant, async (req: Request, res: Response) => {
+    try {
+      const merchantId = (req as any).merchant.merchantId;
+      const { name } = req.body;
+
+      // Import ApiKeyService
+      const { ApiKeyService } = await import('./services/ApiKeyService');
+
+      // Generate new API key
+      const apiKey = ApiKeyService.generateApiKey();
+      const keyHash = await ApiKeyService.hashApiKey(apiKey);
+      const keyPrefix = ApiKeyService.getKeyPrefix(apiKey);
+      const keyName = name || ApiKeyService.generateKeyName();
+
+      // Store in database
+      const keyId = await storage.createMerchantApiKey(merchantId, keyHash, keyPrefix, keyName);
+
+      console.log(`🔑 New API key created for merchant: ${merchantId}, keyId: ${keyId}`);
+
+      // Return the full API key only once (for security)
+      res.json({
+        success: true,
+        apiKey: {
+          id: keyId,
+          name: keyName,
+          keyPrefix: keyPrefix,
+          fullKey: apiKey, // Only shown once!
+          createdAt: new Date()
+        },
+        message: "API key created successfully. Save this key securely - it won't be shown again."
+      });
+    } catch (error) {
+      console.error('Create API key error:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to create API key"
+      });
+    }
+  });
+
+  // DELETE /api/merchant/api-keys/:keyId - Revoke API key
+  app.delete("/api/merchant/api-keys/:keyId", requireMerchant, async (req: Request, res: Response) => {
+    try {
+      const merchantId = (req as any).merchant.merchantId;
+      const { keyId } = req.params;
+
+      const revoked = await storage.revokeMerchantApiKey(keyId, merchantId);
+
+      if (!revoked) {
+        return res.status(404).json({
+          success: false,
+          error: "API key not found"
+        });
+      }
+
+      console.log(`🗑️ API key revoked: ${keyId} for merchant: ${merchantId}`);
+      res.json({
+        success: true,
+        message: "API key revoked successfully"
+      });
+    } catch (error) {
+      console.error('Revoke API key error:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to revoke API key"
+      });
+    }
+  });
+
   return httpServer;
 }

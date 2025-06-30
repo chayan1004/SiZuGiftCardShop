@@ -50,6 +50,11 @@ function Router() {
           <MerchantBulkPurchase />
         </ProtectedRoute>
       </Route>
+      <Route path="/merchant-qr-scanner">
+        <ProtectedRoute role="merchant">
+          <MerchantQRScanner />
+        </ProtectedRoute>
+      </Route>
       <Route path="/merchant-verify" component={MerchantVerify} />
       <Route path="/admin-login" component={AdminLogin} />
       <Route path="/test-modal" component={TestModal} />

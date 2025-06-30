@@ -4335,7 +4335,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Apply fraud detection
-      const fraudResult = await fraudDetectionService.checkRedemption({
+      const fraudResult = await FraudDetectionService.checkRedemptionFraud({
         gan,
         merchantId,
         ipAddress,
@@ -4415,12 +4415,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const isFullyRedeemed = newBalance <= 0;
 
       // Update gift card in database
-      await storage.updateGiftCard(card.id, {
+      const updateData: any = {
         balance: newBalance,
         redeemed: isFullyRedeemed,
-        redeemedAt: isFullyRedeemed ? new Date() : card.redeemedAt,
         lastRedemptionAmount: redemptionAmount
-      });
+      };
+      
+      if (isFullyRedeemed) {
+        updateData.redeemedAt = new Date();
+      }
+      
+      await storage.updateGiftCard(card.id, updateData);
 
       // Log successful redemption
       await storage.createCardRedemption({
@@ -4438,9 +4443,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create gift card activity record
       await storage.createGiftCardActivity({
         giftCardId: card.id,
-        activityType: 'REDEEM',
+        type: 'REDEEM',
         amount: redemptionAmount,
-        merchantId: parseInt(merchantId) || 0,
+        squareActivityId: `qr-redeem-${Date.now()}`,
         notes: `QR redemption - ${isFullyRedeemed ? 'Full' : 'Partial'} redemption`
       });
 

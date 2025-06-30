@@ -114,7 +114,7 @@ export class ThreatClusterEngine {
       .limit(1000); // Limit to prevent memory issues
 
     return results
-      .filter(result => result.timestamp !== null)
+      .filter(result => result.timestamp !== null && result.threatType !== null)
       .map(result => ({
         id: result.id,
         ipAddress: result.ipAddress,
@@ -122,7 +122,7 @@ export class ThreatClusterEngine {
         deviceFingerprint: result.deviceFingerprint,
         merchantId: result.merchantId,
         timestamp: result.timestamp!,
-        threatType: result.threatType,
+        threatType: result.threatType!,
         metadata: result.metadata ? JSON.parse(result.metadata) : null,
       }));
   }
@@ -147,7 +147,7 @@ export class ThreatClusterEngine {
     const clusters: ClusterCandidate[] = [];
 
     // Analyze each IP group
-    for (const [ip, ipThreats] of ipGroups) {
+    for (const [ip, ipThreats] of Array.from(ipGroups)) {
       if (ipThreats.length >= 2) {
         // Calculate time proximity score
         const timeSpan = this.calculateTimeSpan(ipThreats);
@@ -186,7 +186,7 @@ export class ThreatClusterEngine {
 
     const clusters: ClusterCandidate[] = [];
 
-    for (const [fingerprint, deviceThreats] of deviceGroups) {
+    for (const [fingerprint, deviceThreats] of Array.from(deviceGroups)) {
       if (deviceThreats.length >= 2) {
         const timeSpan = this.calculateTimeSpan(deviceThreats);
         const score = this.calculateDeviceClusterScore(deviceThreats, timeSpan);
@@ -267,7 +267,7 @@ export class ThreatClusterEngine {
 
     const clusters: ClusterCandidate[] = [];
 
-    for (const [signature, uaThreats] of uaGroups) {
+    for (const [signature, uaThreats] of Array.from(uaGroups)) {
       if (uaThreats.length >= 3) { // Higher threshold for UA clustering
         const score = this.calculateUserAgentScore(uaThreats);
 
@@ -408,7 +408,7 @@ export class ThreatClusterEngine {
         timeSpan: this.calculateTimeSpan(cluster.patterns),
         uniqueIPs: new Set(cluster.patterns.map(p => p.ipAddress).filter(Boolean)).size,
         uniqueDevices: new Set(cluster.patterns.map(p => p.deviceFingerprint).filter(Boolean)).size,
-        threatTypes: [...new Set(cluster.patterns.map(p => p.threatType))],
+        threatTypes: Array.from(new Set(cluster.patterns.map(p => p.threatType))),
       };
 
       // Insert fraud cluster

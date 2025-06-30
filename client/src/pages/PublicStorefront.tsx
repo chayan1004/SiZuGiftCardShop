@@ -6,7 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Gift, Gamepad2, Pizza, PartyPopper, Briefcase, Heart, Star, Calendar, Filter } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Search, Gift, Gamepad2, Pizza, PartyPopper, Briefcase, Heart, Star, Calendar, Filter, ShoppingCart } from 'lucide-react';
+import { Link } from 'wouter';
 import { apiRequest } from '@/lib/queryClient';
 
 interface PublicMerchant {
@@ -70,7 +72,7 @@ export default function PublicStorefront() {
     return matchesSearch && matchesCategory && matchesAmount;
   }) || [];
 
-  const categories = [...new Set(giftCards?.giftCards?.map((card: PublicGiftCard) => card.businessType) || [])];
+  const categories = Array.from(new Set(giftCards?.giftCards?.map((card: PublicGiftCard) => card.businessType) || []));
 
   if (loadingMerchants || loadingCards) {
     return (

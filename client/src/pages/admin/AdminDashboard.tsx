@@ -768,6 +768,20 @@ export default function AdminDashboard() {
                 </div>
               )}
 
+              {/* Refunds & Disputes Section */}
+              {activeSection === "refunds-disputes" && (
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-xl p-6">
+                    <h3 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-2">
+                      Refunds & Disputes Management
+                    </h3>
+                    <p className="text-gray-300">Comprehensive refund processing and dispute resolution center</p>
+                  </div>
+                  
+                  <AdminRefundsDisputes />
+                </div>
+              )}
+
               {/* Public Orders Section */}
               {activeSection === "orders" && (
                 <div className="space-y-6">

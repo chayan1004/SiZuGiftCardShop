@@ -345,13 +345,16 @@ export const insertWebhookEventSchema = createInsertSchema(webhookEvents).omit({
 export type WebhookEvent = typeof webhookEvents.$inferSelect;
 export type InsertWebhookEvent = z.infer<typeof insertWebhookEventSchema>;
 
-// Webhook Retry Queue Schema - Phase 16A
+// Webhook Retry Queue Schema - Phase 16B Enhanced
 export const webhookRetryQueue = pgTable("webhook_retry_queue", {
   id: uuid("id").defaultRandom().primaryKey(),
   deliveryId: uuid("delivery_id").notNull(),
   retryCount: integer("retry_count").default(0),
   nextRetryAt: timestamp("next_retry_at").notNull(),
   lastStatus: text("last_status"), // e.g., "timeout", "500", "network_error"
+  manualRetryCount: integer("manual_retry_count").default(0),
+  lastManualRetryStatus: text("last_manual_retry_status"),
+  replayedAt: timestamp("replayed_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -365,12 +368,20 @@ export const insertWebhookRetryQueueSchema = createInsertSchema(webhookRetryQueu
 export type WebhookRetryQueue = typeof webhookRetryQueue.$inferSelect;
 export type InsertWebhookRetryQueue = z.infer<typeof insertWebhookRetryQueueSchema>;
 
-// Webhook Failure Log Schema - Phase 16A
+// Webhook Failure Log Schema - Phase 16B Enhanced
 export const webhookFailureLog = pgTable("webhook_failure_log", {
   id: uuid("id").defaultRandom().primaryKey(),
   deliveryId: uuid("delivery_id").notNull(),
   statusCode: integer("status_code"),
   errorMessage: text("error_message"),
+  requestHeaders: text("request_headers"), // JSON string
+  requestBody: text("request_body"),
+  responseHeaders: text("response_headers"), // JSON string
+  responseBody: text("response_body"),
+  responseStatus: integer("response_status"),
+  manualRetryCount: integer("manual_retry_count").default(0),
+  lastManualRetryStatus: text("last_manual_retry_status"),
+  replayedAt: timestamp("replayed_at"),
   failedAt: timestamp("failed_at").defaultNow(),
   resolved: boolean("resolved").default(false),
 });

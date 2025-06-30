@@ -1505,14 +1505,7 @@ export class DatabaseStorage implements IStorage {
 
   async getWebhookFailuresSince(merchantId: string, since: Date): Promise<WebhookFailureLog[]> {
     return await db
-      .select({
-        id: webhookFailureLog.id,
-        deliveryId: webhookFailureLog.deliveryId,
-        statusCode: webhookFailureLog.statusCode,
-        errorMessage: webhookFailureLog.errorMessage,
-        failedAt: webhookFailureLog.failedAt,
-        resolved: webhookFailureLog.resolved
-      })
+      .select()
       .from(webhookFailureLog)
       .innerJoin(webhookDeliveryLogs, eq(webhookFailureLog.deliveryId, webhookDeliveryLogs.id))
       .where(
@@ -1521,6 +1514,52 @@ export class DatabaseStorage implements IStorage {
           gte(webhookFailureLog.failedAt, since)
         )
       );
+  }
+
+  // Phase 16B: Enhanced webhook failure methods with deep context
+  async getWebhookFailureById(failureId: string): Promise<WebhookFailureLog | undefined> {
+    const [failure] = await db
+      .select()
+      .from(webhookFailureLog)
+      .where(eq(webhookFailureLog.id, failureId));
+    return failure;
+  }
+
+  async logEnhancedWebhookFailure(failure: {
+    deliveryId: string;
+    statusCode?: number;
+    errorMessage?: string;
+    requestHeaders?: string;
+    requestBody?: string;
+    responseHeaders?: string;
+    responseBody?: string;
+    responseStatus?: number;
+  }): Promise<string> {
+    const [result] = await db
+      .insert(webhookFailureLog)
+      .values({
+        deliveryId: failure.deliveryId,
+        statusCode: failure.statusCode,
+        errorMessage: failure.errorMessage,
+        requestHeaders: failure.requestHeaders,
+        requestBody: failure.requestBody,
+        responseHeaders: failure.responseHeaders,
+        responseBody: failure.responseBody,
+        responseStatus: failure.responseStatus,
+      })
+      .returning({ id: webhookFailureLog.id });
+    return result.id;
+  }
+
+  async updateWebhookFailureReplay(failureId: string, status: string): Promise<void> {
+    await db
+      .update(webhookFailureLog)
+      .set({
+        manualRetryCount: sql`${webhookFailureLog.manualRetryCount} + 1`,
+        lastManualRetryStatus: status,
+        replayedAt: new Date(),
+      })
+      .where(eq(webhookFailureLog.id, failureId));
   }
 
   async markWebhookFailureResolved(failureId: string): Promise<void> {

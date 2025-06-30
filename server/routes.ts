@@ -4913,7 +4913,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Phase 16A: Webhook Retry Intelligence + Failure Analytics Admin Endpoints
+  // Phase 16A/B: Webhook Retry Intelligence + Failure Analytics Admin Endpoints
   
   // GET /api/admin/webhook-failures - Get webhook failure logs
   app.get("/api/admin/webhook-failures", requireAdmin, async (req: Request, res: Response) => {
@@ -4929,7 +4929,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           statusCode: failure.statusCode,
           errorMessage: failure.errorMessage,
           failedAt: failure.failedAt,
-          resolved: failure.resolved
+          resolved: failure.resolved,
+          manualRetryCount: failure.manualRetryCount || 0,
+          lastManualRetryStatus: failure.lastManualRetryStatus,
+          replayedAt: failure.replayedAt
         }))
       });
     } catch (error) {
@@ -4937,6 +4940,120 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         success: false,
         error: "Failed to fetch webhook failures"
+      });
+    }
+  });
+
+  // Phase 16B: GET /api/admin/webhook-failures/:id - Get detailed failure context
+  app.get("/api/admin/webhook-failures/:id", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const failure = await storage.getWebhookFailureById(id);
+
+      if (!failure) {
+        return res.status(404).json({
+          success: false,
+          error: "Webhook failure not found"
+        });
+      }
+
+      res.json({
+        success: true,
+        failure: {
+          id: failure.id,
+          deliveryId: failure.deliveryId,
+          statusCode: failure.statusCode,
+          errorMessage: failure.errorMessage,
+          requestHeaders: failure.requestHeaders ? JSON.parse(failure.requestHeaders) : null,
+          requestBody: failure.requestBody,
+          responseHeaders: failure.responseHeaders ? JSON.parse(failure.responseHeaders) : null,
+          responseBody: failure.responseBody,
+          responseStatus: failure.responseStatus,
+          manualRetryCount: failure.manualRetryCount || 0,
+          lastManualRetryStatus: failure.lastManualRetryStatus,
+          replayedAt: failure.replayedAt,
+          failedAt: failure.failedAt,
+          resolved: failure.resolved
+        }
+      });
+    } catch (error) {
+      console.error('Get webhook failure details error:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch webhook failure details"
+      });
+    }
+  });
+
+  // Phase 16B: POST /api/admin/webhook-replay/:id - Replay failed webhook
+  app.post("/api/admin/webhook-replay/:id", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const failure = await storage.getWebhookFailureById(id);
+
+      if (!failure) {
+        return res.status(404).json({
+          success: false,
+          error: "Webhook failure not found"
+        });
+      }
+
+      // Get delivery log to replay webhook
+      const deliveryLog = await storage.getWebhookDeliveryLogById(failure.deliveryId);
+      if (!deliveryLog) {
+        return res.status(404).json({
+          success: false,
+          error: "Original webhook delivery log not found"
+        });
+      }
+
+      // Attempt replay using MultiEventWebhookDispatcher
+      try {
+        const response = await fetch(deliveryLog.webhookUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Webhook-Event': deliveryLog.eventType,
+            'X-Timestamp': Math.floor(Date.now() / 1000).toString(),
+          },
+          body: deliveryLog.payload,
+          signal: AbortSignal.timeout(10000), // 10 second timeout
+        });
+
+        const replayStatus = response.ok ? 'success' : `failed_${response.status}`;
+        
+        // Update failure log with replay attempt
+        await storage.updateWebhookFailureReplay(id, replayStatus);
+
+        console.log(`🔄 Manual webhook replay ${id}: ${replayStatus} (${response.status})`);
+
+        res.json({
+          success: response.ok,
+          message: response.ok ? "Webhook replayed successfully" : `Webhook replay failed with status ${response.status}`,
+          replayStatus,
+          statusCode: response.status,
+          replayedAt: new Date().toISOString()
+        });
+
+      } catch (replayError) {
+        const errorStatus = 'replay_error';
+        await storage.updateWebhookFailureReplay(id, errorStatus);
+        
+        console.error(`🔄 Manual webhook replay ${id} error:`, replayError);
+        
+        res.status(500).json({
+          success: false,
+          error: "Webhook replay failed",
+          replayStatus: errorStatus,
+          replayedAt: new Date().toISOString()
+        });
+      }
+
+    } catch (error) {
+      console.error('Webhook replay error:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to replay webhook"
       });
     }
   });

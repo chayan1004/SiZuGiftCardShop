@@ -70,6 +70,7 @@ export class FraudDetectionService {
           ipAddress,
           merchantId,
           userAgent,
+          threatType: "merchant_rate_limit",
           reason: "rate_limit_merchant_violation"
         });
         return {
@@ -93,6 +94,7 @@ export class FraudDetectionService {
         ipAddress,
         merchantId,
         userAgent,
+        threatType: "device_fingerprint_violation",
         reason: "device_fingerprint_violation"
       });
       return {
@@ -112,6 +114,7 @@ export class FraudDetectionService {
           ipAddress,
           merchantId,
           userAgent,
+          threatType: "suspicious_activity",
           reason: "suspicious_pattern_multiple_ips"
         });
         return {

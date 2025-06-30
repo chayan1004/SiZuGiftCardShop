@@ -104,13 +104,13 @@ export class WebhookRetryEngine {
         return;
       }
 
-      console.log(`🔄 Retrying webhook delivery: ${retry.deliveryId} (attempt ${retry.retryCount + 1}/5)`);
+      console.log(`🔄 Retrying webhook delivery: ${retry.deliveryId} (attempt ${(retry.retryCount || 0) + 1}/5)`);
 
       // Attempt delivery with fresh HMAC signature
       const result = await this.attemptDelivery(webhookEvent, deliveryLog.payload);
 
       // Update retry count
-      const newRetryCount = retry.retryCount + 1;
+      const newRetryCount = (retry.retryCount || 0) + 1;
 
       if (result.success) {
         // Success - update delivery log and remove from retry queue
@@ -168,9 +168,11 @@ export class WebhookRetryEngine {
       const parsedPayload = JSON.parse(payload);
       
       // Use MultiEventWebhookDispatcher for delivery with fresh HMAC signature
-      const result = await MultiEventWebhookDispatcher.deliverWebhook(
-        webhookEvent,
-        parsedPayload
+      const dispatcher = new MultiEventWebhookDispatcher();
+      const result = await dispatcher.dispatchWebhook(
+        webhookEvent.eventType,
+        parsedPayload,
+        webhookEvent.merchantId
       );
 
       return {
@@ -239,11 +241,11 @@ export class WebhookRetryEngine {
         // Emit real-time alert via Socket.IO
         const socketService = FraudSocketService.getInstance();
         socketService.emitFraudAlert({
-          type: 'webhook_failure_spike',
-          merchantId,
+          type: 'suspicious_activity',
           severity: 'high',
           message: `Webhook failure spike: ${recentFailures.length} failures in 10 minutes`,
           metadata: {
+            merchantId,
             failureCount: recentFailures.length,
             timeWindow: '10 minutes',
             timestamp: new Date().toISOString()

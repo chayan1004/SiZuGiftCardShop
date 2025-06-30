@@ -23,6 +23,7 @@ import AdminMerchantSettings from "@/pages/AdminMerchantSettings";
 import AdminGiftCardAnalytics from "@/pages/AdminGiftCardAnalytics";
 import AdminThreatReplay from "@/pages/AdminThreatReplay";
 import CheckBalance from "@/pages/CheckBalance";
+import CustomerDashboard from "@/pages/CustomerDashboard";
 import MerchantLogin from "@/pages/MerchantLogin";
 import MerchantRegister from "@/pages/MerchantRegister";
 import MerchantDashboard from "@/pages/MerchantDashboard";
@@ -49,6 +50,7 @@ function Router() {
       <Route path="/branded-checkout" component={BrandedCheckout} />
       <Route path="/branded-checkout/:orderId" component={BrandedCheckout} />
       <Route path="/check-balance" component={CheckBalance} />
+      <Route path="/customer-dashboard" component={CustomerDashboard} />
       <Route path="/gift-cards" component={PublicGiftCardStore} />
       <Route path="/physical-cards" component={PhysicalGiftCardStore} />
       <Route path="/physical-giftcard-store" component={PhysicalGiftCardStore} />

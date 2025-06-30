@@ -774,6 +774,13 @@ export default function AdminDashboard() {
                 </div>
               )}
 
+              {/* Admin Command Center Section */}
+              {activeSection === "command-center" && (
+                <div className="space-y-6">
+                  <AdminCommandCenter />
+                </div>
+              )}
+
               {/* Merchant Settings Section */}
               {activeSection === "settings" && (
                 <div className="space-y-6">

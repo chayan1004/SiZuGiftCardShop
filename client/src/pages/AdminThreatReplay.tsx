@@ -72,13 +72,31 @@ export default function AdminThreatReplay() {
   // Fetch defense rules and statistics
   const { data: defenseData, isLoading: defenseLoading } = useQuery({
     queryKey: ['/api/admin/defense-rules'],
-    refetchInterval: 30000 // Refresh every 30 seconds
+    refetchInterval: 30000, // Refresh every 30 seconds
+    meta: {
+      headers: {
+        'x-admin-token': localStorage.getItem('adminToken') || ''
+      }
+    }
   });
 
   // Threat replay mutation
   const replayMutation = useMutation({
     mutationFn: async (limit: number) => {
-      const response = await apiRequest('POST', '/api/admin/replay-threats', { limit });
+      const response = await fetch('/api/admin/replay-threats', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': localStorage.getItem('adminToken') || ''
+        },
+        body: JSON.stringify({ limit })
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to run threat replay');
+      }
+      
       return response.json();
     },
     onSuccess: (data) => {
@@ -103,7 +121,19 @@ export default function AdminThreatReplay() {
   // Deactivate rule mutation
   const deactivateMutation = useMutation({
     mutationFn: async (ruleId: string) => {
-      const response = await apiRequest('DELETE', `/api/admin/defense-rules/${ruleId}`);
+      const response = await fetch(`/api/admin/defense-rules/${ruleId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': localStorage.getItem('adminToken') || ''
+        }
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to deactivate rule');
+      }
+      
       return response.json();
     },
     onSuccess: () => {

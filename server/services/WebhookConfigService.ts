@@ -157,7 +157,7 @@ export class WebhookConfigService {
       const newEventTypes = data.eventTypes;
 
       // Remove webhooks for event types no longer needed
-      const toRemove = currentEventTypes.filter(eventType => !newEventTypes.includes(eventType));
+      const toRemove = currentEventTypes.filter(eventType => !newEventTypes.includes(eventType as any));
       const removePromises = toRemove.map(eventType => {
         const webhook = webhooksToUpdate.find(w => w.eventType === eventType);
         return webhook ? storage.deleteWebhookEvent(webhook.id) : Promise.resolve();
@@ -213,7 +213,7 @@ export class WebhookConfigService {
       id: log.id,
       webhook_id: log.webhookEventId || 'unknown',
       event_type: log.eventType || 'unknown',
-      status: log.success ? 'success' : 'failed',
+      status: log.success ? 'success' : 'failed' as 'success' | 'failed' | 'retry',
       response_code: log.statusCode,
       created_at: log.deliveredAt || new Date(),
       error_message: log.errorMessage || undefined
@@ -230,11 +230,11 @@ export class WebhookConfigService {
 
     return logs.map(log => ({
       id: log.id,
-      webhook_id: log.webhookId,
+      webhook_id: log.webhookEventId || '',
       event_type: log.eventType || 'unknown',
-      status: log.success ? 'success' : 'failed',
-      response_code: log.responseCode,
-      created_at: log.createdAt,
+      status: log.success ? 'success' : 'failed' as 'success' | 'failed' | 'retry',
+      response_code: log.statusCode,
+      created_at: log.deliveredAt || new Date(),
       error_message: log.errorMessage || undefined,
       merchant_id: log.merchantId || 'unknown',
       webhook_url: log.webhookUrl || 'unknown'

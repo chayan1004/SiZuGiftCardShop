@@ -3658,7 +3658,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               try {
                 const currentOrder = await storage.getPublicGiftCardOrderById(order.id);
                 if (currentOrder && !currentOrder.pdfReceiptUrl) {
-                  const receiptResult = await ReceiptService.generatePDFReceipt(currentOrder);
+                  const receiptResult = await ReceiptService.generateReceiptPDF(currentOrder);
                   
                   if (receiptResult.success && receiptResult.url) {
                     await storage.updateReceiptUrl(order.id, receiptResult.url, new Date());
@@ -4538,7 +4538,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updateData.redeemedAt = new Date();
       }
       
-      await storage.updateGiftCard(card.id, updateData);
+      await storage.redeemGiftCard(card.id, card.redeemed ? 0 : amount, req.body.customerEmail || 'unknown');
 
       // Log successful redemption
       await logRedemptionAttempt(card.id, 'success', null, req);

@@ -193,21 +193,13 @@ export default function GiftCardStore() {
         const data = await response.json();
 
         if (data.success) {
-          setShowSuccessMessage(true);
           toast({
             title: "Payment Successful!",
             description: `Gift card for ${formatCurrency(validatedData.amount)} has been created and sent to ${validatedData.recipientEmail}`,
           });
           
-          // Reset form
-          setRecipientEmail("");
-          setMerchantId("");
-          setSelectedAmount(null);
-          setCustomAmount("");
-          setMessage("");
-          
-          // Hide success message after 5 seconds
-          setTimeout(() => setShowSuccessMessage(false), 5000);
+          // Redirect to success page with order ID
+          setLocation(`/giftcard-store/success/${data.orderId}`);
         } else {
           throw new Error(data.message || 'Payment failed');
         }

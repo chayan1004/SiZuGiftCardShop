@@ -304,6 +304,43 @@ CREATE TABLE public_giftcard_orders (
 - **Responsive Design**: Mobile-optimized action buttons with proper touch targets
 - **Data Refresh**: Automatic cache invalidation ensuring fresh data display post-actions
 
+## Prompt 9: PDF Receipt Generator + Download Link (June 30, 2025)
+
+### PDF Receipt Service Implementation
+- **ReceiptService**: Created `server/services/ReceiptService.ts` with pdf-lib integration for professional receipt generation
+- **Automatic Generation**: PDF receipts created after successful Square gift card creation in checkout flow
+- **Storage System**: Receipts stored in `/public/receipts/` directory with UUID-based filenames
+- **Database Tracking**: Added `pdf_receipt_url` and `pdf_generated_at` fields to `public_giftcard_orders` table
+
+### Database Schema Extensions
+- **PDF Tracking Fields**: Added `pdfReceiptUrl` (string, nullable) and `pdfGeneratedAt` (timestamp, nullable)
+- **Storage Methods**: Added `updateReceiptUrl()` to IStorage interface for PDF URL updates
+- **Data Integrity**: Prevents duplicate PDF generation with existence checks
+
+### Backend Integration
+- **Checkout Flow**: Integrated PDF generation after successful gift card creation
+- **Public Endpoint**: `GET /api/public/order/:orderId` for secure order details access
+- **File Serving**: Express static file serving for PDF downloads from `/public/receipts/`
+- **Error Handling**: Non-blocking PDF generation that doesn't affect gift card creation success
+
+### Frontend Features
+- **Success Page**: Created `/giftcard-store/success/:orderId` route with comprehensive order details
+- **Download Interface**: PDF receipt download buttons in both admin dashboard and public success page
+- **Admin Dashboard**: Enhanced AdminGiftCardOrders with PDF receipt download functionality
+- **Responsive Design**: Mobile-optimized success page with gift card details and download links
+
+### PDF Receipt Design
+- **Professional Layout**: Branded receipt with SiZu GiftCard logo and business information
+- **Complete Details**: Order ID, recipient email, gift card amount, creation date, and gift card metadata
+- **Security Features**: Unique PDF filenames preventing unauthorized access
+- **File Management**: Automatic file cleanup and organized storage structure
+
+### User Experience Enhancements
+- **Checkout Redirect**: Automatic redirect to success page after payment completion
+- **Real-time Status**: Visual indicators for PDF generation status and email delivery
+- **Download Access**: Secure PDF download links for customers and admin monitoring
+- **Mobile Optimization**: Touch-friendly download buttons and responsive receipt display
+
 ## Recent Production Enhancements
 
 ### Phase IX: Complete Mobile-First Merchant Interface (June 29, 2025)

@@ -10,7 +10,7 @@ import { squareGiftCardService } from './services/squareGiftCardService';
 import { squarePaymentService } from './services/squarePaymentService';
 import { mockPaymentService } from './services/mockPaymentService';
 import { simpleQRService } from './services/simpleQRService';
-import { emailService } from './services/emailService';
+import { emailService } from './services/EmailService';
 import { emailDeliveryMonitor } from './services/emailDeliveryMonitor';
 import { domainAuthentication } from './services/domainAuthentication';
 import { pdfReceiptService } from './services/pdfReceiptService';

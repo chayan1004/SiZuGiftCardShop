@@ -5734,7 +5734,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/public/giftcards", async (req: Request, res: Response) => {
     try {
-      const publicGiftCards = await storage.getPublicGiftCards();
+      const { category, occasion, search } = req.query;
+      
+      const publicGiftCards = await storage.getPublicGiftCards({
+        category: category as string,
+        occasion: occasion as string,
+        search: search as string
+      });
+      
       res.json({ 
         success: true, 
         giftCards: publicGiftCards,
@@ -5840,43 +5847,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const mockGan = `GAN${Math.random().toString().substr(2, 16)}`;
 
       // Update order with "successful" transaction details
-      await storage.updatePublicGiftCardOrder(order.id, {
+      const updatedOrder = await storage.updatePublicGiftCardOrder(order.id, {
         status: 'completed',
         squarePaymentId: mockPaymentId,
         giftCardId: mockGiftCardId,
         giftCardGan: mockGan
       });
 
-      // Send email notification
-      try {
-        await emailService.sendGiftCardEmail({
-          recipientEmail: order.recipientEmail,
-          giftCardId: mockGiftCardId,
-          giftCardGan: mockGan,
-          amount: order.amount,
-          senderName: order.senderName || 'Anonymous',
-          message: order.message,
-          orderId: order.id
-        });
-
-        await storage.markEmailAsSent(order.id);
-      } catch (emailError) {
-        console.error('Failed to send gift card email:', emailError);
-      }
+      console.log(`Phase 21B: Gift card purchase completed - Order: ${order.id}, GAN: ${mockGan}`);
 
       res.json({
         success: true,
         orderId: order.id,
         giftCardId: mockGiftCardId,
         giftCardGan: mockGan,
-        amount: order.amount
+        amount: amount,
+        recipientEmail,
+        message: 'Gift card purchased successfully! Check your email for receipt.'
       });
-
     } catch (error: any) {
       console.error('Error processing gift card purchase:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to process purchase'
+      });
+    }
+  });
+
+  // Add public gift card by ID endpoint  
+  app.get("/api/public/giftcard/:id", async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      
+      const giftCards = await storage.getPublicGiftCards();
+      const giftCard = giftCards.find(card => card.id === id);
+      
+      if (!giftCard) {
+        return res.status(404).json({
+          success: false,
+          error: 'Gift card not found'
+        });
+      }
+
+      res.json({
+        success: true,
+        giftCard
+      });
+    } catch (error: any) {
+      console.error('Error fetching gift card:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch gift card'
       });
     }
   });

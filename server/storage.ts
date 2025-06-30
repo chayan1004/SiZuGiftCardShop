@@ -2243,8 +2243,24 @@ export class DatabaseStorage implements IStorage {
     occasion?: string; 
     search?: string; 
   }): Promise<any[]> {
-    // Base query for public-visible gift cards
-    let query = db
+    // Build where conditions array
+    const conditions = [
+      eq(giftCards.publicVisible, true),
+      eq(giftCards.status, 'ACTIVE')
+    ];
+
+    // Apply category filter
+    if (filters?.category && filters.category !== 'all') {
+      conditions.push(eq(giftCards.giftCategory, filters.category));
+    }
+    
+    // Apply occasion filter
+    if (filters?.occasion && filters.occasion !== 'all') {
+      conditions.push(eq(giftCards.occasionTag, filters.occasion));
+    }
+
+    // Execute query with all conditions
+    const cards = await db
       .select({
         id: giftCards.id,
         merchantId: giftCards.merchantId,
@@ -2257,27 +2273,16 @@ export class DatabaseStorage implements IStorage {
         createdAt: giftCards.createdAt
       })
       .from(giftCards)
-      .where(and(
-        eq(giftCards.publicVisible, true),
-        eq(giftCards.status, 'ACTIVE')
-      ));
-
-    // Apply filters
-    if (filters?.category && filters.category !== 'all') {
-      query = query.where(eq(giftCards.giftCategory, filters.category));
-    }
-    
-    if (filters?.occasion && filters.occasion !== 'all') {
-      query = query.where(eq(giftCards.occasionTag, filters.occasion));
-    }
-
-    const cards = await query;
+      .where(and(...conditions));
     
     // Enrich with merchant data
     const enrichedCards = await Promise.all(
       cards.map(async (card) => {
-        const merchant = await this.getMerchant(parseInt(card.merchantId));
-        const branding = await this.getMerchantBranding(parseInt(card.merchantId));
+        const merchantId = typeof card.merchantId === 'string' ? parseInt(card.merchantId) : card.merchantId;
+        if (isNaN(merchantId)) return null;
+        
+        const merchant = await this.getMerchant(merchantId);
+        const branding = await this.getMerchantBranding(merchantId);
         
         if (!merchant || !merchant.isActive) return null;
 
@@ -2303,7 +2308,7 @@ export class DatabaseStorage implements IStorage {
           const matchesSearch = 
             merchant.businessName.toLowerCase().includes(searchLower) ||
             (branding?.tagline || '').toLowerCase().includes(searchLower) ||
-            card.giftCategory.toLowerCase().includes(searchLower);
+            (card.giftCategory || '').toLowerCase().includes(searchLower);
           
           if (!matchesSearch) return null;
         }

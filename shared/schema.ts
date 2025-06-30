@@ -146,9 +146,11 @@ export const publicGiftCardOrders = pgTable("public_giftcard_orders", {
   merchantId: text("merchant_id"),
   amount: integer("amount").notNull(), // Amount in cents
   message: text("message"),
-  status: text("status").notNull().default('pending'),
+  status: text("status").notNull().default('pending'), // pending, issued, failed
   squarePaymentId: text("square_payment_id"),
   giftCardGan: text("gift_card_gan"), // Generated gift card GAN after successful payment
+  giftCardId: text("gift_card_id"), // Square gift card ID
+  giftCardState: text("gift_card_state"), // Square gift card state (ACTIVE, PENDING, etc.)
   createdAt: timestamp("created_at").defaultNow(),
 });
 

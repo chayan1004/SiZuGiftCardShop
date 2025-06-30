@@ -3006,6 +3006,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
 
         const paymentsApi = client.paymentsApi;
+        const giftCardsApi = client.giftCardsApi;
 
         // Create payment
         const paymentRequest = {
@@ -3022,65 +3023,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const { result: paymentResult } = await paymentsApi.createPayment(paymentRequest);
 
         if (paymentResult.payment && paymentResult.payment.status === 'COMPLETED') {
-          // Payment successful - now create the gift card
-          const squareGiftCardsApi = client.giftCardsApi;
+          // Payment successful - now create the gift card using Square Gift Cards API
+          console.log(`✅ Payment confirmed for order ${order.id}, creating gift card...`);
           
-          // Create gift card with Square
-          const giftCardRequest = {
-            idempotencyKey: `gift_${order.id}_${Date.now()}`,
-            locationId: process.env.SQUARE_LOCATION_ID,
-            giftCard: {
-              type: 'DIGITAL',
-              ganSource: 'SQUARE',
-              state: 'ACTIVE',
-              balanceMoney: {
-                amount: amount,
-                currency: 'USD'
-              },
-              recipientEmail: recipientEmail,
-              message: message || undefined
-            }
-          };
-
-          const { result: giftCardResult } = await squareGiftCardsApi.createGiftCard(giftCardRequest);
-
-          if (giftCardResult.giftCard && giftCardResult.giftCard.gan) {
-            // Update order with success status and gift card info
-            await storage.updatePublicGiftCardOrderStatus(
-              order.id,
-              'completed',
-              paymentResult.payment.id,
-              giftCardResult.giftCard.gan
-            );
-
-            // Also create a gift card record in our database for tracking
-            const giftCardData = {
-              merchantId: merchantId || 'public',
-              squareGiftCardId: giftCardResult.giftCard.id!,
-              gan: giftCardResult.giftCard.gan,
-              amount: amount,
-              balance: amount,
-              status: 'ACTIVE',
-              recipientEmail: recipientEmail,
-              recipientName: recipientEmail.split('@')[0],
-              senderName: 'Gift Card Store',
-              personalMessage: message || null,
-              qrCodeData: `https://square.link/u/${giftCardResult.giftCard.gan}`,
-              squareState: giftCardResult.giftCard.state || 'ACTIVE'
+          try {
+            // Create gift card with Square using the latest SDK
+            const giftCardCreateRequest = {
+              idempotencyKey: `gift_${order.id}_${Date.now()}`,
+              locationId: process.env.SQUARE_LOCATION_ID,
+              giftCard: {
+                type: 'DIGITAL',
+                ganSource: 'SQUARE',
+                state: 'ACTIVE',
+                balanceMoney: {
+                  amount: amount,
+                  currency: 'USD'
+                }
+              }
             };
 
-            await storage.createGiftCard(giftCardData);
+            console.log('Creating Square gift card with request:', JSON.stringify(giftCardCreateRequest, null, 2));
+            const giftCardResponse = await giftCardsApi.createGiftCard(giftCardCreateRequest);
+            const giftCardResult = giftCardResponse.result;
 
-            console.log(`✅ Public gift card created successfully: ${giftCardResult.giftCard.gan} for ${recipientEmail}`);
+            console.log('Square gift card API response:', JSON.stringify(giftCardResult, null, 2));
 
-            res.json({
-              success: true,
-              message: "Gift card created successfully",
-              orderId: order.id,
-              giftCardGan: giftCardResult.giftCard.gan
-            });
-          } else {
-            throw new Error('Gift card creation failed - no GAN received');
+            if (giftCardResult.giftCard) {
+              const giftCard = giftCardResult.giftCard;
+              const giftCardId = giftCard.id;
+              const gan = giftCard.gan || null; // GAN might be null initially
+              const state = giftCard.state;
+
+              console.log(`✅ Gift card created: ID=${giftCardId}, GAN=${gan}, State=${state}`);
+
+              // Update order status to 'issued' with gift card metadata
+              await storage.updatePublicGiftCardOrderStatus(
+                order.id,
+                'issued',
+                paymentResult.payment.id,
+                gan
+              );
+
+              // Also create a gift card record in our database for tracking
+              const giftCardData = {
+                merchantId: merchantId || 'public',
+                squareGiftCardId: giftCardId,
+                gan: gan || `TEMP_${giftCardId}`, // Use temp GAN if not provided
+                amount: amount,
+                balance: amount,
+                status: 'ACTIVE',
+                recipientEmail: recipientEmail,
+                recipientName: recipientEmail.split('@')[0],
+                senderName: 'SiZu Gift Card Store',
+                personalMessage: message || null,
+                qrCodeData: gan ? `https://square.link/u/${gan}` : null,
+                squareState: state || 'ACTIVE'
+              };
+
+              await storage.createGiftCard(giftCardData);
+
+              // TODO: Send gift card email notification
+              // This will be implemented in Prompt 6 - Email Delivery + Digital Receipt System
+              console.log(`TODO: Send gift card email to ${recipientEmail} with card details`);
+
+              console.log(`✅ Gift card issued successfully: ID=${giftCardId} for ${recipientEmail}`);
+
+              res.json({
+                success: true,
+                message: "Gift card created and issued successfully",
+                orderId: order.id,
+                giftCardId: giftCardId,
+                giftCardGan: gan,
+                giftCardState: state
+              });
+            } else {
+              throw new Error('Gift card creation failed - no gift card object returned');
+            }
+          } catch (giftCardError: any) {
+            console.error('Gift card creation error:', giftCardError);
+            
+            // Update order status to failed
+            await storage.updatePublicGiftCardOrderStatus(order.id, 'failed');
+            
+            throw new Error(`Gift card creation failed: ${giftCardError.message}`);
           }
         } else {
           throw new Error(`Payment failed: ${paymentResult.payment?.status || 'Unknown error'}`);

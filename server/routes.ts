@@ -6058,12 +6058,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const emailResult = await emailService.sendGiftCardEmail({
               to: recipientEmail,
               giftCardId: giftCardResult.giftCard.id,
-              giftCardGan: giftCardResult.giftCard.gan,
+              gan: giftCardResult.giftCard.gan,
               amount,
               senderName,
               recipientName,
-              message: personalMessage,
-              giftOccasion
+              message: personalMessage
             });
 
             if (emailResult) {

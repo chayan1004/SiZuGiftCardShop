@@ -1539,8 +1539,23 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getWebhookFailuresSince(merchantId: string, since: Date): Promise<WebhookFailureLog[]> {
-    return await db
-      .select()
+    const result = await db
+      .select({
+        id: webhookFailureLog.id,
+        deliveryId: webhookFailureLog.deliveryId,
+        errorMessage: webhookFailureLog.errorMessage,
+        statusCode: webhookFailureLog.statusCode,
+        failedAt: webhookFailureLog.failedAt,
+        manualRetryCount: webhookFailureLog.manualRetryCount,
+        lastManualRetryStatus: webhookFailureLog.lastManualRetryStatus,
+        replayedAt: webhookFailureLog.replayedAt,
+        requestHeaders: webhookFailureLog.requestHeaders,
+        requestBody: webhookFailureLog.requestBody,
+        responseHeaders: webhookFailureLog.responseHeaders,
+        responseBody: webhookFailureLog.responseBody,
+        responseStatus: webhookFailureLog.responseStatus,
+        resolved: webhookFailureLog.resolved
+      })
       .from(webhookFailureLog)
       .innerJoin(webhookDeliveryLogs, eq(webhookFailureLog.deliveryId, webhookDeliveryLogs.id))
       .where(
@@ -1549,6 +1564,8 @@ export class DatabaseStorage implements IStorage {
           gte(webhookFailureLog.failedAt, since)
         )
       );
+    
+    return result;
   }
 
   // Phase 16B: Enhanced webhook failure methods with deep context
@@ -1661,7 +1678,7 @@ export class DatabaseStorage implements IStorage {
         eq(merchantApiKeys.id, keyId),
         eq(merchantApiKeys.merchantId, merchantId)
       ));
-    return result.rowCount > 0;
+    return result.rowCount !== null && result.rowCount > 0;
   }
 
   async validateApiKey(keyHash: string): Promise<MerchantApiKey | undefined> {
@@ -1767,7 +1784,7 @@ export class DatabaseStorage implements IStorage {
       .update(merchants)
       .set(updates)
       .where(eq(merchants.merchantId, merchantId));
-    return result.rowCount > 0;
+    return result.rowCount !== null && result.rowCount > 0;
   }
 
   async getMerchantSettings(merchantId: string): Promise<any> {

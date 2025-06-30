@@ -361,7 +361,7 @@ export default function AdminGiftCardOrders() {
           </CardContent>
         </Card>
 
-        {/* Orders Table */}
+        {/* Orders Display */}
         <Card className="bg-white/10 backdrop-blur-md border-white/20">
           <CardHeader>
             <CardTitle className="text-white">Gift Card Orders ({filteredOrders.length})</CardTitle>
@@ -370,28 +370,149 @@ export default function AdminGiftCardOrders() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-white/20 hover:bg-white/5">
-                    <TableHead className="text-slate-300">Order ID</TableHead>
-                    <TableHead className="text-slate-300">Recipient Email</TableHead>
-                    <TableHead className="text-slate-300">Amount</TableHead>
-                    <TableHead className="text-slate-300">Status</TableHead>
-                    <TableHead className="text-slate-300">Gift Card ID</TableHead>
-                    <TableHead className="text-slate-300">Email Status</TableHead>
-                    <TableHead className="text-slate-300">Created</TableHead>
-                    <TableHead className="text-slate-300">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredOrders.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center text-slate-400 py-8">
-                        No orders found matching your filters
-                      </TableCell>
-                    </TableRow>
-                  ) : (
+            {filteredOrders.length === 0 ? (
+              <div className="text-center text-slate-400 py-8">
+                No orders found matching your filters
+              </div>
+            ) : (
+              <>
+                {/* Mobile Cards - xs to md */}
+                <div className="grid gap-4 xs:grid-cols-1 sm:grid-cols-2 md:hidden">
+                  {filteredOrders.map((order) => (
+                    <Card key={order.id} className="bg-white/5 border-white/10 p-4">
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs text-slate-400 uppercase tracking-wider">Order ID</p>
+                            <p className="text-white font-mono text-sm truncate">{order.id.substring(0, 8)}...</p>
+                          </div>
+                          {getStatusBadge(order.status)}
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <p className="text-xs text-slate-400 uppercase tracking-wider">Amount</p>
+                            <p className="text-white font-semibold">{formatCurrency(order.amount)}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-slate-400 uppercase tracking-wider">Email Status</p>
+                            {getEmailBadge(order.emailSent)}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <p className="text-xs text-slate-400 uppercase tracking-wider">Recipient</p>
+                          <p className="text-white text-sm break-all">{order.recipientEmail}</p>
+                        </div>
+                        
+                        {order.giftCardId && (
+                          <div>
+                            <p className="text-xs text-slate-400 uppercase tracking-wider">Gift Card ID</p>
+                            <p className="text-white font-mono text-sm">{order.giftCardId.substring(0, 16)}...</p>
+                          </div>
+                        )}
+                        
+                        <div>
+                          <p className="text-xs text-slate-400 uppercase tracking-wider">Created</p>
+                          <p className="text-white text-sm">{formatDate(order.createdAt)}</p>
+                        </div>
+                        
+                        <div className="flex flex-wrap gap-2 pt-2 border-t border-white/10">
+                          {order.status === "issued" && order.giftCardId && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleResendEmail(order.id)}
+                              disabled={loadingActions[`resend-${order.id}`]}
+                              className="flex-1 text-xs bg-blue-600/20 border-blue-500/30 text-blue-300 hover:bg-blue-600/30"
+                            >
+                              {loadingActions[`resend-${order.id}`] ? (
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-300" />
+                              ) : (
+                                <>
+                                  <Mail className="w-3 h-3 mr-1" />
+                                  Resend
+                                </>
+                              )}
+                            </Button>
+                          )}
+                          
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDownloadQR(order.id)}
+                            disabled={loadingActions[`qr-${order.id}`]}
+                            className="flex-1 text-xs bg-purple-600/20 border-purple-500/30 text-purple-300 hover:bg-purple-600/30"
+                          >
+                            {loadingActions[`qr-${order.id}`] ? (
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-purple-300" />
+                            ) : (
+                              <>
+                                <QrCode className="w-3 h-3 mr-1" />
+                                QR
+                              </>
+                            )}
+                          </Button>
+                          
+                          {order.pdfReceiptUrl && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => window.open(order.pdfReceiptUrl!, '_blank')}
+                              className="flex-1 text-xs bg-green-600/20 border-green-500/30 text-green-300 hover:bg-green-600/30"
+                            >
+                              <Download className="w-3 h-3 mr-1" />
+                              PDF
+                            </Button>
+                          )}
+                          
+                          {!order.manuallyMarkedFailed && order.status !== "failed" && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleMarkAsFailed(order.id)}
+                              disabled={loadingActions[`fail-${order.id}`]}
+                              className="w-full text-xs bg-red-600/20 border-red-500/30 text-red-300 hover:bg-red-600/30"
+                            >
+                              {loadingActions[`fail-${order.id}`] ? (
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-red-300" />
+                              ) : (
+                                <>
+                                  <XCircle className="w-3 h-3 mr-1" />
+                                  Mark Failed
+                                </>
+                              )}
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* Desktop Table - md and larger */}
+                <div className="hidden md:block overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-white/20 hover:bg-white/5">
+                        <TableHead className="text-slate-300">Order ID</TableHead>
+                        <TableHead className="text-slate-300">Recipient Email</TableHead>
+                        <TableHead className="text-slate-300">Amount</TableHead>
+                        <TableHead className="text-slate-300">Status</TableHead>
+                        <TableHead className="text-slate-300">Gift Card ID</TableHead>
+                        <TableHead className="text-slate-300">Email Status</TableHead>
+                        <TableHead className="text-slate-300">Created</TableHead>
+                        <TableHead className="text-slate-300">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredOrders.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={8} className="text-center text-slate-400 py-8">
+                            No orders found matching your filters
+                          </TableCell>
+                        </TableRow>
+                      ) : (
                     filteredOrders.map((order) => (
                       <TableRow key={order.id} className="border-white/20 hover:bg-white/5">
                         <TableCell className="text-white font-mono text-xs">
@@ -511,10 +632,12 @@ export default function AdminGiftCardOrders() {
                         </TableCell>
                       </TableRow>
                     ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>

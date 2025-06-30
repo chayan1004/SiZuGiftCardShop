@@ -85,8 +85,8 @@ interface TransactionDetail extends Transaction {
 const TransactionExplorerPage: React.FC = () => {
   const [filters, setFilters] = useState({
     merchantId: '',
-    type: '',
-    status: '',
+    type: 'all',
+    status: 'all',
     dateFrom: '',
     dateTo: '',
     search: '',
@@ -343,7 +343,7 @@ const TransactionExplorerPage: React.FC = () => {
                     <SelectValue placeholder="All types" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All types</SelectItem>
+                    <SelectItem value="all">All types</SelectItem>
                     <SelectItem value="issue">Issue</SelectItem>
                     <SelectItem value="redeem">Redeem</SelectItem>
                     <SelectItem value="refund">Refund</SelectItem>
@@ -358,7 +358,7 @@ const TransactionExplorerPage: React.FC = () => {
                     <SelectValue placeholder="All statuses" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All statuses</SelectItem>
+                    <SelectItem value="all">All statuses</SelectItem>
                     <SelectItem value="pending">Pending</SelectItem>
                     <SelectItem value="completed">Completed</SelectItem>
                     <SelectItem value="failed">Failed</SelectItem>

@@ -287,6 +287,9 @@ export const fraudLogs = pgTable("fraud_logs", {
   ipAddress: text("ip_address").notNull(),
   merchantId: text("merchant_id"),
   userAgent: text("user_agent"),
+  deviceFingerprint: text("device_fingerprint"),
+  threatType: text("threat_type").default("unknown"),
+  metadata: text("metadata"), // JSON string for additional threat data
   reason: text("reason").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });

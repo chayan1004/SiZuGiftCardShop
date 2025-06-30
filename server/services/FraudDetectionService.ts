@@ -33,6 +33,7 @@ export class FraudDetectionService {
         ipAddress,
         merchantId,
         userAgent,
+        threatType: "rate_limit_ip_violation",
         reason: "rate_limit_ip_violation"
       });
       return {
@@ -50,6 +51,7 @@ export class FraudDetectionService {
         ipAddress,
         merchantId,
         userAgent,
+        threatType: "reused_code",
         reason: "reused_code_attempt"
       });
       return {

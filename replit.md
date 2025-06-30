@@ -150,6 +150,7 @@ This is a full-stack gift card management application built with a modern tech s
 - June 30, 2025. Prompt 9: PDF Receipt Generator + Download Link - implemented automatic PDF receipt generation with professional branding, admin dashboard download functionality, public success page with receipt access, and complete end-to-end integration with Square checkout flow
 - June 30, 2025. Prompt 10: Gift Card Orders Postman Test Suite - created comprehensive automated testing collection with newman CLI runner, validating payment processing, Square API integration, email delivery, PDF receipt generation, and admin endpoints with real data validation
 - June 30, 2025. Prompt 11: Mobile-Optimized Receipt Views + QR Code Support - enhanced GiftCardSuccess.tsx with fully responsive mobile design, integrated QR code generation service using qrcode package, embedded QR codes in PDF receipts for easy re-access, added admin dashboard QR functionality with download capabilities, and created comprehensive mobile-first receipt viewing experience
+- June 30, 2025. Prompt 13: Admin Branding + Tier Manager UI Panel - implemented comprehensive admin control center for merchant branding and pricing tiers with full CRUD operations, created AdminMerchantSettings.tsx with MerchantBrandingForm.tsx and PricingTierEditor.tsx components, added admin API endpoints for merchant management, real-time branding preview, volume pricing configuration, and complete merchant customization without code updates
 
 ## Prompt 4: Branded Public Gift Card Storefront (June 30, 2025)
 
@@ -432,6 +433,55 @@ CREATE TABLE public_giftcard_orders (
 - **Touch Optimization**: Larger buttons and improved spacing for mobile devices
 - **Desktop Enhancement**: Multi-column layout with sidebar for QR and actions
 - **Tablet Support**: Intermediate layouts that work well on tablet-sized screens
+
+## Prompt 13: Admin Branding + Tier Manager UI Panel (June 30, 2025)
+
+### Comprehensive Admin Control Center
+- **AdminMerchantSettings.tsx**: Modern admin UI panel with merchant selection sidebar and tabbed settings interface
+- **Full CRUD Operations**: Complete merchant management system with real-time data synchronization
+- **Mobile-First Design**: Responsive layout with glass morphism effects and touch-friendly interface
+- **Search & Filter**: Live merchant search with business name and email filtering capabilities
+
+### Merchant Branding Management
+- **MerchantBrandingForm.tsx**: Complete branding customization interface with live preview functionality
+- **Logo Upload System**: Base64 image upload with file input and URL alternative options
+- **Theme Color Picker**: Visual color picker with hex input for precise branding control
+- **Custom Taglines**: Rich text editing for merchant-specific messaging and brand voice
+- **Real-time Preview**: Live preview panel showing how branding appears in checkout flows
+
+### Dynamic Pricing Tier Editor
+- **PricingTierEditor.tsx**: Advanced pricing strategy management with volume-based tiers
+- **Add/Remove Tiers**: Dynamic tier creation with intelligent quantity and price suggestions
+- **Validation System**: Prevents overlapping quantities and ensures ascending price order
+- **Savings Calculator**: Automatic discount percentage calculation and visual savings indicators
+- **Pricing Summary**: Overview cards showing tier count, lowest price, and maximum savings
+
+### Backend API Integration
+- **Admin Endpoints**: Secure API routes for merchant branding and pricing tier management
+  - `GET /api/admin/merchant/:id/branding` - Fetch merchant branding with auto-creation
+  - `POST /api/admin/merchant/:id/branding` - Create/update merchant branding
+  - `GET /api/admin/merchant/:id/pricing-tiers` - Fetch pricing tiers with defaults
+  - `POST /api/admin/merchant/:id/pricing-tiers` - Bulk create/update pricing tiers
+- **Database Operations**: Full CRUD support for merchant_branding and merchant_pricing_tiers tables
+- **Auto-defaults**: Intelligent default creation for new merchants without existing configuration
+
+### Real-time Merchant Customization
+- **Zero Code Updates**: Admin can configure any merchant's branding and pricing without touching code
+- **Live Checkout Integration**: Branded checkout flows adapt dynamically to merchant settings
+- **PDF Receipt Branding**: Merchant colors and logos automatically applied to generated receipts
+- **Bulk Purchase Flows**: Volume pricing tiers immediately reflected in merchant interfaces
+
+### Database-Driven Architecture
+- **Dynamic Pricing**: Replaced hardcoded pricing with database-driven merchant_pricing_tiers
+- **Merchant Branding**: Real merchant customization via merchant_branding table
+- **Version Control**: Created/updated timestamps for all branding and pricing changes
+- **Data Integrity**: Proper foreign key relationships and cascade operations
+
+### User Experience Features
+- **Loading States**: Skeleton loading and animated placeholders during data fetching
+- **Error Handling**: Comprehensive error management with user-friendly toast notifications
+- **Form Validation**: Real-time validation with descriptive error messages
+- **Auto-save Indicators**: Visual feedback showing unsaved changes and save progress
 
 ## Recent Production Enhancements
 

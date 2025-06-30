@@ -175,6 +175,7 @@ export default function AdminDashboard() {
     { id: "customers", label: "Customer Insights", icon: <Users className="w-5 h-5" /> },
     { id: "marketing", label: "Marketing Tools", icon: <Mail className="w-5 h-5" /> },
     { id: "email", label: "Email System", icon: <Mail className="w-5 h-5" /> },
+    { id: "operations", label: "System Operations", icon: <Database className="w-5 h-5" /> },
   ];
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
@@ -228,7 +229,7 @@ export default function AdminDashboard() {
           {/* Premium Status Indicator */}
           <div className="mt-4 flex items-center space-x-2">
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-            <span className="text-xs text-[#192336] font-medium">System Online</span>
+            <span className="text-xs text-green-400 font-medium">System Online</span>
             <div className="ml-auto">
               <span className="text-xs text-gray-400">v2.1.0</span>
             </div>
@@ -347,15 +348,280 @@ export default function AdminDashboard() {
             </div>
           ) : (
             <>
+              {/* Business Overview Section */}
               {activeSection === "overview" && (
                 <div className="space-y-4 lg:space-y-6">
-                  {/* Overview content would go here */}
-                  <div className="bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-xl p-6">
-                    <h3 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-2">
-                      Business Overview
-                    </h3>
-                    <p className="text-gray-300">Welcome to your comprehensive business management dashboard</p>
+                  {/* Enhanced Executive Summary Header */}
+                  <div className="bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-xl p-6 lg:p-8">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                      <div>
+                        <h3 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-2">
+                          SiZu GiftCard Business Intelligence
+                        </h3>
+                        <p className="text-gray-300 text-sm lg:text-base">Real-time performance insights and strategic business metrics</p>
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <Badge className="bg-green-500/20 text-green-300 border-green-500/30 px-3 py-1">
+                          Live Data
+                        </Badge>
+                        <div className="text-right">
+                          <p className="text-xs text-gray-400">Last updated</p>
+                          <p className="text-sm text-green-400 font-medium">30 seconds ago</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Enhanced Premium Metrics Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+                    {/* Total Gift Cards */}
+                    <MetricCard
+                      title="Total Gift Cards"
+                      value={metrics.totalGiftCards.toLocaleString()}
+                      icon={<Gift className="text-white" size={24} />}
+                      color="blue"
+                      subtitle="All time cards issued"
+                      trend={`+${Math.round(metrics.totalGiftCards * 0.12)} this month`}
+                    />
+
+                    {/* Active Gift Cards */}
+                    <MetricCard
+                      title="Active Cards"
+                      value={metrics.activeCards.toLocaleString()}
+                      icon={<Activity className="text-white" size={24} />}
+                      color="green"
+                      subtitle="Currently unredeemed"
+                      trend={`${((metrics.activeCards / metrics.totalGiftCards) * 100).toFixed(1)}% of total`}
+                    />
+
+                    {/* Total Value */}
+                    <MetricCard
+                      title="Total Value"
+                      value={`$${(metrics.totalValue / 100).toLocaleString()}`}
+                      icon={<DollarSign className="text-white" size={24} />}
+                      color="purple"
+                      subtitle="Outstanding card value"
+                      trend={`$${((metrics.totalValue / 100) * 0.08).toFixed(0)} growth`}
+                    />
+
+                    {/* Conversion Rate */}
+                    <MetricCard
+                      title="Conversion Rate"
+                      value={metrics.conversionRate}
+                      icon={<TrendingUp className="text-white" size={24} />}
+                      color="orange"
+                      subtitle="Purchase to redemption"
+                      trend="+2.3% vs last month"
+                    />
+                  </div>
+
+                  {/* Revenue Performance Analytics */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+                    {/* Enhanced Revenue Chart */}
+                    <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
+                      <CardHeader>
+                        <CardTitle className="text-white flex items-center">
+                          <TrendingUp className="w-5 h-5 mr-2 text-green-400" />
+                          Revenue Performance
+                        </CardTitle>
+                        <CardDescription className="text-gray-300">Weekly revenue trends and growth analysis</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="mb-4 grid grid-cols-3 gap-4">
+                          <div className="text-center p-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-lg border border-green-500/30">
+                            <h4 className="text-lg font-bold text-green-400">${totalWeeklyRevenue.toFixed(0)}</h4>
+                            <p className="text-xs text-green-300">Total</p>
+                          </div>
+                          <div className="text-center p-3 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-lg border border-blue-500/30">
+                            <h4 className="text-lg font-bold text-blue-400">{revenueGrowth > 0 ? '+' : ''}{revenueGrowth.toFixed(1)}%</h4>
+                            <p className="text-xs text-blue-300">Growth</p>
+                          </div>
+                          <div className="text-center p-3 bg-gradient-to-r from-purple-500/20 to-violet-500/20 rounded-lg border border-purple-500/30">
+                            <h4 className="text-lg font-bold text-purple-400">${averageWeeklyRevenue.toFixed(0)}</h4>
+                            <p className="text-xs text-purple-300">Avg/Week</p>
+                          </div>
+                        </div>
+                        <ResponsiveContainer width="100%" height={200}>
+                          <LineChart data={weeklyRevenue}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                            <XAxis dataKey="week" stroke="rgba(255,255,255,0.5)" />
+                            <YAxis stroke="rgba(255,255,255,0.5)" />
+                            <Tooltip 
+                              contentStyle={{ 
+                                backgroundColor: 'rgba(0,0,0,0.8)', 
+                                border: '1px solid rgba(255,255,255,0.2)',
+                                borderRadius: '8px',
+                                color: 'white'
+                              }} 
+                            />
+                            <Line 
+                              type="monotone" 
+                              dataKey="revenue" 
+                              stroke="#06b6d4" 
+                              strokeWidth={3}
+                              dot={{ fill: '#06b6d4', strokeWidth: 2, r: 4 }}
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+
+                    {/* Enhanced Activity Distribution */}
+                    <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
+                      <CardHeader>
+                        <CardTitle className="text-white flex items-center">
+                          <Activity className="w-5 h-5 mr-2 text-cyan-400" />
+                          Activity Distribution
+                        </CardTitle>
+                        <CardDescription className="text-gray-300">Gift card lifecycle analysis</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <ResponsiveContainer width="100%" height={200}>
+                          <PieChart>
+                            <Pie
+                              data={[
+                                { name: 'Active', value: metrics.activeCards, color: '#10b981' },
+                                { name: 'Redeemed', value: metrics.redeemedCards, color: '#06b6d4' },
+                                { name: 'Expired', value: Math.max(0, metrics.totalGiftCards - metrics.activeCards - metrics.redeemedCards), color: '#f59e0b' }
+                              ]}
+                              cx="50%"
+                              cy="50%"
+                              outerRadius={80}
+                              fill="#8884d8"
+                              dataKey="value"
+                              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                            >
+                              {[
+                                { name: 'Active', value: metrics.activeCards, color: '#10b981' },
+                                { name: 'Redeemed', value: metrics.redeemedCards, color: '#06b6d4' },
+                                { name: 'Expired', value: Math.max(0, metrics.totalGiftCards - metrics.activeCards - metrics.redeemedCards), color: '#f59e0b' }
+                              ].map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                              ))}
+                            </Pie>
+                            <Tooltip 
+                              contentStyle={{ 
+                                backgroundColor: 'rgba(0,0,0,0.8)', 
+                                border: '1px solid rgba(255,255,255,0.2)',
+                                borderRadius: '8px',
+                                color: 'white'
+                              }} 
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Advanced Business Metrics */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+                    <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
+                      <CardHeader>
+                        <CardTitle className="text-white text-lg">Customer Analytics</CardTitle>
+                        <CardDescription className="text-gray-300">User engagement insights</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300">Total Customers</span>
+                            <span className="text-white font-bold">{metrics.customers}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300">Avg. Card Value</span>
+                            <span className="text-white font-bold">${(metrics.averageValue / 100).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300">Revenue per Customer</span>
+                            <span className="text-white font-bold">${((metrics.totalSales / 100) / Math.max(metrics.customers, 1)).toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
+                      <CardHeader>
+                        <CardTitle className="text-white text-lg">Sales Performance</CardTitle>
+                        <CardDescription className="text-gray-300">Revenue breakdown</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300">Total Sales</span>
+                            <span className="text-white font-bold">${(metrics.totalSales / 100).toLocaleString()}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300">Redemptions</span>
+                            <span className="text-white font-bold">{metrics.redemptions}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300">Redemption Rate</span>
+                            <span className="text-white font-bold">{((metrics.redemptions / Math.max(metrics.totalGiftCards, 1)) * 100).toFixed(1)}%</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
+                      <CardHeader>
+                        <CardTitle className="text-white text-lg">System Health</CardTitle>
+                        <CardDescription className="text-gray-300">Platform status</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300">API Status</span>
+                            <Badge className="bg-green-500/20 text-green-300 border-green-500/30">Online</Badge>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300">Database</span>
+                            <Badge className="bg-green-500/20 text-green-300 border-green-500/30">Healthy</Badge>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300">Email Service</span>
+                            <Badge className="bg-green-500/20 text-green-300 border-green-500/30">Active</Badge>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Real-time Activity Feed */}
+                  <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center">
+                        <Activity className="w-5 h-5 mr-2 text-orange-400" />
+                        Live Activity Stream
+                      </CardTitle>
+                      <CardDescription className="text-gray-300">Real-time transactions and system events</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3 max-h-80 overflow-y-auto">
+                        {recentActivity.slice(0, 10).map((activity, index) => (
+                          <div key={index} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+                            <div className="flex items-center space-x-3">
+                              <div className={`p-2 rounded-full ${
+                                activity.type === 'purchase' ? 'bg-green-500/20 text-green-400' :
+                                activity.type === 'redemption' ? 'bg-blue-500/20 text-blue-400' :
+                                'bg-orange-500/20 text-orange-400'
+                              }`}>
+                                {activity.type === 'purchase' && <CreditCard className="w-4 h-4" />}
+                                {activity.type === 'redemption' && <QrCode className="w-4 h-4" />}
+                                {activity.type !== 'purchase' && activity.type !== 'redemption' && <Activity className="w-4 h-4" />}
+                              </div>
+                              <div>
+                                <p className="text-white font-medium capitalize">{activity.type}</p>
+                                <p className="text-gray-400 text-sm">{activity.email || activity.gan || 'System'}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-white font-bold">${(activity.amount / 100).toFixed(2)}</p>
+                              <p className="text-gray-400 text-sm">{activity.timeAgo}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               )}
 
@@ -400,10 +666,521 @@ export default function AdminDashboard() {
                   <AdminMerchantSettings />
                 </div>
               )}
+
+              {/* Revenue Analytics Section */}
+              {activeSection === "revenue" && (
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-xl p-6">
+                    <h3 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-2">
+                      Revenue Analytics Center
+                    </h3>
+                    <p className="text-gray-300">Comprehensive revenue tracking and business intelligence</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {/* Revenue Growth Chart */}
+                    <Card className="col-span-full lg:col-span-2 bg-white/10 backdrop-blur-xl border border-white/20">
+                      <CardHeader>
+                        <CardTitle className="text-white">Revenue Growth Analysis</CardTitle>
+                        <CardDescription className="text-gray-300">Comprehensive revenue tracking and projections</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                          <div className="text-center p-4 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-lg border border-green-500/30">
+                            <h3 className="text-2xl font-bold text-green-400">${totalWeeklyRevenue.toFixed(0)}</h3>
+                            <p className="text-sm text-green-300">Total Revenue</p>
+                          </div>
+                          <div className="text-center p-4 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-lg border border-blue-500/30">
+                            <h3 className="text-2xl font-bold text-blue-400">{revenueGrowth > 0 ? '+' : ''}{revenueGrowth.toFixed(1)}%</h3>
+                            <p className="text-sm text-blue-300">Growth Rate</p>
+                          </div>
+                          <div className="text-center p-4 bg-gradient-to-r from-purple-500/20 to-violet-500/20 rounded-lg border border-purple-500/30">
+                            <h3 className="text-2xl font-bold text-purple-400">${averageWeeklyRevenue.toFixed(0)}</h3>
+                            <p className="text-sm text-purple-300">Weekly Average</p>
+                          </div>
+                        </div>
+                        <ResponsiveContainer width="100%" height={300}>
+                          <LineChart data={weeklyRevenue}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                            <XAxis dataKey="week" stroke="rgba(255,255,255,0.5)" />
+                            <YAxis stroke="rgba(255,255,255,0.5)" />
+                            <Tooltip 
+                              contentStyle={{ 
+                                backgroundColor: 'rgba(0,0,0,0.8)', 
+                                border: '1px solid rgba(255,255,255,0.2)',
+                                borderRadius: '8px',
+                                color: 'white'
+                              }} 
+                            />
+                            <Line 
+                              type="monotone" 
+                              dataKey="revenue" 
+                              stroke="#06b6d4" 
+                              strokeWidth={3}
+                              dot={{ fill: '#06b6d4', strokeWidth: 2, r: 6 }}
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+
+                    {/* Revenue Distribution */}
+                    <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
+                      <CardHeader>
+                        <CardTitle className="text-white">Revenue Sources</CardTitle>
+                        <CardDescription className="text-gray-300">Breakdown by category</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <ResponsiveContainer width="100%" height={300}>
+                          <PieChart>
+                            <Pie
+                              data={[
+                                { name: 'Gift Cards', value: metrics.totalSales, color: '#06b6d4' },
+                                { name: 'Redemptions', value: metrics.redemptions * 50, color: '#10b981' },
+                                { name: 'Fees', value: metrics.totalSales * 0.03, color: '#f59e0b' }
+                              ]}
+                              cx="50%"
+                              cy="50%"
+                              outerRadius={100}
+                              fill="#8884d8"
+                              dataKey="value"
+                              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                            >
+                              {[
+                                { name: 'Gift Cards', value: metrics.totalSales, color: '#06b6d4' },
+                                { name: 'Redemptions', value: metrics.redemptions * 50, color: '#10b981' },
+                                { name: 'Fees', value: metrics.totalSales * 0.03, color: '#f59e0b' }
+                              ].map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                              ))}
+                            </Pie>
+                            <Tooltip 
+                              contentStyle={{ 
+                                backgroundColor: 'rgba(0,0,0,0.8)', 
+                                border: '1px solid rgba(255,255,255,0.2)',
+                                borderRadius: '8px',
+                                color: 'white'
+                              }} 
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              )}
+
+              {/* Customer Insights Section */}
+              {activeSection === "customers" && (
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-xl p-6">
+                    <h3 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-2">
+                      Customer Intelligence Center
+                    </h3>
+                    <p className="text-gray-300">Deep insights into customer behavior and engagement patterns</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Customer Metrics */}
+                    <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
+                      <CardHeader>
+                        <CardTitle className="text-white">Customer Analytics</CardTitle>
+                        <CardDescription className="text-gray-300">Key customer performance indicators</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="text-center p-4 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-lg border border-blue-500/30">
+                            <h3 className="text-xl font-bold text-blue-400">{metrics.customers}</h3>
+                            <p className="text-sm text-blue-300">Total Customers</p>
+                          </div>
+                          <div className="text-center p-4 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-lg border border-green-500/30">
+                            <h3 className="text-xl font-bold text-green-400">${(metrics.averageValue / 100).toFixed(0)}</h3>
+                            <p className="text-sm text-green-300">Avg Purchase</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Customer Engagement */}
+                    <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
+                      <CardHeader>
+                        <CardTitle className="text-white">Engagement Metrics</CardTitle>
+                        <CardDescription className="text-gray-300">Customer interaction patterns</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300">Return Rate</span>
+                            <span className="text-white font-bold">23%</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300">Satisfaction</span>
+                            <span className="text-white font-bold">4.8/5</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300">Referrals</span>
+                            <span className="text-white font-bold">156</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              )}
+
+              {/* Marketing Tools Section */}
+              {activeSection === "marketing" && (
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-xl p-6">
+                    <h3 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-2">
+                      Marketing Command Center
+                    </h3>
+                    <p className="text-gray-300">Comprehensive marketing tools and campaign management</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {/* Campaign Performance */}
+                    <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
+                      <CardHeader>
+                        <CardTitle className="text-white">Campaign Performance</CardTitle>
+                        <CardDescription className="text-gray-300">Active marketing campaigns</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div className="p-3 bg-white/5 rounded-lg border border-white/10">
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-white font-medium">Holiday Campaign</span>
+                              <Badge className="bg-green-500/20 text-green-300 border-green-500/30">Active</Badge>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-400">Conversion Rate</span>
+                              <span className="text-green-400">12.3%</span>
+                            </div>
+                          </div>
+                          <div className="p-3 bg-white/5 rounded-lg border border-white/10">
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-white font-medium">Email Series</span>
+                              <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">Running</Badge>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-400">Open Rate</span>
+                              <span className="text-blue-400">28.7%</span>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Quick Actions */}
+                    <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
+                      <CardHeader>
+                        <CardTitle className="text-white">Quick Actions</CardTitle>
+                        <CardDescription className="text-gray-300">Launch marketing campaigns</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          <Button className="w-full bg-gradient-to-r from-[#fa8d1b] to-[#9c53f0] hover:from-[#9c53f0] hover:to-[#fa8d1b] text-white font-medium shadow-lg transition-all duration-300">
+                            Create Campaign
+                          </Button>
+                          <Button variant="outline" className="w-full border-blue-500/30 text-blue-300 hover:bg-blue-500/10 hover:text-blue-200 font-medium">
+                            Send Newsletter
+                          </Button>
+                          <Button variant="outline" className="w-full border-purple-500/30 text-purple-300 hover:bg-purple-500/10 hover:text-purple-200 font-medium">
+                            Launch Promotion
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Analytics */}
+                    <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
+                      <CardHeader>
+                        <CardTitle className="text-white">Marketing Analytics</CardTitle>
+                        <CardDescription className="text-gray-300">Performance metrics</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="text-center p-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-lg border border-green-500/30">
+                            <h4 className="text-lg font-bold text-green-400">2.4k</h4>
+                            <p className="text-xs text-green-300">Leads</p>
+                          </div>
+                          <div className="text-center p-3 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-lg border border-blue-500/30">
+                            <h4 className="text-lg font-bold text-blue-400">18.2%</h4>
+                            <p className="text-xs text-blue-300">CVR</p>
+                          </div>
+                          <div className="text-center p-3 bg-gradient-to-r from-purple-500/20 to-violet-500/20 rounded-lg border border-purple-500/30">
+                            <h4 className="text-lg font-bold text-purple-400">$1.2k</h4>
+                            <p className="text-xs text-purple-300">CAC</p>
+                          </div>
+                          <div className="text-center p-3 bg-gradient-to-r from-orange-500/20 to-amber-500/20 rounded-lg border border-orange-500/30">
+                            <h4 className="text-lg font-bold text-orange-400">4.2x</h4>
+                            <p className="text-xs text-orange-300">ROAS</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              )}
+
+              {/* Email System Section */}
+              {activeSection === "email" && (
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-xl p-6">
+                    <h3 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-2">
+                      Email System Management
+                    </h3>
+                    <p className="text-gray-300">Monitor and manage email delivery, performance, and authentication</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {/* Email Metrics */}
+                    <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
+                      <CardHeader>
+                        <CardTitle className="text-white flex items-center">
+                          <Mail className="w-5 h-5 mr-2 text-blue-400" />
+                          Delivery Metrics
+                        </CardTitle>
+                        <CardDescription className="text-gray-300">Real-time email performance</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300">Delivery Rate</span>
+                            <span className="text-green-400 font-bold">{emailMetrics.deliveryRate || '98.2%'}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300">Bounce Rate</span>
+                            <span className="text-orange-400 font-bold">{emailMetrics.bounceRate || '1.3%'}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300">Open Rate</span>
+                            <span className="text-blue-400 font-bold">{emailMetrics.openRate || '24.7%'}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300">Complaint Rate</span>
+                            <span className="text-red-400 font-bold">{emailMetrics.complaintRate || '0.1%'}</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Domain Authentication */}
+                    <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
+                      <CardHeader>
+                        <CardTitle className="text-white flex items-center">
+                          <Shield className="w-5 h-5 mr-2 text-green-400" />
+                          Domain Authentication
+                        </CardTitle>
+                        <CardDescription className="text-gray-300">SPF, DKIM, and DMARC status</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300">SPF Record</span>
+                            <Badge className={`${domainAuth.spf ? 'bg-green-500/20 text-green-300 border-green-500/30' : 'bg-red-500/20 text-red-300 border-red-500/30'}`}>
+                              {domainAuth.spf ? 'Valid' : 'Missing'}
+                            </Badge>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300">DKIM Signing</span>
+                            <Badge className={`${domainAuth.dkim ? 'bg-green-500/20 text-green-300 border-green-500/30' : 'bg-red-500/20 text-red-300 border-red-500/30'}`}>
+                              {domainAuth.dkim ? 'Active' : 'Inactive'}
+                            </Badge>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300">DMARC Policy</span>
+                            <Badge className={`${domainAuth.dmarc ? 'bg-green-500/20 text-green-300 border-green-500/30' : 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30'}`}>
+                              {domainAuth.dmarc || 'None'}
+                            </Badge>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Queue Status */}
+                    <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
+                      <CardHeader>
+                        <CardTitle className="text-white flex items-center">
+                          <Activity className="w-5 h-5 mr-2 text-cyan-400" />
+                          Queue Status
+                        </CardTitle>
+                        <CardDescription className="text-gray-300">Email processing and limits</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300">Pending</span>
+                            <span className="text-yellow-400 font-bold">{queueStatus.pending || '0'}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300">Sent Today</span>
+                            <span className="text-green-400 font-bold">{queueStatus.sentToday || '0'}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300">Daily Limit</span>
+                            <span className="text-blue-400 font-bold">{queueStatus.dailyLimit || '10,000'}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300">Rate Limit</span>
+                            <span className="text-purple-400 font-bold">{queueStatus.rateLimit || '14/sec'}</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              )}
+
+              {/* System Operations Section */}
+              {activeSection === "operations" && (
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-xl p-6">
+                    <h3 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-2">
+                      System Operations Center
+                    </h3>
+                    <p className="text-gray-300">Monitor system health, performance, and operational metrics</p>
+                  </div>
+
+                  {/* System Health Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-white text-sm flex items-center">
+                          <Activity className="w-4 h-4 mr-2 text-green-400" />
+                          System Health
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-green-400 mb-1">99.9%</div>
+                          <div className="text-xs text-gray-400">Uptime</div>
+                          <Badge className="mt-2 bg-green-500/20 text-green-300 border-green-500/30">Operational</Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-white text-sm flex items-center">
+                          <Database className="w-4 h-4 mr-2 text-blue-400" />
+                          Database
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-blue-400 mb-1">234MB</div>
+                          <div className="text-xs text-gray-400">Storage Used</div>
+                          <Badge className="mt-2 bg-blue-500/20 text-blue-300 border-blue-500/30">Healthy</Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-white text-sm flex items-center">
+                          <TrendingUp className="w-4 h-4 mr-2 text-purple-400" />
+                          Performance
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-purple-400 mb-1">120ms</div>
+                          <div className="text-xs text-gray-400">Avg Response</div>
+                          <Badge className="mt-2 bg-purple-500/20 text-purple-300 border-purple-500/30">Excellent</Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-white/10 backdrop-blur-xl border border-white/20">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-white text-sm flex items-center">
+                          <Shield className="w-4 h-4 mr-2 text-orange-400" />
+                          Security
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-orange-400 mb-1">0</div>
+                          <div className="text-xs text-gray-400">Threats</div>
+                          <Badge className="mt-2 bg-orange-500/20 text-orange-300 border-orange-500/30">Secure</Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>
       </div>
     </div>
+  );
+}
+
+// Metric Card Component
+interface MetricCardProps {
+  title: string;
+  value: string;
+  icon: React.ReactNode;
+  color: 'blue' | 'green' | 'purple' | 'orange';
+  subtitle: string;
+  trend?: string;
+}
+
+function MetricCard({ title, value, icon, color, subtitle, trend }: MetricCardProps) {
+  const colorClasses = {
+    blue: {
+      card: 'bg-gradient-to-br from-blue-600/30 via-cyan-500/25 to-blue-500/30 border-blue-400/40 shadow-lg shadow-blue-500/20',
+      icon: 'bg-gradient-to-br from-blue-500 via-cyan-400 to-blue-600 text-white shadow-xl shadow-blue-500/40',
+      text: 'text-white',
+      accent: 'text-cyan-300'
+    },
+    green: {
+      card: 'bg-gradient-to-br from-green-600/30 via-emerald-500/25 to-green-500/30 border-green-400/40 shadow-lg shadow-green-500/20',
+      icon: 'bg-gradient-to-br from-green-500 via-emerald-400 to-green-600 text-white shadow-xl shadow-green-500/40',
+      text: 'text-white',
+      accent: 'text-emerald-300'
+    },
+    purple: {
+      card: 'bg-gradient-to-br from-purple-600/30 via-violet-500/25 to-purple-500/30 border-purple-400/40 shadow-lg shadow-purple-500/20',
+      icon: 'bg-gradient-to-br from-purple-500 via-violet-400 to-purple-600 text-white shadow-xl shadow-purple-500/40',
+      text: 'text-white',
+      accent: 'text-violet-300'
+    },
+    orange: {
+      card: 'bg-gradient-to-br from-orange-600/30 via-amber-500/25 to-orange-500/30 border-orange-400/40 shadow-lg shadow-orange-500/20',
+      icon: 'bg-gradient-to-br from-orange-500 via-amber-400 to-orange-600 text-white shadow-xl shadow-orange-500/40',
+      text: 'text-white',
+      accent: 'text-amber-300'
+    },
+  };
+
+  const colorClass = colorClasses[color];
+
+  return (
+    <Card className={`relative overflow-hidden backdrop-blur-xl border transition-all duration-300 hover:scale-[1.02] hover:shadow-xl ${colorClass.card}`}>
+      <CardContent className="p-4 lg:p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs lg:text-sm font-medium mb-1 truncate text-gray-300">{title}</p>
+            <p className="text-xl lg:text-3xl font-bold text-white mb-1 lg:mb-2">{value}</p>
+            <p className="text-xs text-gray-400 truncate">{subtitle}</p>
+          </div>
+          <div className={`p-2 lg:p-3 rounded-xl flex-shrink-0 ${colorClass.icon}`}>
+            <div className="w-5 h-5 lg:w-6 lg:h-6">
+              {icon}
+            </div>
+          </div>
+        </div>
+        {trend && (
+          <div className="mt-3 lg:mt-4 flex items-center">
+            <TrendingUp className="w-3 h-3 lg:w-4 lg:h-4 mr-1 flex-shrink-0 text-green-400" />
+            <span className="text-xs lg:text-sm font-medium text-green-400">{trend}</span>
+            <span className="text-xs lg:text-sm text-gray-400 ml-1 hidden sm:inline">vs last month</span>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

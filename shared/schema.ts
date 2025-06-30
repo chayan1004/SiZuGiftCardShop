@@ -193,6 +193,9 @@ export const publicGiftCardOrders = pgTable("public_giftcard_orders", {
   giftCardGan: text("gift_card_gan"), // Generated gift card GAN after successful payment
   giftCardId: text("gift_card_id"), // Square gift card ID
   giftCardState: text("gift_card_state"), // Square gift card state (ACTIVE, PENDING, etc.)
+  senderName: text("sender_name"), // Person purchasing the gift card
+  recipientName: text("recipient_name"), // Person receiving the gift card
+  isGift: boolean("is_gift").default(false), // Whether this is a gift or self-purchase
   emailSent: boolean("email_sent").notNull().default(false), // Email delivery tracking
   emailSentAt: timestamp("email_sent_at"), // Timestamp when email was successfully sent
   emailResendCount: integer("email_resend_count").notNull().default(0), // Number of times email was resent

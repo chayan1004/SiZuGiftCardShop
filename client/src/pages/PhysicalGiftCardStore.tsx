@@ -9,33 +9,227 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { CreditCard, Package, Truck, Users, Building2, Calculator, Palette, FileText, CheckCircle, AlertCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { CreditCard, Package, Truck, Users, Building2, Calculator, Palette, FileText, CheckCircle, AlertCircle, Sparkles, Zap, Star, Layers, Eye, ArrowLeft, Menu, Home, ShoppingCart, Gift, Shield, Crown, Diamond } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { Link, useLocation } from "wouter";
 
-// Form validation schema
 const physicalCardOrderSchema = z.object({
-  cardType: z.enum(['plastic', 'metal', 'premium']),
-  quantity: z.number().min(1).max(10000),
-  denomination: z.number().min(500).max(50000), // $5 to $500 in cents
   customerType: z.enum(['merchant', 'individual']),
+  businessName: z.string().optional(),
+  contactEmail: z.string().email(),
+  contactPhone: z.string(),
+  cardType: z.enum(['plastic', 'metal', 'premium']),
+  quantity: z.number().min(1),
   customDesign: z.boolean().default(false),
-  shippingMethod: z.enum(['standard', 'expedited', 'overnight']).default('standard'),
-  customerName: z.string().min(2),
-  customerEmail: z.string().email(),
-  customerId: z.string().optional(),
-  shippingAddress: z.string().min(5),
-  shippingCity: z.string().min(2),
-  shippingState: z.string().min(2),
-  shippingZip: z.string().min(5).max(10),
-  shippingCountry: z.string().default('US'),
-  notes: z.string().optional()
+  designNotes: z.string().optional(),
+  shippingAddress: z.object({
+    street: z.string(),
+    city: z.string(),
+    state: z.string(),
+    zipCode: z.string(),
+    country: z.string().default('US')
+  }),
+  expeditedShipping: z.boolean().default(false)
 });
 
 type PhysicalCardOrderForm = z.infer<typeof physicalCardOrderSchema>;
+
+// Premium Physical Card Preview Component
+const PhysicalCardPreview = ({ cardType, customDesign, themeColor }: { 
+  cardType: 'plastic' | 'metal' | 'premium', 
+  customDesign: boolean,
+  themeColor: string 
+}) => {
+  const cardStyles = {
+    plastic: {
+      background: `linear-gradient(135deg, ${themeColor}40, ${themeColor}20)`,
+      border: `2px solid ${themeColor}60`,
+      shadow: '0 8px 32px rgba(0,0,0,0.1)',
+      material: 'Durable PVC'
+    },
+    metal: {
+      background: `linear-gradient(135deg, #c0c0c0, #808080, ${themeColor}30)`,
+      border: '2px solid #606060',
+      shadow: '0 12px 40px rgba(0,0,0,0.2)',
+      material: 'Brushed Metal'
+    },
+    premium: {
+      background: `linear-gradient(135deg, #ffd700, ${themeColor}, #ff6b6b)`,
+      border: '3px solid #ffd700',
+      shadow: '0 16px 48px rgba(255,215,0,0.3)',
+      material: 'Premium Composite'
+    }
+  };
+
+  const style = cardStyles[cardType];
+
+  return (
+    <motion.div
+      initial={{ scale: 0.8, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ duration: 0.5, type: "spring" }}
+      className="relative w-80 h-48 mx-auto"
+    >
+      <motion.div
+        whileHover={{ scale: 1.05, rotateY: 5 }}
+        transition={{ duration: 0.3 }}
+        className="w-full h-full rounded-xl p-6 text-white relative overflow-hidden"
+        style={{
+          background: style.background,
+          border: style.border,
+          boxShadow: style.shadow,
+        }}
+      >
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute -top-10 -right-10 w-32 h-32 opacity-10"
+        >
+          <Sparkles className="w-full h-full" />
+        </motion.div>
+        
+        <div className="relative z-10 h-full flex flex-col justify-between">
+          <div className="flex justify-between items-start">
+            <div>
+              <motion.h3 
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="text-lg font-bold"
+              >
+                SiZu GiftCard
+              </motion.h3>
+              <motion.p 
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="text-sm opacity-80"
+              >
+                {style.material}
+              </motion.p>
+            </div>
+            <motion.div
+              animate={{ rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              {cardType === 'premium' ? <Crown className="w-8 h-8" /> : 
+               cardType === 'metal' ? <Diamond className="w-8 h-8" /> : 
+               <Gift className="w-8 h-8" />}
+            </motion.div>
+          </div>
+          
+          <div>
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="text-xl font-mono tracking-widest mb-2"
+            >
+              •••• •••• •••• 1234
+            </motion.div>
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="text-sm opacity-80"
+            >
+              VALID THRU 12/28
+            </motion.div>
+          </div>
+        </div>
+        
+        {customDesign && (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="absolute top-2 right-2 bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold"
+          >
+            CUSTOM
+          </motion.div>
+        )}
+      </motion.div>
+    </motion.div>
+  );
+};
+
+// Premium Navigation Header Component
+const PremiumHeader = () => {
+  const [location, setLocation] = useLocation();
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  return (
+    <motion.header
+      initial={{ y: -100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isScrolled 
+          ? 'bg-black/20 backdrop-blur-xl border-b border-white/10' 
+          : 'bg-transparent'
+      }`}
+    >
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex items-center justify-between">
+          <Link href="/">
+            <motion.div 
+              whileHover={{ scale: 1.05 }}
+              className="flex items-center space-x-3 cursor-pointer"
+            >
+              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                <Package className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-white">Physical Cards</h1>
+                <p className="text-xs text-purple-300">Premium Gift Experience</p>
+              </div>
+            </motion.div>
+          </Link>
+
+          <nav className="hidden md:flex items-center space-x-6">
+            {[
+              { label: 'Home', href: '/', icon: Home },
+              { label: 'Digital Cards', href: '/gift-cards', icon: Gift },
+              { label: 'Store', href: '/store', icon: ShoppingCart },
+            ].map((item, index) => (
+              <motion.div
+                key={item.href}
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <Link href={item.href}>
+                  <motion.div
+                    whileHover={{ scale: 1.1 }}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all cursor-pointer ${
+                      location === item.href 
+                        ? 'bg-white/20 text-white' 
+                        : 'text-white/70 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    <item.icon className="w-4 h-4" />
+                    <span className="text-sm font-medium">{item.label}</span>
+                  </motion.div>
+                </Link>
+              </motion.div>
+            ))}
+          </nav>
+        </div>
+      </div>
+    </motion.header>
+  );
+};
 
 export default function PhysicalGiftCardStore() {
   const { toast } = useToast();
@@ -43,612 +237,676 @@ export default function PhysicalGiftCardStore() {
   const [selectedCardType, setSelectedCardType] = useState<'plastic' | 'metal' | 'premium'>('plastic');
   const [selectedCustomerType, setSelectedCustomerType] = useState<'merchant' | 'individual'>('individual');
   const [currentPricing, setCurrentPricing] = useState<any>(null);
+  const [themeColor, setThemeColor] = useState('#7c3aed');
+  const [customDesign, setCustomDesign] = useState(false);
+  const [previewMode, setPreviewMode] = useState(true);
 
   const form = useForm<PhysicalCardOrderForm>({
     resolver: zodResolver(physicalCardOrderSchema),
     defaultValues: {
-      cardType: 'plastic',
-      quantity: 1,
-      denomination: 2500, // $25 default
       customerType: 'individual',
+      cardType: 'plastic',
+      quantity: 25,
       customDesign: false,
-      shippingMethod: 'standard',
-      shippingCountry: 'US'
+      expeditedShipping: false,
+      shippingAddress: {
+        country: 'US'
+      }
     }
   });
 
-  // Get pricing tiers
-  const { data: pricingTiers, isLoading: pricingLoading } = useQuery({
-    queryKey: ['/api/physical-cards/pricing', selectedCardType, selectedCustomerType],
-    queryFn: async () => {
-      const response = await fetch(`/api/physical-cards/pricing/${selectedCardType}/${selectedCustomerType}`);
-      return response.json();
-    },
-    enabled: !!selectedCardType && !!selectedCustomerType
+  // Fetch pricing data
+  const { data: pricingData, isLoading: isPricingLoading } = useQuery({
+    queryKey: ['/api/physical-cards/pricing'],
+    enabled: true
   });
 
   // Calculate pricing mutation
   const calculatePricingMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (orderData: { cardType: string; quantity: number; customerType: string; customDesign: boolean; expeditedShipping: boolean }) => {
       const response = await fetch('/api/physical-cards/calculate-pricing', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      return response.json();
-    },
-    onSuccess: (data) => {
-      if (data.success) {
-        setCurrentPricing(data.pricing);
-      }
-    }
-  });
-
-  // Create order mutation
-  const createOrderMutation = useMutation({
-    mutationFn: async (orderData: PhysicalCardOrderForm) => {
-      const response = await fetch('/api/physical-cards/order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderData)
       });
+      if (!response.ok) throw new Error('Failed to calculate pricing');
       return response.json();
     },
     onSuccess: (data) => {
-      if (data.success) {
-        toast({
-          title: "Order Created Successfully",
-          description: `Your physical gift card order has been created. Order ID: ${data.order.id}`,
-        });
-        form.reset();
-        setCurrentPricing(null);
-        queryClient.invalidateQueries({ queryKey: ['/api/physical-cards'] });
-      } else {
-        toast({
-          title: "Order Failed",
-          description: data.message || "Failed to create order",
-          variant: "destructive",
-        });
-      }
+      setCurrentPricing(data.pricing);
     }
   });
 
-  // Watch form values for pricing calculation
-  const watchedValues = form.watch();
-  
-  useEffect(() => {
-    if (watchedValues.cardType && watchedValues.quantity && watchedValues.denomination) {
-      calculatePricingMutation.mutate({
-        cardType: watchedValues.cardType,
-        quantity: watchedValues.quantity,
-        denomination: watchedValues.denomination,
-        customerType: watchedValues.customerType,
-        customDesign: watchedValues.customDesign,
-        shippingMethod: watchedValues.shippingMethod
+  // Submit order mutation
+  const submitOrderMutation = useMutation({
+    mutationFn: async (orderData: PhysicalCardOrderForm) => {
+      const response = await fetch('/api/physical-cards/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData)
+      });
+      if (!response.ok) throw new Error('Failed to submit order');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Order Submitted Successfully!",
+        description: "Your physical gift card order has been received and will be processed within 1-2 business days.",
+      });
+      form.reset();
+      queryClient.invalidateQueries({ queryKey: ['/api/physical-cards/orders'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Order Failed",
+        description: error.message || "There was an error submitting your order. Please try again.",
+        variant: "destructive",
       });
     }
-  }, [watchedValues.cardType, watchedValues.quantity, watchedValues.denomination, watchedValues.customerType, watchedValues.customDesign, watchedValues.shippingMethod]);
-
-  // Update selected values when form changes
-  useEffect(() => {
-    setSelectedCardType(watchedValues.cardType);
-    setSelectedCustomerType(watchedValues.customerType);
-  }, [watchedValues.cardType, watchedValues.customerType]);
+  });
 
   const onSubmit = (data: PhysicalCardOrderForm) => {
-    createOrderMutation.mutate(data);
+    submitOrderMutation.mutate(data);
   };
 
-  const cardTypeDetails = {
+  // Update pricing when form values change
+  useEffect(() => {
+    const subscription = form.watch((values) => {
+      if (values.cardType && values.quantity && values.customerType !== undefined) {
+        calculatePricingMutation.mutate({
+          cardType: values.cardType,
+          quantity: values.quantity,
+          customerType: values.customerType,
+          customDesign: values.customDesign || false,
+          expeditedShipping: values.expeditedShipping || false
+        });
+        setSelectedCardType(values.cardType);
+        setSelectedCustomerType(values.customerType);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form.watch]);
+
+  const cardTypes = {
     plastic: {
-      title: "Plastic Gift Cards",
-      description: "Durable PVC cards perfect for everyday use",
-      features: ["Standard PVC material", "Full-color printing", "Magnetic stripe optional", "2-3 year lifespan"]
+      name: "Standard Plastic",
+      price: "Starting at $2.50",
+      description: "Durable PVC cards with full-color printing",
+      features: ["Full-color printing", "Magnetic stripe", "Standard durability", "Quick production"]
     },
     metal: {
-      title: "Metal Gift Cards", 
-      description: "Premium metal cards for luxury experiences",
-      features: ["Brushed metal finish", "Laser engraving", "Premium weight", "Lifetime durability"]
+      name: "Premium Metal",
+      price: "Starting at $8.00",
+      description: "Luxury metal cards with brushed finish",
+      features: ["Brushed metal finish", "Magnetic stripe", "Premium weight", "Engraved details"]
     },
     premium: {
-      title: "Premium Gift Cards",
+      name: "Ultra Premium",
+      price: "Starting at $15.00",
       description: "Ultra-premium cards with custom finishes",
       features: ["Multiple material options", "Custom textures", "Embossed elements", "Luxury packaging"]
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50 dark:from-gray-900 dark:via-purple-900 dark:to-indigo-900">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            Physical Gift Cards
-          </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Create tangible gift experiences with our premium physical gift cards. 
-            Perfect for corporate gifts, special occasions, and retail environments.
-          </p>
+    <>
+      <PremiumHeader />
+      
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-black relative overflow-hidden">
+        {/* Animated background elements */}
+        <div className="absolute inset-0">
+          <motion.div
+            animate={{ 
+              background: [
+                "radial-gradient(circle at 20% 80%, #7c3aed40 0%, transparent 50%)",
+                "radial-gradient(circle at 80% 20%, #ec489940 0%, transparent 50%)",
+                "radial-gradient(circle at 40% 40%, #8b5cf640 0%, transparent 50%)"
+              ]
+            }}
+            transition={{ duration: 10, repeat: Infinity, repeatType: "reverse" }}
+            className="absolute inset-0"
+          />
+          {[...Array(20)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-2 h-2 bg-white/20 rounded-full"
+              animate={{
+                x: [0, Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200)],
+                y: [0, Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 800)],
+                scale: [0, 1, 0],
+              }}
+              transition={{
+                duration: Math.random() * 20 + 10,
+                repeat: Infinity,
+                delay: Math.random() * 5,
+              }}
+              style={{
+                left: Math.random() * 100 + '%',
+                top: Math.random() * 100 + '%',
+              }}
+            />
+          ))}
         </div>
 
-        <div className="max-w-6xl mx-auto">
-          <Tabs defaultValue="order" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="order" className="flex items-center gap-2">
-                <Package className="h-4 w-4" />
-                Order Cards
-              </TabsTrigger>
-              <TabsTrigger value="activate" className="flex items-center gap-2">
-                <CreditCard className="h-4 w-4" />
-                Activate Card
-              </TabsTrigger>
-              <TabsTrigger value="balance" className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4" />
-                Check Balance
-              </TabsTrigger>
-              <TabsTrigger value="reload" className="flex items-center gap-2">
-                <Calculator className="h-4 w-4" />
-                Reload Card
-              </TabsTrigger>
-            </TabsList>
+        <div className="relative z-10 container mx-auto px-4 pt-24 pb-8">
+          {/* Enhanced Hero Section */}
+          <motion.div
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-12"
+          >
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-full px-6 py-3 mb-6"
+            >
+              <Sparkles className="w-5 h-5 text-yellow-400" />
+              <span className="text-sm font-medium text-white">Premium Physical Experience</span>
+              <Zap className="w-5 h-5 text-blue-400" />
+            </motion.div>
+            
+            <motion.h1 
+              initial={{ y: 30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight"
+            >
+              Physical
+              <motion.span
+                animate={{ 
+                  background: [
+                    "linear-gradient(45deg, #7c3aed, #ec4899)",
+                    "linear-gradient(45deg, #ec4899, #8b5cf6)",
+                    "linear-gradient(45deg, #8b5cf6, #7c3aed)"
+                  ]
+                }}
+                transition={{ duration: 3, repeat: Infinity }}
+                className="bg-clip-text text-transparent ml-4"
+                style={{ backgroundClip: 'text', WebkitBackgroundClip: 'text' }}
+              >
+                Gift Cards
+              </motion.span>
+            </motion.h1>
+            
+            <motion.p 
+              initial={{ y: 30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed"
+            >
+              Transform your gift-giving with premium physical cards featuring custom designs, 
+              luxury materials, and seamless activation. From plastic to premium metal finishes.
+            </motion.p>
 
-            <TabsContent value="order" className="mt-6">
-              <div className="grid lg:grid-cols-3 gap-6">
-                {/* Order Form */}
-                <div className="lg:col-span-2">
-                  <Card className="border-0 shadow-lg bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
+            {/* Live Preview Toggle */}
+            <motion.div
+              initial={{ y: 30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="mt-8 flex items-center justify-center space-x-4"
+            >
+              <span className="text-sm text-gray-300">Live Preview</span>
+              <Switch
+                checked={previewMode}
+                onCheckedChange={setPreviewMode}
+                className="data-[state=checked]:bg-purple-600"
+              />
+              <Eye className="w-4 h-4 text-gray-300" />
+            </motion.div>
+          </motion.div>
+
+          {/* Live Preview Section */}
+          <AnimatePresence>
+            {previewMode && (
+              <motion.div
+                initial={{ y: 50, opacity: 0, scale: 0.9 }}
+                animate={{ y: 0, opacity: 1, scale: 1 }}
+                exit={{ y: -50, opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.5 }}
+                className="mb-12"
+              >
+                <div className="text-center mb-8">
+                  <h2 className="text-2xl font-bold text-white mb-4">Live Preview</h2>
+                  <p className="text-gray-300">See your customizations in real-time</p>
+                </div>
+                
+                <PhysicalCardPreview 
+                  cardType={selectedCardType}
+                  customDesign={customDesign}
+                  themeColor={themeColor}
+                />
+                
+                {/* Customization Controls */}
+                <motion.div
+                  initial={{ y: 30, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="mt-8 max-w-md mx-auto"
+                >
+                  <Card className="border-0 shadow-xl bg-white/10 backdrop-blur-xl">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Package className="h-5 w-5 text-purple-600" />
-                        Physical Gift Card Order
+                      <CardTitle className="text-white flex items-center gap-2">
+                        <Palette className="w-5 h-5" />
+                        Customize Your Card
                       </CardTitle>
-                      <CardDescription>
-                        Configure your custom physical gift cards with your business branding
-                      </CardDescription>
                     </CardHeader>
-                    <CardContent>
-                      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                        {/* Card Type Selection */}
-                        <div className="space-y-4">
-                          <Label className="text-sm font-semibold text-purple-700 dark:text-purple-300">
-                            Card Type
-                          </Label>
-                          <div className="grid md:grid-cols-3 gap-4">
-                            {Object.entries(cardTypeDetails).map(([key, details]) => (
-                              <Card 
-                                key={key}
-                                className={`cursor-pointer transition-all hover:shadow-md ${
-                                  form.watch('cardType') === key 
-                                    ? 'ring-2 ring-purple-500 bg-purple-50 dark:bg-purple-900/30' 
-                                    : 'hover:bg-gray-50 dark:hover:bg-gray-800'
-                                }`}
-                                onClick={() => form.setValue('cardType', key as any)}
-                              >
-                                <CardHeader className="pb-2">
-                                  <CardTitle className="text-sm">{details.title}</CardTitle>
-                                  <CardDescription className="text-xs">
-                                    {details.description}
-                                  </CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                  <ul className="text-xs space-y-1">
-                                    {details.features.slice(0, 2).map((feature, idx) => (
-                                      <li key={idx} className="flex items-center gap-1">
-                                        <CheckCircle className="h-3 w-3 text-green-500" />
-                                        {feature}
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </CardContent>
-                              </Card>
-                            ))}
+                    <CardContent className="space-y-6">
+                      {/* Theme Color Picker */}
+                      <div className="space-y-3">
+                        <Label className="text-white text-sm font-medium">Theme Color</Label>
+                        <div className="flex items-center space-x-4">
+                          <input
+                            type="color"
+                            value={themeColor}
+                            onChange={(e) => setThemeColor(e.target.value)}
+                            className="w-12 h-12 rounded-lg border-2 border-white/20 cursor-pointer"
+                          />
+                          <div className="flex-1">
+                            <Slider
+                              value={[parseInt(themeColor.slice(1), 16)]}
+                              onValueChange={([value]) => {
+                                const hex = value.toString(16).padStart(6, '0');
+                                setThemeColor(`#${hex}`);
+                              }}
+                              max={16777215}
+                              step={1}
+                              className="w-full"
+                            />
                           </div>
                         </div>
+                        
+                        {/* Quick Color Presets */}
+                        <div className="flex space-x-2">
+                          {['#7c3aed', '#ec4899', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b'].map((color) => (
+                            <motion.button
+                              key={color}
+                              whileHover={{ scale: 1.2 }}
+                              whileTap={{ scale: 0.9 }}
+                              onClick={() => setThemeColor(color)}
+                              className="w-8 h-8 rounded-full border-2 border-white/30 cursor-pointer"
+                              style={{ backgroundColor: color }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Custom Design Toggle */}
+                      <div className="flex items-center justify-between">
+                        <Label className="text-white text-sm font-medium">Custom Design</Label>
+                        <Switch
+                          checked={customDesign}
+                          onCheckedChange={setCustomDesign}
+                          className="data-[state=checked]:bg-purple-600"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-                        {/* Customer Type & Quantity */}
-                        <div className="grid md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="customerType">Customer Type</Label>
-                            <Select 
-                              value={form.watch('customerType')}
-                              onValueChange={(value: any) => form.setValue('customerType', value)}
+          <div className="max-w-6xl mx-auto">
+            <Tabs defaultValue="order" className="w-full">
+              <motion.div
+                initial={{ y: 30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.7 }}
+              >
+                <TabsList className="grid w-full grid-cols-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-2">
+                  {[
+                    { value: "order", icon: Package, label: "Order Cards", gradient: "from-purple-500 to-pink-500" },
+                    { value: "activate", icon: CreditCard, label: "Activate Card", gradient: "from-blue-500 to-cyan-500" },
+                    { value: "balance", icon: CheckCircle, label: "Check Balance", gradient: "from-green-500 to-emerald-500" },
+                    { value: "reload", icon: Calculator, label: "Reload Card", gradient: "from-orange-500 to-red-500" }
+                  ].map((tab, index) => (
+                    <TabsTrigger 
+                      key={tab.value}
+                      value={tab.value} 
+                      className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:text-white text-white/70 hover:text-white transition-all duration-300 rounded-xl py-3"
+                    >
+                      <tab.icon className="h-4 w-4" />
+                      <span className="hidden sm:inline">{tab.label}</span>
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </motion.div>
+
+              <TabsContent value="order" className="mt-6">
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="grid lg:grid-cols-3 gap-6"
+                >
+                  {/* Order Form */}
+                  <div className="lg:col-span-2">
+                    <Card className="border-0 shadow-2xl bg-white/10 backdrop-blur-xl border border-white/20">
+                      <CardHeader className="pb-6">
+                        <motion.div
+                          initial={{ scale: 0.9, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ delay: 0.2 }}
+                        >
+                          <CardTitle className="flex items-center gap-3 text-white text-2xl">
+                            <motion.div
+                              animate={{ rotate: [0, 5, -5, 0] }}
+                              transition={{ duration: 2, repeat: Infinity }}
+                              className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl"
                             >
-                              <SelectTrigger>
+                              <Package className="h-6 w-6 text-white" />
+                            </motion.div>
+                            Order Physical Gift Cards
+                          </CardTitle>
+                          <CardDescription className="text-gray-300 text-lg mt-2">
+                            Create premium physical gift cards with custom designs and luxury materials
+                          </CardDescription>
+                        </motion.div>
+                      </CardHeader>
+                      <CardContent>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                          {/* Customer Type Selection */}
+                          <motion.div
+                            initial={{ x: -20, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            transition={{ delay: 0.3 }}
+                            className="space-y-3"
+                          >
+                            <Label className="text-white text-sm font-medium">Customer Type</Label>
+                            <Select onValueChange={(value) => form.setValue('customerType', value as 'merchant' | 'individual')}>
+                              <SelectTrigger className="bg-white/10 border-white/20 text-white">
                                 <SelectValue placeholder="Select customer type" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="individual">
-                                  <div className="flex items-center gap-2">
-                                    <Users className="h-4 w-4" />
-                                    Individual Customer
-                                  </div>
-                                </SelectItem>
-                                <SelectItem value="merchant">
-                                  <div className="flex items-center gap-2">
-                                    <Building2 className="h-4 w-4" />
-                                    Business/Merchant
-                                  </div>
-                                </SelectItem>
+                                <SelectItem value="individual">Individual Customer</SelectItem>
+                                <SelectItem value="merchant">Business/Merchant</SelectItem>
                               </SelectContent>
                             </Select>
-                          </div>
+                          </motion.div>
 
-                          <div className="space-y-2">
-                            <Label htmlFor="quantity">Quantity</Label>
-                            <Input
-                              id="quantity"
-                              type="number"
-                              min="1"
-                              max="10000"
-                              {...form.register('quantity', { valueAsNumber: true })}
-                              placeholder="Enter quantity"
-                            />
-                          </div>
-                        </div>
+                          {/* Card Type Selection */}
+                          <motion.div
+                            initial={{ x: -20, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            transition={{ delay: 0.4 }}
+                            className="space-y-3"
+                          >
+                            <Label className="text-white text-sm font-medium">Card Material</Label>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                              {Object.entries(cardTypes).map(([type, info]) => (
+                                <motion.div
+                                  key={type}
+                                  whileHover={{ scale: 1.02 }}
+                                  whileTap={{ scale: 0.98 }}
+                                  className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                                    selectedCardType === type
+                                      ? 'border-purple-400 bg-purple-500/20'
+                                      : 'border-white/20 bg-white/5 hover:border-white/40'
+                                  }`}
+                                  onClick={() => {
+                                    form.setValue('cardType', type as 'plastic' | 'metal' | 'premium');
+                                    setSelectedCardType(type as 'plastic' | 'metal' | 'premium');
+                                  }}
+                                >
+                                  <div className="text-center">
+                                    <h3 className="text-white font-semibold">{info.name}</h3>
+                                    <p className="text-purple-300 text-sm">{info.price}</p>
+                                    <div className="mt-2 flex justify-center">
+                                      {type === 'premium' ? <Crown className="w-6 h-6 text-yellow-400" /> : 
+                                       type === 'metal' ? <Diamond className="w-6 h-6 text-gray-400" /> : 
+                                       <CreditCard className="w-6 h-6 text-blue-400" />}
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              ))}
+                            </div>
+                          </motion.div>
 
-                        {/* Denomination & Shipping */}
-                        <div className="grid md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="denomination">Card Value ($)</Label>
-                            <Input
-                              id="denomination"
-                              type="number"
-                              min="5"
-                              max="500"
-                              step="5"
-                              {...form.register('denomination', { 
-                                valueAsNumber: true,
-                                setValueAs: (value) => value * 100 // Convert to cents
-                              })}
-                              placeholder="25"
-                              onChange={(e) => {
-                                const value = parseFloat(e.target.value) * 100 || 0;
-                                form.setValue('denomination', value);
-                              }}
-                              value={form.watch('denomination') / 100}
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="shippingMethod">Shipping Method</Label>
-                            <Select 
-                              value={form.watch('shippingMethod')}
-                              onValueChange={(value: any) => form.setValue('shippingMethod', value)}
+                          {/* Quantity and Custom Design */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <motion.div
+                              initial={{ x: -20, opacity: 0 }}
+                              animate={{ x: 0, opacity: 1 }}
+                              transition={{ delay: 0.5 }}
+                              className="space-y-2"
                             >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select shipping" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="standard">
-                                  <div className="flex items-center gap-2">
-                                    <Truck className="h-4 w-4" />
-                                    Standard (7-10 days) - $7.99
-                                  </div>
-                                </SelectItem>
-                                <SelectItem value="expedited">
-                                  <div className="flex items-center gap-2">
-                                    <Truck className="h-4 w-4" />
-                                    Expedited (3-5 days) - $14.99
-                                  </div>
-                                </SelectItem>
-                                <SelectItem value="overnight">
-                                  <div className="flex items-center gap-2">
-                                    <Truck className="h-4 w-4" />
-                                    Overnight (1-2 days) - $29.99
-                                  </div>
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-
-                        {/* Customer Information */}
-                        <div className="space-y-4">
-                          <Label className="text-sm font-semibold text-purple-700 dark:text-purple-300">
-                            Customer Information
-                          </Label>
-                          <div className="grid md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="customerName">Full Name</Label>
+                              <Label className="text-white text-sm font-medium">Quantity</Label>
                               <Input
-                                id="customerName"
-                                {...form.register('customerName')}
-                                placeholder="John Doe"
+                                type="number"
+                                min="1"
+                                className="bg-white/10 border-white/20 text-white placeholder-gray-400"
+                                placeholder="25"
+                                {...form.register('quantity', { valueAsNumber: true })}
                               />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="customerEmail">Email Address</Label>
+                            </motion.div>
+
+                            <motion.div
+                              initial={{ x: 20, opacity: 0 }}
+                              animate={{ x: 0, opacity: 1 }}
+                              transition={{ delay: 0.5 }}
+                              className="space-y-2"
+                            >
+                              <Label className="text-white text-sm font-medium">Contact Email</Label>
                               <Input
-                                id="customerEmail"
                                 type="email"
-                                {...form.register('customerEmail')}
-                                placeholder="john@example.com"
+                                className="bg-white/10 border-white/20 text-white placeholder-gray-400"
+                                placeholder="you@company.com"
+                                {...form.register('contactEmail')}
                               />
-                            </div>
+                            </motion.div>
                           </div>
-                        </div>
 
-                        {/* Shipping Address */}
-                        <div className="space-y-4">
-                          <Label className="text-sm font-semibold text-purple-700 dark:text-purple-300">
-                            Shipping Address
-                          </Label>
-                          <div className="space-y-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="shippingAddress">Street Address</Label>
-                              <Input
-                                id="shippingAddress"
-                                {...form.register('shippingAddress')}
-                                placeholder="123 Main Street"
-                              />
-                            </div>
-                            <div className="grid md:grid-cols-3 gap-4">
-                              <div className="space-y-2">
-                                <Label htmlFor="shippingCity">City</Label>
-                                <Input
-                                  id="shippingCity"
-                                  {...form.register('shippingCity')}
-                                  placeholder="New York"
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="shippingState">State</Label>
-                                <Input
-                                  id="shippingState"
-                                  {...form.register('shippingState')}
-                                  placeholder="NY"
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="shippingZip">ZIP Code</Label>
-                                <Input
-                                  id="shippingZip"
-                                  {...form.register('shippingZip')}
-                                  placeholder="10001"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                          {/* Submit Button */}
+                          <motion.div
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ delay: 0.8 }}
+                            className="pt-4"
+                          >
+                            <Button 
+                              type="submit"
+                              disabled={submitOrderMutation.isPending}
+                              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-3 rounded-xl"
+                            >
+                              {submitOrderMutation.isPending ? (
+                                <div className="flex items-center gap-2">
+                                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                  Processing Order...
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-2">
+                                  <Package className="w-5 h-5" />
+                                  Place Order
+                                </div>
+                              )}
+                            </Button>
+                          </motion.div>
+                        </form>
+                      </CardContent>
+                    </Card>
+                  </div>
 
-                        {/* Notes */}
-                        <div className="space-y-2">
-                          <Label htmlFor="notes">Special Instructions (Optional)</Label>
-                          <Textarea
-                            id="notes"
-                            {...form.register('notes')}
-                            placeholder="Any special requirements or notes..."
-                            rows={3}
-                          />
-                        </div>
-
-                        <Button 
-                          type="submit" 
-                          className="w-full bg-purple-600 hover:bg-purple-700"
-                          disabled={createOrderMutation.isPending}
-                        >
-                          {createOrderMutation.isPending ? 'Creating Order...' : 'Place Order'}
-                        </Button>
-                      </form>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Pricing Panel */}
-                <div className="space-y-6">
-                  {/* Live Pricing */}
-                  {currentPricing && (
-                    <Card className="border-0 shadow-lg bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
+                  {/* Pricing Summary */}
+                  <motion.div
+                    initial={{ x: 30, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                  >
+                    <Card className="border-0 shadow-xl bg-white/10 backdrop-blur-xl border border-white/20 sticky top-24">
                       <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Calculator className="h-5 w-5 text-green-600" />
-                          Order Summary
+                        <CardTitle className="text-white flex items-center gap-2">
+                          <Calculator className="w-5 h-5" />
+                          Pricing Summary
                         </CardTitle>
                       </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span>Square Base Cost:</span>
-                            <span>${(currentPricing.breakdown.squareBaseCost / 100).toFixed(2)}</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span>Admin Fee ({currentPricing.adminFeePercentage}%):</span>
-                            <span>${(currentPricing.breakdown.adminFee / 100).toFixed(2)}</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span>Printing & Materials:</span>
-                            <span>${(currentPricing.breakdown.printing / 100).toFixed(2)}</span>
-                          </div>
-                          {currentPricing.breakdown.customDesign > 0 && (
-                            <div className="flex justify-between text-sm">
-                              <span>Custom Design Fee:</span>
-                              <span>${(currentPricing.breakdown.customDesign / 100).toFixed(2)}</span>
+                      <CardContent>
+                        {currentPricing ? (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="space-y-4"
+                          >
+                            <div className="space-y-2">
+                              <div className="flex justify-between text-white">
+                                <span>Base Price:</span>
+                                <span>${currentPricing.basePrice.toFixed(2)}</span>
+                              </div>
+                              <div className="flex justify-between text-white">
+                                <span>Square Fee:</span>
+                                <span>${currentPricing.squareFee.toFixed(2)}</span>
+                              </div>
+                              <div className="flex justify-between text-white">
+                                <span>Our Fee:</span>
+                                <span>${currentPricing.ourFee.toFixed(2)}</span>
+                              </div>
+                              <Separator className="bg-white/20" />
+                              <div className="flex justify-between text-white font-bold text-lg">
+                                <span>Total:</span>
+                                <span>${currentPricing.totalPrice.toFixed(2)}</span>
+                              </div>
                             </div>
-                          )}
-                          <div className="flex justify-between text-sm">
-                            <span>Shipping:</span>
-                            <span>${(currentPricing.breakdown.shipping / 100).toFixed(2)}</span>
-                          </div>
-                          <Separator />
-                          <div className="flex justify-between font-semibold">
-                            <span>Total:</span>
-                            <span className="text-green-600">${(currentPricing.totalOrder / 100).toFixed(2)}</span>
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            Per card: ${(currentPricing.totalPerCard / 100).toFixed(2)}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {/* Pricing Tiers */}
-                  {pricingTiers?.success && (
-                    <Card className="border-0 shadow-lg bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
-                      <CardHeader>
-                        <CardTitle className="text-sm">Volume Pricing</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-2">
-                        {pricingTiers.pricingTiers.map((tier: any, index: number) => (
-                          <div key={index} className="flex justify-between items-center p-2 rounded bg-gray-50 dark:bg-gray-800">
-                            <span className="text-xs font-medium">{tier.description}</span>
-                            <Badge variant="secondary" className="text-xs">
-                              ${(tier.pricePerCard / 100).toFixed(2)}
+                            <Badge variant="secondary" className="w-full justify-center bg-green-500/20 text-green-300">
+                              {currentPricing.savings > 0 && `Save $${currentPricing.savings.toFixed(2)} with bulk pricing`}
                             </Badge>
+                          </motion.div>
+                        ) : (
+                          <div className="text-center text-gray-400">
+                            Configure your order to see pricing
                           </div>
-                        ))}
+                        )}
                       </CardContent>
                     </Card>
-                  )}
+                  </motion.div>
+                </motion.div>
+              </TabsContent>
 
-                  {/* Features */}
-                  <Card className="border-0 shadow-lg bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
+              {/* Other Tabs */}
+              <TabsContent value="activate" className="mt-6">
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Card className="border-0 shadow-xl bg-white/10 backdrop-blur-xl border border-white/20">
                     <CardHeader>
-                      <CardTitle className="text-sm">What's Included</CardTitle>
+                      <CardTitle className="text-white flex items-center gap-2">
+                        <CreditCard className="w-5 h-5" />
+                        Activate Physical Card
+                      </CardTitle>
+                      <CardDescription className="text-gray-300">
+                        Activate your physical gift card and link it to your account
+                      </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm">
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                        Professional card design
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                        Square integration
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                        Activation instructions
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                        Secure packaging
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                        Tracking information
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label className="text-white">Card Number</Label>
+                          <Input
+                            placeholder="SIZU12345678901234"
+                            className="bg-white/10 border-white/20 text-white placeholder-gray-400 font-mono"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-white">Your Email</Label>
+                          <Input
+                            type="email"
+                            placeholder="your@email.com"
+                            className="bg-white/10 border-white/20 text-white placeholder-gray-400"
+                          />
+                        </div>
+                        <Button className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700">
+                          <CreditCard className="w-4 h-4 mr-2" />
+                          Activate Card
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
-                </div>
-              </div>
-            </TabsContent>
+                </motion.div>
+              </TabsContent>
 
-            <TabsContent value="activate" className="mt-6">
-              <Card className="border-0 shadow-lg bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm max-w-md mx-auto">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CreditCard className="h-5 w-5 text-blue-600" />
-                    Activate Your Card
-                  </CardTitle>
-                  <CardDescription>
-                    Enter your card number to activate your physical gift card
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="activateCardNumber">Card Number</Label>
-                      <Input
-                        id="activateCardNumber"
-                        placeholder="SIZU12345678901234"
-                        className="font-mono"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="activatedBy">Your Email</Label>
-                      <Input
-                        id="activatedBy"
-                        type="email"
-                        placeholder="your@email.com"
-                      />
-                    </div>
-                    <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                      Activate Card
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+              <TabsContent value="balance" className="mt-6">
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Card className="border-0 shadow-xl bg-white/10 backdrop-blur-xl border border-white/20">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center gap-2">
+                        <CheckCircle className="w-5 h-5" />
+                        Check Card Balance
+                      </CardTitle>
+                      <CardDescription className="text-gray-300">
+                        Check the current balance on your physical gift card
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label className="text-white">Card Number</Label>
+                          <Input
+                            placeholder="SIZU12345678901234"
+                            className="bg-white/10 border-white/20 text-white placeholder-gray-400 font-mono"
+                          />
+                        </div>
+                        <Button className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700">
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Check Balance
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </TabsContent>
 
-            <TabsContent value="balance" className="mt-6">
-              <Card className="border-0 shadow-lg bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm max-w-md mx-auto">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CheckCircle className="h-5 w-5 text-green-600" />
-                    Check Card Balance
-                  </CardTitle>
-                  <CardDescription>
-                    Enter your card number to check your current balance
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="balanceCardNumber">Card Number</Label>
-                      <Input
-                        id="balanceCardNumber"
-                        placeholder="SIZU12345678901234"
-                        className="font-mono"
-                      />
-                    </div>
-                    <Button className="w-full bg-green-600 hover:bg-green-700">
-                      Check Balance
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="reload" className="mt-6">
-              <Card className="border-0 shadow-lg bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm max-w-md mx-auto">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Calculator className="h-5 w-5 text-orange-600" />
-                    Reload Your Card
-                  </CardTitle>
-                  <CardDescription>
-                    Add money to your existing physical gift card
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="reloadCardNumber">Card Number</Label>
-                      <Input
-                        id="reloadCardNumber"
-                        placeholder="SIZU12345678901234"
-                        className="font-mono"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="reloadAmount">Amount to Add ($)</Label>
-                      <Input
-                        id="reloadAmount"
-                        type="number"
-                        min="5"
-                        max="500"
-                        step="5"
-                        placeholder="25.00"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="reloadedBy">Your Email</Label>
-                      <Input
-                        id="reloadedBy"
-                        type="email"
-                        placeholder="your@email.com"
-                      />
-                    </div>
-                    <Button className="w-full bg-orange-600 hover:bg-orange-700">
-                      Calculate Reload Cost
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+              <TabsContent value="reload" className="mt-6">
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Card className="border-0 shadow-xl bg-white/10 backdrop-blur-xl border border-white/20">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center gap-2">
+                        <Calculator className="w-5 h-5" />
+                        Reload Card Balance
+                      </CardTitle>
+                      <CardDescription className="text-gray-300">
+                        Add funds to your existing physical gift card
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label className="text-white">Card Number</Label>
+                          <Input
+                            placeholder="SIZU12345678901234"
+                            className="bg-white/10 border-white/20 text-white placeholder-gray-400 font-mono"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-white">Reload Amount</Label>
+                          <Input
+                            type="number"
+                            placeholder="50.00"
+                            className="bg-white/10 border-white/20 text-white placeholder-gray-400"
+                          />
+                        </div>
+                        <Button className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700">
+                          <Calculator className="w-4 h-4 mr-2" />
+                          Reload Card
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </TabsContent>
+            </Tabs>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

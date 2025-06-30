@@ -1,18 +1,32 @@
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import { PDFDocument, rgb, StandardFonts, PageSizes } from 'pdf-lib';
+import fetch from 'node-fetch';
 import fs from 'fs/promises';
 import path from 'path';
-import { PublicGiftCardOrder, MerchantBranding } from '@shared/schema';
-import { QRCodeUtil } from '../utils/QRCodeUtil';
 import { storage } from '../storage';
 
-export interface ReceiptGenerationResult {
-  success: boolean;
-  url?: string;
-  error?: string;
+interface GiftCardPurchase {
+  orderId: string;
+  merchantId?: string;
+  recipientEmail: string;
+  recipientName?: string;
+  senderName?: string;
+  amount: number; // in cents
+  personalMessage?: string;
+  transactionId?: string;
+  giftCardGan?: string;
+  purchaseDate: Date;
+}
+
+interface MerchantDesign {
+  hasCustomDesign: boolean;
+  backgroundImageUrl: string | null;
+  logoUrl: string | null;
+  themeColor: string;
+  customMessage: string;
 }
 
 export class ReceiptService {
-  private static readonly RECEIPTS_DIR = path.join(process.cwd(), 'public', 'receipts');
+  private static RECEIPTS_DIR = path.join(process.cwd(), 'storage', 'receipts');
 
   static async ensureReceiptsDirectory(): Promise<void> {
     try {
@@ -22,282 +36,318 @@ export class ReceiptService {
     }
   }
 
-  private static hexToRgb(hex: string): { r: number; g: number; b: number } {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-      r: parseInt(result[1], 16) / 255,
-      g: parseInt(result[2], 16) / 255,
-      b: parseInt(result[3], 16) / 255
-    } : { r: 0.38, g: 0.22, b: 0.57 }; // Default purple
-  }
-
-  static async generatePDFReceipt(order: PublicGiftCardOrder): Promise<ReceiptGenerationResult> {
+  static async generateReceiptPDF(purchase: GiftCardPurchase): Promise<{
+    success: boolean;
+    receiptId?: string;
+    filePath?: string;
+    error?: string;
+  }> {
     try {
       await this.ensureReceiptsDirectory();
 
-      // Fetch merchant branding if merchant ID is provided
-      let branding: MerchantBranding | null = null;
-      if (order.merchantId) {
-        // Find merchant by merchant ID (string) and get their branding
-        const merchant = await storage.getMerchantBySquareId(order.merchantId);
-        if (merchant) {
-          branding = await storage.getMerchantBranding(merchant.id) || null;
+      // Fetch merchant design for branding
+      let merchantDesign: MerchantDesign | null = null;
+      if (purchase.merchantId) {
+        try {
+          const response = await fetch(`http://localhost:5000/api/public/merchant-design/${purchase.merchantId}`);
+          if (response.ok) {
+            const data = await response.json() as { design: MerchantDesign };
+            merchantDesign = data.design;
+          }
+        } catch (error) {
+          console.warn('Failed to fetch merchant design, using default:', error);
         }
       }
 
+      // Use default design if none found
+      if (!merchantDesign) {
+        merchantDesign = {
+          hasCustomDesign: false,
+          backgroundImageUrl: null,
+          logoUrl: null,
+          themeColor: '#613791',
+          customMessage: 'Thank you for choosing our gift card!'
+        };
+      }
+
+      // Generate unique receipt ID
+      const receiptId = `receipt_${purchase.orderId}_${Date.now()}`;
+      const filePath = path.join(this.RECEIPTS_DIR, `${receiptId}.pdf`);
+
       // Create PDF document
       const pdfDoc = await PDFDocument.create();
-      const page = pdfDoc.addPage([612, 792]); // Letter size
+      const page = pdfDoc.addPage(PageSizes.A4);
       const { width, height } = page.getSize();
-      
-      // Load fonts
-      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-      const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-      // Colors - use merchant branding if available
-      const themeColor = branding?.themeColor || '#6366f1';
-      const colorValues = this.hexToRgb(themeColor);
-      const primaryColor = rgb(colorValues.r, colorValues.g, colorValues.b);
-      const textColor = rgb(0.2, 0.2, 0.2);
-      const grayColor = rgb(0.6, 0.6, 0.6);
+      // Load fonts
+      const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const helveticaBoldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+      // Parse theme color
+      const themeColor = this.hexToRgb(merchantDesign.themeColor);
+      const primaryColor = rgb(themeColor.r / 255, themeColor.g / 255, themeColor.b / 255);
+      const lightGray = rgb(0.9, 0.9, 0.9);
+      const darkGray = rgb(0.4, 0.4, 0.4);
+      const black = rgb(0, 0, 0);
 
       let yPosition = height - 80;
 
-      // Header with merchant branding
-      const headerText = branding?.tagline || 'SiZu Gift Card Receipt';
-      page.drawText(headerText, {
+      // Header with branding
+      page.drawRectangle({
+        x: 0,
+        y: height - 120,
+        width: width,
+        height: 120,
+        color: primaryColor,
+      });
+
+      // Company logo area (if available)
+      if (merchantDesign.logoUrl) {
+        try {
+          const logoResponse = await fetch(merchantDesign.logoUrl);
+          if (logoResponse.ok) {
+            const logoBytes = await logoResponse.arrayBuffer();
+            const logoImage = await pdfDoc.embedPng(new Uint8Array(logoBytes));
+            const logoSize = 60;
+            page.drawImage(logoImage, {
+              x: 50,
+              y: height - 110,
+              width: logoSize,
+              height: logoSize,
+            });
+          }
+        } catch (error) {
+          console.warn('Failed to embed logo:', error);
+        }
+      }
+
+      // Title
+      page.drawText('SiZu Gift Card Receipt', {
+        x: merchantDesign.logoUrl ? 130 : 50,
+        y: height - 70,
+        size: 24,
+        font: helveticaBoldFont,
+        color: rgb(1, 1, 1),
+      });
+
+      // Receipt ID
+      page.drawText(`Receipt #${receiptId}`, {
+        x: width - 200,
+        y: height - 50,
+        size: 12,
+        font: helveticaFont,
+        color: rgb(1, 1, 1),
+      });
+
+      // Date
+      page.drawText(`Date: ${purchase.purchaseDate.toLocaleDateString()}`, {
+        x: width - 200,
+        y: height - 70,
+        size: 12,
+        font: helveticaFont,
+        color: rgb(1, 1, 1),
+      });
+
+      yPosition = height - 160;
+
+      // Gift Card Details Section
+      page.drawText('Gift Card Details', {
         x: 50,
         y: yPosition,
-        size: 24,
-        font: boldFont,
+        size: 18,
+        font: helveticaBoldFont,
         color: primaryColor,
       });
 
       yPosition -= 40;
 
-      // Receipt info
-      page.drawText(`Receipt #${order.id.substring(0, 8).toUpperCase()}`, {
+      // Gift card preview box
+      const cardBoxHeight = 120;
+      page.drawRectangle({
         x: 50,
-        y: yPosition,
-        size: 14,
-        font: font,
-        color: textColor,
+        y: yPosition - cardBoxHeight,
+        width: width - 100,
+        height: cardBoxHeight,
+        color: lightGray,
+        borderColor: primaryColor,
+        borderWidth: 2,
       });
 
-      page.drawText(`Date: ${new Date(order.createdAt || new Date()).toLocaleDateString()}`, {
-        x: width - 200,
-        y: yPosition,
-        size: 12,
-        font: font,
-        color: grayColor,
-      });
-
-      yPosition -= 60;
-
-      // Order details section
-      page.drawText('Gift Card Details', {
-        x: 50,
-        y: yPosition,
+      // Gift card content
+      page.drawText(`Gift Card Amount: $${(purchase.amount / 100).toFixed(2)}`, {
+        x: 70,
+        y: yPosition - 30,
         size: 16,
-        font: boldFont,
-        color: textColor,
+        font: helveticaBoldFont,
+        color: black,
+      });
+
+      if (purchase.giftCardGan) {
+        page.drawText(`Gift Card Number: ${purchase.giftCardGan}`, {
+          x: 70,
+          y: yPosition - 50,
+          size: 12,
+          font: helveticaFont,
+          color: darkGray,
+        });
+      }
+
+      page.drawText(merchantDesign.customMessage, {
+        x: 70,
+        y: yPosition - 70,
+        size: 11,
+        font: helveticaFont,
+        color: darkGray,
+        maxWidth: width - 140,
+      });
+
+      page.drawText('Valid until used • No expiration • Digital delivery', {
+        x: 70,
+        y: yPosition - 90,
+        size: 10,
+        font: helveticaFont,
+        color: darkGray,
+      });
+
+      yPosition -= 160;
+
+      // Purchase Details Section
+      page.drawText('Purchase Details', {
+        x: 50,
+        y: yPosition,
+        size: 18,
+        font: helveticaBoldFont,
+        color: primaryColor,
       });
 
       yPosition -= 30;
 
-      // Gift card amount
-      const amount = (order.amount / 100).toFixed(2);
-      page.drawText(`Gift Card Value: $${amount}`, {
-        x: 50,
-        y: yPosition,
-        size: 14,
-        font: boldFont,
-        color: textColor,
-      });
+      const details = [
+        ['Order ID:', purchase.orderId],
+        ['Transaction ID:', purchase.transactionId || 'N/A'],
+        ['Recipient:', purchase.recipientName || 'N/A'],
+        ['Recipient Email:', purchase.recipientEmail],
+        ['Sender:', purchase.senderName || 'N/A'],
+        ['Amount Paid:', `$${(purchase.amount / 100).toFixed(2)}`],
+        ['Payment Method:', 'Credit Card (Square)'],
+        ['Purchase Date:', purchase.purchaseDate.toLocaleString()],
+      ];
 
-      yPosition -= 25;
-
-      // Recipient email
-      page.drawText(`Recipient: ${order.recipientEmail}`, {
-        x: 50,
-        y: yPosition,
-        size: 12,
-        font: font,
-        color: textColor,
-      });
-
-      yPosition -= 25;
-
-      // Gift card ID and GAN
-      if (order.giftCardId) {
-        page.drawText(`Gift Card ID: ${order.giftCardId}`, {
+      details.forEach(([label, value]) => {
+        page.drawText(label, {
           x: 50,
           y: yPosition,
-          size: 10,
-          font: font,
-          color: grayColor,
+          size: 12,
+          font: helveticaBoldFont,
+          color: black,
         });
-        yPosition -= 20;
-      }
 
-      if (order.giftCardGan) {
-        page.drawText(`Gift Card Number: ${order.giftCardGan}`, {
-          x: 50,
+        page.drawText(value, {
+          x: 200,
           y: yPosition,
-          size: 10,
-          font: font,
-          color: grayColor,
+          size: 12,
+          font: helveticaFont,
+          color: darkGray,
         });
-        yPosition -= 20;
-      }
 
-      // Message if provided
-      if (order.message) {
+        yPosition -= 20;
+      });
+
+      // Personal message if provided
+      if (purchase.personalMessage) {
         yPosition -= 20;
         page.drawText('Personal Message:', {
           x: 50,
           y: yPosition,
+          size: 14,
+          font: helveticaBoldFont,
+          color: primaryColor,
+        });
+
+        yPosition -= 25;
+        page.drawText(purchase.personalMessage, {
+          x: 50,
+          y: yPosition,
           size: 12,
-          font: boldFont,
-          color: textColor,
-        });
-        yPosition -= 20;
-        page.drawText(`"${order.message}"`, {
-          x: 50,
-          y: yPosition,
-          size: 11,
-          font: font,
-          color: textColor,
-        });
-      }
-
-      yPosition -= 60;
-
-      // Payment details
-      page.drawText('Payment Information', {
-        x: 50,
-        y: yPosition,
-        size: 16,
-        font: boldFont,
-        color: textColor,
-      });
-
-      yPosition -= 30;
-
-      page.drawText(`Total Paid: $${amount}`, {
-        x: 50,
-        y: yPosition,
-        size: 14,
-        font: boldFont,
-        color: textColor,
-      });
-
-      yPosition -= 25;
-
-      page.drawText(`Payment Method: Credit Card`, {
-        x: 50,
-        y: yPosition,
-        size: 12,
-        font: font,
-        color: textColor,
-      });
-
-      yPosition -= 20;
-
-      if (order.squarePaymentId) {
-        page.drawText(`Transaction ID: ${order.squarePaymentId.substring(0, 16)}...`, {
-          x: 50,
-          y: yPosition,
-          size: 10,
-          font: font,
-          color: grayColor,
+          font: helveticaFont,
+          color: black,
+          maxWidth: width - 100,
         });
       }
 
       // Footer
       yPosition = 100;
+      page.drawRectangle({
+        x: 0,
+        y: 0,
+        width: width,
+        height: 80,
+        color: lightGray,
+      });
+
       page.drawText('Thank you for your purchase!', {
         x: 50,
-        y: yPosition,
+        y: 50,
         size: 14,
-        font: boldFont,
+        font: helveticaBoldFont,
         color: primaryColor,
       });
 
-      yPosition -= 25;
-      page.drawText('SiZu Gift Card Store - Premium Digital Gift Cards', {
+      page.drawText('SiZu Gift Card Shop • support@sizugiftcard.com • https://sizugiftcard.com', {
         x: 50,
-        y: yPosition,
+        y: 30,
         size: 10,
-        font: font,
-        color: grayColor,
+        font: helveticaFont,
+        color: darkGray,
       });
 
-      yPosition -= 15;
-      page.drawText('For support, contact us at support@sizugiftcard.com', {
-        x: 50,
-        y: yPosition,
-        size: 9,
-        font: font,
-        color: grayColor,
-      });
-
-      // Add QR Code in bottom-right corner
-      try {
-        const receiptURL = QRCodeUtil.generateReceiptURL(order.id);
-        const qrCodeBuffer = await QRCodeUtil.generateQRCodeBuffer(receiptURL, {
-          width: 80,
-          margin: 1
-        });
-        
-        const qrCodeImage = await pdfDoc.embedPng(qrCodeBuffer);
-        const qrCodeDims = qrCodeImage.scale(0.8);
-        
-        // Position QR code in bottom-right corner
-        page.drawImage(qrCodeImage, {
-          x: width - qrCodeDims.width - 30,
-          y: 30,
-          width: qrCodeDims.width,
-          height: qrCodeDims.height,
-        });
-        
-        // Add QR code caption
-        page.drawText('Scan to Reopen Receipt', {
-          x: width - qrCodeDims.width - 30,
-          y: 15,
-          size: 8,
-          font: font,
-          color: grayColor,
-        });
-      } catch (qrError) {
-        console.error('QR code generation failed:', qrError);
-        // Continue without QR code if generation fails
-      }
-
-      // Generate PDF bytes
+      // Save PDF
       const pdfBytes = await pdfDoc.save();
-
-      // Save to file
-      const filename = `receipt-${order.id}.pdf`;
-      const filePath = path.join(this.RECEIPTS_DIR, filename);
       await fs.writeFile(filePath, pdfBytes);
 
-      // Return URL for download
-      const url = `/receipts/${filename}`;
+      console.log(`✅ PDF receipt generated: ${receiptId}`);
 
-      console.log(`PDF receipt generated successfully: ${filename}`);
-      
       return {
         success: true,
-        url
+        receiptId,
+        filePath,
       };
 
     } catch (error) {
       console.error('Error generating PDF receipt:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
+    }
+  }
+
+  private static hexToRgb(hex: string): { r: number; g: number; b: number } {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16),
+    } : { r: 97, g: 55, b: 145 }; // Default purple
+  }
+
+  static async getReceiptFilePath(receiptId: string): Promise<string | null> {
+    const filePath = path.join(this.RECEIPTS_DIR, `${receiptId}.pdf`);
+    try {
+      await fs.access(filePath);
+      return filePath;
+    } catch {
+      return null;
+    }
+  }
+
+  static async deleteReceipt(receiptId: string): Promise<boolean> {
+    const filePath = path.join(this.RECEIPTS_DIR, `${receiptId}.pdf`);
+    try {
+      await fs.unlink(filePath);
+      return true;
+    } catch {
+      return false;
     }
   }
 }

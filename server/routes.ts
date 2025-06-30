@@ -2936,6 +2936,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET /api/receipts/:receiptId - Serve PDF receipts securely
+  app.get("/api/receipts/:receiptId", async (req: Request, res: Response) => {
+    try {
+      const { receiptId } = req.params;
+      
+      if (!receiptId || !/^receipt_[a-zA-Z0-9_-]+$/.test(receiptId)) {
+        return res.status(400).json({ error: 'Invalid receipt ID format' });
+      }
+
+      const filePath = await ReceiptService.getReceiptFilePath(receiptId);
+      if (!filePath) {
+        return res.status(404).json({ error: 'Receipt not found' });
+      }
+
+      // Set proper headers for PDF download
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${receiptId}.pdf"`);
+      res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+
+      // Stream the PDF file
+      res.sendFile(filePath);
+    } catch (error) {
+      console.error('Error serving receipt:', error);
+      res.status(500).json({ error: 'Failed to retrieve receipt' });
+    }
+  });
+
+  // POST /api/test/generate-receipt - Test PDF receipt generation
+  app.post("/api/test/generate-receipt", async (req: Request, res: Response) => {
+    try {
+      const mockPurchase = {
+        orderId: `test_order_${Date.now()}`,
+        merchantId: req.body.merchantId || 'merchant_1751221971890_zmi502',
+        recipientEmail: req.body.recipientEmail || 'customer@example.com',
+        recipientName: req.body.recipientName || 'John Doe',
+        senderName: req.body.senderName || 'Jane Smith',
+        amount: req.body.amount || 5000, // $50.00 in cents
+        personalMessage: req.body.personalMessage || 'Happy Birthday! Enjoy this gift card.',
+        transactionId: `txn_${Date.now()}`,
+        giftCardGan: `GC${Date.now()}`,
+        purchaseDate: new Date(),
+      };
+
+      const result = await ReceiptService.generateReceiptPDF(mockPurchase);
+      
+      if (result.success) {
+        res.json({
+          success: true,
+          receiptId: result.receiptId,
+          downloadUrl: `/api/receipts/${result.receiptId}`,
+          message: 'PDF receipt generated successfully'
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          error: result.error || 'Failed to generate receipt'
+        });
+      }
+    } catch (error) {
+      console.error('Error in test receipt generation:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Internal server error' 
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   // Phase III-B: Promo Codes API
   app.post("/api/promos", requireAdmin, async (req: Request, res: Response) => {

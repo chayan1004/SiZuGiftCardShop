@@ -283,8 +283,7 @@ class SquarePaymentService {
       environment: this.environment === 'production' 
         ? SquareEnvironment.Production 
         : SquareEnvironment.Sandbox,
-      accessToken: this.accessToken,
-      userAgentDetail: 'SiZu-GiftCard/1.0'
+      accessToken: this.accessToken
     });
 
     if (!this.accessToken || !this.locationId) {

@@ -1864,17 +1864,17 @@ export class DatabaseStorage implements IStorage {
     if (!transaction) return null;
 
     // Get related fraud logs
-    const fraudLogs = await db
+    const relatedFraudLogs = await db
       .select()
       .from(fraudLogs)
       .where(eq(fraudLogs.ipAddress, transaction.transaction.ipAddress || ''))
-      .orderBy(desc(fraudLogs.timestamp))
+      .orderBy(desc(fraudLogs.createdAt))
       .limit(10);
 
     return {
       ...transaction.transaction,
       merchant: transaction.merchant,
-      fraudLogs
+      fraudLogs: relatedFraudLogs
     };
   }
 

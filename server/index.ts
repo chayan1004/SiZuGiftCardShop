@@ -67,7 +67,7 @@ app.use((req, res, next) => {
     port,
     host: "0.0.0.0",
     reusePort: true,
-  }, () => {
+  }, async () => {
     log(`serving on port ${port}`);
     
     // Start the WebhookRetryEngine for Phase 16A

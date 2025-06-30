@@ -1155,6 +1155,13 @@ export default function AdminDashboard() {
                 </div>
               )}
 
+              {/* Fraud Pattern Analyzer Section */}
+              {activeSection === "fraud-clusters" && (
+                <div className="space-y-6">
+                  <FraudClusters />
+                </div>
+              )}
+
               {/* System Operations Section */}
               {activeSection === "operations" && (
                 <div className="space-y-6">

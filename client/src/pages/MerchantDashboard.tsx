@@ -5,7 +5,7 @@ import {
   CreditCard, Package, TrendingUp, DollarSign, Users, 
   RefreshCw, Settings, LogOut, Plus, Eye, Download,
   Calendar, Filter, Search, AlertCircle, Menu, X,
-  ShoppingCart, Activity, Bell, Home, BarChart3, QrCode
+  ShoppingCart, Activity, Bell, Home, BarChart3, QrCode, Palette
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import MerchantCardDesign from "@/components/merchant/MerchantCardDesign";
 
 interface MerchantGiftCard {
   id: number;
@@ -267,6 +268,18 @@ export default function MerchantDashboard() {
                 >
                   <Package className="w-4 h-4 mr-2" />
                   Bulk Orders
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  className="justify-start text-white hover:bg-white/10"
+                  onClick={() => {
+                    setActiveTab("carddesign");
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  <Palette className="w-4 h-4 mr-2" />
+                  Card Design
                 </Button>
                 
                 <Button
@@ -751,6 +764,12 @@ export default function MerchantDashboard() {
             {activeTab === "orders" && (
               <div className="space-y-6">
                 <BulkOrdersSection />
+              </div>
+            )}
+            
+            {activeTab === "carddesign" && (
+              <div className="space-y-6">
+                <MerchantCardDesign />
               </div>
             )}
           </div>

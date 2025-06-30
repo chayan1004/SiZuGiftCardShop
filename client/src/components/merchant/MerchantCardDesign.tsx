@@ -42,7 +42,7 @@ export default function MerchantCardDesign() {
     queryFn: () => apiRequest('GET', '/api/merchant/card-design/validation')
   });
 
-  const validation = validationData?.validation as ValidationConfig;
+  const validation = (validationData as any)?.validation as ValidationConfig;
 
   // Fetch existing card design
   const { data: designData, isLoading: isLoadingDesign } = useQuery({
@@ -50,7 +50,7 @@ export default function MerchantCardDesign() {
     queryFn: () => apiRequest('GET', '/api/merchant/card-design')
   });
 
-  const existingDesign = designData?.design as CardDesign;
+  const existingDesign = (designData as any)?.design as CardDesign;
 
   // Load existing design data
   useEffect(() => {

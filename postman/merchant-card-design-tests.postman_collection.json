@@ -1,0 +1,453 @@
+{
+  "info": {
+    "name": "SiZu Merchant Card Design - Phase 1 Tests",
+    "description": "Comprehensive testing suite for merchant custom card design upload system",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{merchantToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://SiZu-GiftCardShop.replit.app",
+      "type": "string"
+    },
+    {
+      "key": "merchantToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Merchant Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Test merchant login for card design testing",
+              "pm.test('Login successful', function () {",
+              "    pm.response.to.have.status(200);",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.success).to.be.true;",
+              "    pm.expect(response.token).to.exist;",
+              "    pm.expect(response.merchant).to.exist;",
+              "    ",
+              "    // Store token for subsequent requests",
+              "    pm.collectionVariables.set('merchantToken', response.token);",
+              "    console.log('✅ Merchant authenticated for card design testing');",
+              "    console.log('🔑 Token stored:', response.token.substring(0, 20) + '...');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"test@merchant.com\",\n  \"password\": \"password123\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/merchant/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "merchant", "login"]
+        }
+      }
+    },
+    {
+      "name": "2. Get Upload Validation Config",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Test validation config endpoint",
+              "pm.test('Validation config retrieved', function () {",
+              "    pm.response.to.have.status(200);",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.success).to.be.true;",
+              "    pm.expect(response.validation).to.exist;",
+              "    pm.expect(response.validation.maxSize).to.be.a('number');",
+              "    pm.expect(response.validation.maxSizeMB).to.be.a('number');",
+              "    pm.expect(response.validation.allowedTypes).to.be.an('array');",
+              "    pm.expect(response.validation.allowedExtensions).to.be.an('array');",
+              "    ",
+              "    console.log('📋 Validation Config:');",
+              "    console.log('   Max Size:', response.validation.maxSizeMB, 'MB');",
+              "    console.log('   Allowed Types:', response.validation.allowedTypes.join(', '));",
+              "    console.log('   Allowed Extensions:', response.validation.allowedExtensions.join(', '));",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/merchant/card-design/validation",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "merchant", "card-design", "validation"]
+        }
+      }
+    },
+    {
+      "name": "3. Get Initial Card Design",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Test initial card design retrieval",
+              "pm.test('Initial design retrieved', function () {",
+              "    pm.response.to.have.status(200);",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.success).to.be.true;",
+              "    pm.expect(response.design).to.exist;",
+              "    ",
+              "    // Should return default values for new merchant",
+              "    const design = response.design;",
+              "    pm.expect(design.themeColor).to.exist;",
+              "    pm.expect(design.isActive).to.exist;",
+              "    ",
+              "    console.log('🎨 Initial Design State:');",
+              "    console.log('   Theme Color:', design.themeColor);",
+              "    console.log('   Design URL:', design.designUrl || 'None');",
+              "    console.log('   Logo URL:', design.logoUrl || 'None');",
+              "    console.log('   Custom Message:', design.customMessage || 'None');",
+              "    console.log('   Active:', design.isActive);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/merchant/card-design",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "merchant", "card-design"]
+        }
+      }
+    },
+    {
+      "name": "4. Upload Theme Color Only",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Test theme color update",
+              "pm.test('Theme color updated successfully', function () {",
+              "    pm.response.to.have.status(200);",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.success).to.be.true;",
+              "    pm.expect(response.design).to.exist;",
+              "    pm.expect(response.design.themeColor).to.equal('#ff6b35');",
+              "    ",
+              "    console.log('🎨 Theme Color Updated:');",
+              "    console.log('   New Color:', response.design.themeColor);",
+              "    console.log('   Message:', response.message);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"themeColor\": \"#ff6b35\",\n  \"customMessage\": \"Welcome to our store!\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/merchant/card-design",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "merchant", "card-design"]
+        }
+      }
+    },
+    {
+      "name": "5. Upload Design Image (Base64)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Test design image upload",
+              "pm.test('Design image uploaded successfully', function () {",
+              "    pm.response.to.have.status(200);",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.success).to.be.true;",
+              "    pm.expect(response.design).to.exist;",
+              "    pm.expect(response.design.designUrl).to.exist;",
+              "    pm.expect(response.design.designUrl).to.include('/uploads/card-designs/');",
+              "    ",
+              "    console.log('🖼️ Design Image Uploaded:');",
+              "    console.log('   Design URL:', response.design.designUrl);",
+              "    console.log('   File validation passed');",
+              "    console.log('   Message:', response.message);",
+              "    ",
+              "    // Store design URL for verification",
+              "    pm.collectionVariables.set('designUrl', response.design.designUrl);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"designImageBase64\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==\",\n  \"themeColor\": \"#8b5cf6\",\n  \"customMessage\": \"Thank you for choosing us!\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/merchant/card-design",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "merchant", "card-design"]
+        }
+      }
+    },
+    {
+      "name": "6. Upload Logo Image (Base64)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Test logo image upload",
+              "pm.test('Logo image uploaded successfully', function () {",
+              "    pm.response.to.have.status(200);",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.success).to.be.true;",
+              "    pm.expect(response.design).to.exist;",
+              "    pm.expect(response.design.logoUrl).to.exist;",
+              "    pm.expect(response.design.logoUrl).to.include('/uploads/card-designs/');",
+              "    ",
+              "    console.log('🏷️ Logo Image Uploaded:');",
+              "    console.log('   Logo URL:', response.design.logoUrl);",
+              "    console.log('   File validation passed');",
+              "    console.log('   Message:', response.message);",
+              "    ",
+              "    // Store logo URL for verification",
+              "    pm.collectionVariables.set('logoUrl', response.design.logoUrl);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"logoImageBase64\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==\",\n  \"themeColor\": \"#10b981\",\n  \"customMessage\": \"Premium gift cards for special moments\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/merchant/card-design",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "merchant", "card-design"]
+        }
+      }
+    },
+    {
+      "name": "7. Verify Final Design State",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Test final design state verification",
+              "pm.test('Final design state verified', function () {",
+              "    pm.response.to.have.status(200);",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.success).to.be.true;",
+              "    pm.expect(response.design).to.exist;",
+              "    ",
+              "    const design = response.design;",
+              "    pm.expect(design.designUrl).to.exist;",
+              "    pm.expect(design.logoUrl).to.exist;",
+              "    pm.expect(design.themeColor).to.equal('#10b981');",
+              "    pm.expect(design.customMessage).to.equal('Premium gift cards for special moments');",
+              "    pm.expect(design.isActive).to.be.true;",
+              "    ",
+              "    console.log('✅ Final Design Verification:');",
+              "    console.log('   Theme Color:', design.themeColor);",
+              "    console.log('   Design URL:', design.designUrl);",
+              "    console.log('   Logo URL:', design.logoUrl);",
+              "    console.log('   Custom Message:', design.customMessage);",
+              "    console.log('   Active Status:', design.isActive);",
+              "    console.log('🎉 Phase 1 Implementation Complete!');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/merchant/card-design",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "merchant", "card-design"]
+        }
+      }
+    },
+    {
+      "name": "8. Test File Size Validation",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Test file size validation (should fail)",
+              "pm.test('File size validation working', function () {",
+              "    pm.response.to.have.status(400);",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.success).to.be.false;",
+              "    pm.expect(response.error).to.exist;",
+              "    ",
+              "    console.log('🚫 File Size Validation:');",
+              "    console.log('   Error:', response.error);",
+              "    console.log('   Validation working correctly');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"designImageBase64\": \"data:image/png;base64,\" + \"A\".repeat(5000000),\n  \"themeColor\": \"#ef4444\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/merchant/card-design",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "merchant", "card-design"]
+        }
+      }
+    },
+    {
+      "name": "9. Test Invalid Color Format",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Test invalid color format validation",
+              "pm.test('Color format validation working', function () {",
+              "    pm.response.to.have.status(400);",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.success).to.be.false;",
+              "    pm.expect(response.error).to.exist;",
+              "    ",
+              "    console.log('🚫 Color Format Validation:');",
+              "    console.log('   Error:', response.error);",
+              "    console.log('   Validation working correctly');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"themeColor\": \"invalid-color\",\n  \"customMessage\": \"Testing validation\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/merchant/card-design",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "merchant", "card-design"]
+        }
+      }
+    },
+    {
+      "name": "10. Test Unauthorized Access",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Test unauthorized access protection",
+              "pm.test('Authentication protection working', function () {",
+              "    pm.response.to.have.status(401);",
+              "    ",
+              "    console.log('🔒 Authentication Protection:');",
+              "    console.log('   Unauthorized access blocked correctly');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/merchant/card-design",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "merchant", "card-design"]
+        }
+      }
+    }
+  ]
+}

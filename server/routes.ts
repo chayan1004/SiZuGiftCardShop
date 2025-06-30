@@ -21,6 +21,7 @@ import { webhookService, type RedemptionData } from './services/WebhookService';
 import { webhookDispatcher, type RedemptionWebhookPayload as DispatcherPayload } from './services/WebhookDispatcher';
 import { multiEventWebhookDispatcher } from './services/MultiEventWebhookDispatcher';
 import { WebhookConfigService } from './services/WebhookConfigService';
+import { WebhookRetryEngine } from './services/WebhookRetryEngine';
 import { FraudDetectionService } from './services/FraudDetectionService';
 import { ThreatReplayService } from './services/ThreatReplayService';
 import { AutoDefenseEngine } from './services/AutoDefenseEngine';
@@ -4982,7 +4983,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             deliveryId: retry.deliveryId,
             retryCount: retry.retryCount,
             nextRetryAt: retry.nextRetryAt,
-            status: retry.status,
+            status: retry.lastStatus || 'pending',
             createdAt: retry.createdAt
           }))
         }

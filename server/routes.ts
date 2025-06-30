@@ -5029,6 +5029,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Physical Gift Card Checkout Endpoint
+  app.post("/api/physical-cards/create-checkout", async (req: Request, res: Response) => {
+    try {
+      const customerData = req.body;
+      
+      // Validate required fields
+      if (!customerData.firstName || !customerData.lastName || !customerData.email || !customerData.shippingAddress) {
+        return res.status(400).json({
+          success: false,
+          error: 'Missing required customer information'
+        });
+      }
+
+      // Get pricing for the card type and quantity
+      const pricingService = await import('./services/PhysicalCardPricingService.js');
+      const pricing = await pricingService.PhysicalCardPricingService.calculatePricing(
+        customerData.cardType || 'plastic',
+        customerData.quantity || 1,
+        customerData.expeditedShipping || false
+      );
+
+      // Create Square hosted checkout session
+      const squarePaymentService = await import('./services/enhancedSquareAPIService.js');
+      const checkoutData = {
+        amount: pricing.total,
+        currency: 'USD',
+        redirectUrl: `${process.env.REPLIT_DOMAIN || 'https://sizu-giftcardshop.replit.app'}/physical-cards/success`,
+        note: `Physical Gift Card Order - ${customerData.quantity}x ${customerData.cardType} cards`,
+        prePopulatedData: {
+          buyerEmail: customerData.email,
+          buyerPhoneNumber: customerData.phone,
+          buyerAddress: {
+            firstName: customerData.firstName,
+            lastName: customerData.lastName,
+            addressLine1: customerData.shippingAddress.street,
+            locality: customerData.shippingAddress.city,
+            administrativeDistrictLevel1: customerData.shippingAddress.state,
+            postalCode: customerData.shippingAddress.zipCode,
+            country: customerData.shippingAddress.country || 'US'
+          }
+        }
+      };
+
+      const checkoutSession = await squarePaymentService.enhancedSquareAPIService.createHostedCheckout(checkoutData);
+
+      if (!checkoutSession.success) {
+        return res.status(400).json({
+          success: false,
+          error: checkoutSession.error || 'Failed to create checkout session'
+        });
+      }
+
+      // Store pending order in database
+      const orderData = {
+        firstName: customerData.firstName,
+        lastName: customerData.lastName,
+        email: customerData.email,
+        phone: customerData.phone,
+        emailOptIn: customerData.emailOptIn || false,
+        shippingAddress: customerData.shippingAddress,
+        cardType: customerData.cardType || 'plastic',
+        quantity: customerData.quantity || 1,
+        expeditedShipping: customerData.expeditedShipping || false,
+        customText: customerData.customText || '',
+        customImage: customerData.customImage || '',
+        selectedEmoji: customerData.selectedEmoji || '',
+        themeColor: customerData.themeColor || '#7c3aed',
+        status: 'pending',
+        totalAmount: pricing.total,
+        squareCheckoutId: checkoutSession.checkoutId
+      };
+
+      const order = await storage.createPhysicalCardOrder(orderData);
+
+      res.json({
+        success: true,
+        checkoutUrl: checkoutSession.checkoutUrl,
+        orderId: order.id,
+        pricing: pricing
+      });
+
+    } catch (error) {
+      console.error('Error creating physical card checkout:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to create checkout session'
+      });
+    }
+  });
+
   // Import fraud detection middleware
   const fraudMiddleware = await import('./middleware/fraudDetectionMiddleware.js');
   const { 

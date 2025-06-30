@@ -393,9 +393,11 @@ export default function PhysicalGiftCardStore() {
       return response.json();
     },
     onSuccess: (data) => {
-      if (data.checkoutUrl) {
+      if (data.success && data.checkoutUrl) {
         // Redirect to Square's hosted checkout page
         window.location.href = data.checkoutUrl;
+      } else {
+        throw new Error(data.error || 'Invalid checkout response');
       }
     },
     onError: (error: any) => {
@@ -956,7 +958,7 @@ export default function PhysicalGiftCardStore() {
                             </motion.div>
                           </div>
 
-                          {/* Submit Button */}
+                          {/* Proceed to Checkout Button */}
                           <motion.div
                             initial={{ y: 20, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
@@ -964,21 +966,14 @@ export default function PhysicalGiftCardStore() {
                             className="pt-4"
                           >
                             <Button 
-                              type="submit"
-                              disabled={submitOrderMutation.isPending}
+                              type="button"
+                              onClick={() => setOrderStep('customer-info')}
                               className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-3 rounded-xl"
                             >
-                              {submitOrderMutation.isPending ? (
-                                <div className="flex items-center gap-2">
-                                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                  Processing Order...
-                                </div>
-                              ) : (
-                                <div className="flex items-center gap-2">
-                                  <Package className="w-5 h-5" />
-                                  Place Order
-                                </div>
-                              )}
+                              <div className="flex items-center gap-2">
+                                <ShoppingCart className="w-5 h-5" />
+                                Proceed to Checkout
+                              </div>
                             </Button>
                           </motion.div>
                         </form>

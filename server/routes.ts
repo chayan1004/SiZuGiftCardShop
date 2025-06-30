@@ -3214,7 +3214,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Square configuration endpoint for Web SDK
   app.get("/api/config/square", (req, res) => {
     try {
-      const applicationId = process.env.SQUARE_APPLICATION_ID;
+      // Use sandbox application ID when available, otherwise fall back to main application ID
+      const applicationId = process.env.VITE_SQUARE_SANDBOX_APPLICATION_ID || process.env.SQUARE_APPLICATION_ID;
       const locationId = process.env.SQUARE_LOCATION_ID;
       
       // Determine environment based on application ID prefix
@@ -3222,6 +3223,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (applicationId?.startsWith('sq0app-')) {
         environment = 'production';
       } else if (applicationId?.startsWith('sq0idp-')) {
+        environment = 'sandbox';
+      } else if (applicationId?.startsWith('sandbox-sq0idb-')) {
         environment = 'sandbox';
       } else {
         environment = process.env.SQUARE_ENVIRONMENT || 'sandbox';

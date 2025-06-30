@@ -670,6 +670,101 @@ export default function BrandedCheckout() {
                           </div>
                         </div>
 
+                        {selectedPaymentMethod === 'debitCard' && (
+                          <div className="space-y-4">
+                            <div>
+                              <Label className="text-white">Debit Card Number</Label>
+                              <Input
+                                {...form.register('cardNumber')}
+                                className="bg-white/10 border-white/20 text-white font-mono"
+                                placeholder="1234 5678 9012 3456"
+                                onChange={(e) => {
+                                  const formatted = formatCardNumber(e.target.value);
+                                  form.setValue('cardNumber', formatted);
+                                }}
+                              />
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <Label className="text-white">Expiry Date</Label>
+                                <Input
+                                  {...form.register('expiryDate')}
+                                  className="bg-white/10 border-white/20 text-white font-mono"
+                                  placeholder="MM/YY"
+                                  onChange={(e) => {
+                                    const formatted = formatExpiryDate(e.target.value);
+                                    form.setValue('expiryDate', formatted);
+                                  }}
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-white">CVV</Label>
+                                <Input
+                                  {...form.register('cvv')}
+                                  className="bg-white/10 border-white/20 text-white font-mono"
+                                  placeholder="123"
+                                  maxLength={4}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {selectedPaymentMethod === 'applePay' && (
+                          <div className="bg-white/10 rounded-lg p-6 text-center border border-white/20">
+                            <div className="text-white text-lg mb-2">🍎 Apple Pay</div>
+                            <p className="text-gray-300 text-sm">Touch ID or Face ID required</p>
+                            <p className="text-gray-400 text-xs mt-2">Secure payment with Apple Pay</p>
+                          </div>
+                        )}
+
+                        {selectedPaymentMethod === 'googlePay' && (
+                          <div className="bg-white/10 rounded-lg p-6 text-center border border-white/20">
+                            <div className="text-white text-lg mb-2">🟡 Google Pay</div>
+                            <p className="text-gray-300 text-sm">One-tap checkout</p>
+                            <p className="text-gray-400 text-xs mt-2">Fast and secure payment with Google Pay</p>
+                          </div>
+                        )}
+
+                        {selectedPaymentMethod === 'cashApp' && (
+                          <div className="bg-white/10 rounded-lg p-6 text-center border border-white/20">
+                            <div className="text-white text-lg mb-2">💵 Cash App Pay</div>
+                            <p className="text-gray-300 text-sm">Pay with Cash App balance</p>
+                            <p className="text-gray-400 text-xs mt-2">Secure payment with your Cash App account</p>
+                          </div>
+                        )}
+
+                        {selectedPaymentMethod === 'paypal' && (
+                          <div className="bg-white/10 rounded-lg p-6 text-center border border-white/20">
+                            <div className="text-white text-lg mb-2">🅿️ PayPal</div>
+                            <p className="text-gray-300 text-sm">Pay with your PayPal account</p>
+                            <p className="text-gray-400 text-xs mt-2">You'll be redirected to PayPal to complete payment</p>
+                          </div>
+                        )}
+
+                        {selectedPaymentMethod === 'bankTransfer' && (
+                          <div className="space-y-4">
+                            <div className="bg-white/10 rounded-lg p-4 border border-white/20">
+                              <div className="text-white text-sm mb-2">🏦 Bank Transfer Details</div>
+                              <div className="text-gray-300 text-xs space-y-1">
+                                <p><strong>Account Name:</strong> SiZu GiftCard Services</p>
+                                <p><strong>Account Number:</strong> 1234567890</p>
+                                <p><strong>Routing Number:</strong> 987654321</p>
+                                <p><strong>Bank:</strong> Demo Bank</p>
+                              </div>
+                            </div>
+                            <div>
+                              <Label className="text-white">Reference Number (from your bank)</Label>
+                              <Input
+                                {...form.register('bankReference')}
+                                className="bg-white/10 border-white/20 text-white"
+                                placeholder="Enter bank transfer reference"
+                              />
+                            </div>
+                          </div>
+                        )}
+
                         <div className="space-y-3">
                           <div className="flex items-center space-x-2">
                             <Checkbox 

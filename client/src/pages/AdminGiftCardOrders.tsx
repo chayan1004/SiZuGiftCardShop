@@ -20,6 +20,9 @@ interface PublicGiftCardOrder {
   giftCardState: string | null;
   emailSent: boolean;
   emailSentAt: string | null;
+  emailResendCount: number;
+  emailLastResendAt: string | null;
+  manuallyMarkedFailed: boolean;
   createdAt: string;
 }
 

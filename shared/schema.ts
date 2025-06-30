@@ -153,6 +153,9 @@ export const publicGiftCardOrders = pgTable("public_giftcard_orders", {
   giftCardState: text("gift_card_state"), // Square gift card state (ACTIVE, PENDING, etc.)
   emailSent: boolean("email_sent").notNull().default(false), // Email delivery tracking
   emailSentAt: timestamp("email_sent_at"), // Timestamp when email was successfully sent
+  emailResendCount: integer("email_resend_count").notNull().default(0), // Number of times email was resent
+  emailLastResendAt: timestamp("email_last_resend_at"), // Last time email was resent
+  manuallyMarkedFailed: boolean("manually_marked_failed").notNull().default(false), // Admin marked as failed
   createdAt: timestamp("created_at").defaultNow(),
 });
 

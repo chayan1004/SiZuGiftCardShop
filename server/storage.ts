@@ -44,6 +44,8 @@ export interface IStorage {
   createPublicGiftCardOrder(order: InsertPublicGiftCardOrder): Promise<PublicGiftCardOrder>;
   updatePublicGiftCardOrderStatus(orderId: string, status: string, squarePaymentId?: string, giftCardGan?: string, giftCardId?: string, giftCardState?: string): Promise<PublicGiftCardOrder | undefined>;
   updatePublicGiftCardOrderEmailStatus(orderId: string, emailSent: boolean, emailSentAt?: Date): Promise<PublicGiftCardOrder | undefined>;
+  markEmailAsResent(orderId: string): Promise<PublicGiftCardOrder | undefined>;
+  markOrderAsFailed(orderId: string): Promise<PublicGiftCardOrder | undefined>;
   getPublicGiftCardOrderById(orderId: string): Promise<PublicGiftCardOrder | undefined>;
   getAllPublicGiftCardOrders(): Promise<PublicGiftCardOrder[]>;
   validateMerchantById(merchantId: string): Promise<boolean>;
@@ -536,6 +538,30 @@ export class DatabaseStorage implements IStorage {
     const [updated] = await db
       .update(publicGiftCardOrders)
       .set(updateData)
+      .where(eq(publicGiftCardOrders.id, orderId))
+      .returning();
+    return updated || undefined;
+  }
+
+  async markEmailAsResent(orderId: string): Promise<PublicGiftCardOrder | undefined> {
+    const [updated] = await db
+      .update(publicGiftCardOrders)
+      .set({ 
+        emailResendCount: sql`${publicGiftCardOrders.emailResendCount} + 1`,
+        emailLastResendAt: new Date()
+      })
+      .where(eq(publicGiftCardOrders.id, orderId))
+      .returning();
+    return updated || undefined;
+  }
+
+  async markOrderAsFailed(orderId: string): Promise<PublicGiftCardOrder | undefined> {
+    const [updated] = await db
+      .update(publicGiftCardOrders)
+      .set({ 
+        status: 'failed',
+        manuallyMarkedFailed: true
+      })
       .where(eq(publicGiftCardOrders.id, orderId))
       .returning();
     return updated || undefined;

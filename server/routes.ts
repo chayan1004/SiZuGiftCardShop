@@ -3172,6 +3172,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Resend Email for Gift Card Order (Prompt 8)
+  app.post("/api/admin/giftcard-orders/:orderId/resend-email", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { orderId } = req.params;
+      
+      // Get order details
+      const order = await storage.getPublicGiftCardOrderById(orderId);
+      if (!order) {
+        return res.status(404).json({ 
+          success: false, 
+          message: "Order not found" 
+        });
+      }
+
+      // Check if order is in issued state and has gift card data
+      if (order.status !== 'issued' || !order.giftCardGan || !order.giftCardId) {
+        return res.status(400).json({
+          success: false,
+          message: "Order must be in 'issued' status with gift card data to resend email"
+        });
+      }
+
+      // Send email using emailService
+      const emailSent = await emailService.sendGiftCardEmail(order);
+      
+      if (emailSent) {
+        // Update resend tracking
+        await storage.markEmailAsResent(orderId);
+        await storage.updatePublicGiftCardOrderEmailStatus(orderId, true, new Date());
+        
+        console.log(`Admin resent email for order ${orderId} to ${order.recipientEmail}`);
+        
+        res.json({
+          success: true,
+          message: "Email resent successfully"
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          message: "Failed to send email"
+        });
+      }
+    } catch (error) {
+      console.error('Error resending email:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to resend email"
+      });
+    }
+  });
+
+  // Mark Order as Failed (Prompt 8)
+  app.post("/api/admin/giftcard-orders/:orderId/mark-failed", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { orderId } = req.params;
+      
+      // Get order details
+      const order = await storage.getPublicGiftCardOrderById(orderId);
+      if (!order) {
+        return res.status(404).json({ 
+          success: false, 
+          message: "Order not found" 
+        });
+      }
+
+      // Update order status to failed
+      const updatedOrder = await storage.markOrderAsFailed(orderId);
+      
+      if (updatedOrder) {
+        console.log(`Admin marked order ${orderId} as failed`);
+        
+        res.json({
+          success: true,
+          message: "Order marked as failed successfully",
+          order: updatedOrder
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          message: "Failed to update order status"
+        });
+      }
+    } catch (error) {
+      console.error('Error marking order as failed:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to mark order as failed"
+      });
+    }
+  });
+
   // Admin endpoint for email log tracking
   app.get("/api/admin/email-log/:orderId", requireAdmin, async (req: Request, res: Response) => {
     try {

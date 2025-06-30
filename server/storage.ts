@@ -2267,7 +2267,7 @@ export class DatabaseStorage implements IStorage {
 
   async createPublicGiftCardOrder(orderData: any): Promise<any> {
     const [order] = await db
-      .insert(publicGiftcardOrders)
+      .insert(publicGiftCardOrders)
       .values({
         id: crypto.randomUUID(),
         recipientEmail: orderData.recipientEmail,
@@ -2291,20 +2291,30 @@ export class DatabaseStorage implements IStorage {
   async getPublicGiftCardOrderById(orderId: string): Promise<any> {
     const [order] = await db
       .select()
-      .from(publicGiftcardOrders)
-      .where(eq(publicGiftcardOrders.id, orderId));
+      .from(publicGiftCardOrders)
+      .where(eq(publicGiftCardOrders.id, orderId));
     
     return order;
   }
 
+  async updatePublicGiftCardOrder(orderId: string, updateData: any): Promise<any> {
+    const [updated] = await db
+      .update(publicGiftCardOrders)
+      .set(updateData)
+      .where(eq(publicGiftCardOrders.id, orderId))
+      .returning();
+    
+    return updated;
+  }
+
   async markEmailAsSent(orderId: string): Promise<void> {
     await db
-      .update(publicGiftcardOrders)
+      .update(publicGiftCardOrders)
       .set({ 
         emailSent: true,
         emailSentAt: new Date()
       })
-      .where(eq(publicGiftcardOrders.id, orderId));
+      .where(eq(publicGiftCardOrders.id, orderId));
   }
 }
 

@@ -5714,6 +5714,211 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public gift card storefront endpoints
+  app.get("/api/public/merchants", async (req: Request, res: Response) => {
+    try {
+      const activeMerchants = await storage.getActiveMerchants();
+      res.json({ 
+        success: true, 
+        merchants: activeMerchants,
+        count: activeMerchants.length 
+      });
+    } catch (error: any) {
+      console.error('Error fetching active merchants:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to fetch merchants' 
+      });
+    }
+  });
+
+  app.get("/api/public/giftcards", async (req: Request, res: Response) => {
+    try {
+      const publicGiftCards = await storage.getPublicGiftCards();
+      res.json({ 
+        success: true, 
+        giftCards: publicGiftCards,
+        count: publicGiftCards.length 
+      });
+    } catch (error: any) {
+      console.error('Error fetching public gift cards:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to fetch gift cards' 
+      });
+    }
+  });
+
+  app.get("/api/public/merchant/:merchantId", async (req: Request, res: Response) => {
+    try {
+      const { merchantId } = req.params;
+      const merchant = await storage.getMerchantById(parseInt(merchantId));
+      
+      if (!merchant || !merchant.isActive) {
+        return res.status(404).json({ 
+          success: false, 
+          error: 'Merchant not found or inactive' 
+        });
+      }
+
+      // Get merchant branding and pricing
+      const branding = await storage.getMerchantBranding(parseInt(merchantId));
+      const pricingTiers = await storage.getMerchantPricingTiers(parseInt(merchantId));
+
+      res.json({
+        success: true,
+        id: merchant.id.toString(),
+        businessName: merchant.businessName,
+        businessType: merchant.businessType,
+        logo: branding?.logoUrl,
+        themeColor: branding?.themeColor || '#6366f1',
+        tagline: branding?.tagline,
+        description: branding?.description,
+        minAmount: pricingTiers.length > 0 ? Math.min(...pricingTiers.map(t => t.minQuantity * 100)) : 1000,
+        maxAmount: pricingTiers.length > 0 ? Math.max(...pricingTiers.map(t => t.maxQuantity * 100)) : 50000,
+        popularAmounts: [2500, 5000, 10000, 15000, 25000]
+      });
+    } catch (error: any) {
+      console.error('Error fetching merchant details:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to fetch merchant details' 
+      });
+    }
+  });
+
+  app.post("/api/public/purchase", async (req: Request, res: Response) => {
+    try {
+      const {
+        merchantId,
+        amount,
+        recipientEmail,
+        senderName,
+        recipientName,
+        message,
+        isGift,
+        paymentMethodId
+      } = req.body;
+
+      // Validate required fields
+      if (!amount || !recipientEmail || !senderName || !paymentMethodId) {
+        return res.status(400).json({
+          success: false,
+          error: 'Missing required fields'
+        });
+      }
+
+      // Validate merchant if provided
+      if (merchantId) {
+        const merchant = await storage.getMerchantById(parseInt(merchantId));
+        if (!merchant || !merchant.isActive) {
+          return res.status(404).json({
+            success: false,
+            error: 'Merchant not found or inactive'
+          });
+        }
+      }
+
+      // Create order record first for tracking
+      const order = await storage.createPublicGiftCardOrder({
+        recipientEmail,
+        merchantId: merchantId || null,
+        amount,
+        message: message || null,
+        status: 'pending',
+        squarePaymentId: null,
+        giftCardId: null,
+        giftCardGan: null,
+        senderName,
+        recipientName: recipientName || senderName,
+        isGift: isGift || false
+      });
+
+      // For demo purposes, simulate successful payment and gift card creation
+      const mockPaymentId = `pay_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const mockGiftCardId = `gift_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const mockGan = `GAN${Math.random().toString().substr(2, 16)}`;
+
+      // Update order with "successful" transaction details
+      await storage.updatePublicGiftCardOrder(order.id, {
+        status: 'completed',
+        squarePaymentId: mockPaymentId,
+        giftCardId: mockGiftCardId,
+        giftCardGan: mockGan
+      });
+
+      // Send email notification
+      try {
+        await emailService.sendGiftCardEmail({
+          recipientEmail: order.recipientEmail,
+          giftCardId: mockGiftCardId,
+          giftCardGan: mockGan,
+          amount: order.amount,
+          senderName: order.senderName || 'Anonymous',
+          message: order.message,
+          orderId: order.id
+        });
+
+        await storage.markEmailAsSent(order.id);
+      } catch (emailError) {
+        console.error('Failed to send gift card email:', emailError);
+      }
+
+      res.json({
+        success: true,
+        orderId: order.id,
+        giftCardId: mockGiftCardId,
+        giftCardGan: mockGan,
+        amount: order.amount
+      });
+
+    } catch (error: any) {
+      console.error('Error processing gift card purchase:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to process purchase'
+      });
+    }
+  });
+
+  app.get("/api/public/purchase-success/:orderId", async (req: Request, res: Response) => {
+    try {
+      const { orderId } = req.params;
+      const order = await storage.getPublicGiftCardOrderById(orderId);
+      
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          error: 'Order not found'
+        });
+      }
+
+      res.json({
+        success: true,
+        order: {
+          id: order.id,
+          amount: order.amount,
+          recipientEmail: order.recipientEmail,
+          giftCardId: order.giftCardId,
+          giftCardGan: order.giftCardGan,
+          senderName: order.senderName,
+          recipientName: order.recipientName,
+          message: order.message,
+          isGift: order.isGift,
+          status: order.status,
+          createdAt: order.createdAt,
+          pdfReceiptUrl: order.pdfReceiptUrl
+        }
+      });
+    } catch (error: any) {
+      console.error('Error fetching purchase details:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch purchase details'
+      });
+    }
+  });
+
   // Initialize Socket.IO for real-time transaction monitoring
   const io = new SocketServer(httpServer, {
     cors: {

@@ -235,82 +235,94 @@ export default function GDPRComplianceDashboard() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Shield className="w-8 h-8 text-primary" />
-            GDPR Compliance Center
+    <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 lg:p-6">
+      {/* Mobile-First Header */}
+      <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
+        <div className="text-center sm:text-left">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight flex items-center justify-center sm:justify-start gap-2">
+            <Shield className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-primary" />
+            <span className="break-words">GDPR Compliance Center</span>
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-xs sm:text-sm lg:text-base text-muted-foreground mt-1 sm:mt-2 px-2 sm:px-0">
             Comprehensive data protection and privacy compliance management
           </p>
         </div>
       </div>
 
-      {/* Overview Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Data Processing</CardTitle>
-            <Database className="h-4 w-4 text-muted-foreground" />
+      {/* Mobile-First Overview Cards */}
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        <Card className="hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
+            <CardTitle className="text-xs sm:text-sm font-medium truncate">Data Processing</CardTitle>
+            <Database className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{overviewData.dataProcessing.total}</div>
-            <p className="text-xs text-muted-foreground">
+          <CardContent className="pt-1 sm:pt-2">
+            <div className="text-xl sm:text-2xl font-bold">{overviewData.dataProcessing.total}</div>
+            <p className="text-xs text-muted-foreground mt-1">
               Active processing activities
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Subject Requests</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+        <Card className="hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
+            <CardTitle className="text-xs sm:text-sm font-medium truncate">Subject Requests</CardTitle>
+            <Users className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{overviewData.dataSubjectRequests.total}</div>
-            <p className="text-xs text-muted-foreground">
+          <CardContent className="pt-1 sm:pt-2">
+            <div className="text-xl sm:text-2xl font-bold">{overviewData.dataSubjectRequests.total}</div>
+            <p className="text-xs text-muted-foreground mt-1">
               {overviewData.dataSubjectRequests.pending} pending • {overviewData.dataSubjectRequests.overdue} overdue
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Data Breaches</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+        <Card className="hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
+            <CardTitle className="text-xs sm:text-sm font-medium truncate">Data Breaches</CardTitle>
+            <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{overviewData.dataBreaches.total}</div>
-            <p className="text-xs text-muted-foreground">
+          <CardContent className="pt-1 sm:pt-2">
+            <div className="text-xl sm:text-2xl font-bold">{overviewData.dataBreaches.total}</div>
+            <p className="text-xs text-muted-foreground mt-1">
               {overviewData.dataBreaches.highRisk} high risk • {overviewData.dataBreaches.resolved} resolved
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Privacy Assessments</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+        <Card className="hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
+            <CardTitle className="text-xs sm:text-sm font-medium truncate">Privacy Assessments</CardTitle>
+            <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{overviewData.privacyAssessments.total}</div>
-            <p className="text-xs text-muted-foreground">
+          <CardContent className="pt-1 sm:pt-2">
+            <div className="text-xl sm:text-2xl font-bold">{overviewData.privacyAssessments.total}</div>
+            <p className="text-xs text-muted-foreground mt-1">
               {overviewData.privacyAssessments.approved} approved • {overviewData.privacyAssessments.highRisk} high risk
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Main Content */}
-      <Tabs defaultValue="requests" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="requests">Data Subject Requests</TabsTrigger>
-          <TabsTrigger value="breaches">Data Breaches</TabsTrigger>
-          <TabsTrigger value="assessments">Privacy Assessments</TabsTrigger>
-          <TabsTrigger value="processing">Data Processing</TabsTrigger>
+      {/* Mobile-First Content Tabs */}
+      <Tabs defaultValue="requests" className="space-y-4 sm:space-y-6">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
+          <TabsTrigger value="requests" className="text-xs sm:text-sm px-1 sm:px-3 py-2">
+            <span className="hidden sm:inline">Data Subject Requests</span>
+            <span className="sm:hidden">Requests</span>
+          </TabsTrigger>
+          <TabsTrigger value="breaches" className="text-xs sm:text-sm px-1 sm:px-3 py-2">
+            <span className="hidden sm:inline">Data Breaches</span>
+            <span className="sm:hidden">Breaches</span>
+          </TabsTrigger>
+          <TabsTrigger value="assessments" className="text-xs sm:text-sm px-1 sm:px-3 py-2">
+            <span className="hidden sm:inline">Privacy Assessments</span>
+            <span className="sm:hidden">Assessments</span>
+          </TabsTrigger>
+          <TabsTrigger value="processing" className="text-xs sm:text-sm px-1 sm:px-3 py-2">
+            <span className="hidden sm:inline">Data Processing</span>
+            <span className="sm:hidden">Processing</span>
+          </TabsTrigger>
         </TabsList>
 
         {/* Data Subject Requests */}

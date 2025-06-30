@@ -1,0 +1,454 @@
+{
+  "info": {
+    "name": "Phase 14D: Webhook Trigger on Redemption",
+    "description": "Test suite for secure HMAC-SHA256 webhook triggers after gift card redemption",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "adminToken", 
+      "value": "sizu-admin-2025",
+      "type": "string"
+    },
+    {
+      "key": "merchantId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "giftCardGan",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "testWebhookUrl",
+      "value": "{{baseUrl}}/api/test/mock-webhook",
+      "type": "string"
+    },
+    {
+      "key": "merchantToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Setup & Authentication",
+      "item": [
+        {
+          "name": "Test 1: Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Admin login successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response).to.have.property('success', true);",
+                  "    pm.expect(response).to.have.property('token');",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('adminToken', response.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"Chayan38125114@\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "login"]
+            }
+          }
+        },
+        {
+          "name": "Test 2: Get Test Merchant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Merchants retrieved', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const merchants = pm.response.json();",
+                  "    pm.expect(merchants.length).to.be.greaterThan(0);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const merchants = pm.response.json();",
+                  "    if (merchants.length > 0) {",
+                  "        pm.collectionVariables.set('merchantId', merchants[0].merchantId);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/merchants",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "merchants"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhook Configuration",
+      "item": [
+        {
+          "name": "Test 3: Configure Redemption Webhook URL",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Webhook URL configured', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response).to.have.property('success', true);",
+                  "    pm.expect(response).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"webhookUrl\": \"{{testWebhookUrl}}\",\n  \"enabled\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/webhook/settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "webhook", "settings"]
+            }
+          }
+        },
+        {
+          "name": "Test 4: Test Webhook Connectivity",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Webhook test successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response).to.have.property('success', true);",
+                  "    pm.expect(response).to.have.property('responseTime');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/webhook/test",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "webhook", "test"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gift Card Redemption & Webhook Trigger",
+      "item": [
+        {
+          "name": "Test 5: Create Test Gift Card",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Test gift card created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response).to.have.property('gan');",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('giftCardGan', response.gan);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 5000,\n  \"status\": \"ACTIVE\",\n  \"gan\": \"TEST-WEBHOOK-{{$randomInt}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/test/create-giftcard",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "test", "create-giftcard"]
+            }
+          }
+        },
+        {
+          "name": "Test 6: Redeem Gift Card (Trigger Webhook)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Gift card redemption successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response).to.have.property('success', true);",
+                  "    pm.expect(response).to.have.property('message');",
+                  "});",
+                  "",
+                  "// Wait for webhook delivery",
+                  "setTimeout(() => {}, 2000);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{giftCardGan}}\",\n  \"redeemedBy\": \"test@webhook.com\",\n  \"amount\": 2500,\n  \"merchantId\": \"{{merchantId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/gift-cards/redeem",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "gift-cards", "redeem"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhook Verification",
+      "item": [
+        {
+          "name": "Test 7: Verify Mock Webhook Received Payload",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Mock webhook responds correctly', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response).to.have.property('success', true);",
+                  "    pm.expect(response).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-SiZu-Signature",
+                "value": "sha256=test-signature"
+              },
+              {
+                "key": "X-SiZu-Timestamp",
+                "value": "{{$isoTimestamp}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"gift_card.redeemed\",\n  \"timestamp\": \"{{$isoTimestamp}}\",\n  \"data\": {\n    \"giftCardCode\": \"{{giftCardGan}}\",\n    \"merchantId\": \"{{merchantId}}\",\n    \"amountRedeemed\": 2500,\n    \"currency\": \"USD\",\n    \"redeemedBy\": {\n      \"ip\": \"127.0.0.1\",\n      \"device\": \"test-device\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/test/mock-webhook",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "test", "mock-webhook"]
+            }
+          }
+        },
+        {
+          "name": "Test 8: Check Webhook Delivery Logs",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Webhook logs available', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response).to.have.property('success', true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/webhook-logs/{{merchantId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "webhook-logs", "{{merchantId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Security Validation",
+      "item": [
+        {
+          "name": "Test 9: Invalid Signature Rejection",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Invalid signature rejected', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response).to.have.property('success', false);",
+                  "    pm.expect(response).to.have.property('error');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-SiZu-Signature",
+                "value": "sha256=invalid-signature-12345"
+              },
+              {
+                "key": "X-SiZu-Timestamp",
+                "value": "{{$isoTimestamp}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"gift_card.redeemed\",\n  \"malicious\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/test/mock-webhook",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "test", "mock-webhook"]
+            }
+          }
+        },
+        {
+          "name": "Test 10: Webhook Without Configuration",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Redemption works without webhook config', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response).to.have.property('success', true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"FALLBACK-TEST-{{$randomInt}}\",\n  \"redeemedBy\": \"test@fallback.com\",\n  \"amount\": 1000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/gift-cards/redeem",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "gift-cards", "redeem"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

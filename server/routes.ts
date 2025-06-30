@@ -17,7 +17,7 @@ import { domainAuthentication } from './services/domainAuthentication';
 import { pdfReceiptService } from './services/pdfReceiptService';
 import { ReceiptService } from './services/ReceiptService';
 import { squareWebhookHandler } from './webhooks/squareWebhookHandler';
-import { webhookService, type RedemptionWebhookPayload } from './services/WebhookService';
+import { webhookService, type RedemptionData } from './services/WebhookService';
 import { webhookDispatcher, type RedemptionWebhookPayload as DispatcherPayload } from './services/WebhookDispatcher';
 import { FraudDetectionService } from './services/FraudDetectionService';
 import { ThreatReplayService } from './services/ThreatReplayService';
@@ -3976,6 +3976,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Step 5: Process legitimate redemption
       const updatedCard = await storage.redeemGiftCard(code, redeemedBy, amount);
+      
+      // Step 6: Trigger redemption webhook for merchant automation (after successful redemption)
+      if (updatedCard && req.body.merchantId) {
+        const redemptionData: RedemptionData = {
+          giftCardCode: code,
+          merchantId: req.body.merchantId,
+          amountRedeemed: updatedCard.lastRedemptionAmount || amount,
+          currency: 'USD',
+          redeemedBy: {
+            ip: req.ip || req.socket.remoteAddress || 'unknown',
+            device: req.get('User-Agent') || 'unknown'
+          },
+          redemptionTime: new Date().toISOString()
+        };
+
+        // Fire webhook asynchronously - don't block redemption response
+        webhookService.triggerRedemptionWebhook(req.body.merchantId, redemptionData);
+      }
       
       res.json({
         success: true,

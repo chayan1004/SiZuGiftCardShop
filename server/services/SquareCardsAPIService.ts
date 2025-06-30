@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { Client } from 'squareup';
+import { Client, Environment } from 'square';
 import { storage } from '../storage';
 
 /**

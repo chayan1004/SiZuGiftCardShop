@@ -140,6 +140,23 @@ export const merchantBulkOrdersSchema = createInsertSchema(merchant_bulk_orders)
   created_at: true,
 });
 
+export const publicGiftCardOrders = pgTable("public_giftcard_orders", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  recipientEmail: text("recipient_email").notNull(),
+  merchantId: text("merchant_id"),
+  amount: integer("amount").notNull(), // Amount in cents
+  message: text("message"),
+  status: text("status").notNull().default('pending'),
+  squarePaymentId: text("square_payment_id"),
+  giftCardGan: text("gift_card_gan"), // Generated gift card GAN after successful payment
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertPublicGiftCardOrderSchema = createInsertSchema(publicGiftCardOrders).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type Merchant = typeof merchants.$inferSelect;
 export type InsertMerchant = z.infer<typeof insertMerchantSchema>;
 export type GiftCard = typeof giftCards.$inferSelect;
@@ -156,3 +173,5 @@ export type MerchantGiftCard = typeof merchantGiftCards.$inferSelect;
 export type InsertMerchantGiftCard = z.infer<typeof insertMerchantGiftCardSchema>;
 export type MerchantBulkOrder = typeof merchant_bulk_orders.$inferSelect;
 export type InsertMerchantBulkOrder = z.infer<typeof merchantBulkOrdersSchema>;
+export type PublicGiftCardOrder = typeof publicGiftCardOrders.$inferSelect;
+export type InsertPublicGiftCardOrder = z.infer<typeof insertPublicGiftCardOrderSchema>;

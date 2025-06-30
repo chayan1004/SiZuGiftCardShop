@@ -39,6 +39,11 @@ export interface IStorage {
   getMerchantGiftCards(merchantId: string, bulkOrderId?: string): Promise<MerchantGiftCard[]>;
   getMerchantGiftCardByGan(gan: string): Promise<MerchantGiftCard | undefined>;
   
+  // Public Gift Card Order methods
+  createPublicGiftCardOrder(order: InsertPublicGiftCardOrder): Promise<PublicGiftCardOrder>;
+  updatePublicGiftCardOrderStatus(orderId: string, status: string, squarePaymentId?: string, giftCardGan?: string): Promise<PublicGiftCardOrder | undefined>;
+  validateMerchantById(merchantId: string): Promise<boolean>;
+  
   // Gift Card methods
   getGiftCard(id: number): Promise<GiftCard | undefined>;
   getGiftCardByGan(gan: string): Promise<GiftCard | undefined>;
@@ -494,6 +499,37 @@ export class DatabaseStorage implements IStorage {
       .from(merchantGiftCards)
       .where(eq(merchantGiftCards.gan, gan));
     return card || undefined;
+  }
+
+  // Public Gift Card Order methods
+  async createPublicGiftCardOrder(insertOrder: InsertPublicGiftCardOrder): Promise<PublicGiftCardOrder> {
+    const [order] = await db
+      .insert(publicGiftCardOrders)
+      .values(insertOrder)
+      .returning();
+    return order;
+  }
+
+  async updatePublicGiftCardOrderStatus(orderId: string, status: string, squarePaymentId?: string, giftCardGan?: string): Promise<PublicGiftCardOrder | undefined> {
+    const updateData: any = { status };
+    if (squarePaymentId) updateData.squarePaymentId = squarePaymentId;
+    if (giftCardGan) updateData.giftCardGan = giftCardGan;
+
+    const [updated] = await db
+      .update(publicGiftCardOrders)
+      .set(updateData)
+      .where(eq(publicGiftCardOrders.id, orderId))
+      .returning();
+    return updated || undefined;
+  }
+
+  async validateMerchantById(merchantId: string): Promise<boolean> {
+    const [merchant] = await db
+      .select({ id: merchants.id })
+      .from(merchants)
+      .where(eq(merchants.merchantId, merchantId))
+      .limit(1);
+    return !!merchant;
   }
 }
 

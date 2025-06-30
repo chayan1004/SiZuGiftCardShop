@@ -1361,12 +1361,67 @@ export class DatabaseStorage implements IStorage {
         statusCode: log.status === 'success' ? 200 : 500,
         success: log.status === 'success',
         errorMessage: log.errorMessage,
-        responseTimeMs: log.responseTimeMs,
-        payload: log.payload
+        responseTime: log.responseTimeMs,
+        retryCount: 0
       });
     } catch (error) {
       console.error('Error logging webhook delivery:', error);
     }
+  }
+
+  // Webhook Event methods implementation
+  async createWebhookEvent(webhookEvent: InsertWebhookEvent): Promise<WebhookEvent> {
+    const [created] = await db.insert(webhookEvents).values(webhookEvent).returning();
+    return created;
+  }
+
+  async getWebhookEventsByMerchant(merchantId: string): Promise<WebhookEvent[]> {
+    return await db
+      .select()
+      .from(webhookEvents)
+      .where(eq(webhookEvents.merchantId, merchantId))
+      .orderBy(desc(webhookEvents.createdAt));
+  }
+
+  async getWebhookEventsByMerchantAndType(merchantId: string, eventType: string): Promise<WebhookEvent[]> {
+    return await db
+      .select()
+      .from(webhookEvents)
+      .where(
+        and(
+          eq(webhookEvents.merchantId, merchantId),
+          eq(webhookEvents.eventType, eventType),
+          eq(webhookEvents.enabled, true)
+        )
+      );
+  }
+
+  async updateWebhookEvent(id: string, updates: Partial<InsertWebhookEvent>): Promise<WebhookEvent | undefined> {
+    const [updated] = await db
+      .update(webhookEvents)
+      .set(updates)
+      .where(eq(webhookEvents.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteWebhookEvent(id: string): Promise<boolean> {
+    const result = await db.delete(webhookEvents).where(eq(webhookEvents.id, id));
+    return result.rowCount > 0;
+  }
+
+  async createWebhookDeliveryLog(log: InsertWebhookDeliveryLog): Promise<WebhookDeliveryLog> {
+    const [created] = await db.insert(webhookDeliveryLogs).values(log).returning();
+    return created;
+  }
+
+  async getWebhookDeliveryLogsByMerchant(merchantId: string, limit: number = 50): Promise<WebhookDeliveryLog[]> {
+    return await db
+      .select()
+      .from(webhookDeliveryLogs)
+      .where(eq(webhookDeliveryLogs.merchantId, merchantId))
+      .orderBy(desc(webhookDeliveryLogs.deliveredAt))
+      .limit(limit);
   }
 }
 

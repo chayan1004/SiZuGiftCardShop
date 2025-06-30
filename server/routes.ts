@@ -19,6 +19,7 @@ import { ReceiptService } from './services/ReceiptService';
 import { squareWebhookHandler } from './webhooks/squareWebhookHandler';
 import { webhookService, type RedemptionData } from './services/WebhookService';
 import { webhookDispatcher, type RedemptionWebhookPayload as DispatcherPayload } from './services/WebhookDispatcher';
+import { multiEventWebhookDispatcher } from './services/MultiEventWebhookDispatcher';
 import { FraudDetectionService } from './services/FraudDetectionService';
 import { ThreatReplayService } from './services/ThreatReplayService';
 import { AutoDefenseEngine } from './services/AutoDefenseEngine';
@@ -4603,6 +4604,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error('Mock webhook error:', error);
+      res.status(500).json({
+        success: false,
+        error: "Mock webhook processing failed"
+      });
+    }
+  });
+
+  // Multi-Event Webhook Mock Endpoint for Phase 15A Testing
+  app.post("/api/mock/webhook", async (req: Request, res: Response) => {
+    try {
+      const payload = JSON.stringify(req.body);
+      const signature = req.headers['x-sizu-signature'] as string;
+      const eventType = req.headers['x-sizu-event'] as string;
+      const timestamp = req.headers['x-sizu-timestamp'] as string;
+      
+      console.log('🧪 Multi-Event Mock webhook received:');
+      console.log('- Event Type:', eventType);
+      console.log('- Timestamp:', timestamp);
+      console.log('- Payload:', payload);
+      
+      // Verify signature if present (using test secret)
+      let signatureValid = false;
+      if (signature) {
+        const testSecret = 'test-webhook-secret-123';
+        signatureValid = multiEventWebhookDispatcher.verifyWebhookSignature(payload, signature, testSecret);
+        console.log('- Signature Valid:', signatureValid);
+        
+        if (!signatureValid) {
+          return res.status(401).json({
+            success: false,
+            error: "Invalid webhook signature",
+            eventType
+          });
+        }
+      }
+
+      // Simulate processing delay
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      res.json({
+        success: true,
+        message: `Mock webhook received successfully for ${eventType || 'unknown'} event`,
+        receivedAt: new Date().toISOString(),
+        eventType: eventType || 'unknown',
+        payloadSize: payload.length,
+        signatureVerified: signatureValid,
+        timestamp: timestamp
+      });
+    } catch (error) {
+      console.error('Multi-Event Mock webhook error:', error);
       res.status(500).json({
         success: false,
         error: "Mock webhook processing failed"

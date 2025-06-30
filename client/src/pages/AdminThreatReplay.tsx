@@ -418,9 +418,9 @@ export default function AdminThreatReplay() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {defenseData?.rules?.length > 0 ? (
+                  {(defenseData as any)?.rules?.length > 0 ? (
                     <div className="space-y-3">
-                      {defenseData.rules.map((rule: DefenseRule) => (
+                      {(defenseData as any).rules.map((rule: DefenseRule) => (
                         <div key={rule.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border">
                           <div className="flex items-center space-x-4">
                             {getRuleTypeBadge(rule.type)}
@@ -468,7 +468,7 @@ export default function AdminThreatReplay() {
         {/* Statistics Tab */}
         <TabsContent value="statistics" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {defenseData?.statistics && (
+            {(defenseData as any)?.statistics && (
               <>
                 <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border-blue-200 dark:border-blue-800">
                   <CardContent className="p-6">
@@ -477,7 +477,7 @@ export default function AdminThreatReplay() {
                       <div>
                         <p className="text-sm text-blue-600 dark:text-blue-400">Total Rules</p>
                         <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">
-                          {defenseData.statistics.totalRules}
+                          {(defenseData as any).statistics.totalRules}
                         </p>
                       </div>
                     </div>
@@ -491,7 +491,7 @@ export default function AdminThreatReplay() {
                       <div>
                         <p className="text-sm text-green-600 dark:text-green-400">Active Rules</p>
                         <p className="text-2xl font-bold text-green-700 dark:text-green-300">
-                          {defenseData.statistics.activeRules}
+                          {(defenseData as any).statistics.activeRules}
                         </p>
                       </div>
                     </div>
@@ -505,7 +505,7 @@ export default function AdminThreatReplay() {
                       <div>
                         <p className="text-sm text-purple-600 dark:text-purple-400">Recently Triggered</p>
                         <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">
-                          {defenseData.statistics.recentlyTriggered}
+                          {(defenseData as any).statistics.recentlyTriggered}
                         </p>
                       </div>
                     </div>
@@ -519,7 +519,7 @@ export default function AdminThreatReplay() {
                       <div>
                         <p className="text-sm text-orange-600 dark:text-orange-400">Avg Confidence</p>
                         <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">
-                          {defenseData.statistics.averageConfidence}%
+                          {(defenseData as any).statistics.averageConfidence}%
                         </p>
                       </div>
                     </div>

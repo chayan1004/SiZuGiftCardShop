@@ -3118,6 +3118,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 // Don't fail the entire transaction if email fails
               }
 
+              // Generate PDF receipt after successful gift card creation
+              try {
+                const currentOrder = await storage.getPublicGiftCardOrderById(order.id);
+                if (currentOrder && !currentOrder.pdfReceiptUrl) {
+                  const receiptResult = await ReceiptService.generatePDFReceipt(currentOrder);
+                  
+                  if (receiptResult.success && receiptResult.url) {
+                    await storage.updateReceiptUrl(order.id, receiptResult.url, new Date());
+                    console.log(`✅ PDF receipt generated: ${receiptResult.url}`);
+                  } else {
+                    console.error(`❌ Failed to generate PDF receipt: ${receiptResult.error}`);
+                  }
+                } else {
+                  console.log(`📄 PDF receipt already exists for order ${order.id}`);
+                }
+              } catch (pdfError) {
+                console.error('PDF receipt generation error:', pdfError);
+              }
+
               console.log(`✅ Gift card issued successfully: ID=${giftCardId} for ${recipientEmail}`);
 
               res.json({
@@ -3159,6 +3178,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: false,
         message: "An error occurred while processing your order"
       });
+    }
+  });
+
+  // Public order details endpoint for success page
+  app.get("/api/public/order/:orderId", async (req: Request, res: Response) => {
+    try {
+      const { orderId } = req.params;
+      const order = await storage.getPublicGiftCardOrderById(orderId);
+      
+      if (!order) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+
+      // Return only safe public data
+      const publicOrder = {
+        id: order.id,
+        recipientEmail: order.recipientEmail,
+        amount: order.amount,
+        status: order.status,
+        giftCardId: order.giftCardId,
+        giftCardGan: order.giftCardGan,
+        pdfReceiptUrl: order.pdfReceiptUrl,
+        emailSent: order.emailSent,
+        createdAt: order.createdAt
+      };
+
+      res.json(publicOrder);
+    } catch (error) {
+      console.error('Error fetching public order:', error);
+      res.status(500).json({ message: "Failed to fetch order details" });
     }
   });
 

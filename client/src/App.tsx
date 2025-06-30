@@ -7,6 +7,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Home from "@/pages/Home";
 import About from "@/pages/About";
 import GiftCardStore from "@/pages/GiftCardStore";
+import GiftCardSuccess from "@/pages/GiftCardSuccess";
 import Checkout from "@/pages/Checkout";
 import PublicGiftCard from "@/pages/PublicGiftCard";
 import AdminDashboard from "@/pages/admin/AdminDashboard";

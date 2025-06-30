@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Filter, Calendar, Mail, CreditCard, CheckCircle, XCircle, Clock, RefreshCw, AlertTriangle } from "lucide-react";
+import { Search, Filter, Calendar, Mail, CreditCard, CheckCircle, XCircle, Clock, RefreshCw, AlertTriangle, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -26,6 +26,8 @@ interface PublicGiftCardOrder {
   emailResendCount: number;
   emailLastResendAt: string | null;
   manuallyMarkedFailed: boolean;
+  pdfReceiptUrl: string | null;
+  pdfGeneratedAt: string | null;
   createdAt: string;
 }
 
@@ -423,6 +425,19 @@ export default function AdminGiftCardOrders() {
                                   <AlertTriangle className="w-3 h-3" />
                                 )}
                                 <span className="ml-1">Mark Failed</span>
+                              </Button>
+                            )}
+
+                            {/* PDF Receipt Download */}
+                            {order.pdfReceiptUrl && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => window.open(order.pdfReceiptUrl!, '_blank')}
+                                className="h-8 px-2 text-xs bg-green-600/20 border-green-500/30 hover:bg-green-600/30 text-green-300"
+                              >
+                                <Download className="w-3 h-3" />
+                                <span className="ml-1">Receipt</span>
                               </Button>
                             )}
 

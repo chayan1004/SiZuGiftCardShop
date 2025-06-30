@@ -5752,7 +5752,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/public/merchant/:merchantId", async (req: Request, res: Response) => {
     try {
       const { merchantId } = req.params;
-      const merchant = await storage.getMerchantById(parseInt(merchantId));
+      const merchant = await storage.getMerchant(parseInt(merchantId));
       
       if (!merchant || !merchant.isActive) {
         return res.status(404).json({ 
@@ -5769,13 +5769,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
         id: merchant.id.toString(),
         businessName: merchant.businessName,
-        businessType: merchant.businessType,
+        businessType: 'Retail',
         logo: branding?.logoUrl,
         themeColor: branding?.themeColor || '#6366f1',
         tagline: branding?.tagline,
-        description: branding?.description,
+        description: branding?.tagline || 'Quality gift cards for every occasion',
         minAmount: pricingTiers.length > 0 ? Math.min(...pricingTiers.map(t => t.minQuantity * 100)) : 1000,
-        maxAmount: pricingTiers.length > 0 ? Math.max(...pricingTiers.map(t => t.maxQuantity * 100)) : 50000,
+        maxAmount: pricingTiers.length > 0 ? Math.max(...pricingTiers.map(t => t.minQuantity * 100)) : 50000,
         popularAmounts: [2500, 5000, 10000, 15000, 25000]
       });
     } catch (error: any) {
@@ -5810,7 +5810,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Validate merchant if provided
       if (merchantId) {
-        const merchant = await storage.getMerchantById(parseInt(merchantId));
+        const merchant = await storage.getMerchant(parseInt(merchantId));
         if (!merchant || !merchant.isActive) {
           return res.status(404).json({
             success: false,

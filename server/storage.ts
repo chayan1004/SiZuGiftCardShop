@@ -2221,20 +2221,19 @@ export class DatabaseStorage implements IStorage {
   // Public storefront methods
   async getActiveMerchants(): Promise<any[]> {
     const activeMerchants = await db
-      .select({
-        id: merchants.id,
-        businessName: merchants.businessName,
-        businessType: merchants.businessType,
-        isActive: merchants.isActive,
-        createdAt: merchants.createdAt
-      })
+      .select()
       .from(merchants)
       .where(eq(merchants.isActive, true))
       .orderBy(merchants.businessName);
     
     return activeMerchants.map(merchant => ({
-      ...merchant,
-      giftCardCount: 5, // Mock count for now
+      id: merchant.id,
+      businessName: merchant.businessName,
+      businessType: 'Retail', // Default type for display
+      email: merchant.email,
+      isActive: merchant.isActive,
+      createdAt: merchant.createdAt,
+      giftCardCount: 5,
       avgRating: 4.8
     }));
   }

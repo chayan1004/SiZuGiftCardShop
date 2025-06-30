@@ -14,6 +14,7 @@ import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminGiftCardOrders from "@/pages/AdminGiftCardOrders";
 import AdminMerchantSettings from "@/pages/AdminMerchantSettings";
 import AdminGiftCardAnalytics from "@/pages/AdminGiftCardAnalytics";
+import AdminThreatReplay from "@/pages/AdminThreatReplay";
 import CheckBalance from "@/pages/CheckBalance";
 import MerchantLogin from "@/pages/MerchantLogin";
 import MerchantRegister from "@/pages/MerchantRegister";
@@ -83,6 +84,11 @@ function Router() {
       <Route path="/merchant-qr">
         <ProtectedRoute role="merchant">
           <MerchantQRScanner />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/threat-replay">
+        <ProtectedRoute role="admin">
+          <AdminThreatReplay />
         </ProtectedRoute>
       </Route>
       <Route component={NotFound} />

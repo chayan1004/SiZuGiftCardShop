@@ -2856,6 +2856,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Threat Replay Engine Endpoints
+  app.post("/api/admin/replay-threats", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { limit = 50 } = req.body;
+      
+      console.log(`Admin initiated threat replay analysis (limit: ${limit})`);
+      
+      // Run threat replay analysis
+      const replayResults = await ThreatReplayService.runThreatReplay(limit);
+      
+      // Learn from replay results and create defense rules
+      const learningResults = await AutoDefenseEngine.learnFromReplay(replayResults.reports);
+      
+      res.json({
+        success: true,
+        replay: replayResults,
+        learning: learningResults,
+        message: `Analyzed ${replayResults.totalAnalyzed} threats, created ${learningResults.rulesCreated} new defense rules`
+      });
+    } catch (error) {
+      console.error('Error running threat replay:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to run threat replay analysis"
+      });
+    }
+  });
+
+  app.get("/api/admin/defense-rules", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const rules = await storage.getAutoDefenseRules();
+      const statistics = await AutoDefenseEngine.getDefenseStatistics();
+      
+      res.json({
+        success: true,
+        rules,
+        statistics
+      });
+    } catch (error) {
+      console.error('Error fetching defense rules:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch defense rules"
+      });
+    }
+  });
+
+  app.delete("/api/admin/defense-rules/:id", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      
+      const deactivatedRule = await storage.deactivateAutoDefenseRule(id);
+      
+      if (deactivatedRule) {
+        res.json({
+          success: true,
+          message: "Defense rule deactivated successfully",
+          rule: deactivatedRule
+        });
+      } else {
+        res.status(404).json({
+          success: false,
+          error: "Defense rule not found"
+        });
+      }
+    } catch (error) {
+      console.error('Error deactivating defense rule:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to deactivate defense rule"
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   // Phase III-B: Promo Codes API
   app.post("/api/promos", requireAdmin, async (req: Request, res: Response) => {

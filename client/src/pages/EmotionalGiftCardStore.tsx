@@ -47,7 +47,8 @@ export default function EmotionalGiftCardStore() {
       const response = await apiRequest('POST', '/api/public/emotional-checkout', giftData);
       return response;
     },
-    onSuccess: (data) => {
+    onSuccess: async (response) => {
+      const data = await response.json();
       toast({
         title: "Gift Card Created Successfully!",
         description: "Your emotional gift card has been created and will be delivered.",

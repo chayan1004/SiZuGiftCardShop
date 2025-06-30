@@ -96,7 +96,8 @@ export default function FraudClusters() {
   // Manual threat analysis trigger
   const triggerAnalysis = useMutation({
     mutationFn: () => apiRequest("POST", "/api/admin/threat-analysis/trigger"),
-    onSuccess: (data) => {
+    onSuccess: async (response) => {
+      const data = await response.json();
       toast({
         title: "Analysis Complete",
         description: `Found ${data.result.clustersFound} new clusters from ${data.result.threatsAnalyzed} threats`,
@@ -329,18 +330,18 @@ export default function FraudClusters() {
                                 <div className="h-20 bg-gray-700 rounded"></div>
                               </div>
                             </div>
-                          ) : clusterDetails?.cluster ? (
+                          ) : clusterDetails ? (
                             <div className="space-y-6 py-4">
                               <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                   <p className="text-sm font-medium text-gray-400">Risk Score</p>
                                   <div className="flex items-center gap-2">
                                     <Progress 
-                                      value={parseFloat(clusterDetails.cluster.score) * 10} 
+                                      value={parseFloat(clusterDetails.score) * 10} 
                                       className="flex-1 h-2"
                                     />
                                     <span className="text-sm text-white">
-                                      {parseFloat(clusterDetails.cluster.score).toFixed(1)}/10
+                                      {parseFloat(clusterDetails.score).toFixed(1)}/10
                                     </span>
                                   </div>
                                 </div>

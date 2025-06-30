@@ -297,7 +297,7 @@ export default function MerchantDashboard() {
                   variant="ghost"
                   className="justify-start text-white hover:bg-white/10"
                   onClick={() => {
-                    window.location.href = '/merchant-qr';
+                    window.location.href = '/merchant-qr-scanner';
                   }}
                 >
                   <QrCode className="w-4 h-4 mr-2" />

@@ -4335,16 +4335,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Apply fraud detection
-      const fraudResult = await FraudDetectionService.checkRedemptionFraud({
+      const fraudResult = await FraudDetectionService.checkRedemptionFraud(
         gan,
         merchantId,
-        ipAddress,
-        deviceFingerprint,
-        userAgent,
-        amount: amount || 0
-      });
+        ipAddress
+      );
 
-      if (fraudResult.blocked) {
+      if (fraudResult.isBlocked) {
         // Log fraud attempt
         await storage.createCardRedemption({
           cardId: 0,
@@ -4355,7 +4352,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           deviceFingerprint,
           userAgent,
           success: false,
-          failureReason: `Fraud detected: ${fraudResult.reason}`
+          failureReason: `Fraud detected: ${fraudResult.reason || 'Security violation'}`
         });
 
         return res.status(429).json({

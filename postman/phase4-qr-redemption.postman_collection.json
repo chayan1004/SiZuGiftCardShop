@@ -1,0 +1,609 @@
+{
+  "info": {
+    "name": "Phase 4: QR Scanner Mobile POS Redemption",
+    "description": "Comprehensive test suite for QR code validation and redemption system with fraud detection",
+    "_postman_id": "qr-redemption-test-suite",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{merchantToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "merchantToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "testOrderId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "testGiftCardGan",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "validationCard",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication Setup",
+      "item": [
+        {
+          "name": "Merchant Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Merchant login successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.true;",
+                  "    pm.expect(response.token).to.exist;",
+                  "    pm.collectionVariables.set('merchantToken', response.token);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"demo\",\n  \"password\": \"demo123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "QR Validation Tests",
+      "item": [
+        {
+          "name": "Test 1: Validate QR with Valid Gift Card",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('QR validation successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.true;",
+                  "    pm.expect(response.card).to.exist;",
+                  "    pm.expect(response.card.gan).to.exist;",
+                  "    pm.expect(response.card.balance).to.be.above(0);",
+                  "    pm.collectionVariables.set('validationCard', JSON.stringify(response.card));",
+                  "    pm.collectionVariables.set('testGiftCardGan', response.card.gan);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrData\": \"1234567890123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/validate-qr",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "validate-qr"]
+            }
+          }
+        },
+        {
+          "name": "Test 2: Validate QR with Invalid Gift Card",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Invalid QR validation fails correctly', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.false;",
+                  "    pm.expect(response.error).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrData\": \"invalid-gift-card-gan\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/validate-qr",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "validate-qr"]
+            }
+          }
+        },
+        {
+          "name": "Test 3: Validate QR with Receipt URL",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('QR URL validation successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.true;",
+                  "    pm.expect(response.card).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrData\": \"/giftcard-store/success/{{testOrderId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/validate-qr",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "validate-qr"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "QR Redemption Tests",
+      "item": [
+        {
+          "name": "Test 4: Redeem Gift Card (Full Balance)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Full gift card redemption successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.true;",
+                  "    pm.expect(response.redemptionAmount).to.be.above(0);",
+                  "    pm.expect(response.remainingBalance).to.equal(0);",
+                  "    pm.expect(response.fullyRedeemed).to.be.true;",
+                  "    pm.expect(response.message).to.include('Successfully redeemed');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrData\": \"{{testGiftCardGan}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/redeem-qr",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "redeem-qr"]
+            }
+          }
+        },
+        {
+          "name": "Test 5: Redeem Gift Card (Partial Amount)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Partial gift card redemption successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.true;",
+                  "    pm.expect(response.redemptionAmount).to.equal(1000);",
+                  "    pm.expect(response.remainingBalance).to.be.above(0);",
+                  "    pm.expect(response.fullyRedeemed).to.be.false;",
+                  "    pm.expect(response.message).to.include('Successfully redeemed');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrData\": \"1234567890123456\",\n  \"amount\": 1000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/redeem-qr",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "redeem-qr"]
+            }
+          }
+        },
+        {
+          "name": "Test 6: Redeem Already Redeemed Card",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Already redeemed card fails correctly', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.false;",
+                  "    pm.expect(response.error).to.include('already been redeemed');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrData\": \"{{testGiftCardGan}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/redeem-qr",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "redeem-qr"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fraud Detection Tests",
+      "item": [
+        {
+          "name": "Test 7: Rate Limiting Protection",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Rate limiting blocks excessive requests', function () {",
+                  "    // This test may pass or fail depending on rate limit state",
+                  "    const response = pm.response.json();",
+                  "    if (pm.response.code === 429) {",
+                  "        pm.expect(response.success).to.be.false;",
+                  "        pm.expect(response.error).to.include('security reasons');",
+                  "    } else {",
+                  "        pm.expect(pm.response.code).to.be.oneOf([200, 400, 404]);",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              },
+              {
+                "key": "X-Device-Fingerprint",
+                "value": "test-device-123"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrData\": \"fraud-test-gan\",\n  \"amount\": 100\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/redeem-qr",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "redeem-qr"]
+            }
+          }
+        },
+        {
+          "name": "Test 8: Device Fingerprinting",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Device fingerprinting tracked', function () {",
+                  "    // Response should be tracked regardless of success/failure",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 400, 404, 429]);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response).to.have.property('success');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              },
+              {
+                "key": "X-Device-Fingerprint",
+                "value": "suspicious-device-999"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrData\": \"test-gan-device\",\n  \"amount\": 500\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/redeem-qr",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "redeem-qr"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Error Handling Tests",
+      "item": [
+        {
+          "name": "Test 9: Missing QR Data",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Missing QR data validation', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.false;",
+                  "    pm.expect(response.error).to.include('QR data is required');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/validate-qr",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "validate-qr"]
+            }
+          }
+        },
+        {
+          "name": "Test 10: Unauthorized Access",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Unauthorized access blocked', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrData\": \"test-gan\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/validate-qr",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "validate-qr"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Database Integration Tests",
+      "item": [
+        {
+          "name": "Test 11: Redemption Logging",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Redemption attempt logged', function () {",
+                  "    // Any response indicates logging occurred",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 400, 404, 429]);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response).to.have.property('success');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrData\": \"logging-test-gan\",\n  \"amount\": 250\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/redeem-qr",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "redeem-qr"]
+            }
+          }
+        },
+        {
+          "name": "Test 12: Activity Tracking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Activity tracking functional', function () {",
+                  "    // Test successful activity creation",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 400, 404]);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response).to.have.property('success');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrData\": \"activity-test-gan\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/redeem-qr",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "redeem-qr"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

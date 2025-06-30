@@ -57,6 +57,7 @@ export default function Checkout() {
   const [purchaseResult, setPurchaseResult] = useState<any>(null);
   const [paymentForm, setPaymentForm] = useState<any>(null);
   const [squareLoaded, setSquareLoaded] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('creditCard');
   const { toast } = useToast();
 
   // Parse URL parameters and extract merchant ID from path
@@ -631,47 +632,165 @@ export default function Checkout() {
                       </p>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                      {/* Square Payment Form Container */}
+                      {/* Payment Method Selection */}
                       <div className="space-y-4">
-                        <Label className="text-white">Card Information</Label>
-                        <div className="space-y-4">
-                          <div 
-                            id="card-container" 
-                            className="min-h-[120px] p-4 rounded-lg border border-white/20 bg-white/5"
+                        <Label className="text-white">Select Payment Method</Label>
+                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                          <Button
+                            type="button"
+                            variant={selectedPaymentMethod === 'creditCard' ? 'default' : 'outline'}
+                            onClick={() => setSelectedPaymentMethod('creditCard')}
+                            className="h-16 flex flex-col items-center gap-1 border-white/20 hover:bg-white/10"
                           >
-                            {!squareLoaded && (
-                              <div className="space-y-4">
-                                <div className="flex items-center justify-center h-12">
-                                  <Loader2 className="w-6 h-6 animate-spin text-cyan-300" />
-                                  <span className="ml-2 text-gray-300">Loading payment form...</span>
-                                </div>
-                                
-                                {/* Test Payment Form */}
-                                <div className="space-y-3">
-                                  <div className="text-sm text-amber-300 mb-2">
-                                    Development Mode: Test payment enabled
-                                  </div>
-                                  <Input
-                                    placeholder="4111 1111 1111 1111 (Test Card)"
-                                    className="glass-premium border-white/20 text-white"
-                                    readOnly
-                                  />
-                                  <div className="grid grid-cols-2 gap-3">
-                                    <Input
-                                      placeholder="12/25"
-                                      className="glass-premium border-white/20 text-white"
-                                      readOnly
-                                    />
-                                    <Input
-                                      placeholder="123"
-                                      className="glass-premium border-white/20 text-white"
-                                      readOnly
-                                    />
-                                  </div>
-                                </div>
+                            <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded" />
+                            <span className="text-xs">Credit Card</span>
+                          </Button>
+                          
+                          <Button
+                            type="button"
+                            variant={selectedPaymentMethod === 'debitCard' ? 'default' : 'outline'}
+                            onClick={() => setSelectedPaymentMethod('debitCard')}
+                            className="h-16 flex flex-col items-center gap-1 border-white/20 hover:bg-white/10"
+                          >
+                            <div className="w-6 h-6 bg-gradient-to-r from-green-500 to-teal-500 rounded" />
+                            <span className="text-xs">Debit Card</span>
+                          </Button>
+                          
+                          <Button
+                            type="button"
+                            variant={selectedPaymentMethod === 'applePay' ? 'default' : 'outline'}
+                            onClick={() => setSelectedPaymentMethod('applePay')}
+                            className="h-16 flex flex-col items-center gap-1 border-white/20 hover:bg-white/10"
+                          >
+                            <div className="w-6 h-6 bg-black rounded flex items-center justify-center">
+                              <span className="text-white text-xs font-bold">A</span>
+                            </div>
+                            <span className="text-xs">Apple Pay</span>
+                          </Button>
+                          
+                          <Button
+                            type="button"
+                            variant={selectedPaymentMethod === 'googlePay' ? 'default' : 'outline'}
+                            onClick={() => setSelectedPaymentMethod('googlePay')}
+                            className="h-16 flex flex-col items-center gap-1 border-white/20 hover:bg-white/10"
+                          >
+                            <div className="w-6 h-6 bg-gradient-to-r from-red-500 to-yellow-500 rounded" />
+                            <span className="text-xs">Google Pay</span>
+                          </Button>
+                          
+                          <Button
+                            type="button"
+                            variant={selectedPaymentMethod === 'cashApp' ? 'default' : 'outline'}
+                            onClick={() => setSelectedPaymentMethod('cashApp')}
+                            className="h-16 flex flex-col items-center gap-1 border-white/20 hover:bg-white/10"
+                          >
+                            <div className="w-6 h-6 bg-green-600 rounded flex items-center justify-center">
+                              <span className="text-white text-xs font-bold">$</span>
+                            </div>
+                            <span className="text-xs">Cash App</span>
+                          </Button>
+                          
+                          <Button
+                            type="button"
+                            variant={selectedPaymentMethod === 'paypal' ? 'default' : 'outline'}
+                            onClick={() => setSelectedPaymentMethod('paypal')}
+                            className="h-16 flex flex-col items-center gap-1 border-white/20 hover:bg-white/10"
+                          >
+                            <div className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center">
+                              <span className="text-white text-xs font-bold">P</span>
+                            </div>
+                            <span className="text-xs">PayPal</span>
+                          </Button>
+                          
+                          <Button
+                            type="button"
+                            variant={selectedPaymentMethod === 'bankTransfer' ? 'default' : 'outline'}
+                            onClick={() => setSelectedPaymentMethod('bankTransfer')}
+                            className="h-16 flex flex-col items-center gap-1 border-white/20 hover:bg-white/10 col-span-2 lg:col-span-1"
+                          >
+                            <div className="w-6 h-6 bg-gray-600 rounded flex items-center justify-center">
+                              <span className="text-white text-xs font-bold">B</span>
+                            </div>
+                            <span className="text-xs">Bank Transfer</span>
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Payment Form Container */}
+                      <div className="space-y-4">
+                        <div className="min-h-[120px] p-4 rounded-lg border border-white/20 bg-white/5">
+                          {selectedPaymentMethod === 'creditCard' || selectedPaymentMethod === 'debitCard' ? (
+                            <div className="space-y-4">
+                              <div className="text-sm text-amber-300 mb-2">
+                                Development Mode: {selectedPaymentMethod} payment form
                               </div>
-                            )}
-                          </div>
+                              <Input
+                                placeholder="4111 1111 1111 1111 (Test Card)"
+                                className="glass-premium border-white/20 text-white placeholder-gray-400"
+                                readOnly
+                              />
+                              <div className="grid grid-cols-2 gap-3">
+                                <Input
+                                  placeholder="12/25"
+                                  className="glass-premium border-white/20 text-white placeholder-gray-400"
+                                  readOnly
+                                />
+                                <Input
+                                  placeholder="123"
+                                  className="glass-premium border-white/20 text-white placeholder-gray-400"
+                                  readOnly
+                                />
+                              </div>
+                            </div>
+                          ) : selectedPaymentMethod === 'applePay' ? (
+                            <div className="flex flex-col items-center justify-center h-24 space-y-2">
+                              <div className="w-12 h-12 bg-black rounded-lg flex items-center justify-center">
+                                <span className="text-white font-bold">Apple Pay</span>
+                              </div>
+                              <span className="text-gray-300 text-sm">Touch ID or Face ID</span>
+                            </div>
+                          ) : selectedPaymentMethod === 'googlePay' ? (
+                            <div className="flex flex-col items-center justify-center h-24 space-y-2">
+                              <div className="w-12 h-12 bg-gradient-to-r from-red-500 to-yellow-500 rounded-lg flex items-center justify-center">
+                                <span className="text-white font-bold text-xs">Google</span>
+                              </div>
+                              <span className="text-gray-300 text-sm">Pay with Google</span>
+                            </div>
+                          ) : selectedPaymentMethod === 'cashApp' ? (
+                            <div className="flex flex-col items-center justify-center h-24 space-y-2">
+                              <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center">
+                                <span className="text-white font-bold text-lg">$</span>
+                              </div>
+                              <span className="text-gray-300 text-sm">Cash App Pay</span>
+                            </div>
+                          ) : selectedPaymentMethod === 'paypal' ? (
+                            <div className="flex flex-col items-center justify-center h-24 space-y-2">
+                              <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+                                <span className="text-white font-bold">PayPal</span>
+                              </div>
+                              <span className="text-gray-300 text-sm">Pay with PayPal</span>
+                            </div>
+                          ) : selectedPaymentMethod === 'bankTransfer' ? (
+                            <div className="space-y-4">
+                              <div className="text-sm text-amber-300 mb-2">
+                                Development Mode: Bank transfer details
+                              </div>
+                              <Input
+                                placeholder="Bank Account Number"
+                                className="glass-premium border-white/20 text-white placeholder-gray-400"
+                                readOnly
+                              />
+                              <Input
+                                placeholder="Routing Number"
+                                className="glass-premium border-white/20 text-white placeholder-gray-400"
+                                readOnly
+                              />
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-center h-24">
+                              <span className="text-gray-400">Select a payment method above</span>
+                            </div>
+                          )}
                         </div>
                       </div>
 

@@ -1,4 +1,14 @@
 import type { Express, Request, Response } from "express";
+
+// Extend Request interface for authenticated routes
+interface AuthenticatedRequest extends Request {
+  user?: {
+    merchantId: string;
+    email: string;
+    businessName: string;
+    role: string;
+  };
+}
 import { createServer, type Server } from "http";
 import { Server as SocketServer } from "socket.io";
 import crypto from "crypto";
@@ -3861,7 +3871,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   const receiptResult = await ReceiptService.generateReceiptPDF({
                   ...currentOrder,
                   orderId: currentOrder.id,
-                  purchaseDate: currentOrder.createdAt || new Date()
+                  purchaseDate: currentOrder.createdAt || new Date(),
+                  merchantId: currentOrder.merchantId || undefined,
+                  recipientName: currentOrder.recipientName || undefined,
+                  senderName: currentOrder.senderName || undefined,
+                  personalMessage: currentOrder.message || undefined,
+                  transactionId: currentOrder.squarePaymentId || undefined,
+                  giftCardGan: currentOrder.giftCardGan || undefined
                 });
                   
                   if (receiptResult.success && receiptResult.filePath) {
@@ -4742,7 +4758,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updateData.redeemedAt = new Date();
       }
       
-      await storage.redeemGiftCard(card.id, card.redeemed ? 0 : amount, req.body.customerEmail || 'unknown');
+      await storage.redeemGiftCard(card.id.toString(), card.redeemed ? 0 : amount, req.body.customerEmail || 'unknown');
 
       // Log successful redemption
       await logRedemptionAttempt(card.id, 'success', null, req);
@@ -4904,7 +4920,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const updatedMerchant = await storage.updateMerchantWebhookSettings(
-        req.user.merchantId, 
+        (req as AuthenticatedRequest).user?.merchantId || '', 
         webhookUrl || null,
         Boolean(enabled)
       );
@@ -4916,7 +4932,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      console.log(`🔗 Webhook settings updated for merchant: ${req.user.merchantId} - URL: ${webhookUrl || 'none'}, Enabled: ${enabled}`);
+      console.log(`🔗 Webhook settings updated for merchant: ${(req as AuthenticatedRequest).user?.merchantId} - URL: ${webhookUrl || 'none'}, Enabled: ${enabled}`);
       
       res.json({
         success: true,
@@ -5415,7 +5431,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/transactions/stats/dashboard", requireAdmin, async (req: Request, res: Response) => {
     try {
       const stats = await storage.getTransactionStats();
-      const recentTransactions = await storage.getRecentTransactions(5);
+      const recentTransactions = await storage.getRecentTransactions("5");
 
       res.json({
         success: true,

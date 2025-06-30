@@ -1,6 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import crypto from "crypto";
+import path from "path";
 import { storage } from "./storage";
 import { insertMerchantSchema, insertGiftCardSchema, insertGiftCardActivitySchema } from "@shared/schema";
 import { squareService } from "./services/squareService";
@@ -2952,7 +2953,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Additional security check - ensure file is within receipts directory
-      const path = require('path');
       const receiptDir = path.join(process.cwd(), 'storage', 'receipts');
       if (!filePath.startsWith(receiptDir)) {
         return res.status(403).json({ error: 'Access denied' });

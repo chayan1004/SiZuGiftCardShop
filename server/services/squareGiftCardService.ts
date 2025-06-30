@@ -75,12 +75,6 @@ export interface SquareGiftCard {
   };
   created_at?: string;
   updated_at?: string;
-  balance_money?: {
-    amount: number;
-    currency: string;
-  };
-  created_at: string;
-  updated_at: string;
 }
 
 export interface SquareGiftCardActivity {

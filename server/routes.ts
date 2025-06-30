@@ -3895,13 +3895,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
               console.log(`✅ Gift card issued successfully: ID=${giftCardId} for ${recipientEmail}`);
 
+              // Get updated order with PDF receipt URL
+              const finalOrder = await storage.getPublicGiftCardOrderById(order.id);
+              
               res.json({
                 success: true,
                 message: "Gift card created and issued successfully",
                 orderId: order.id,
                 giftCardId: giftCardId,
                 giftCardGan: gan,
-                giftCardState: state
+                giftCardState: state,
+                url: finalOrder?.pdfReceiptUrl || undefined
               });
             } else {
               throw new Error('Gift card creation failed - no gift card object returned');

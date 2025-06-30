@@ -62,9 +62,32 @@ export function useSocket() {
     };
   }, []);
 
+  const on = (event: string, callback: (data: any) => void) => {
+    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+      // Store callback for event handling
+      socketRef.current.addEventListener('message', (messageEvent) => {
+        try {
+          const data = JSON.parse(messageEvent.data);
+          if (data.event === event) {
+            callback(data.payload || data);
+          }
+        } catch (error) {
+          console.error('Error parsing socket message:', error);
+        }
+      });
+    }
+  };
+
+  const off = (event: string) => {
+    // WebSocket doesn't have direct event removal, but we handle this in cleanup
+    console.log(`Removing listener for event: ${event}`);
+  };
+
   return {
     isConnected,
     fraudAlerts,
-    clearAlerts: () => setFraudAlerts([])
+    clearAlerts: () => setFraudAlerts([]),
+    on,
+    off
   };
 }

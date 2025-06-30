@@ -100,11 +100,11 @@ const TransactionExplorerPage: React.FC = () => {
   const { toast } = useToast();
 
   // Socket.IO for real-time updates
-  const socket = useSocket();
+  const { isConnected, fraudAlerts, on, off } = useSocket();
 
   useEffect(() => {
-    if (socket) {
-      socket.on('transaction-feed', (transaction: Transaction) => {
+    if (isConnected && on) {
+      on('transaction-feed', (transaction: Transaction) => {
         setRealtimeTransactions(prev => [transaction, ...prev.slice(0, 4)]);
         toast({
           title: "New Transaction",
@@ -114,10 +114,12 @@ const TransactionExplorerPage: React.FC = () => {
       });
 
       return () => {
-        socket.off('transaction-feed');
+        if (off) {
+          off('transaction-feed');
+        }
       };
     }
-  }, [socket, toast]);
+  }, [isConnected, on, off, toast]);
 
   // Fetch transactions with filters
   const { data: transactionData, isLoading } = useQuery({

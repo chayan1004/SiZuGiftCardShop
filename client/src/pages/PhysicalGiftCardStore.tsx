@@ -163,21 +163,21 @@ const PhysicalCardPreview = ({
             </div>
           </div>
           
-          {/* Custom Image Display */}
+          {/* Custom Image Display - Fill Whole Card */}
           {customImage && (
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.5 }}
-              className="absolute inset-0 flex items-center justify-center"
+              className="absolute inset-0 rounded-2xl overflow-hidden"
             >
-              <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white/30 bg-white/10 backdrop-blur-sm">
-                <img 
-                  src={customImage} 
-                  alt="Custom design" 
-                  className="w-full h-full object-cover"
-                />
-              </div>
+              <img 
+                src={customImage} 
+                alt="Custom design" 
+                className="w-full h-full object-cover opacity-80"
+              />
+              {/* Dark overlay to maintain text readability */}
+              <div className="absolute inset-0 bg-black/40 rounded-2xl"></div>
             </motion.div>
           )}
           
@@ -495,7 +495,7 @@ export default function PhysicalGiftCardStore() {
                   ]
                 }}
                 transition={{ duration: 3, repeat: Infinity }}
-                className="bg-clip-text text-transparent ml-4"
+                className="bg-clip-text ml-4 text-[#fdfdfe]"
                 style={{ backgroundClip: 'text', WebkitBackgroundClip: 'text' }}
               >
                 Gift Cards

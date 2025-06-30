@@ -1,5 +1,5 @@
 import { 
-  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, merchantCardDesigns, fraudLogs, autoDefenseRules,
+  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, merchantCardDesigns, fraudLogs, autoDefenseRules, cardRedemptions,
   type User, type InsertUser,
   type Merchant, type InsertMerchant, 
   type GiftCard, type InsertGiftCard,
@@ -13,7 +13,8 @@ import {
   type MerchantBranding, type InsertMerchantBranding,
   type MerchantCardDesign, type InsertMerchantCardDesign,
   type FraudLog, type InsertFraudLog,
-  type AutoDefenseRule, type InsertAutoDefenseRule
+  type AutoDefenseRule, type InsertAutoDefenseRule,
+  type CardRedemption, type InsertCardRedemption
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, count, sum, and, gte } from "drizzle-orm";

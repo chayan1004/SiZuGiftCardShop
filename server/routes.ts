@@ -4233,5 +4233,233 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // QR Code Validation Endpoint
+  app.post("/api/merchant/validate-qr", requireMerchantAuth, async (req, res) => {
+    try {
+      const { qrData } = req.body;
+      const merchantId = (req as any).merchant.merchantId;
+
+      if (!qrData) {
+        return res.status(400).json({
+          success: false,
+          error: 'QR data is required'
+        });
+      }
+
+      // Extract GAN from QR data (could be URL or direct GAN)
+      let gan = qrData;
+      if (qrData.includes('/')) {
+        // Extract GAN from URL like /giftcard-store/success/order-id
+        const parts = qrData.split('/');
+        const orderId = parts[parts.length - 1];
+        
+        // Get order details to find GAN
+        const order = await storage.getPublicGiftCardOrderById(orderId);
+        if (!order || !order.giftCardGan) {
+          return res.status(404).json({
+            success: false,
+            error: 'Gift card not found'
+          });
+        }
+        gan = order.giftCardGan;
+      }
+
+      // Validate the gift card
+      const validation = await storage.validateGiftCardForRedemption(gan, merchantId);
+
+      if (!validation.valid) {
+        return res.status(400).json({
+          success: false,
+          error: validation.error
+        });
+      }
+
+      res.json({
+        success: true,
+        card: validation.card,
+        message: 'Gift card is valid for redemption'
+      });
+
+    } catch (error) {
+      console.error('QR validation error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Server error during validation'
+      });
+    }
+  });
+
+  // QR Code Redemption Endpoint
+  app.post("/api/merchant/redeem-qr", requireMerchantAuth, async (req, res) => {
+    try {
+      const { qrData, amount } = req.body;
+      const merchantId = (req as any).merchant.merchantId;
+      const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
+      const userAgent = req.get('User-Agent') || 'unknown';
+      const deviceFingerprint = req.get('X-Device-Fingerprint') || `${ipAddress}-${userAgent}`;
+
+      if (!qrData) {
+        return res.status(400).json({
+          success: false,
+          error: 'QR data is required'
+        });
+      }
+
+      // Extract GAN from QR data
+      let gan = qrData;
+      if (qrData.includes('/')) {
+        const parts = qrData.split('/');
+        const orderId = parts[parts.length - 1];
+        
+        const order = await storage.getPublicGiftCardOrderById(orderId);
+        if (!order || !order.giftCardGan) {
+          // Log failed redemption attempt
+          await storage.createCardRedemption({
+            cardId: 0,
+            merchantId,
+            giftCardGan: qrData,
+            amount: amount || 0,
+            ipAddress,
+            deviceFingerprint,
+            userAgent,
+            success: false,
+            failureReason: 'Gift card not found'
+          });
+
+          return res.status(404).json({
+            success: false,
+            error: 'Gift card not found'
+          });
+        }
+        gan = order.giftCardGan;
+      }
+
+      // Apply fraud detection
+      const fraudResult = await fraudDetectionService.checkRedemption({
+        gan,
+        merchantId,
+        ipAddress,
+        deviceFingerprint,
+        userAgent,
+        amount: amount || 0
+      });
+
+      if (fraudResult.blocked) {
+        // Log fraud attempt
+        await storage.createCardRedemption({
+          cardId: 0,
+          merchantId,
+          giftCardGan: gan,
+          amount: amount || 0,
+          ipAddress,
+          deviceFingerprint,
+          userAgent,
+          success: false,
+          failureReason: `Fraud detected: ${fraudResult.reason}`
+        });
+
+        return res.status(429).json({
+          success: false,
+          error: 'Redemption blocked for security reasons'
+        });
+      }
+
+      // Validate the gift card
+      const validation = await storage.validateGiftCardForRedemption(gan, merchantId);
+
+      if (!validation.valid || !validation.card) {
+        // Log failed redemption
+        await storage.createCardRedemption({
+          cardId: validation.card?.id || 0,
+          merchantId,
+          giftCardGan: gan,
+          amount: amount || 0,
+          ipAddress,
+          deviceFingerprint,
+          userAgent,
+          success: false,
+          failureReason: validation.error
+        });
+
+        return res.status(400).json({
+          success: false,
+          error: validation.error
+        });
+      }
+
+      const card = validation.card;
+      const redemptionAmount = amount || card.balance;
+
+      // Check if redemption amount is valid
+      if (redemptionAmount > card.balance) {
+        await storage.createCardRedemption({
+          cardId: card.id,
+          merchantId,
+          giftCardGan: gan,
+          amount: redemptionAmount,
+          ipAddress,
+          deviceFingerprint,
+          userAgent,
+          success: false,
+          failureReason: 'Insufficient balance'
+        });
+
+        return res.status(400).json({
+          success: false,
+          error: 'Insufficient balance on gift card'
+        });
+      }
+
+      // Perform the redemption
+      const newBalance = card.balance - redemptionAmount;
+      const isFullyRedeemed = newBalance <= 0;
+
+      // Update gift card in database
+      await storage.updateGiftCard(card.id, {
+        balance: newBalance,
+        redeemed: isFullyRedeemed,
+        redeemedAt: isFullyRedeemed ? new Date() : card.redeemedAt,
+        lastRedemptionAmount: redemptionAmount
+      });
+
+      // Log successful redemption
+      await storage.createCardRedemption({
+        cardId: card.id,
+        merchantId,
+        giftCardGan: gan,
+        amount: redemptionAmount,
+        ipAddress,
+        deviceFingerprint,
+        userAgent,
+        success: true,
+        failureReason: null
+      });
+
+      // Create gift card activity record
+      await storage.createGiftCardActivity({
+        giftCardId: card.id,
+        activityType: 'REDEEM',
+        amount: redemptionAmount,
+        merchantId: parseInt(merchantId) || 0,
+        notes: `QR redemption - ${isFullyRedeemed ? 'Full' : 'Partial'} redemption`
+      });
+
+      res.json({
+        success: true,
+        redemptionAmount,
+        remainingBalance: newBalance,
+        fullyRedeemed: isFullyRedeemed,
+        message: `Successfully redeemed $${(redemptionAmount / 100).toFixed(2)}`
+      });
+
+    } catch (error) {
+      console.error('QR redemption error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Server error during redemption'
+      });
+    }
+  });
+
   return httpServer;
 }

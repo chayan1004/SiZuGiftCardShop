@@ -4211,7 +4211,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Create Square payment link with Cash App Pay support
-        const paymentLinkResult = await enhancedSquareAPI.createPaymentLink({
+        const paymentLinkResult = await enhancedSquareAPIService.createPaymentLink({
           amount: amount, // Amount in cents
           currency: 'USD',
           redirectUrl: `${process.env.FRONTEND_URL || 'https://sizugiftcardshop.replit.app'}/giftcard-store/success/${order.id}`,
@@ -4257,7 +4257,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`🔄 Processing payment for order ${order.id}, amount: $${amount/100}`);
 
         // Use mock payment result for workflow testing
-        const paymentResult = mockSquarePaymentResult;
+        const paymentResult = squarePaymentResult;
 
         if (paymentResult.payment) {
           // Payment successful - now create the gift card using Square Gift Cards API

@@ -588,7 +588,6 @@ class EnhancedSquareAPIService {
           lineItems: [
             {
               quantity: "1",
-              itemType: 'ITEM_VARIATION',
               basePriceMoney: {
                 amount: BigInt(paymentData.amount * 100), // Convert to cents
                 currency: paymentData.currency || 'USD'

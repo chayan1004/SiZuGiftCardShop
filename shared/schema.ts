@@ -975,3 +975,52 @@ export type InsertPciNetworkDiagram = z.infer<typeof insertPciNetworkDiagramSche
 
 export type PciAuditLog = typeof pciAuditLogs.$inferSelect;
 export type InsertPciAuditLog = z.infer<typeof insertPciAuditLogSchema>;
+
+// Pricing Configuration Table
+export const pricingConfigurations = pgTable("pricing_configurations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  basePrice: decimal("base_price", { precision: 10, scale: 2 }).notNull().default("100.00"),
+  merchantBuyRate: decimal("merchant_buy_rate", { precision: 5, scale: 2 }).notNull().default("5.00"), // % markup for merchant purchases
+  merchantSellRate: decimal("merchant_sell_rate", { precision: 5, scale: 2 }).notNull().default("-3.00"), // % discount for merchant sales
+  individualBuyRate: decimal("individual_buy_rate", { precision: 5, scale: 2 }).notNull().default("8.00"), // % markup for individual purchases
+  individualSellRate: decimal("individual_sell_rate", { precision: 5, scale: 2 }).notNull().default("-5.00"), // % discount for individual sales
+  isActive: boolean("is_active").default(true),
+  updatedBy: text("updated_by").notNull().default("admin"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Pricing History Table for audit trail
+export const pricingHistory = pgTable("pricing_history", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  configurationId: uuid("configuration_id").references(() => pricingConfigurations.id),
+  basePrice: decimal("base_price", { precision: 10, scale: 2 }).notNull(),
+  merchantBuyRate: decimal("merchant_buy_rate", { precision: 5, scale: 2 }).notNull(),
+  merchantSellRate: decimal("merchant_sell_rate", { precision: 5, scale: 2 }).notNull(),
+  individualBuyRate: decimal("individual_buy_rate", { precision: 5, scale: 2 }).notNull(),
+  individualSellRate: decimal("individual_sell_rate", { precision: 5, scale: 2 }).notNull(),
+  changedBy: text("changed_by").notNull(),
+  changeReason: text("change_reason"),
+  previousValues: text("previous_values"), // JSON string of previous values
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// Pricing Configuration Schemas
+export const insertPricingConfigurationSchema = createInsertSchema(pricingConfigurations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertPricingHistorySchema = createInsertSchema(pricingHistory).omit({
+  id: true,
+  createdAt: true
+});
+
+// Pricing Configuration Types
+export type PricingConfiguration = typeof pricingConfigurations.$inferSelect;
+export type InsertPricingConfiguration = z.infer<typeof insertPricingConfigurationSchema>;
+
+export type PricingHistory = typeof pricingHistory.$inferSelect;
+export type InsertPricingHistory = z.infer<typeof insertPricingHistorySchema>;

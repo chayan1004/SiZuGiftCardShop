@@ -1,5 +1,5 @@
 import { 
-  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, merchantCardDesigns, fraudLogs, autoDefenseRules, cardRedemptions, webhookEvents, webhookDeliveryLogs, webhookRetryQueue, webhookFailureLog, merchantApiKeys, giftCardTransactions, globalSettings, gatewayFeatureToggles, fraudClusters, clusterPatterns, defenseActions, actionRules, defenseHistory, dataProcessingRecords, userConsentRecords, dataSubjectRequests, dataBreachIncidents, privacyImpactAssessments, pciComplianceAssessments, pciSecurityScans, pciSecurityControls, pciIncidentResponses, pciNetworkDiagrams, pciAuditLogs,
+  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, merchantCardDesigns, fraudLogs, autoDefenseRules, cardRedemptions, webhookEvents, webhookDeliveryLogs, webhookRetryQueue, webhookFailureLog, merchantApiKeys, giftCardTransactions, globalSettings, gatewayFeatureToggles, fraudClusters, clusterPatterns, defenseActions, actionRules, defenseHistory, dataProcessingRecords, userConsentRecords, dataSubjectRequests, dataBreachIncidents, privacyImpactAssessments, pciComplianceAssessments, pciSecurityScans, pciSecurityControls, pciIncidentResponses, pciNetworkDiagrams, pciAuditLogs, pricingConfigurations, pricingHistory,
   type User, type InsertUser,
   type Merchant, type InsertMerchant, 
   type GiftCard, type InsertGiftCard,
@@ -38,7 +38,9 @@ import {
   type PciSecurityControl, type InsertPciSecurityControl,
   type PciIncidentResponse, type InsertPciIncidentResponse,
   type PciNetworkDiagram, type InsertPciNetworkDiagram,
-  type PciAuditLog, type InsertPciAuditLog
+  type PciAuditLog, type InsertPciAuditLog,
+  type PricingConfiguration, type InsertPricingConfiguration,
+  type PricingHistory, type InsertPricingHistory
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, count, sum, and, gte, lte, asc, or, isNull, isNotNull } from "drizzle-orm";

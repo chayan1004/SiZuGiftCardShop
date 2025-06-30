@@ -196,6 +196,66 @@ export class DatabaseStorage implements IStorage {
     return merchant || undefined;
   }
 
+  // Merchant Pricing Tiers methods
+  async getMerchantPricingTiers(merchantId: number): Promise<MerchantPricingTier[]> {
+    const tiers = await db
+      .select()
+      .from(merchantPricingTiers)
+      .where(eq(merchantPricingTiers.merchantId, merchantId))
+      .orderBy(merchantPricingTiers.minQuantity);
+    return tiers;
+  }
+
+  async createMerchantPricingTier(insertTier: InsertMerchantPricingTier): Promise<MerchantPricingTier> {
+    const [tier] = await db
+      .insert(merchantPricingTiers)
+      .values(insertTier)
+      .returning();
+    return tier;
+  }
+
+  async updateMerchantPricingTier(id: number, updateData: Partial<InsertMerchantPricingTier>): Promise<MerchantPricingTier | undefined> {
+    const [tier] = await db
+      .update(merchantPricingTiers)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(merchantPricingTiers.id, id))
+      .returning();
+    return tier || undefined;
+  }
+
+  async deleteMerchantPricingTier(id: number): Promise<boolean> {
+    const result = await db
+      .delete(merchantPricingTiers)
+      .where(eq(merchantPricingTiers.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Merchant Branding methods
+  async getMerchantBranding(merchantId: number): Promise<MerchantBranding | undefined> {
+    const [branding] = await db
+      .select()
+      .from(merchantBranding)
+      .where(eq(merchantBranding.merchantId, merchantId));
+    return branding || undefined;
+  }
+
+  async createMerchantBranding(insertBranding: InsertMerchantBranding): Promise<MerchantBranding> {
+    const [branding] = await db
+      .insert(merchantBranding)
+      .values(insertBranding)
+      .returning();
+    return branding;
+  }
+
+  async updateMerchantBranding(merchantId: number, updateData: Partial<InsertMerchantBranding>): Promise<MerchantBranding | undefined> {
+    const [branding] = await db
+      .update(merchantBranding)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(merchantBranding.merchantId, merchantId))
+      .returning();
+    return branding || undefined;
+  }
+
   async getGiftCard(id: number): Promise<GiftCard | undefined> {
     const [giftCard] = await db.select().from(giftCards).where(eq(giftCards.id, id));
     return giftCard || undefined;

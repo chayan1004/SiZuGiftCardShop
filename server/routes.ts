@@ -1392,19 +1392,109 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/merchant/pricing-tiers", requireMerchant, async (req: Request, res: Response) => {
     try {
-      const { MerchantBulkPurchaseService } = await import('./services/merchantBulkPurchaseService');
-      const tiers = MerchantBulkPurchaseService.getMerchantTiers();
+      const merchantId = (req as any).merchantId;
+      const merchant = await storage.getMerchant(merchantId);
+      
+      if (!merchant) {
+        return res.status(404).json({ message: "Merchant not found" });
+      }
+
+      const tiers = await storage.getMerchantPricingTiers(merchant.id);
+      
+      // If no custom tiers exist, create default ones
+      if (tiers.length === 0) {
+        const defaultTiers = [
+          { merchantId: merchant.id, minQuantity: 1, pricePerUnit: 2500 },
+          { merchantId: merchant.id, minQuantity: 10, pricePerUnit: 2300 },
+          { merchantId: merchant.id, minQuantity: 50, pricePerUnit: 2000 },
+        ];
+        
+        for (const tier of defaultTiers) {
+          await storage.createMerchantPricingTier(tier);
+        }
+        
+        const newTiers = await storage.getMerchantPricingTiers(merchant.id);
+        return res.json({
+          success: true,
+          tiers: newTiers
+        });
+      }
 
       res.json({
         success: true,
         tiers
       });
-
     } catch (error) {
       console.error('Error fetching pricing tiers:', error);
       res.status(500).json({
         success: false,
         error: "Failed to fetch pricing tiers"
+      });
+    }
+  });
+
+  // Get merchant branding
+  app.get("/api/merchant/branding", requireMerchant, async (req: Request, res: Response) => {
+    try {
+      const merchantId = (req as any).merchantId;
+      const merchant = await storage.getMerchant(merchantId);
+      
+      if (!merchant) {
+        return res.status(404).json({ message: "Merchant not found" });
+      }
+
+      let branding = await storage.getMerchantBranding(merchant.id);
+      
+      // If no branding exists, create default branding
+      if (!branding) {
+        branding = await storage.createMerchantBranding({
+          merchantId: merchant.id,
+          logoUrl: null,
+          themeColor: '#6366f1',
+          tagline: `Gift cards by ${merchant.businessName}`
+        });
+      }
+
+      res.json({
+        success: true,
+        branding
+      });
+    } catch (error) {
+      console.error('Error fetching merchant branding:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch merchant branding"
+      });
+    }
+  });
+
+  // Update merchant branding
+  app.put("/api/merchant/branding", requireMerchant, async (req: Request, res: Response) => {
+    try {
+      const merchantId = (req as any).merchantId;
+      const merchant = await storage.getMerchant(merchantId);
+      
+      if (!merchant) {
+        return res.status(404).json({ message: "Merchant not found" });
+      }
+
+      const { logoUrl, themeColor, tagline } = req.body;
+      
+      const updatedBranding = await storage.updateMerchantBranding(merchant.id, {
+        logoUrl,
+        themeColor,
+        tagline
+      });
+
+      res.json({
+        success: true,
+        branding: updatedBranding
+      });
+    } catch (error) {
+      console.error('Error updating merchant branding:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to update merchant branding"
       });
     }
   });

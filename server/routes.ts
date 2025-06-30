@@ -8289,8 +8289,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!customerProfile) {
         // Create new Square customer and local profile
-        const { squareCardsAPIService } = await import('./services/SquareCardsAPIService');
-        const customerResult = await squareCardsAPIService.createOrGetCustomer({
+        const { squareHTTPService } = await import('./services/SquareHTTPService');
+        const customerResult = await squareHTTPService.createOrGetCustomer({
           email,
           firstName,
           lastName,
@@ -8341,8 +8341,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const { squareCardsAPIService } = await import('./services/SquareCardsAPIService');
-      const cardResult = await squareCardsAPIService.saveCardOnFile({
+      const { squareHTTPService } = await import('./services/SquareHTTPService');
+      const cardResult = await squareHTTPService.saveCardOnFile({
         customerId,
         cardNonce,
         cardNickname,

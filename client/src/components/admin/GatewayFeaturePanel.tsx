@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import LoadingAnimation from '@/components/ui/LoadingAnimation';
 import { 
   CreditCard, 
   DollarSign, 
@@ -189,25 +190,12 @@ export default function GatewayFeaturePanel() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        {[1, 2, 3].map(i => (
-          <Card key={i} className="animate-pulse">
-            <CardHeader>
-              <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {[1, 2, 3, 4].map(j => (
-                  <div key={j} className="flex justify-between items-center">
-                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
-                    <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-12"></div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="flex items-center justify-center py-16">
+        <LoadingAnimation 
+          size="lg" 
+          message="Loading gateway features..." 
+          className="scale-90"
+        />
       </div>
     );
   }

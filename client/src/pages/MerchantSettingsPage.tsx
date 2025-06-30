@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Settings, Key, Copy, Trash2, Plus, Eye, EyeOff } from 'lucide-react';
+import { Settings, Key, Copy, Trash2, Plus, Eye, EyeOff, Shield } from 'lucide-react';
+import GDPRConsentManager from '@/components/merchant/GDPRConsentManager';
 
 interface MerchantSettings {
   merchantId: string;

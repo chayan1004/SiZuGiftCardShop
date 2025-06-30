@@ -32,6 +32,7 @@ import FraudDetectionMonitoring from "../../components/admin/FraudDetectionMonit
 import SystemOperationsMonitoring from "../../components/admin/SystemOperationsMonitoring";
 import CustomerInsightsAnalytics from "../../components/admin/CustomerInsightsAnalytics";
 import LoadingAnimation from "../../components/ui/LoadingAnimation";
+import GDPRComplianceDashboard from "../../components/admin/GDPRComplianceDashboard";
 import type { FraudAlert } from "../../components/admin/ThreatFeedPanel";
 
 interface DashboardMetrics {
@@ -251,6 +252,7 @@ export default function AdminDashboard() {
     { id: "customers", label: "Customer Insights", icon: <Users className="w-5 h-5" /> },
     { id: "email-system", label: "Email System", icon: <Mail className="w-5 h-5" /> },
     { id: "operations", label: "System Operations", icon: <Database className="w-5 h-5" /> },
+    { id: "gdpr", label: "GDPR Compliance", icon: <Shield className="w-5 h-5" /> },
   ];
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
@@ -1070,6 +1072,13 @@ export default function AdminDashboard() {
               {activeSection === "operations" && (
                 <div className="space-y-6">
                   <SystemOperationsMonitoring />
+                </div>
+              )}
+
+              {/* GDPR Compliance Section */}
+              {activeSection === "gdpr" && (
+                <div className="space-y-6">
+                  <GDPRComplianceDashboard />
                 </div>
               )}
 

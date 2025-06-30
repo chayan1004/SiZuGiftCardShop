@@ -1,5 +1,5 @@
 import { 
-  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, merchantCardDesigns, fraudLogs, autoDefenseRules, cardRedemptions, webhookEvents, webhookDeliveryLogs,
+  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, merchantCardDesigns, fraudLogs, autoDefenseRules, cardRedemptions, webhookEvents, webhookDeliveryLogs, webhookRetryQueue, webhookFailureLog,
   type User, type InsertUser,
   type Merchant, type InsertMerchant, 
   type GiftCard, type InsertGiftCard,
@@ -16,10 +16,12 @@ import {
   type AutoDefenseRule, type InsertAutoDefenseRule,
   type CardRedemption, type InsertCardRedemption,
   type WebhookEvent, type InsertWebhookEvent,
-  type WebhookDeliveryLog, type InsertWebhookDeliveryLog
+  type WebhookDeliveryLog, type InsertWebhookDeliveryLog,
+  type WebhookRetryQueue, type InsertWebhookRetryQueue,
+  type WebhookFailureLog, type InsertWebhookFailureLog
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, sql, count, sum, and, gte } from "drizzle-orm";
+import { eq, desc, sql, count, sum, and, gte, lte, asc } from "drizzle-orm";
 
 export interface IStorage {
   // User methods

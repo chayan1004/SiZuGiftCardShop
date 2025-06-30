@@ -4912,5 +4912,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Phase 16A: Webhook Retry Intelligence + Failure Analytics Admin Endpoints
+  
+  // GET /api/admin/webhook-failures - Get webhook failure logs
+  app.get("/api/admin/webhook-failures", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 50;
+      const failures = await storage.getWebhookFailures(limit);
+
+      res.json({
+        success: true,
+        failures: failures.map(failure => ({
+          id: failure.id,
+          deliveryId: failure.deliveryId,
+          statusCode: failure.statusCode,
+          errorMessage: failure.errorMessage,
+          failedAt: failure.failedAt,
+          resolved: failure.resolved
+        }))
+      });
+    } catch (error) {
+      console.error('Get webhook failures error:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch webhook failures"
+      });
+    }
+  });
+
+  // POST /api/admin/webhook-retry/:deliveryId - Force retry webhook delivery
+  app.post("/api/admin/webhook-retry/:deliveryId", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { deliveryId } = req.params;
+      
+      const success = await WebhookRetryEngine.forceRetry(deliveryId);
+      
+      if (success) {
+        console.log(`🔄 Admin forced retry for webhook delivery: ${deliveryId}`);
+        res.json({
+          success: true,
+          message: "Webhook retry initiated successfully"
+        });
+      } else {
+        res.status(404).json({
+          success: false,
+          error: "Webhook delivery not found or cannot be retried"
+        });
+      }
+    } catch (error) {
+      console.error('Force webhook retry error:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to initiate webhook retry"
+      });
+    }
+  });
+
+  // GET /api/admin/webhook-retry-queue - Get current retry queue status
+  app.get("/api/admin/webhook-retry-queue", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const readyRetries = await storage.getReadyWebhookRetries();
+      
+      res.json({
+        success: true,
+        queue: {
+          totalPending: readyRetries.length,
+          retries: readyRetries.map(retry => ({
+            id: retry.id,
+            deliveryId: retry.deliveryId,
+            retryCount: retry.retryCount,
+            nextRetryAt: retry.nextRetryAt,
+            status: retry.status,
+            createdAt: retry.createdAt
+          }))
+        }
+      });
+    } catch (error) {
+      console.error('Get retry queue error:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch retry queue"
+      });
+    }
+  });
+
+  // POST /api/admin/webhook-failure/:failureId/resolve - Mark failure as resolved
+  app.post("/api/admin/webhook-failure/:failureId/resolve", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { failureId } = req.params;
+      
+      await storage.markWebhookFailureResolved(failureId);
+      
+      console.log(`✅ Admin marked webhook failure as resolved: ${failureId}`);
+      res.json({
+        success: true,
+        message: "Webhook failure marked as resolved"
+      });
+    } catch (error) {
+      console.error('Resolve webhook failure error:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to resolve webhook failure"
+      });
+    }
+  });
+
   return httpServer;
 }

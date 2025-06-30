@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import cookieParser from "cookie-parser";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { WebhookRetryEngine } from "./services/WebhookRetryEngine";
 
 const app = express();
 app.use(express.json());
@@ -68,5 +69,10 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+    
+    // Start the WebhookRetryEngine for Phase 16A
+    const retryEngine = WebhookRetryEngine.getInstance();
+    retryEngine.start();
+    log(`WebhookRetryEngine started with intelligent retry processing`);
   });
 })();

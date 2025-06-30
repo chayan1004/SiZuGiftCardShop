@@ -708,6 +708,24 @@ export default function AdminDashboard() {
                 </div>
               )}
 
+              {/* Live Threat Feed Section */}
+              {activeSection === "threats" && (
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-xl p-6">
+                    <h3 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-2">
+                      Live Threat Monitoring
+                    </h3>
+                    <p className="text-gray-300">Real-time fraud detection and threat intelligence center</p>
+                  </div>
+                  
+                  <ThreatFeedPanel 
+                    alerts={fraudAlerts}
+                    isConnected={isSocketConnected}
+                    connectedAdmins={connectedAdmins}
+                  />
+                </div>
+              )}
+
               {/* Gift Card Analytics Section */}
               {activeSection === "analytics" && (
                 <div className="space-y-6">

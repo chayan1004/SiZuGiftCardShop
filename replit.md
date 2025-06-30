@@ -151,6 +151,7 @@ This is a full-stack gift card management application built with a modern tech s
 - June 30, 2025. Prompt 10: Gift Card Orders Postman Test Suite - created comprehensive automated testing collection with newman CLI runner, validating payment processing, Square API integration, email delivery, PDF receipt generation, and admin endpoints with real data validation
 - June 30, 2025. Prompt 11: Mobile-Optimized Receipt Views + QR Code Support - enhanced GiftCardSuccess.tsx with fully responsive mobile design, integrated QR code generation service using qrcode package, embedded QR codes in PDF receipts for easy re-access, added admin dashboard QR functionality with download capabilities, and created comprehensive mobile-first receipt viewing experience
 - June 30, 2025. Prompt 13: Admin Branding + Tier Manager UI Panel - implemented comprehensive admin control center for merchant branding and pricing tiers with full CRUD operations, created AdminMerchantSettings.tsx with MerchantBrandingForm.tsx and PricingTierEditor.tsx components, added admin API endpoints for merchant management, real-time branding preview, volume pricing configuration, and complete merchant customization without code updates
+- June 30, 2025. Prompt 14: Gift Card Analytics + Redemption Dashboard - extended database schema with redemption tracking fields, implemented comprehensive real-time analytics dashboards for both admins and merchants, created gift card redemption API endpoints, built AdminGiftCardAnalytics.tsx and MerchantGiftCardAnalytics.tsx with interactive charts, metrics, and redemption forms, added 30-day daily activity tracking, redemption rate calculations, and merchant-specific analytics filtering
 
 ## Prompt 4: Branded Public Gift Card Storefront (June 30, 2025)
 
@@ -482,6 +483,81 @@ CREATE TABLE public_giftcard_orders (
 - **Error Handling**: Comprehensive error management with user-friendly toast notifications
 - **Form Validation**: Real-time validation with descriptive error messages
 - **Auto-save Indicators**: Visual feedback showing unsaved changes and save progress
+
+## Prompt 14: Gift Card Analytics + Redemption Dashboard (June 30, 2025)
+
+### Enhanced Database Schema for Redemption Tracking
+- **Extended Gift Cards Table**: Added redemption tracking fields to existing gift_cards schema
+  - `redeemed` (boolean) - Tracks redemption status
+  - `redeemedAt` (timestamp) - Records redemption timestamp
+  - `redeemedBy` (text) - Stores customer email/ID who redeemed
+  - `lastRedemptionAmount` (integer) - Tracks partial redemption amounts
+- **Database Migration**: Successfully pushed schema changes with `npm run db:push`
+- **Backward Compatibility**: All existing gift card data preserved during schema extension
+
+### Comprehensive Analytics Storage Layer
+- **Gift Card Analytics Method**: Implemented `getGiftCardAnalytics()` with advanced filtering
+  - Merchant-specific filtering for isolated analytics
+  - Custom date range support for flexible reporting periods
+  - Daily statistics generation for 30-day activity tracking
+  - Recent redemptions tracking with customer details
+- **Redemption Processing**: Added `redeemGiftCard()` and `getGiftCardByCode()` methods
+- **Real-time Calculations**: Automated redemption rate, total value, and usage metrics
+
+### Gift Card Redemption API System
+- **Redemption Endpoint**: `POST /api/gift-cards/redeem` with comprehensive validation
+  - Gift card existence and status verification
+  - Duplicate redemption prevention
+  - Active status requirement enforcement
+  - Partial amount redemption support
+- **Admin Analytics API**: `GET /api/admin/gift-card-analytics` with global merchant filtering
+- **Merchant Analytics API**: `GET /api/merchant/gift-card-analytics` with role-based access control
+
+### AdminGiftCardAnalytics Dashboard
+- **Real-time Metrics Display**: Total issued, redeemed, unused cards with live value calculations
+- **Interactive Charts**: Bar charts for daily activity, pie charts for redemption status
+- **Advanced Filtering System**: Merchant selection, date range pickers (7d/30d/90d/custom)
+- **Recent Activity Feed**: Live redemption tracking with customer information and timestamps
+- **Auto-refresh Capability**: 30-second intervals for real-time dashboard updates
+
+### MerchantGiftCardAnalytics Dashboard
+- **Merchant-Specific Analytics**: Isolated data view showing only merchant's gift cards
+- **Tabbed Interface**: Separate tabs for analytics viewing and gift card redemption
+- **Performance Metrics**: Redemption rates, total value, usage patterns for merchant optimization
+- **Redemption Form**: Integrated POS-style redemption interface for physical store transactions
+
+### Interactive Data Visualization
+- **Recharts Integration**: Professional charts with responsive design and dark theme compatibility
+- **Daily Activity Tracking**: 30-day bar charts showing issued vs redeemed patterns
+- **Redemption Status Distribution**: Pie charts with color-coded segments and legends
+- **Currency Formatting**: Proper USD formatting for all monetary values
+- **Date Formatting**: Human-readable date displays with timezone handling
+
+### Gift Card Redemption Processing
+- **Physical Redemption Form**: In-store redemption interface for merchant use
+- **Validation System**: Real-time gift card code verification and status checking
+- **Customer Tracking**: Redemption attribution with customer email/ID recording
+- **Partial Redemption Support**: Optional amount specification for partial balance usage
+- **Success Feedback**: Toast notifications with redemption confirmation details
+
+### Enhanced Security & Validation
+- **Role-Based Access Control**: Admin vs merchant data isolation with proper authentication
+- **Input Validation**: Comprehensive form validation for all redemption inputs
+- **Error Handling**: Graceful failure management with descriptive error messages
+- **Audit Trail**: Complete redemption history with timestamps and customer attribution
+
+### Real-time Dashboard Features
+- **Live Data Updates**: 30-second auto-refresh for current analytics
+- **Loading States**: Skeleton placeholders and animated loading indicators
+- **Empty State Handling**: Informative displays when no data is available
+- **Mobile Responsiveness**: Full responsive design for tablet and mobile access
+- **Touch-Friendly Interface**: Optimized for mobile POS and tablet usage
+
+### Business Intelligence Capabilities
+- **Redemption Rate Analysis**: Percentage calculations for conversion tracking
+- **Trend Identification**: Daily activity patterns for business optimization
+- **Customer Insights**: Redemption behavior analysis for marketing strategies
+- **Performance Monitoring**: Real-time tracking of gift card program effectiveness
 
 ## Recent Production Enhancements
 

@@ -3644,5 +3644,122 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Gift Card Redemption Endpoint
+  app.post("/api/gift-cards/redeem", async (req: Request, res: Response) => {
+    try {
+      const { code, redeemedBy, amount } = req.body;
+      
+      if (!code || !redeemedBy) {
+        return res.status(400).json({ 
+          success: false, 
+          error: "Gift card code and redeemer information are required" 
+        });
+      }
+
+      const giftCard = await storage.getGiftCardByCode(code);
+      if (!giftCard) {
+        return res.status(404).json({ 
+          success: false, 
+          error: "Gift card not found" 
+        });
+      }
+
+      if (giftCard.redeemed) {
+        return res.status(400).json({ 
+          success: false, 
+          error: "Gift card has already been redeemed" 
+        });
+      }
+
+      if (giftCard.status !== 'ACTIVE') {
+        return res.status(400).json({ 
+          success: false, 
+          error: "Gift card is not active" 
+        });
+      }
+
+      const updatedCard = await storage.redeemGiftCard(code, redeemedBy, amount);
+      
+      res.json({
+        success: true,
+        message: "Gift card redeemed successfully",
+        giftCard: updatedCard
+      });
+    } catch (error) {
+      console.error('Error redeeming gift card:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to redeem gift card"
+      });
+    }
+  });
+
+  // Admin Gift Card Analytics
+  app.get("/api/admin/gift-card-analytics", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { merchantId, startDate, endDate } = req.query;
+      
+      let dateRange: { start: Date; end: Date } | undefined;
+      if (startDate && endDate) {
+        dateRange = {
+          start: new Date(startDate as string),
+          end: new Date(endDate as string)
+        };
+      }
+
+      const analytics = await storage.getGiftCardAnalytics(
+        merchantId as string || undefined,
+        dateRange
+      );
+      
+      res.json({
+        success: true,
+        analytics
+      });
+    } catch (error) {
+      console.error('Error fetching gift card analytics:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch analytics"
+      });
+    }
+  });
+
+  // Merchant Gift Card Analytics
+  app.get("/api/merchant/gift-card-analytics", requireMerchant, async (req: Request, res: Response) => {
+    try {
+      const merchantId = (req as any).merchant?.merchantId || (req as any).merchantId;
+      const { startDate, endDate } = req.query;
+      
+      if (!merchantId) {
+        return res.status(400).json({
+          success: false,
+          error: "Merchant ID not found"
+        });
+      }
+
+      let dateRange: { start: Date; end: Date } | undefined;
+      if (startDate && endDate) {
+        dateRange = {
+          start: new Date(startDate as string),
+          end: new Date(endDate as string)
+        };
+      }
+
+      const analytics = await storage.getGiftCardAnalytics(merchantId, dateRange);
+      
+      res.json({
+        success: true,
+        analytics
+      });
+    } catch (error) {
+      console.error('Error fetching merchant gift card analytics:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch analytics"
+      });
+    }
+  });
+
   return httpServer;
 }

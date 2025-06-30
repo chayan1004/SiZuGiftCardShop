@@ -13,11 +13,13 @@ import PublicGiftCard from "@/pages/PublicGiftCard";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminGiftCardOrders from "@/pages/AdminGiftCardOrders";
 import AdminMerchantSettings from "@/pages/AdminMerchantSettings";
+import AdminGiftCardAnalytics from "@/pages/AdminGiftCardAnalytics";
 import CheckBalance from "@/pages/CheckBalance";
 import MerchantLogin from "@/pages/MerchantLogin";
 import MerchantRegister from "@/pages/MerchantRegister";
 import MerchantDashboard from "@/pages/MerchantDashboard";
 import MerchantBulkPurchase from "@/pages/MerchantBulkPurchase";
+import MerchantGiftCardAnalytics from "@/pages/MerchantGiftCardAnalytics";
 import MerchantVerify from "@/pages/MerchantVerify";
 import AdminLogin from "@/pages/admin/AdminLogin";
 import TestModal from "@/pages/TestModal";
@@ -65,6 +67,16 @@ function Router() {
       <Route path="/admin/merchant-settings">
         <ProtectedRoute role="admin">
           <AdminMerchantSettings />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/analytics">
+        <ProtectedRoute role="admin">
+          <AdminGiftCardAnalytics />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/merchant-analytics">
+        <ProtectedRoute role="merchant">
+          <MerchantGiftCardAnalytics />
         </ProtectedRoute>
       </Route>
       <Route component={NotFound} />

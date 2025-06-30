@@ -149,6 +149,7 @@ This is a full-stack gift card management application built with a modern tech s
 - June 30, 2025. Prompt 8: Resend Email + Admin Recovery Panel - implemented comprehensive email recovery system with resend functionality, manual failure marking, tracking counters, and admin action buttons
 - June 30, 2025. Prompt 9: PDF Receipt Generator + Download Link - implemented automatic PDF receipt generation with professional branding, admin dashboard download functionality, public success page with receipt access, and complete end-to-end integration with Square checkout flow
 - June 30, 2025. Prompt 10: Gift Card Orders Postman Test Suite - created comprehensive automated testing collection with newman CLI runner, validating payment processing, Square API integration, email delivery, PDF receipt generation, and admin endpoints with real data validation
+- June 30, 2025. Prompt 11: Mobile-Optimized Receipt Views + QR Code Support - enhanced GiftCardSuccess.tsx with fully responsive mobile design, integrated QR code generation service using qrcode package, embedded QR codes in PDF receipts for easy re-access, added admin dashboard QR functionality with download capabilities, and created comprehensive mobile-first receipt viewing experience
 
 ## Prompt 4: Branded Public Gift Card Storefront (June 30, 2025)
 
@@ -375,6 +376,62 @@ CREATE TABLE public_giftcard_orders (
 - **Regression Testing**: Automated detection of API breaking changes
 - **Performance Monitoring**: Response time tracking for all endpoints
 - **Integration Verification**: Real Square API and database connectivity validation
+
+## Prompt 11: Mobile-Optimized Receipt Views + QR Code Support (June 30, 2025)
+
+### QR Code Service Implementation
+- **QRCodeUtil Service**: Created `server/utils/QRCodeUtil.ts` using qrcode package for PNG QR code generation
+- **Data URI Generation**: Supports both PNG buffer for PDF embedding and data URI for web display
+- **Receipt URL Encoding**: QR codes encode public receipt URLs for easy mobile access
+- **Validation & Error Handling**: Comprehensive QR data validation and graceful error management
+
+### PDF Receipt Enhancement
+- **QR Code Embedding**: Added QR codes to bottom-right corner of PDF receipts with "Scan to Reopen Receipt" caption
+- **Auto-generation**: QR codes automatically generated during PDF creation process
+- **Non-blocking**: QR generation failures don't prevent PDF creation from completing
+- **Professional Positioning**: QR codes properly scaled and positioned for optimal scanning
+
+### Mobile-First Success Page Redesign
+- **Responsive Layout**: Complete rebuild of GiftCardSuccess.tsx with mobile-first Tailwind CSS approach
+- **Grid System**: 3-column desktop layout that stacks vertically on mobile (lg:grid-cols-3)
+- **Adaptive Typography**: Scalable text sizes (text-2xl sm:text-4xl) for optimal readability across devices
+- **Touch-Friendly Interface**: Larger touch targets and optimized spacing for mobile interaction
+
+### QR Code Integration Features
+- **Real-time Generation**: QR codes generated via `/api/public/qr/:orderId` endpoint on page load
+- **Loading States**: Animated placeholders while QR codes are being generated
+- **Share Functionality**: Native Web Share API integration with fallback to clipboard copy
+- **Mobile Camera Support**: QR codes optimized for mobile camera scanning with proper contrast
+
+### Admin Dashboard QR Enhancement
+- **Download Capability**: Added QR code download button in admin orders table
+- **Action Integration**: QR download action alongside PDF receipt and email resend functions
+- **Loading States**: Individual loading indicators for each QR generation request
+- **File Naming**: Automatic filename generation (receipt-qr-{orderId}.png) for downloaded QR codes
+
+### Backend API Extensions
+- **QR Endpoint**: `GET /api/public/qr/:orderId` for QR code generation with order validation
+- **Receipt Service Updates**: Enhanced ReceiptService.ts with QR code embedding functionality
+- **Error Handling**: Comprehensive error management for QR generation failures
+- **Security**: Order validation ensures QR codes only generated for valid orders
+
+### Mobile User Experience
+- **Quick Access Card**: Dedicated QR code section in right column with clear instructions
+- **Share Actions Card**: Native sharing capabilities with copy link fallback
+- **Responsive Cards**: All cards adapt to mobile screens with proper padding and spacing
+- **Break-word Support**: Long email addresses and order IDs wrap properly on mobile
+
+### Technical Implementation
+- **Package Integration**: Using `qrcode` npm package for reliable QR generation
+- **Image Processing**: PNG format with customizable width, margin, and quality settings
+- **Data URI Support**: Base64 encoded images for direct browser display
+- **Buffer Support**: Raw PNG buffers for PDF embedding with pdf-lib
+
+### Cross-Device Compatibility
+- **Mobile Breakpoints**: Comprehensive responsive design (sm:, lg: prefixes)
+- **Touch Optimization**: Larger buttons and improved spacing for mobile devices
+- **Desktop Enhancement**: Multi-column layout with sidebar for QR and actions
+- **Tablet Support**: Intermediate layouts that work well on tablet-sized screens
 
 ## Recent Production Enhancements
 

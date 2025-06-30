@@ -128,6 +128,45 @@ export default function AdminGiftCardOrders() {
     }
   };
 
+  const handleDownloadQR = async (orderId: string) => {
+    setLoadingActions(prev => ({ ...prev, [`qr-${orderId}`]: true }));
+    
+    try {
+      const response = await fetch(`/api/public/qr/${orderId}`);
+      const data = await response.json();
+      
+      if (data.success && data.qrCodeDataURI) {
+        // Create download link
+        const link = document.createElement('a');
+        link.href = data.qrCodeDataURI;
+        link.download = `receipt-qr-${orderId.substring(0, 8)}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        toast({
+          title: "QR Code Downloaded",
+          description: "Receipt QR code has been downloaded",
+        });
+      } else {
+        toast({
+          title: "Download Failed",
+          description: "Failed to generate QR code",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error downloading QR code:', error);
+      toast({
+        title: "Error",
+        description: "An error occurred while generating QR code",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingActions(prev => ({ ...prev, [`qr-${orderId}`]: false }));
+    }
+  };
+
   const handleMarkAsFailed = async (orderId: string) => {
     if (!confirm("Are you sure you want to mark this order as failed? This action cannot be undone.")) {
       return;
@@ -440,6 +479,22 @@ export default function AdminGiftCardOrders() {
                                 <span className="ml-1">Receipt</span>
                               </Button>
                             )}
+
+                            {/* QR Code Download */}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDownloadQR(order.id)}
+                              disabled={loadingActions[`qr-${order.id}`]}
+                              className="h-8 px-2 text-xs bg-purple-600/20 border-purple-500/30 hover:bg-purple-600/30 text-purple-300"
+                            >
+                              {loadingActions[`qr-${order.id}`] ? (
+                                <div className="animate-spin w-3 h-3 border border-purple-300 border-t-transparent rounded-full" />
+                              ) : (
+                                <QrCode className="w-3 h-3" />
+                              )}
+                              <span className="ml-1">QR</span>
+                            </Button>
 
                             {/* Show resend count if > 0 */}
                             {order.emailResendCount > 0 && (

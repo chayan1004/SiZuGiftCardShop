@@ -63,9 +63,8 @@ class SquareCardsAPIService {
     this.environment = process.env.SQUARE_ENVIRONMENT || 'sandbox';
 
     this.client = new SquareClient({
-      accessToken: this.accessToken,
       environment: this.environment === 'production' ? SquareEnvironment.Production : SquareEnvironment.Sandbox,
-      squareVersion: '2023-10-18',
+      accessToken: this.accessToken,
     });
 
     this.customersApi = this.client.customers;

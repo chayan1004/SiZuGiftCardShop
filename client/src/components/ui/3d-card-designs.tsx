@@ -232,6 +232,7 @@ export function Card3DDesign({ category, amount, merchantName, className = "" }:
         );
 
       case 'wellness':
+      case 'health & wellness':
         return (
           <div className={`relative w-full h-48 perspective-1000 ${className}`}>
             <div className="relative w-full h-full transform-style-preserve-3d hover:rotate-y-12 transition-all duration-500">
@@ -274,12 +275,124 @@ export function Card3DDesign({ category, amount, merchantName, className = "" }:
                     {merchantName}
                   </div>
                   <div className="text-teal-200 text-xs uppercase tracking-wider mt-1">
-                    Wellness & Self-Care Gift
+                    Health & Wellness Gift
                   </div>
                 </div>
                 
                 {/* Peaceful glow */}
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-green-400/10 rounded-xl"></div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'retail':
+      case 'shopping & retail':
+        return (
+          <div className={`relative w-full h-48 perspective-1000 ${className}`}>
+            <div className="relative w-full h-full transform-style-preserve-3d hover:rotate-y-12 transition-all duration-500">
+              {/* Retail Card Design */}
+              <div className="absolute inset-0 bg-gradient-to-br from-rose-600 via-pink-600 to-purple-700 rounded-xl shadow-2xl border border-rose-300/30">
+                {/* Shopping Pattern */}
+                <div className="absolute inset-0 opacity-15">
+                  <div className="absolute top-4 left-4 text-4xl">🛍️</div>
+                  <div className="absolute top-8 right-8 text-3xl">💎</div>
+                  <div className="absolute bottom-8 left-8 text-3xl">👗</div>
+                  <div className="absolute bottom-4 right-4 text-4xl">✨</div>
+                  <div className="absolute top-12 left-16 text-2xl">🛒</div>
+                </div>
+                
+                {/* Shopping Bag 3D Icon */}
+                <div className="absolute top-6 left-6">
+                  <div className="relative">
+                    <div className="w-10 h-10 bg-gradient-to-br from-white to-gray-200 rounded shadow-lg">
+                      <div className="absolute top-1 left-2 right-2 h-2 bg-gradient-to-r from-pink-400 to-purple-500 rounded-t"></div>
+                      <div className="absolute top-3 left-3 right-3 bottom-1 bg-gradient-to-b from-gray-50 to-gray-100 rounded"></div>
+                      <div className="absolute top-0 left-3 w-1 h-3 bg-gray-400 rounded"></div>
+                      <div className="absolute top-0 right-3 w-1 h-3 bg-gray-400 rounded"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Price Tags */}
+                <div className="absolute top-4 right-6">
+                  <div className="flex space-x-1">
+                    <div className="w-3 h-4 bg-yellow-400 rounded transform rotate-12 animate-pulse"></div>
+                    <div className="w-3 h-4 bg-green-400 rounded transform -rotate-12 animate-pulse"></div>
+                  </div>
+                </div>
+                
+                {/* Content */}
+                <div className="absolute bottom-0 left-0 right-0 p-6">
+                  <div className="text-white font-bold text-lg mb-1 drop-shadow-lg">
+                    {formatAmount(amount)}
+                  </div>
+                  <div className="text-rose-100 text-sm truncate">
+                    {merchantName}
+                  </div>
+                  <div className="text-pink-200 text-xs uppercase tracking-wider mt-1">
+                    Shopping & Retail Gift
+                  </div>
+                </div>
+                
+                {/* Sparkle overlay */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform skew-x-12 -translate-x-full animate-shimmer"></div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'travel':
+      case 'travel & experiences':
+        return (
+          <div className={`relative w-full h-48 perspective-1000 ${className}`}>
+            <div className="relative w-full h-full transform-style-preserve-3d hover:rotate-y-12 transition-all duration-500">
+              {/* Travel Card Design */}
+              <div className="absolute inset-0 bg-gradient-to-br from-sky-600 via-blue-600 to-indigo-700 rounded-xl shadow-2xl border border-sky-300/30">
+                {/* Travel Pattern */}
+                <div className="absolute inset-0 opacity-20">
+                  <div className="absolute top-4 left-4 text-4xl">✈️</div>
+                  <div className="absolute top-8 right-8 text-3xl">🌍</div>
+                  <div className="absolute bottom-8 left-8 text-3xl">🏖️</div>
+                  <div className="absolute bottom-4 right-4 text-4xl">🗺️</div>
+                  <div className="absolute top-12 left-16 text-2xl">📸</div>
+                </div>
+                
+                {/* Passport 3D Icon */}
+                <div className="absolute top-6 left-6">
+                  <div className="relative">
+                    <div className="w-8 h-12 bg-gradient-to-br from-red-600 to-red-800 rounded shadow-lg transform rotate-6">
+                      <div className="absolute top-2 left-1 right-1 h-6 bg-gradient-to-b from-red-500 to-red-700 rounded"></div>
+                      <div className="absolute top-3 left-1.5 right-1.5 h-4 bg-white/90 rounded flex items-center justify-center">
+                        <div className="w-1 h-1 bg-red-600 rounded-full"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Cloud Animation */}
+                <div className="absolute top-8 right-6">
+                  <div className="relative">
+                    <div className="w-8 h-4 bg-white/30 rounded-full animate-bounce"></div>
+                    <div className="absolute -top-1 left-2 w-4 h-3 bg-white/20 rounded-full"></div>
+                  </div>
+                </div>
+                
+                {/* Content */}
+                <div className="absolute bottom-0 left-0 right-0 p-6">
+                  <div className="text-white font-bold text-lg mb-1 drop-shadow-lg">
+                    {formatAmount(amount)}
+                  </div>
+                  <div className="text-sky-100 text-sm truncate">
+                    {merchantName}
+                  </div>
+                  <div className="text-blue-200 text-xs uppercase tracking-wider mt-1">
+                    Travel & Experiences Gift
+                  </div>
+                </div>
+                
+                {/* Sky glow */}
+                <div className="absolute inset-0 bg-gradient-to-t from-transparent via-sky-400/5 to-blue-300/10 rounded-xl"></div>
               </div>
             </div>
           </div>

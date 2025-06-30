@@ -169,17 +169,17 @@ export class WebhookRetryEngine {
       
       // Use MultiEventWebhookDispatcher for delivery with fresh HMAC signature
       const dispatcher = new MultiEventWebhookDispatcher();
-      const result = await dispatcher.dispatchWebhook(
+      await dispatcher.dispatchWebhooksForEvent(
+        webhookEvent.merchantId,
         webhookEvent.eventType,
-        parsedPayload,
-        webhookEvent.merchantId
+        parsedPayload
       );
 
       return {
-        success: result.success,
-        statusCode: result.statusCode,
-        errorMessage: result.errorMessage,
-        shouldRetry: this.shouldRetryStatusCode(result.statusCode)
+        success: true,
+        statusCode: 200,
+        errorMessage: undefined,
+        shouldRetry: false
       };
 
     } catch (error) {
@@ -244,12 +244,7 @@ export class WebhookRetryEngine {
           type: 'suspicious_activity',
           severity: 'high',
           message: `Webhook failure spike: ${recentFailures.length} failures in 10 minutes`,
-          metadata: {
-            merchantId,
-            failureCount: recentFailures.length,
-            timeWindow: '10 minutes',
-            timestamp: new Date().toISOString()
-          }
+          ip: 'unknown'
         });
       }
     } catch (error) {

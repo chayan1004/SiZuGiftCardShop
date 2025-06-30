@@ -118,14 +118,16 @@ export class SquareGiftCardService {
       const responseData = await response.json();
       
       if (!response.ok) {
+        const errorData = responseData as { errors?: Array<{ detail?: string }> };
         return {
           success: false,
-          error: `Square API error: ${responseData.errors?.[0]?.detail || 'Gift card creation failed'}`
+          error: `Square API error: ${errorData.errors?.[0]?.detail || 'Gift card creation failed'}`
         };
       }
 
-      if (responseData.gift_card) {
-        const giftCard = responseData.gift_card;
+      const data = responseData as { gift_card?: any };
+      if (data.gift_card) {
+        const giftCard = data.gift_card;
         
         // Activate the gift card with the specified amount
         const activationResult = await this.activateGiftCard(

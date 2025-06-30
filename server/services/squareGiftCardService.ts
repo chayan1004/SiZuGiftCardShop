@@ -56,6 +56,24 @@ const SquareGiftCardActivitySchema = z.object({
   gift_card_balance_money: z.object({
     amount: z.number(),
     currency: z.string()
+  }).optional(),
+  activate_activity_details: z.object({
+    amount_money: z.object({
+      amount: z.number(),
+      currency: z.string()
+    })
+  }).optional(),
+  load_activity_details: z.object({
+    amount_money: z.object({
+      amount: z.number(),
+      currency: z.string()
+    })
+  }).optional(),
+  redeem_activity_details: z.object({
+    amount_money: z.object({
+      amount: z.number(),
+      currency: z.string()
+    })
   }).optional()
 });
 
@@ -497,15 +515,18 @@ export class SquareGiftCardService {
 
       const validated = SquareGiftCardActivitiesResponseSchema.parse(responseData);
       if (validated.gift_card_activities) {
-        const activities = validated.gift_card_activities.map((activity) => ({
-          id: activity.id,
-          type: activity.type,
-          amount: activity.activate_activity_details?.amount_money?.amount || 
-                 activity.load_activity_details?.amount_money?.amount || 
-                 activity.redeem_activity_details?.amount_money?.amount || 0,
-          createdAt: new Date(activity.created_at || ''),
-          description: `${activity.type} activity`
-        }));
+        const activities = validated.gift_card_activities.map((activity) => {
+          const typedActivity = activity as SquareGiftCardActivity;
+          return {
+            id: typedActivity.id,
+            type: typedActivity.type,
+            amount: typedActivity.activate_activity_details?.amount_money?.amount || 
+                   typedActivity.load_activity_details?.amount_money?.amount || 
+                   typedActivity.redeem_activity_details?.amount_money?.amount || 0,
+            createdAt: new Date(typedActivity.created_at || ''),
+            description: `${typedActivity.type} activity`
+          };
+        });
 
         return {
           success: true,

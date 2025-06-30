@@ -8697,6 +8697,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get refund analytics (MUST be before :id route)
+  app.get("/api/admin/refunds/analytics", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const {
+        merchantId,
+        dateFrom,
+        dateTo
+      } = req.query;
+
+      const filters: any = {};
+      if (merchantId) filters.merchantId = merchantId as string;
+      if (dateFrom) filters.dateFrom = new Date(dateFrom as string);
+      if (dateTo) filters.dateTo = new Date(dateTo as string);
+
+      const analytics = await storage.getRefundAnalytics(filters);
+
+      res.json({
+        success: true,
+        analytics
+      });
+    } catch (error) {
+      console.error('Error fetching refund analytics:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch refund analytics"
+      });
+    }
+  });
+
   // Get refund by ID
   app.get("/api/admin/refunds/:id", requireAdmin, async (req: Request, res: Response) => {
     try {
@@ -8773,35 +8802,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         success: false,
         message: "Failed to update refund"
-      });
-    }
-  });
-
-  // Get refund analytics
-  app.get("/api/admin/refunds/analytics", requireAdmin, async (req: Request, res: Response) => {
-    try {
-      const {
-        merchantId,
-        dateFrom,
-        dateTo
-      } = req.query;
-
-      const filters: any = {};
-      if (merchantId) filters.merchantId = merchantId as string;
-      if (dateFrom) filters.dateFrom = new Date(dateFrom as string);
-      if (dateTo) filters.dateTo = new Date(dateTo as string);
-
-      const analytics = await storage.getRefundAnalytics(filters);
-
-      res.json({
-        success: true,
-        analytics
-      });
-    } catch (error) {
-      console.error('Error fetching refund analytics:', error);
-      res.status(500).json({
-        success: false,
-        message: "Failed to fetch refund analytics"
       });
     }
   });

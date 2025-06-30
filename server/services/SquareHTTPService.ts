@@ -107,26 +107,14 @@ class SquareHTTPService {
     try {
       const idempotencyKey = crypto.randomUUID();
 
-      // First, search for existing customer by email
-      const searchBody = {
-        filter: {
-          email_address: {
-            exact: profileData.email
-          }
-        }
-      };
-
-      console.log('Searching for existing customer...');
-      const searchResult = await this.makeRequest('/v2/customers/search', 'POST', searchBody);
-
-      if (searchResult.customers && searchResult.customers.length > 0) {
-        const existingCustomer = searchResult.customers[0];
-        console.log(`Found existing Square customer: ${existingCustomer.id}`);
-
+      // Check if customer already exists in our database first
+      const existingProfile = await storage.getCustomerProfileByEmail(profileData.email);
+      if (existingProfile && existingProfile.squareCustomerId) {
+        console.log(`Found existing customer profile for: ${profileData.email}`);
         return {
           success: true,
-          customer: existingCustomer,
-          squareCustomerId: existingCustomer.id
+          customer: { id: existingProfile.squareCustomerId },
+          squareCustomerId: existingProfile.squareCustomerId
         };
       }
 

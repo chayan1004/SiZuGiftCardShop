@@ -5,7 +5,7 @@ import {
   CreditCard, Package, TrendingUp, DollarSign, Users, 
   RefreshCw, Settings, LogOut, Plus, Eye, Download,
   Calendar, Filter, Search, AlertCircle, Menu, X,
-  ShoppingCart, Activity, Bell, Home, BarChart3
+  ShoppingCart, Activity, Bell, Home, BarChart3, QrCode
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -278,6 +278,28 @@ export default function MerchantDashboard() {
                 >
                   <ShoppingCart className="w-4 h-4 mr-2" />
                   Buy Gift Cards
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  className="justify-start text-white hover:bg-white/10"
+                  onClick={() => {
+                    window.location.href = '/merchant-qr';
+                  }}
+                >
+                  <QrCode className="w-4 h-4 mr-2" />
+                  Scan QR to Redeem
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  className="justify-start text-white hover:bg-white/10"
+                  onClick={() => {
+                    window.location.href = '/merchant-analytics';
+                  }}
+                >
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  Analytics & Reports
                 </Button>
                 
                 <hr className="border-white/10 my-4" />

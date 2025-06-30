@@ -152,6 +152,7 @@ This is a full-stack gift card management application built with a modern tech s
 - June 30, 2025. Prompt 11: Mobile-Optimized Receipt Views + QR Code Support - enhanced GiftCardSuccess.tsx with fully responsive mobile design, integrated QR code generation service using qrcode package, embedded QR codes in PDF receipts for easy re-access, added admin dashboard QR functionality with download capabilities, and created comprehensive mobile-first receipt viewing experience
 - June 30, 2025. Prompt 13: Admin Branding + Tier Manager UI Panel - implemented comprehensive admin control center for merchant branding and pricing tiers with full CRUD operations, created AdminMerchantSettings.tsx with MerchantBrandingForm.tsx and PricingTierEditor.tsx components, added admin API endpoints for merchant management, real-time branding preview, volume pricing configuration, and complete merchant customization without code updates
 - June 30, 2025. Prompt 14: Gift Card Analytics + Redemption Dashboard - extended database schema with redemption tracking fields, implemented comprehensive real-time analytics dashboards for both admins and merchants, created gift card redemption API endpoints, built AdminGiftCardAnalytics.tsx and MerchantGiftCardAnalytics.tsx with interactive charts, metrics, and redemption forms, added 30-day daily activity tracking, redemption rate calculations, and merchant-specific analytics filtering
+- June 30, 2025. Phase 14A: Mobile QR Scanner for In-Store Redemption - created MerchantQRScanner.tsx with fullscreen camera view using @zxing/browser library, integrated with existing /api/gift-cards/redeem endpoint for seamless redemption processing, added mobile-first UI design and navigation from merchant dashboard to QR scanner functionality, completed mobile POS system enabling instant gift card redemption via QR code scanning
 
 ## Prompt 4: Branded Public Gift Card Storefront (June 30, 2025)
 
@@ -558,6 +559,44 @@ CREATE TABLE public_giftcard_orders (
 - **Trend Identification**: Daily activity patterns for business optimization
 - **Customer Insights**: Redemption behavior analysis for marketing strategies
 - **Performance Monitoring**: Real-time tracking of gift card program effectiveness
+
+## Phase 14A: Mobile QR Scanner for In-Store Redemption (June 30, 2025)
+
+### Mobile QR Scanner Implementation
+- **MerchantQRScanner.tsx**: Fullscreen camera-based QR code scanner using @zxing/browser library
+- **Mobile-First Design**: Touch-optimized interface with gradient backgrounds and responsive layout
+- **Camera Integration**: Real-time camera access with permission handling and error management
+- **QR Code Detection**: Automatic QR code scanning with visual feedback and scanning overlays
+
+### Backend Integration
+- **Existing API Reuse**: Leverages existing `/api/gift-cards/redeem` endpoint for seamless redemption
+- **No Backend Changes**: Complete integration using existing gift card redemption infrastructure
+- **Real-time Processing**: Instant gift card validation and redemption upon QR code scan
+- **Error Handling**: Comprehensive error management for invalid codes and network issues
+
+### Mobile POS Features
+- **Instant Redemption**: Scan QR codes from PDF receipts for immediate gift card redemption
+- **Merchant Dashboard Integration**: Added "Scan QR to Redeem" button in mobile navigation menu
+- **Auto-navigation**: Automatic redirect to merchant dashboard after successful redemption
+- **Toast Notifications**: Real-time feedback for successful/failed redemption attempts
+
+### User Experience Enhancements
+- **Fullscreen Scanner**: Immersive scanning experience with camera viewport and scanning guides
+- **Permission Management**: Graceful camera permission requests with user-friendly messaging
+- **Loading States**: Visual indicators during scanning and redemption processing
+- **Responsive Design**: Optimized for mobile devices with touch-friendly controls
+
+### Technical Architecture
+- **@zxing/browser Library**: Reliable QR code detection with multi-format support
+- **Video Stream Management**: Proper camera stream initialization and cleanup
+- **React Integration**: Clean component lifecycle with useEffect hooks for camera management
+- **Protected Routes**: Secure access requiring merchant authentication
+
+### Complete Mobile POS System
+- **Route**: `/merchant-qr` - Protected merchant-only QR scanner interface
+- **Navigation**: Integrated into merchant dashboard mobile menu for easy access
+- **Workflow**: Merchant → Dashboard → Scan QR → Instant Redemption → Analytics Update
+- **Real-time Updates**: Analytics dashboards reflect redemptions immediately after scanning
 
 ## Recent Production Enhancements
 

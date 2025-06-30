@@ -83,7 +83,19 @@ export default function MerchantQRScanner() {
 
   const stopScanning = () => {
     if (codeReaderRef.current) {
-      codeReaderRef.current.reset();
+      try {
+        // Stop all video streams
+        if (videoRef.current && videoRef.current.srcObject) {
+          const stream = videoRef.current.srcObject as MediaStream;
+          stream.getTracks().forEach(track => track.stop());
+        }
+        // Clear video source
+        if (videoRef.current) {
+          videoRef.current.srcObject = null;
+        }
+      } catch (error) {
+        console.error('Error stopping video stream:', error);
+      }
     }
     setIsScanning(false);
   };

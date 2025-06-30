@@ -1,7 +1,12 @@
 #!/usr/bin/env node
 
-const newman = require('newman');
-const path = require('path');
+import newman from 'newman';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const CONFIG = {
   collection: path.join(__dirname, '..', 'postman', 'phase14d-webhook-redemption.postman_collection.json'),
@@ -25,7 +30,6 @@ console.log(`🧪 Mock Endpoint: /api/test/mock-webhook`);
 console.log('='.repeat(65));
 
 // Ensure test results directory exists
-const fs = require('fs');
 const testResultsDir = path.join(__dirname, '..', 'test-results');
 if (!fs.existsSync(testResultsDir)) {
   fs.mkdirSync(testResultsDir, { recursive: true });

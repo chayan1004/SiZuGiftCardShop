@@ -215,9 +215,16 @@ class WebhookDispatcher {
   verifyWebhookSignature(payload: string, signature: string): boolean {
     try {
       const expectedSignature = this.generateHMACSignature(payload);
+      const receivedSignature = signature.replace('sha256=', '');
+      
+      // Ensure both signatures are the same length for timing-safe comparison
+      if (receivedSignature.length !== expectedSignature.length) {
+        return false;
+      }
+      
       return crypto.timingSafeEqual(
-        Buffer.from(signature),
-        Buffer.from(expectedSignature)
+        Buffer.from(receivedSignature, 'hex'),
+        Buffer.from(expectedSignature, 'hex')
       );
     } catch (error) {
       console.error('WebhookDispatcher: Signature verification error:', error);

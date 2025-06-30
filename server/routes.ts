@@ -7254,8 +7254,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize Socket.IO for real-time transaction monitoring
   const io = new SocketServer(httpServer, {
     cors: {
-      origin: "*",
-      methods: ["GET", "POST"]
+      origin: [
+        "https://sizugiftcard.com",
+        "https://www.sizugiftcard.com", 
+        "https://SiZu-GiftCardShop.replit.app",
+        "http://localhost:5000",
+        "http://localhost:3000"
+      ],
+      methods: ["GET", "POST"],
+      credentials: true
     }
   });
 

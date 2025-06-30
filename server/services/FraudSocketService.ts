@@ -20,8 +20,15 @@ export class FraudSocketService {
   constructor(server: Server) {
     this.io = new SocketIOServer(server, {
       cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
+        origin: [
+          "https://sizugiftcard.com",
+          "https://www.sizugiftcard.com",
+          "https://SiZu-GiftCardShop.replit.app",
+          "http://localhost:5000",
+          "http://localhost:3000"
+        ],
+        methods: ["GET", "POST"],
+        credentials: true
       },
       path: "/socket.io"
     });

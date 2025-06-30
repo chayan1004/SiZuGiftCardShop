@@ -183,7 +183,11 @@ export default function AdminDashboard() {
   useEffect(() => {
     const newSocket = io('/', {
       path: '/socket.io',
-      transports: ['websocket', 'polling']
+      transports: ['websocket', 'polling'],
+      forceNew: true,
+      timeout: 10000,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000
     });
 
     newSocket.on('connect', () => {

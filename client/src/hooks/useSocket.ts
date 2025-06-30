@@ -17,9 +17,14 @@ export function useSocket() {
 
   useEffect(() => {
     try {
+      // Always use relative path to connect to current host
       const socket = io('/', {
         path: '/socket.io',
-        transports: ['websocket', 'polling']
+        transports: ['websocket', 'polling'],
+        forceNew: true,
+        timeout: 10000,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000
       });
       
       socketRef.current = socket;

@@ -6976,5 +6976,547 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   console.log('🚀 Socket.IO transaction monitoring system initialized');
 
+  // ===== PCI DSS COMPLIANCE API ENDPOINTS =====
+
+  // Compliance Assessments
+  app.post("/api/admin/pci/assessments", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const assessmentData = req.body;
+      const assessment = await storage.createPciComplianceAssessment(assessmentData);
+      
+      // Log assessment creation
+      await storage.createPciAuditLog({
+        eventType: 'admin_action',
+        eventCategory: 'compliance',
+        userId: 'admin',
+        userRole: 'admin',
+        sourceIp: req.ip || 'unknown',
+        userAgent: req.get('User-Agent') || 'unknown',
+        eventDescription: `Created PCI compliance assessment: ${assessment.assessmentType}`,
+        resourceAccessed: 'pci_compliance_assessments',
+        actionPerformed: 'create',
+        eventResult: 'success',
+        riskLevel: 'medium',
+        transactionId: assessment.id,
+        alertGenerated: false,
+        reviewRequired: true
+      });
+
+      res.json({ success: true, assessment });
+    } catch (error) {
+      console.error('Error creating PCI assessment:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to create assessment" 
+      });
+    }
+  });
+
+  app.get("/api/admin/pci/assessments", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const assessments = await storage.getPciComplianceAssessments();
+      res.json({ success: true, assessments });
+    } catch (error) {
+      console.error('Error fetching PCI assessments:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to fetch assessments" 
+      });
+    }
+  });
+
+  app.put("/api/admin/pci/assessments/:id", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      const assessment = await storage.updatePciComplianceAssessment(id, updates);
+      
+      if (!assessment) {
+        return res.status(404).json({ 
+          success: false, 
+          message: "Assessment not found" 
+        });
+      }
+
+      // Log assessment update
+      await storage.createPciAuditLog({
+        eventType: 'admin_action',
+        eventCategory: 'compliance',
+        userId: 'admin',
+        userRole: 'admin',
+        sourceIp: req.ip || 'unknown',
+        userAgent: req.get('User-Agent') || 'unknown',
+        eventDescription: `Updated PCI compliance assessment: ${assessment.assessmentType}`,
+        resourceAccessed: 'pci_compliance_assessments',
+        actionPerformed: 'update',
+        eventResult: 'success',
+        riskLevel: 'medium',
+        transactionId: assessment.id,
+        alertGenerated: false,
+        reviewRequired: true
+      });
+
+      res.json({ success: true, assessment });
+    } catch (error) {
+      console.error('Error updating PCI assessment:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to update assessment" 
+      });
+    }
+  });
+
+  // Security Scans
+  app.post("/api/admin/pci/scans", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const scanData = req.body;
+      const scan = await storage.createPciSecurityScan(scanData);
+      
+      // Log scan creation
+      await storage.createPciAuditLog({
+        eventType: 'admin_action',
+        eventCategory: 'security_scan',
+        userId: 'admin',
+        userRole: 'admin',
+        sourceIp: req.ip || 'unknown',
+        userAgent: req.get('User-Agent') || 'unknown',
+        eventDescription: `Created PCI security scan: ${scan.scanType}`,
+        resourceAccessed: 'pci_security_scans',
+        actionPerformed: 'create',
+        eventResult: 'success',
+        riskLevel: scan.criticalVulnerabilities > 0 ? 'critical' : scan.highVulnerabilities > 0 ? 'high' : 'medium',
+        transactionId: scan.id,
+        alertGenerated: scan.criticalVulnerabilities > 0,
+        reviewRequired: true
+      });
+
+      res.json({ success: true, scan });
+    } catch (error) {
+      console.error('Error creating PCI scan:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to create scan" 
+      });
+    }
+  });
+
+  app.get("/api/admin/pci/scans", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const scans = await storage.getPciSecurityScans();
+      res.json({ success: true, scans });
+    } catch (error) {
+      console.error('Error fetching PCI scans:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to fetch scans" 
+      });
+    }
+  });
+
+  app.put("/api/admin/pci/scans/:id", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      const scan = await storage.updatePciSecurityScan(id, updates);
+      
+      if (!scan) {
+        return res.status(404).json({ 
+          success: false, 
+          message: "Scan not found" 
+        });
+      }
+
+      // Log scan update
+      await storage.createPciAuditLog({
+        eventType: 'admin_action',
+        eventCategory: 'security_scan',
+        userId: 'admin',
+        userRole: 'admin',
+        sourceIp: req.ip || 'unknown',
+        userAgent: req.get('User-Agent') || 'unknown',
+        eventDescription: `Updated PCI security scan: ${scan.scanType}`,
+        resourceAccessed: 'pci_security_scans',
+        actionPerformed: 'update',
+        eventResult: 'success',
+        riskLevel: scan.criticalVulnerabilities > 0 ? 'critical' : scan.highVulnerabilities > 0 ? 'high' : 'medium',
+        transactionId: scan.id,
+        alertGenerated: scan.criticalVulnerabilities > 0,
+        reviewRequired: true
+      });
+
+      res.json({ success: true, scan });
+    } catch (error) {
+      console.error('Error updating PCI scan:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to update scan" 
+      });
+    }
+  });
+
+  // Security Controls
+  app.post("/api/admin/pci/controls", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const controlData = req.body;
+      const control = await storage.createPciSecurityControl(controlData);
+      
+      // Log control creation
+      await storage.createPciAuditLog({
+        eventType: 'admin_action',
+        eventCategory: 'security_control',
+        userId: 'admin',
+        userRole: 'admin',
+        sourceIp: req.ip || 'unknown',
+        userAgent: req.get('User-Agent') || 'unknown',
+        eventDescription: `Created PCI security control: ${control.requirementNumber} - ${control.requirementTitle}`,
+        resourceAccessed: 'pci_security_controls',
+        actionPerformed: 'create',
+        eventResult: 'success',
+        riskLevel: control.riskLevel || 'medium',
+        transactionId: control.id,
+        alertGenerated: control.riskLevel === 'critical',
+        reviewRequired: control.implementationStatus !== 'implemented'
+      });
+
+      res.json({ success: true, control });
+    } catch (error) {
+      console.error('Error creating PCI control:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to create control" 
+      });
+    }
+  });
+
+  app.get("/api/admin/pci/controls", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const controls = await storage.getPciSecurityControls();
+      res.json({ success: true, controls });
+    } catch (error) {
+      console.error('Error fetching PCI controls:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to fetch controls" 
+      });
+    }
+  });
+
+  app.put("/api/admin/pci/controls/:id", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      const control = await storage.updatePciSecurityControl(id, updates);
+      
+      if (!control) {
+        return res.status(404).json({ 
+          success: false, 
+          message: "Control not found" 
+        });
+      }
+
+      // Log control update
+      await storage.createPciAuditLog({
+        eventType: 'admin_action',
+        eventCategory: 'security_control',
+        userId: 'admin',
+        userRole: 'admin',
+        sourceIp: req.ip || 'unknown',
+        userAgent: req.get('User-Agent') || 'unknown',
+        eventDescription: `Updated PCI security control: ${control.requirementNumber} - ${control.requirementTitle}`,
+        resourceAccessed: 'pci_security_controls',
+        actionPerformed: 'update',
+        eventResult: 'success',
+        riskLevel: control.riskLevel || 'medium',
+        transactionId: control.id,
+        alertGenerated: control.riskLevel === 'critical',
+        reviewRequired: control.implementationStatus !== 'implemented'
+      });
+
+      res.json({ success: true, control });
+    } catch (error) {
+      console.error('Error updating PCI control:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to update control" 
+      });
+    }
+  });
+
+  // Incident Response
+  app.post("/api/admin/pci/incidents", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const incidentData = req.body;
+      const incident = await storage.createPciIncidentResponse(incidentData);
+      
+      // Log incident creation
+      await storage.createPciAuditLog({
+        eventType: 'security_incident',
+        eventCategory: 'incident_response',
+        userId: 'admin',
+        userRole: 'admin',
+        sourceIp: req.ip || 'unknown',
+        userAgent: req.get('User-Agent') || 'unknown',
+        eventDescription: `Created PCI incident response: ${incident.incidentType} - ${incident.severity}`,
+        resourceAccessed: 'pci_incident_responses',
+        actionPerformed: 'create',
+        eventResult: 'success',
+        riskLevel: incident.severity === 'critical' ? 'critical' : incident.severity === 'high' ? 'high' : 'medium',
+        transactionId: incident.id,
+        cardDataAccessed: incident.cardDataInvolved,
+        alertGenerated: incident.severity === 'critical' || incident.severity === 'high',
+        reviewRequired: true
+      });
+
+      res.json({ success: true, incident });
+    } catch (error) {
+      console.error('Error creating PCI incident:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to create incident" 
+      });
+    }
+  });
+
+  app.get("/api/admin/pci/incidents", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const incidents = await storage.getPciIncidentResponses();
+      res.json({ success: true, incidents });
+    } catch (error) {
+      console.error('Error fetching PCI incidents:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to fetch incidents" 
+      });
+    }
+  });
+
+  app.put("/api/admin/pci/incidents/:id", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      const incident = await storage.updatePciIncidentResponse(id, updates);
+      
+      if (!incident) {
+        return res.status(404).json({ 
+          success: false, 
+          message: "Incident not found" 
+        });
+      }
+
+      // Log incident update
+      await storage.createPciAuditLog({
+        eventType: 'security_incident',
+        eventCategory: 'incident_response',
+        userId: 'admin',
+        userRole: 'admin',
+        sourceIp: req.ip || 'unknown',
+        userAgent: req.get('User-Agent') || 'unknown',
+        eventDescription: `Updated PCI incident response: ${incident.incidentType} - ${incident.severity}`,
+        resourceAccessed: 'pci_incident_responses',
+        actionPerformed: 'update',
+        eventResult: 'success',
+        riskLevel: incident.severity === 'critical' ? 'critical' : incident.severity === 'high' ? 'high' : 'medium',
+        transactionId: incident.id,
+        cardDataAccessed: incident.cardDataInvolved,
+        alertGenerated: incident.severity === 'critical' || incident.severity === 'high',
+        reviewRequired: true
+      });
+
+      res.json({ success: true, incident });
+    } catch (error) {
+      console.error('Error updating PCI incident:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to update incident" 
+      });
+    }
+  });
+
+  // Network Diagrams
+  app.post("/api/admin/pci/diagrams", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const diagramData = req.body;
+      const diagram = await storage.createPciNetworkDiagram(diagramData);
+      
+      // Log diagram creation
+      await storage.createPciAuditLog({
+        eventType: 'admin_action',
+        eventCategory: 'configuration',
+        userId: 'admin',
+        userRole: 'admin',
+        sourceIp: req.ip || 'unknown',
+        userAgent: req.get('User-Agent') || 'unknown',
+        eventDescription: `Created PCI network diagram: ${diagram.diagramName} - ${diagram.diagramType}`,
+        resourceAccessed: 'pci_network_diagrams',
+        actionPerformed: 'create',
+        eventResult: 'success',
+        riskLevel: 'medium',
+        transactionId: diagram.id,
+        alertGenerated: false,
+        reviewRequired: true
+      });
+
+      res.json({ success: true, diagram });
+    } catch (error) {
+      console.error('Error creating PCI diagram:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to create diagram" 
+      });
+    }
+  });
+
+  app.get("/api/admin/pci/diagrams", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const diagrams = await storage.getPciNetworkDiagrams();
+      res.json({ success: true, diagrams });
+    } catch (error) {
+      console.error('Error fetching PCI diagrams:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to fetch diagrams" 
+      });
+    }
+  });
+
+  app.put("/api/admin/pci/diagrams/:id", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      const diagram = await storage.updatePciNetworkDiagram(id, updates);
+      
+      if (!diagram) {
+        return res.status(404).json({ 
+          success: false, 
+          message: "Diagram not found" 
+        });
+      }
+
+      // Log diagram update
+      await storage.createPciAuditLog({
+        eventType: 'admin_action',
+        eventCategory: 'configuration',
+        userId: 'admin',
+        userRole: 'admin',
+        sourceIp: req.ip || 'unknown',
+        userAgent: req.get('User-Agent') || 'unknown',
+        eventDescription: `Updated PCI network diagram: ${diagram.diagramName} - ${diagram.diagramType}`,
+        resourceAccessed: 'pci_network_diagrams',
+        actionPerformed: 'update',
+        eventResult: 'success',
+        riskLevel: 'medium',
+        transactionId: diagram.id,
+        alertGenerated: false,
+        reviewRequired: true
+      });
+
+      res.json({ success: true, diagram });
+    } catch (error) {
+      console.error('Error updating PCI diagram:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to update diagram" 
+      });
+    }
+  });
+
+  // Audit Logs
+  app.get("/api/admin/pci/audit-logs", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { startDate, endDate, eventType, userId } = req.query;
+      
+      const filters: any = {};
+      if (startDate) filters.startDate = new Date(startDate as string);
+      if (endDate) filters.endDate = new Date(endDate as string);
+      if (eventType) filters.eventType = eventType as string;
+      if (userId) filters.userId = userId as string;
+      
+      const auditLogs = await storage.getPciAuditLogs(filters);
+      res.json({ success: true, auditLogs });
+    } catch (error) {
+      console.error('Error fetching PCI audit logs:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to fetch audit logs" 
+      });
+    }
+  });
+
+  // PCI DSS Statistics Dashboard
+  app.get("/api/admin/pci/stats", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const stats = await storage.getPciComplianceStats();
+      res.json({ success: true, stats });
+    } catch (error) {
+      console.error('Error fetching PCI stats:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to fetch compliance statistics" 
+      });
+    }
+  });
+
+  // PCI DSS Compliance Report Generation
+  app.post("/api/admin/pci/generate-report", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { reportType = 'comprehensive' } = req.body;
+      
+      // Get all compliance data
+      const [assessments, scans, controls, incidents, diagrams, auditLogs, stats] = await Promise.all([
+        storage.getPciComplianceAssessments(),
+        storage.getPciSecurityScans(),
+        storage.getPciSecurityControls(),
+        storage.getPciIncidentResponses(),
+        storage.getPciNetworkDiagrams(),
+        storage.getPciAuditLogs({ startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }), // Last 30 days
+        storage.getPciComplianceStats()
+      ]);
+
+      const reportData = {
+        generatedAt: new Date(),
+        reportType,
+        summary: {
+          complianceOverview: stats,
+          totalAssessments: assessments.length,
+          totalScans: scans.length,
+          totalControls: controls.length,
+          totalIncidents: incidents.length,
+          totalDiagrams: diagrams.length,
+          recentAuditEvents: auditLogs.length
+        },
+        assessments: assessments.slice(0, 10), // Last 10 assessments
+        scans: scans.slice(0, 10), // Last 10 scans
+        controls: controls.filter(c => c.implementationStatus !== 'implemented'), // Outstanding controls
+        incidents: incidents.filter(i => i.investigationStatus === 'open'), // Open incidents
+        recentAuditActivity: auditLogs.slice(0, 50) // Last 50 audit events
+      };
+
+      // Log report generation
+      await storage.createPciAuditLog({
+        eventType: 'admin_action',
+        eventCategory: 'reporting',
+        userId: 'admin',
+        userRole: 'admin',
+        sourceIp: req.ip || 'unknown',
+        userAgent: req.get('User-Agent') || 'unknown',
+        eventDescription: `Generated PCI DSS compliance report: ${reportType}`,
+        resourceAccessed: 'pci_compliance_report',
+        actionPerformed: 'generate',
+        eventResult: 'success',
+        riskLevel: 'low',
+        alertGenerated: false,
+        reviewRequired: false
+      });
+
+      res.json({ success: true, report: reportData });
+    } catch (error) {
+      console.error('Error generating PCI report:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to generate compliance report" 
+      });
+    }
+  });
+
   return httpServer;
 }

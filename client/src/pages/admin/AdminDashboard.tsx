@@ -33,6 +33,7 @@ import SystemOperationsMonitoring from "../../components/admin/SystemOperationsM
 import CustomerInsightsAnalytics from "../../components/admin/CustomerInsightsAnalytics";
 import LoadingAnimation from "../../components/ui/LoadingAnimation";
 import GDPRComplianceDashboard from "../../components/admin/GDPRComplianceDashboard";
+import PCIDSSComplianceDashboard from "../../components/admin/PCIDSSComplianceDashboard";
 import type { FraudAlert } from "../../components/admin/ThreatFeedPanel";
 
 interface DashboardMetrics {
@@ -253,6 +254,7 @@ export default function AdminDashboard() {
     { id: "email-system", label: "Email System", icon: <Mail className="w-5 h-5" /> },
     { id: "operations", label: "System Operations", icon: <Database className="w-5 h-5" /> },
     { id: "gdpr", label: "GDPR Compliance", icon: <Shield className="w-5 h-5" /> },
+    { id: "pci-dss", label: "PCI DSS Compliance", icon: <Shield className="w-5 h-5" /> },
   ];
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];

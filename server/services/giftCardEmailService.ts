@@ -16,7 +16,7 @@ export class GiftCardEmailService {
   private transporter: nodemailer.Transporter;
 
   constructor() {
-    this.transporter = nodemailer.createTransporter({
+    this.transporter = nodemailer.createTransport({
       host: 'smtp.mailgun.org',
       port: 587,
       secure: false,

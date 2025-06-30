@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { storage } from '../storage';
-import { sendVerificationEmail } from './emailService';
+import { sendVerificationEmail } from './EmailService';
 
 export class EmailVerificationService {
   /**

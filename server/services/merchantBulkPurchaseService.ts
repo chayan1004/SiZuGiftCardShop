@@ -149,7 +149,7 @@ export class MerchantBulkPurchaseService {
 
       // Create bulk order record
       const bulkOrder: InsertMerchantBulkOrder = {
-        merchantId,
+        merchant_id: merchantId,
         bulkOrderId,
         totalAmount: pricing.total,
         quantity,

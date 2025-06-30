@@ -3796,6 +3796,412 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return tokenEvent;
   }
+
+  // Refunds Management Implementation
+  async createRefund(refund: InsertRefund): Promise<Refund> {
+    const [newRefund] = await db
+      .insert(refunds)
+      .values(refund)
+      .returning();
+    return newRefund;
+  }
+
+  async getRefund(id: string): Promise<Refund | undefined> {
+    const [refund] = await db
+      .select()
+      .from(refunds)
+      .where(eq(refunds.id, id));
+    return refund || undefined;
+  }
+
+  async getRefundBySquareId(squareRefundId: string): Promise<Refund | undefined> {
+    const [refund] = await db
+      .select()
+      .from(refunds)
+      .where(eq(refunds.squareRefundId, squareRefundId));
+    return refund || undefined;
+  }
+
+  async getAllRefunds(filters?: {
+    status?: string;
+    merchantId?: string;
+    dateFrom?: Date;
+    dateTo?: Date;
+    limit?: number;
+    offset?: number;
+  }): Promise<Refund[]> {
+    let query = db.select().from(refunds);
+
+    if (filters?.status) {
+      query = query.where(eq(refunds.status, filters.status));
+    }
+    if (filters?.merchantId) {
+      query = query.where(eq(refunds.merchantId, filters.merchantId));
+    }
+    if (filters?.dateFrom && filters?.dateTo) {
+      query = query.where(
+        and(
+          gte(refunds.createdAt, filters.dateFrom),
+          lte(refunds.createdAt, filters.dateTo)
+        )
+      );
+    }
+
+    query = query.orderBy(desc(refunds.createdAt));
+
+    if (filters?.limit) {
+      query = query.limit(filters.limit);
+    }
+    if (filters?.offset) {
+      query = query.offset(filters.offset);
+    }
+
+    return await query;
+  }
+
+  async updateRefundStatus(id: string, status: string, processedAt?: Date, failureReason?: string): Promise<Refund | undefined> {
+    const updateData: any = { 
+      status, 
+      updatedAt: new Date() 
+    };
+    
+    if (processedAt) updateData.processedAt = processedAt;
+    if (failureReason) updateData.failureReason = failureReason;
+
+    const [updatedRefund] = await db
+      .update(refunds)
+      .set(updateData)
+      .where(eq(refunds.id, id))
+      .returning();
+    return updatedRefund || undefined;
+  }
+
+  async getRefundsByPaymentId(paymentId: string): Promise<Refund[]> {
+    return await db
+      .select()
+      .from(refunds)
+      .where(eq(refunds.paymentId, paymentId))
+      .orderBy(desc(refunds.createdAt));
+  }
+
+  async getRefundsByGiftCardOrderId(giftCardOrderId: string): Promise<Refund[]> {
+    return await db
+      .select()
+      .from(refunds)
+      .where(eq(refunds.giftCardOrderId, giftCardOrderId))
+      .orderBy(desc(refunds.createdAt));
+  }
+
+  // Disputes Management Implementation
+  async createDispute(dispute: InsertDispute): Promise<Dispute> {
+    const [newDispute] = await db
+      .insert(disputes)
+      .values(dispute)
+      .returning();
+    return newDispute;
+  }
+
+  async getDispute(id: string): Promise<Dispute | undefined> {
+    const [dispute] = await db
+      .select()
+      .from(disputes)
+      .where(eq(disputes.id, id));
+    return dispute || undefined;
+  }
+
+  async getDisputeBySquareId(squareDisputeId: string): Promise<Dispute | undefined> {
+    const [dispute] = await db
+      .select()
+      .from(disputes)
+      .where(eq(disputes.squareDisputeId, squareDisputeId));
+    return dispute || undefined;
+  }
+
+  async getAllDisputes(filters?: {
+    state?: string;
+    disputeType?: string;
+    merchantId?: string;
+    dateFrom?: Date;
+    dateTo?: Date;
+    limit?: number;
+    offset?: number;
+  }): Promise<Dispute[]> {
+    let query = db.select().from(disputes);
+
+    if (filters?.state) {
+      query = query.where(eq(disputes.state, filters.state));
+    }
+    if (filters?.disputeType) {
+      query = query.where(eq(disputes.disputeType, filters.disputeType));
+    }
+    if (filters?.merchantId) {
+      query = query.where(eq(disputes.merchantId, filters.merchantId));
+    }
+    if (filters?.dateFrom && filters?.dateTo) {
+      query = query.where(
+        and(
+          gte(disputes.createdAt, filters.dateFrom),
+          lte(disputes.createdAt, filters.dateTo)
+        )
+      );
+    }
+
+    query = query.orderBy(desc(disputes.createdAt));
+
+    if (filters?.limit) {
+      query = query.limit(filters.limit);
+    }
+    if (filters?.offset) {
+      query = query.offset(filters.offset);
+    }
+
+    return await query;
+  }
+
+  async updateDisputeState(id: string, state: string, resolution?: string, resolvedAt?: Date): Promise<Dispute | undefined> {
+    const updateData: any = { 
+      state, 
+      updatedAt: new Date() 
+    };
+    
+    if (resolution) updateData.resolution = resolution;
+    if (resolvedAt) updateData.resolvedAt = resolvedAt;
+
+    const [updatedDispute] = await db
+      .update(disputes)
+      .set(updateData)
+      .where(eq(disputes.id, id))
+      .returning();
+    return updatedDispute || undefined;
+  }
+
+  async updateDisputeStatus(squareDisputeId: string, state: string): Promise<Dispute | undefined> {
+    const [updatedDispute] = await db
+      .update(disputes)
+      .set({ 
+        state, 
+        updatedAt: new Date() 
+      })
+      .where(eq(disputes.squareDisputeId, squareDisputeId))
+      .returning();
+    return updatedDispute || undefined;
+  }
+
+  async getDisputesByPaymentId(paymentId: string): Promise<Dispute[]> {
+    return await db
+      .select()
+      .from(disputes)
+      .where(eq(disputes.paymentId, paymentId))
+      .orderBy(desc(disputes.createdAt));
+  }
+
+  async getDisputesByGiftCardOrderId(giftCardOrderId: string): Promise<Dispute[]> {
+    return await db
+      .select()
+      .from(disputes)
+      .where(eq(disputes.giftCardOrderId, giftCardOrderId))
+      .orderBy(desc(disputes.createdAt));
+  }
+
+  // Dispute Evidence Management Implementation
+  async createDisputeEvidence(evidence: InsertDisputeEvidence): Promise<DisputeEvidence> {
+    const [newEvidence] = await db
+      .insert(disputeEvidence)
+      .values(evidence)
+      .returning();
+    return newEvidence;
+  }
+
+  async getDisputeEvidence(id: string): Promise<DisputeEvidence | undefined> {
+    const [evidence] = await db
+      .select()
+      .from(disputeEvidence)
+      .where(eq(disputeEvidence.id, id));
+    return evidence || undefined;
+  }
+
+  async getEvidenceByDisputeId(disputeId: string): Promise<DisputeEvidence[]> {
+    return await db
+      .select()
+      .from(disputeEvidence)
+      .where(eq(disputeEvidence.disputeId, disputeId))
+      .orderBy(desc(disputeEvidence.createdAt));
+  }
+
+  async markEvidenceSubmitted(id: string, squareEvidenceId?: string): Promise<DisputeEvidence | undefined> {
+    const updateData: any = {
+      isSubmitted: true,
+      submittedAt: new Date()
+    };
+    
+    if (squareEvidenceId) updateData.squareEvidenceId = squareEvidenceId;
+
+    const [updatedEvidence] = await db
+      .update(disputeEvidence)
+      .set(updateData)
+      .where(eq(disputeEvidence.id, id))
+      .returning();
+    return updatedEvidence || undefined;
+  }
+
+  // Activity Tracking Implementation
+  async createRefundActivity(activity: InsertRefundActivity): Promise<RefundActivity> {
+    const [newActivity] = await db
+      .insert(refundActivities)
+      .values(activity)
+      .returning();
+    return newActivity;
+  }
+
+  async createDisputeActivity(activity: InsertDisputeActivity): Promise<DisputeActivity> {
+    const [newActivity] = await db
+      .insert(disputeActivities)
+      .values(activity)
+      .returning();
+    return newActivity;
+  }
+
+  async getRefundActivities(refundId: string): Promise<RefundActivity[]> {
+    return await db
+      .select()
+      .from(refundActivities)
+      .where(eq(refundActivities.refundId, refundId))
+      .orderBy(desc(refundActivities.createdAt));
+  }
+
+  async getDisputeActivities(disputeId: string): Promise<DisputeActivity[]> {
+    return await db
+      .select()
+      .from(disputeActivities)
+      .where(eq(disputeActivities.disputeId, disputeId))
+      .orderBy(desc(disputeActivities.createdAt));
+  }
+
+  // Analytics and Reports Implementation
+  async getRefundAnalytics(filters?: {
+    merchantId?: string;
+    dateFrom?: Date;
+    dateTo?: Date;
+  }): Promise<{
+    totalRefunds: number;
+    totalAmount: number;
+    refundsByStatus: { status: string; count: number; amount: number }[];
+    refundsByMethod: { method: string; count: number; amount: number }[];
+  }> {
+    let baseQuery = db.select().from(refunds);
+
+    if (filters?.merchantId) {
+      baseQuery = baseQuery.where(eq(refunds.merchantId, filters.merchantId));
+    }
+    if (filters?.dateFrom && filters?.dateTo) {
+      baseQuery = baseQuery.where(
+        and(
+          gte(refunds.createdAt, filters.dateFrom),
+          lte(refunds.createdAt, filters.dateTo)
+        )
+      );
+    }
+
+    const allRefunds = await baseQuery;
+
+    const totalRefunds = allRefunds.length;
+    const totalAmount = allRefunds.reduce((sum, refund) => sum + refund.amount, 0);
+
+    // Group by status
+    const statusGroups = allRefunds.reduce((acc, refund) => {
+      const status = refund.status;
+      if (!acc[status]) {
+        acc[status] = { status, count: 0, amount: 0 };
+      }
+      acc[status].count++;
+      acc[status].amount += refund.amount;
+      return acc;
+    }, {} as Record<string, { status: string; count: number; amount: number }>);
+
+    // Group by method
+    const methodGroups = allRefunds.reduce((acc, refund) => {
+      const method = refund.refundMethod || 'unknown';
+      if (!acc[method]) {
+        acc[method] = { method, count: 0, amount: 0 };
+      }
+      acc[method].count++;
+      acc[method].amount += refund.amount;
+      return acc;
+    }, {} as Record<string, { method: string; count: number; amount: number }>);
+
+    return {
+      totalRefunds,
+      totalAmount,
+      refundsByStatus: Object.values(statusGroups),
+      refundsByMethod: Object.values(methodGroups),
+    };
+  }
+
+  async getDisputeAnalytics(filters?: {
+    merchantId?: string;
+    dateFrom?: Date;
+    dateTo?: Date;
+  }): Promise<{
+    totalDisputes: number;
+    totalAmount: number;
+    disputesByState: { state: string; count: number; amount: number }[];
+    disputesByType: { type: string; count: number; amount: number }[];
+    winRate: number;
+  }> {
+    let baseQuery = db.select().from(disputes);
+
+    if (filters?.merchantId) {
+      baseQuery = baseQuery.where(eq(disputes.merchantId, filters.merchantId));
+    }
+    if (filters?.dateFrom && filters?.dateTo) {
+      baseQuery = baseQuery.where(
+        and(
+          gte(disputes.createdAt, filters.dateFrom),
+          lte(disputes.createdAt, filters.dateTo)
+        )
+      );
+    }
+
+    const allDisputes = await baseQuery;
+
+    const totalDisputes = allDisputes.length;
+    const totalAmount = allDisputes.reduce((sum, dispute) => sum + dispute.amount, 0);
+
+    // Group by state
+    const stateGroups = allDisputes.reduce((acc, dispute) => {
+      const state = dispute.state;
+      if (!acc[state]) {
+        acc[state] = { state, count: 0, amount: 0 };
+      }
+      acc[state].count++;
+      acc[state].amount += dispute.amount;
+      return acc;
+    }, {} as Record<string, { state: string; count: number; amount: number }>);
+
+    // Group by type
+    const typeGroups = allDisputes.reduce((acc, dispute) => {
+      const type = dispute.disputeType || 'unknown';
+      if (!acc[type]) {
+        acc[type] = { type, count: 0, amount: 0 };
+      }
+      acc[type].count++;
+      acc[type].amount += dispute.amount;
+      return acc;
+    }, {} as Record<string, { type: string; count: number; amount: number }>);
+
+    // Calculate win rate
+    const resolvedDisputes = allDisputes.filter(d => d.resolution);
+    const wonDisputes = resolvedDisputes.filter(d => d.resolution === 'WON').length;
+    const winRate = resolvedDisputes.length > 0 ? (wonDisputes / resolvedDisputes.length) * 100 : 0;
+
+    return {
+      totalDisputes,
+      totalAmount,
+      disputesByState: Object.values(stateGroups),
+      disputesByType: Object.values(typeGroups),
+      winRate,
+    };
+  }
 }
 
 export const storage = new DatabaseStorage();

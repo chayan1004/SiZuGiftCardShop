@@ -8605,5 +8605,494 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ================================
+  // REFUNDS AND DISPUTES API ROUTES
+  // ================================
+
+  // Import Square Refund Service
+  const { squareRefundService } = await import('./services/SquareRefundService');
+
+  // Create a refund
+  app.post("/api/admin/refunds", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const refundRequest = req.body;
+      
+      // Validate request
+      if (!refundRequest.paymentId || !refundRequest.amount || !refundRequest.reason) {
+        return res.status(400).json({
+          success: false,
+          message: "Missing required fields: paymentId, amount, reason"
+        });
+      }
+
+      // Create refund via Square API
+      const result = await squareRefundService.createRefund({
+        paymentId: refundRequest.paymentId,
+        amountMoney: {
+          amount: refundRequest.amount,
+          currency: refundRequest.currency || 'USD'
+        },
+        reason: refundRequest.reason,
+        orderId: refundRequest.orderId
+      });
+
+      if (!result.success) {
+        return res.status(400).json({
+          success: false,
+          message: result.error || "Failed to create refund"
+        });
+      }
+
+      res.json({
+        success: true,
+        refund: result.refund,
+        message: "Refund created successfully"
+      });
+    } catch (error) {
+      console.error('Error creating refund:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to create refund"
+      });
+    }
+  });
+
+  // Get all refunds with filtering
+  app.get("/api/admin/refunds", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const {
+        status,
+        merchantId,
+        dateFrom,
+        dateTo,
+        limit = 50,
+        offset = 0
+      } = req.query;
+
+      const filters: any = {};
+      if (status) filters.status = status as string;
+      if (merchantId) filters.merchantId = merchantId as string;
+      if (dateFrom) filters.dateFrom = new Date(dateFrom as string);
+      if (dateTo) filters.dateTo = new Date(dateTo as string);
+      filters.limit = parseInt(limit as string);
+      filters.offset = parseInt(offset as string);
+
+      const refunds = await storage.getAllRefunds(filters);
+
+      res.json({
+        success: true,
+        refunds,
+        pagination: {
+          limit: filters.limit,
+          offset: filters.offset,
+          total: refunds.length
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching refunds:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch refunds"
+      });
+    }
+  });
+
+  // Get refund by ID
+  app.get("/api/admin/refunds/:id", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const refund = await storage.getRefund(id);
+
+      if (!refund) {
+        return res.status(404).json({
+          success: false,
+          message: "Refund not found"
+        });
+      }
+
+      // Get refund activities
+      const activities = await storage.getRefundActivities(id);
+
+      res.json({
+        success: true,
+        refund,
+        activities
+      });
+    } catch (error) {
+      console.error('Error fetching refund:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch refund"
+      });
+    }
+  });
+
+  // Update refund status
+  app.put("/api/admin/refunds/:id", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { status, failureReason } = req.body;
+
+      if (!status) {
+        return res.status(400).json({
+          success: false,
+          message: "Status is required"
+        });
+      }
+
+      const processedAt = status === 'COMPLETED' ? new Date() : undefined;
+      const refund = await storage.updateRefundStatus(id, status, processedAt, failureReason);
+
+      if (!refund) {
+        return res.status(404).json({
+          success: false,
+          message: "Refund not found"
+        });
+      }
+
+      // Log activity
+      await storage.createRefundActivity({
+        refundId: id,
+        activityType: 'STATUS_UPDATED',
+        performedBy: 'admin',
+        userRole: 'admin',
+        description: `Status updated to ${status}`,
+        previousStatus: refund.status,
+        newStatus: status,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent')
+      });
+
+      res.json({
+        success: true,
+        refund,
+        message: "Refund updated successfully"
+      });
+    } catch (error) {
+      console.error('Error updating refund:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to update refund"
+      });
+    }
+  });
+
+  // Get refund analytics
+  app.get("/api/admin/refunds/analytics", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const {
+        merchantId,
+        dateFrom,
+        dateTo
+      } = req.query;
+
+      const filters: any = {};
+      if (merchantId) filters.merchantId = merchantId as string;
+      if (dateFrom) filters.dateFrom = new Date(dateFrom as string);
+      if (dateTo) filters.dateTo = new Date(dateTo as string);
+
+      const analytics = await storage.getRefundAnalytics(filters);
+
+      res.json({
+        success: true,
+        analytics
+      });
+    } catch (error) {
+      console.error('Error fetching refund analytics:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch refund analytics"
+      });
+    }
+  });
+
+  // ================================
+  // DISPUTES API ROUTES
+  // ================================
+
+  // Get all disputes with filtering
+  app.get("/api/admin/disputes", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const {
+        state,
+        disputeType,
+        merchantId,
+        dateFrom,
+        dateTo,
+        limit = 50,
+        offset = 0
+      } = req.query;
+
+      const filters: any = {};
+      if (state) filters.state = state as string;
+      if (disputeType) filters.disputeType = disputeType as string;
+      if (merchantId) filters.merchantId = merchantId as string;
+      if (dateFrom) filters.dateFrom = new Date(dateFrom as string);
+      if (dateTo) filters.dateTo = new Date(dateTo as string);
+      filters.limit = parseInt(limit as string);
+      filters.offset = parseInt(offset as string);
+
+      const disputes = await storage.getAllDisputes(filters);
+
+      res.json({
+        success: true,
+        disputes,
+        pagination: {
+          limit: filters.limit,
+          offset: filters.offset,
+          total: disputes.length
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching disputes:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch disputes"
+      });
+    }
+  });
+
+  // Get dispute by ID
+  app.get("/api/admin/disputes/:id", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const dispute = await storage.getDispute(id);
+
+      if (!dispute) {
+        return res.status(404).json({
+          success: false,
+          message: "Dispute not found"
+        });
+      }
+
+      // Get dispute evidence and activities
+      const evidence = await storage.getEvidenceByDisputeId(id);
+      const activities = await storage.getDisputeActivities(id);
+
+      res.json({
+        success: true,
+        dispute,
+        evidence,
+        activities
+      });
+    } catch (error) {
+      console.error('Error fetching dispute:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch dispute"
+      });
+    }
+  });
+
+  // Accept a dispute
+  app.post("/api/admin/disputes/:id/accept", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const dispute = await storage.getDispute(id);
+
+      if (!dispute) {
+        return res.status(404).json({
+          success: false,
+          message: "Dispute not found"
+        });
+      }
+
+      // Accept dispute via Square API
+      const result = await squareRefundService.acceptDispute(dispute.squareDisputeId);
+
+      if (!result.success) {
+        return res.status(400).json({
+          success: false,
+          message: result.error || "Failed to accept dispute"
+        });
+      }
+
+      // Update dispute status
+      const updatedDispute = await storage.updateDisputeState(
+        id,
+        'ACCEPTED',
+        'ACCEPTED',
+        new Date()
+      );
+
+      // Log activity
+      await storage.createDisputeActivity({
+        disputeId: id,
+        activityType: 'ACCEPTED',
+        performedBy: 'admin',
+        userRole: 'admin',
+        description: 'Dispute accepted by admin',
+        previousState: dispute.state,
+        newState: 'ACCEPTED',
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent')
+      });
+
+      res.json({
+        success: true,
+        dispute: updatedDispute,
+        message: "Dispute accepted successfully"
+      });
+    } catch (error) {
+      console.error('Error accepting dispute:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to accept dispute"
+      });
+    }
+  });
+
+  // Submit evidence for a dispute
+  app.post("/api/admin/disputes/:id/evidence", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { evidenceType, evidenceCategory, evidenceText, evidenceFile } = req.body;
+
+      const dispute = await storage.getDispute(id);
+      if (!dispute) {
+        return res.status(404).json({
+          success: false,
+          message: "Dispute not found"
+        });
+      }
+
+      // Create evidence record
+      const evidence = await storage.createDisputeEvidence({
+        disputeId: id,
+        evidenceType,
+        evidenceCategory,
+        evidenceText,
+        evidenceFile,
+        uploadedBy: 'admin'
+      });
+
+      // Submit evidence to Square
+      const result = await squareRefundService.submitDisputeEvidence(dispute.squareDisputeId, {
+        evidenceType,
+        evidenceCategory,
+        evidenceText,
+        evidenceFile
+      });
+
+      if (result.success && result.evidenceId) {
+        // Mark evidence as submitted
+        await storage.markEvidenceSubmitted(evidence.id, result.evidenceId);
+      }
+
+      // Log activity
+      await storage.createDisputeActivity({
+        disputeId: id,
+        activityType: 'EVIDENCE_SUBMITTED',
+        performedBy: 'admin',
+        userRole: 'admin',
+        description: `Evidence submitted: ${evidenceType}`,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent')
+      });
+
+      res.json({
+        success: true,
+        evidence,
+        squareResult: result,
+        message: "Evidence submitted successfully"
+      });
+    } catch (error) {
+      console.error('Error submitting evidence:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to submit evidence"
+      });
+    }
+  });
+
+  // Get dispute analytics
+  app.get("/api/admin/disputes/analytics", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const {
+        merchantId,
+        dateFrom,
+        dateTo
+      } = req.query;
+
+      const filters: any = {};
+      if (merchantId) filters.merchantId = merchantId as string;
+      if (dateFrom) filters.dateFrom = new Date(dateFrom as string);
+      if (dateTo) filters.dateTo = new Date(dateTo as string);
+
+      const analytics = await storage.getDisputeAnalytics(filters);
+
+      res.json({
+        success: true,
+        analytics
+      });
+    } catch (error) {
+      console.error('Error fetching dispute analytics:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch dispute analytics"
+      });
+    }
+  });
+
+  // List disputes from Square API (sync with database)
+  app.get("/api/admin/disputes/sync", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { limit = 10 } = req.query;
+
+      const result = await squareRefundService.listDisputes({
+        limit: parseInt(limit as string)
+      });
+
+      if (!result.success) {
+        return res.status(400).json({
+          success: false,
+          message: result.error || "Failed to fetch disputes from Square"
+        });
+      }
+
+      res.json({
+        success: true,
+        disputes: result.disputes,
+        message: "Disputes synced from Square successfully"
+      });
+    } catch (error) {
+      console.error('Error syncing disputes:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to sync disputes"
+      });
+    }
+  });
+
+  // List refunds from Square API
+  app.get("/api/admin/refunds/sync", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { limit = 10 } = req.query;
+
+      const result = await squareRefundService.listRefunds({
+        limit: parseInt(limit as string)
+      });
+
+      if (!result.success) {
+        return res.status(400).json({
+          success: false,
+          message: result.error || "Failed to fetch refunds from Square"
+        });
+      }
+
+      res.json({
+        success: true,
+        refunds: result.refunds,
+        message: "Refunds synced from Square successfully"
+      });
+    } catch (error) {
+      console.error('Error syncing refunds:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to sync refunds"
+      });
+    }
+  });
+
   return httpServer;
 }

@@ -36,6 +36,7 @@ import GDPRComplianceDashboard from "../../components/admin/GDPRComplianceDashbo
 import PCIDSSComplianceDashboard from "../../components/admin/PCIDSSComplianceDashboard";
 import PricingManagement from "../../components/admin/PricingManagement";
 import AdminCheckoutConfig from "../../components/admin/AdminCheckoutConfig";
+import AdminRefundsDisputes from "./AdminRefundsDisputes";
 import type { FraudAlert } from "../../components/admin/ThreatFeedPanel";
 
 interface DashboardMetrics {
@@ -241,6 +242,7 @@ export default function AdminDashboard() {
     { id: "merchants", label: "Merchant Partners", icon: <Users className="w-5 h-5" /> },
     { id: "orders", label: "Public Orders", icon: <CreditCard className="w-5 h-5" /> },
     { id: "analytics", label: "Gift Card Analytics", icon: <BarChart3 className="w-5 h-5" /> },
+    { id: "refunds-disputes", label: "Refunds & Disputes", icon: <RefreshCw className="w-5 h-5" /> },
     { id: "transactions", label: "Transaction Explorer", icon: <Activity className="w-5 h-5" /> },
     { id: "command-center", label: "Command Center", icon: <Settings className="w-5 h-5" /> },
     { id: "settings", label: "Merchant Settings", icon: <Settings className="w-5 h-5" /> },

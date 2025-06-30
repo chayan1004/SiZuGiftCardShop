@@ -3061,7 +3061,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 order.id,
                 'issued',
                 paymentResult.payment.id,
-                gan
+                gan,
+                giftCardId,
+                state
               );
 
               // Also create a gift card record in our database for tracking

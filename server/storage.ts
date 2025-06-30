@@ -42,7 +42,7 @@ export interface IStorage {
   
   // Public Gift Card Order methods
   createPublicGiftCardOrder(order: InsertPublicGiftCardOrder): Promise<PublicGiftCardOrder>;
-  updatePublicGiftCardOrderStatus(orderId: string, status: string, squarePaymentId?: string, giftCardGan?: string): Promise<PublicGiftCardOrder | undefined>;
+  updatePublicGiftCardOrderStatus(orderId: string, status: string, squarePaymentId?: string, giftCardGan?: string, giftCardId?: string, giftCardState?: string): Promise<PublicGiftCardOrder | undefined>;
   validateMerchantById(merchantId: string): Promise<boolean>;
   
   // Gift Card methods
@@ -511,10 +511,12 @@ export class DatabaseStorage implements IStorage {
     return order;
   }
 
-  async updatePublicGiftCardOrderStatus(orderId: string, status: string, squarePaymentId?: string, giftCardGan?: string): Promise<PublicGiftCardOrder | undefined> {
+  async updatePublicGiftCardOrderStatus(orderId: string, status: string, squarePaymentId?: string, giftCardGan?: string, giftCardId?: string, giftCardState?: string): Promise<PublicGiftCardOrder | undefined> {
     const updateData: any = { status };
     if (squarePaymentId) updateData.squarePaymentId = squarePaymentId;
     if (giftCardGan) updateData.giftCardGan = giftCardGan;
+    if (giftCardId) updateData.giftCardId = giftCardId;
+    if (giftCardState) updateData.giftCardState = giftCardState;
 
     const [updated] = await db
       .update(publicGiftCardOrders)

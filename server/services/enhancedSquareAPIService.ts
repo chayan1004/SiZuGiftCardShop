@@ -559,6 +559,8 @@ class EnhancedSquareAPIService {
     error?: string;
   }> {
     try {
+      console.log('🔧 Creating payment link with Cash App Pay support...');
+      
       const { SquareClient, SquareEnvironment } = await import('square');
       
       const client = new SquareClient({
@@ -568,7 +570,9 @@ class EnhancedSquareAPIService {
         token: process.env.SQUARE_ACCESS_TOKEN || "EAAAlxqLNvlPZ0CtBPELxpPe6Hjq9--DfFPA45gVsXFnhmR4pyHhvqHc79HFaPMn"
       });
 
-      const result = await client.checkout.paymentLinks.create({
+      const amountCents = Math.round(paymentData.amount * 100);
+      
+      const createPaymentLinkRequest = {
         idempotencyKey: crypto.randomUUID(),
         checkoutOptions: {
           acceptedPaymentMethods: {
@@ -588,7 +592,7 @@ class EnhancedSquareAPIService {
             {
               quantity: "1",
               basePriceMoney: {
-                amount: BigInt(paymentData.amount * 100), // Convert to cents
+                amount: BigInt(amountCents),
                 currency: 'USD'
               },
               name: paymentData.itemName || "SiZu Gift Card",
@@ -597,9 +601,13 @@ class EnhancedSquareAPIService {
           ]
         },
         paymentNote: paymentData.itemDescription || ""
-      });
+      };
+
+      console.log('💳 Sending payment link request to Square...');
+      const result = await client.checkout.paymentLinks.create(createPaymentLinkRequest);
 
       if (result.paymentLink) {
+        console.log('✅ Payment link created successfully');
         return {
           success: true,
           checkoutUrl: result.paymentLink.url,
@@ -607,6 +615,7 @@ class EnhancedSquareAPIService {
         };
       }
 
+      console.log('❌ No payment link in response');
       return {
         success: false,
         error: 'Failed to create payment link'

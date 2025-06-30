@@ -1252,3 +1252,154 @@ export type CustomCardDesign = typeof customCardDesigns.$inferSelect;
 export type InsertCustomCardDesign = z.infer<typeof insertCustomCardDesignSchema>;
 export type CheckoutConfiguration = typeof checkoutConfigurations.$inferSelect;
 export type InsertCheckoutConfiguration = z.infer<typeof insertCheckoutConfigurationSchema>;
+
+// Refunds Table - Square Refunds Management
+export const refunds = pgTable("refunds", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  squareRefundId: text("square_refund_id").notNull().unique(),
+  paymentId: text("payment_id").notNull(), // Original Square payment ID
+  orderId: text("order_id"), // Associated order ID (optional)
+  giftCardOrderId: uuid("gift_card_order_id"), // Link to gift card orders
+  amount: integer("amount").notNull(), // Refund amount in cents
+  currency: text("currency").notNull().default("USD"),
+  reason: text("reason").notNull(),
+  status: text("status").notNull(), // PENDING, COMPLETED, FAILED, REJECTED
+  processingFee: integer("processing_fee").default(0), // Any processing fees
+  merchantId: text("merchant_id"), // For merchant-specific refunds
+  initiatedBy: text("initiated_by"), // admin, merchant, customer
+  refundMethod: text("refund_method"), // original_payment_method, store_credit, cash
+  customerEmail: text("customer_email"),
+  customerName: text("customer_name"),
+  adminNotes: text("admin_notes"),
+  squareLocationId: text("square_location_id"),
+  approvedBy: text("approved_by"), // Admin who approved the refund
+  approvedAt: timestamp("approved_at"),
+  processedAt: timestamp("processed_at"),
+  failureReason: text("failure_reason"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Disputes Table - Square Disputes Management  
+export const disputes = pgTable("disputes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  squareDisputeId: text("square_dispute_id").notNull().unique(),
+  paymentId: text("payment_id").notNull(), // Disputed Square payment ID
+  orderId: text("order_id"), // Associated order ID (optional)
+  giftCardOrderId: uuid("gift_card_order_id"), // Link to gift card orders
+  amount: integer("amount").notNull(), // Disputed amount in cents
+  currency: text("currency").notNull().default("USD"),
+  reason: text("reason").notNull(), // Dispute reason from Square
+  state: text("state").notNull(), // INQUIRY_EVIDENCE_REQUIRED, INQUIRY_PROCESSING, etc.
+  disputeType: text("dispute_type"), // CHARGEBACK, INQUIRY, RETRIEVAL
+  cardBrand: text("card_brand"), // VISA, MASTERCARD, AMEX, DISCOVER
+  lastFourDigits: text("last_four_digits"),
+  merchantId: text("merchant_id"), // For merchant-specific disputes
+  customerEmail: text("customer_email"),
+  customerName: text("customer_name"),
+  evidenceSubmitted: boolean("evidence_submitted").default(false),
+  evidenceDeadline: timestamp("evidence_deadline"),
+  responseRequired: boolean("response_required").default(false),
+  adminNotes: text("admin_notes"),
+  squareLocationId: text("square_location_id"),
+  dueAt: timestamp("due_at"), // When response is due
+  disputedAt: timestamp("disputed_at"), // When dispute was created
+  resolvedAt: timestamp("resolved_at"),
+  resolution: text("resolution"), // WON, LOST, ACCEPTED, WITHDRAWN
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Dispute Evidence Table - Evidence submitted for disputes
+export const disputeEvidence = pgTable("dispute_evidence", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  disputeId: uuid("dispute_id").notNull().references(() => disputes.id),
+  squareEvidenceId: text("square_evidence_id"), // Square's evidence ID
+  evidenceType: text("evidence_type").notNull(), // RECEIPT, CUSTOMER_COMMUNICATION, etc.
+  evidenceCategory: text("evidence_category"), // ONLINE_OR_APP_PURCHASE_CONFIRMATION, etc.
+  evidenceText: text("evidence_text"),
+  evidenceFile: text("evidence_file"), // File path or URL
+  fileName: text("file_name"),
+  fileSize: integer("file_size"),
+  mimeType: text("mime_type"),
+  uploadedBy: text("uploaded_by"), // admin, merchant
+  isSubmitted: boolean("is_submitted").default(false),
+  submittedAt: timestamp("submitted_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Refund Activities Table - Audit trail for refund actions
+export const refundActivities = pgTable("refund_activities", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  refundId: uuid("refund_id").notNull().references(() => refunds.id),
+  activityType: text("activity_type").notNull(), // CREATED, APPROVED, PROCESSED, FAILED, CANCELLED
+  performedBy: text("performed_by").notNull(), // User who performed the action
+  userRole: text("user_role"), // admin, merchant, system
+  description: text("description").notNull(),
+  previousStatus: text("previous_status"),
+  newStatus: text("new_status"),
+  metadata: text("metadata"), // JSON string for additional data
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Dispute Activities Table - Audit trail for dispute actions
+export const disputeActivities = pgTable("dispute_activities", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  disputeId: uuid("dispute_id").notNull().references(() => disputes.id),
+  activityType: text("activity_type").notNull(), // EVIDENCE_SUBMITTED, RESPONSE_SENT, RESOLVED, etc.
+  performedBy: text("performed_by").notNull(),
+  userRole: text("user_role"), // admin, merchant, system
+  description: text("description").notNull(),
+  previousState: text("previous_state"),
+  newState: text("new_state"),
+  metadata: text("metadata"), // JSON string for additional data
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Insert schemas for refunds and disputes
+export const insertRefundSchema = createInsertSchema(refunds).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertDisputeSchema = createInsertSchema(disputes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertDisputeEvidenceSchema = createInsertSchema(disputeEvidence).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertRefundActivitySchema = createInsertSchema(refundActivities).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertDisputeActivitySchema = createInsertSchema(disputeActivities).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Types for refunds and disputes
+export type Refund = typeof refunds.$inferSelect;
+export type InsertRefund = z.infer<typeof insertRefundSchema>;
+
+export type Dispute = typeof disputes.$inferSelect;
+export type InsertDispute = z.infer<typeof insertDisputeSchema>;
+
+export type DisputeEvidence = typeof disputeEvidence.$inferSelect;
+export type InsertDisputeEvidence = z.infer<typeof insertDisputeEvidenceSchema>;
+
+export type RefundActivity = typeof refundActivities.$inferSelect;
+export type InsertRefundActivity = z.infer<typeof insertRefundActivitySchema>;
+
+export type DisputeActivity = typeof disputeActivities.$inferSelect;
+export type InsertDisputeActivity = z.infer<typeof insertDisputeActivitySchema>;

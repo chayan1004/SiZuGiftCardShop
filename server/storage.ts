@@ -1,5 +1,5 @@
 import { 
-  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, merchantCardDesigns, fraudLogs, autoDefenseRules, cardRedemptions, webhookEvents, webhookDeliveryLogs, webhookRetryQueue, webhookFailureLog, merchantApiKeys, giftCardTransactions, globalSettings, gatewayFeatureToggles, fraudClusters, clusterPatterns, defenseActions, actionRules, defenseHistory, dataProcessingRecords, userConsentRecords, dataSubjectRequests, dataBreachIncidents, privacyImpactAssessments, pciComplianceAssessments, pciSecurityScans, pciSecurityControls, pciIncidentResponses, pciNetworkDiagrams, pciAuditLogs, pricingConfigurations, pricingHistory, physicalGiftCards, physicalCardActivations, cardReloadTransactions, cardBalanceChecks, customCardDesigns, checkoutConfigurations, customerProfiles, savedCards, cardTokenEvents,
+  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, merchantCardDesigns, fraudLogs, autoDefenseRules, cardRedemptions, webhookEvents, webhookDeliveryLogs, webhookRetryQueue, webhookFailureLog, merchantApiKeys, giftCardTransactions, globalSettings, gatewayFeatureToggles, fraudClusters, clusterPatterns, defenseActions, actionRules, defenseHistory, dataProcessingRecords, userConsentRecords, dataSubjectRequests, dataBreachIncidents, privacyImpactAssessments, pciComplianceAssessments, pciSecurityScans, pciSecurityControls, pciIncidentResponses, pciNetworkDiagrams, pciAuditLogs, pricingConfigurations, pricingHistory, physicalGiftCards, physicalCardActivations, cardReloadTransactions, cardBalanceChecks, customCardDesigns, checkoutConfigurations, customerProfiles, savedCards, cardTokenEvents, refunds, disputes, disputeEvidence, refundActivities, disputeActivities,
   type User, type InsertUser,
   type Merchant, type InsertMerchant, 
   type GiftCard, type InsertGiftCard,
@@ -46,7 +46,12 @@ import {
   type CardReloadTransaction, type InsertCardReloadTransaction,
   type CardBalanceCheck, type InsertCardBalanceCheck,
   type CustomCardDesign, type InsertCustomCardDesign,
-  type CheckoutConfiguration, type InsertCheckoutConfiguration
+  type CheckoutConfiguration, type InsertCheckoutConfiguration,
+  type Refund, type InsertRefund,
+  type Dispute, type InsertDispute,
+  type DisputeEvidence, type InsertDisputeEvidence,
+  type RefundActivity, type InsertRefundActivity,
+  type DisputeActivity, type InsertDisputeActivity
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, count, sum, and, gte, lte, asc, or, isNull, isNotNull } from "drizzle-orm";
@@ -481,6 +486,75 @@ export interface IStorage {
     status: string;
     expiresAt?: Date;
   }): Promise<any>;
+
+  // Refunds Management
+  createRefund(refund: InsertRefund): Promise<Refund>;
+  getRefund(id: string): Promise<Refund | undefined>;
+  getRefundBySquareId(squareRefundId: string): Promise<Refund | undefined>;
+  getAllRefunds(filters?: {
+    status?: string;
+    merchantId?: string;
+    dateFrom?: Date;
+    dateTo?: Date;
+    limit?: number;
+    offset?: number;
+  }): Promise<Refund[]>;
+  updateRefundStatus(id: string, status: string, processedAt?: Date, failureReason?: string): Promise<Refund | undefined>;
+  getRefundsByPaymentId(paymentId: string): Promise<Refund[]>;
+  getRefundsByGiftCardOrderId(giftCardOrderId: string): Promise<Refund[]>;
+
+  // Disputes Management
+  createDispute(dispute: InsertDispute): Promise<Dispute>;
+  getDispute(id: string): Promise<Dispute | undefined>;
+  getDisputeBySquareId(squareDisputeId: string): Promise<Dispute | undefined>;
+  getAllDisputes(filters?: {
+    state?: string;
+    disputeType?: string;
+    merchantId?: string;
+    dateFrom?: Date;
+    dateTo?: Date;
+    limit?: number;
+    offset?: number;
+  }): Promise<Dispute[]>;
+  updateDisputeState(id: string, state: string, resolution?: string, resolvedAt?: Date): Promise<Dispute | undefined>;
+  updateDisputeStatus(squareDisputeId: string, state: string): Promise<Dispute | undefined>;
+  getDisputesByPaymentId(paymentId: string): Promise<Dispute[]>;
+  getDisputesByGiftCardOrderId(giftCardOrderId: string): Promise<Dispute[]>;
+
+  // Dispute Evidence Management
+  createDisputeEvidence(evidence: InsertDisputeEvidence): Promise<DisputeEvidence>;
+  getDisputeEvidence(id: string): Promise<DisputeEvidence | undefined>;
+  getEvidenceByDisputeId(disputeId: string): Promise<DisputeEvidence[]>;
+  markEvidenceSubmitted(id: string, squareEvidenceId?: string): Promise<DisputeEvidence | undefined>;
+
+  // Activity Tracking
+  createRefundActivity(activity: InsertRefundActivity): Promise<RefundActivity>;
+  createDisputeActivity(activity: InsertDisputeActivity): Promise<DisputeActivity>;
+  getRefundActivities(refundId: string): Promise<RefundActivity[]>;
+  getDisputeActivities(disputeId: string): Promise<DisputeActivity[]>;
+
+  // Analytics and Reports
+  getRefundAnalytics(filters?: {
+    merchantId?: string;
+    dateFrom?: Date;
+    dateTo?: Date;
+  }): Promise<{
+    totalRefunds: number;
+    totalAmount: number;
+    refundsByStatus: { status: string; count: number; amount: number }[];
+    refundsByMethod: { method: string; count: number; amount: number }[];
+  }>;
+  getDisputeAnalytics(filters?: {
+    merchantId?: string;
+    dateFrom?: Date;
+    dateTo?: Date;
+  }): Promise<{
+    totalDisputes: number;
+    totalAmount: number;
+    disputesByState: { state: string; count: number; amount: number }[];
+    disputesByType: { type: string; count: number; amount: number }[];
+    winRate: number;
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {

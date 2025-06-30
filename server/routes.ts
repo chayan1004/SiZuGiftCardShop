@@ -3978,8 +3978,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Step 5: Process legitimate redemption
       const updatedCard = await storage.redeemGiftCard(code, redeemedBy, amount);
       
-      // Step 6: Trigger redemption webhook for merchant automation (after successful redemption)
+      // Step 6: Trigger multi-event webhook for merchant automation (after successful redemption)
       if (updatedCard && req.body.merchantId) {
+        const webhookPayload = {
+          event: 'gift_card_redeemed' as const,
+          timestamp: new Date().toISOString(),
+          data: {
+            giftCardId: updatedCard.id?.toString(),
+            giftCardCode: code,
+            merchantId: req.body.merchantId,
+            amount: updatedCard.lastRedemptionAmount || amount,
+            currency: 'USD',
+            customerEmail: redeemedBy,
+            redemptionTime: new Date().toISOString()
+          }
+        };
+
+        // Fire multi-event webhook asynchronously - don't block redemption response
+        multiEventWebhookDispatcher.dispatchWebhooksForEvent(
+          req.body.merchantId, 
+          'gift_card_redeemed', 
+          webhookPayload
+        );
+
+        // Legacy webhook support for backward compatibility
         const redemptionData: RedemptionData = {
           giftCardCode: code,
           merchantId: req.body.merchantId,
@@ -3991,8 +4013,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           },
           redemptionTime: new Date().toISOString()
         };
-
-        // Fire webhook asynchronously - don't block redemption response
         webhookService.triggerRedemptionWebhook(req.body.merchantId, redemptionData);
       }
       

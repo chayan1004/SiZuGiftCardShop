@@ -629,13 +629,14 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  async getRecentTransactions(merchantId: string, limit = 10): Promise<Array<{
+  async getRecentTransactions(merchantId: string, limit?: number): Promise<Array<{
     type: string;
     amount: number;
     email?: string;
     gan?: string;
     createdAt: Date;
   }>> {
+    const actualLimit = limit || 10;
     const merchantCards = await this.getGiftCardsByMerchant(merchantId);
     const transactions: Array<{
       type: string;
@@ -670,7 +671,7 @@ export class DatabaseStorage implements IStorage {
 
     return transactions
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-      .slice(0, limit);
+      .slice(0, actualLimit);
   }
 
   async getAllMerchants(): Promise<Merchant[]> {

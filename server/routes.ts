@@ -4763,7 +4763,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updateData.redeemedAt = new Date();
       }
       
-      await storage.redeemGiftCard(card.id.toString(), card.redeemed ? 0 : amount, req.body.customerEmail || 'unknown');
+      await storage.redeemGiftCard(card.gan, req.body.customerEmail || 'unknown', amount);
 
       // Log successful redemption
       await logRedemptionAttempt(card.id, 'success', null, req);

@@ -3389,7 +3389,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
         design: {
           hasCustomDesign: true,
-          backgroundImageUrl: design.backgroundImageUrl,
+          backgroundImageUrl: design.designUrl,
           logoUrl: design.logoUrl,
           themeColor: design.themeColor || '#613791',
           customMessage: design.customMessage || 'Thank you for choosing our gift card!'

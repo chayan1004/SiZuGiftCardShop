@@ -955,25 +955,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getMerchantCardDesignBySquareId(merchantSquareId: string): Promise<MerchantCardDesign | undefined> {
-    const [design] = await db.select({
-      id: merchantCardDesigns.id,
-      merchantId: merchantCardDesigns.merchantId,
-      backgroundImageUrl: merchantCardDesigns.backgroundImageUrl,
-      logoUrl: merchantCardDesigns.logoUrl,
-      themeColor: merchantCardDesigns.themeColor,
-      customMessage: merchantCardDesigns.customMessage,
-      isActive: merchantCardDesigns.isActive,
-      createdAt: merchantCardDesigns.createdAt,
-      updatedAt: merchantCardDesigns.updatedAt
-    })
+    const [design] = await db.select()
       .from(merchantCardDesigns)
       .innerJoin(merchants, eq(merchantCardDesigns.merchantId, merchants.id))
       .where(and(
-        eq(merchants.squareId, merchantSquareId),
+        eq(merchants.merchantId, merchantSquareId),
         eq(merchantCardDesigns.isActive, true)
       ));
     
-    return design || undefined;
+    return design?.merchant_card_designs || undefined;
   }
 
   async createMerchantCardDesign(insertDesign: InsertMerchantCardDesign): Promise<MerchantCardDesign> {

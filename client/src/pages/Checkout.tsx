@@ -27,6 +27,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import DesignPreview from "@/components/DesignPreview";
 
 // Square Web SDK types
 declare global {
@@ -58,11 +59,15 @@ export default function Checkout() {
   const [squareLoaded, setSquareLoaded] = useState(false);
   const { toast } = useToast();
 
-  // Parse URL parameters
+  // Parse URL parameters and extract merchant ID from path
   const urlParams = new URLSearchParams(location.split('?')[1] || '');
   const presetAmount = urlParams.get('amount');
   const isCustom = urlParams.get('custom') === 'true';
   const cardType = urlParams.get('type');
+  
+  // Extract merchant ID from URL path (/checkout/:merchantId)
+  const pathParts = location.split('/');
+  const merchantId = pathParts[2] || null;
 
   // Fetch Square configuration
   const { data: squareConfig } = useQuery({
@@ -75,6 +80,32 @@ export default function Checkout() {
       return response.json();
     }
   });
+
+  // Fetch merchant design for branding
+  const { data: merchantDesignData, isLoading: isLoadingDesign } = useQuery({
+    queryKey: ['/api/public/merchant-design', merchantId],
+    queryFn: async () => {
+      if (!merchantId) return null;
+      const response = await fetch(`/api/public/merchant-design/${merchantId}`);
+      if (!response.ok) {
+        console.warn('Failed to fetch merchant design, using default');
+        return {
+          success: true,
+          design: {
+            hasCustomDesign: false,
+            backgroundImageUrl: null,
+            logoUrl: null,
+            themeColor: '#613791',
+            customMessage: 'Thank you for choosing our gift card!'
+          }
+        };
+      }
+      return response.json();
+    },
+    enabled: !!merchantId
+  });
+
+  const merchantDesign = merchantDesignData?.design || null;
 
   // Load Square Web SDK
   useEffect(() => {

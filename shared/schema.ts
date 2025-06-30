@@ -1133,7 +1133,7 @@ export const checkoutConfigurations = pgTable("checkout_configurations", {
   animation: text("animation").notNull().default("enhanced"), // 'minimal', 'standard', 'enhanced'
   
   // Payment Options (JSON stored as text)
-  acceptedPaymentMethods: text("accepted_payment_methods").notNull().default('{"creditCard":true,"debitCard":true,"applePay":true,"googlePay":true,"paypal":false,"bankTransfer":false}'),
+  acceptedPaymentMethods: text("accepted_payment_methods").notNull().default('{"creditCard":true,"debitCard":true,"applePay":true,"googlePay":true,"cashApp":true,"paypal":false,"bankTransfer":false}'),
   
   // Security Features
   requireCVV: boolean("require_cvv").notNull().default(true),

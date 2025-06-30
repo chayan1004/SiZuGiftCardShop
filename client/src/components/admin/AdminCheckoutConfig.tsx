@@ -60,6 +60,7 @@ const checkoutConfigSchema = z.object({
     debitCard: z.boolean().default(true),
     applePay: z.boolean().default(true),
     googlePay: z.boolean().default(true),
+    cashApp: z.boolean().default(true),
     paypal: z.boolean().default(false),
     bankTransfer: z.boolean().default(false)
   }),

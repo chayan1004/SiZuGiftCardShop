@@ -26,6 +26,40 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 
+// Checkout configuration interface
+interface CheckoutConfig {
+  brandName: string;
+  brandLogo?: string;
+  tagline?: string;
+  primaryColor: string;
+  secondaryColor: string;
+  accentColor: string;
+  backgroundColor: string;
+  textColor: string;
+  layout: string;
+  theme: string;
+  animation: string;
+  acceptedPaymentMethods: {
+    creditCard: boolean;
+    debitCard: boolean;
+    applePay: boolean;
+    googlePay: boolean;
+    cashApp: boolean;
+    paypal: boolean;
+    bankTransfer: boolean;
+  };
+  requireCVV: boolean;
+  requireBillingAddress: boolean;
+  enableSavePayment: boolean;
+  enableGuestCheckout: boolean;
+  welcomeMessage?: string;
+  footerText?: string;
+  privacyPolicyUrl?: string;
+  termsOfServiceUrl?: string;
+  sessionTimeout: number;
+  enableAnalytics: boolean;
+}
+
 // Checkout form schema
 const checkoutSchema = z.object({
   // Personal Information
@@ -142,7 +176,7 @@ export default function BrandedCheckout() {
   
   const [step, setStep] = useState<'details' | 'payment' | 'processing' | 'success'>('details');
   const [orderData, setOrderData] = useState<any>(null);
-  const [checkoutConfig, setCheckoutConfig] = useState<any>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('creditCard');
 
   // Form setup
   const form = useForm<CheckoutFormData>({
@@ -434,7 +468,11 @@ export default function BrandedCheckout() {
 
                         <Button
                           onClick={() => setStep('payment')}
-                          className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                          className="w-full text-white font-semibold transition-all duration-200"
+                          style={{
+                            background: config ? `linear-gradient(135deg, ${config.primaryColor}, ${config.secondaryColor})` : 'linear-gradient(135deg, #7c3aed, #ec4899)',
+                            border: 'none'
+                          }}
                         >
                           Continue to Payment
                         </Button>
@@ -516,7 +554,11 @@ export default function BrandedCheckout() {
                           <Button
                             onClick={form.handleSubmit(onSubmit)}
                             disabled={processPaymentMutation.isPending}
-                            className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                            className="flex-1 text-white font-semibold transition-all duration-200"
+                            style={{
+                              background: config ? `linear-gradient(135deg, ${config.primaryColor}, ${config.secondaryColor})` : 'linear-gradient(135deg, #7c3aed, #ec4899)',
+                              border: 'none'
+                            }}
                           >
                             {processPaymentMutation.isPending ? 'Processing...' : 'Complete Payment'}
                           </Button>
@@ -560,7 +602,11 @@ export default function BrandedCheckout() {
                         <p className="text-gray-400 mb-6">Your order has been processed successfully.</p>
                         <Button
                           onClick={() => setLocation('/')}
-                          className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                          className="text-white font-semibold transition-all duration-200"
+                          style={{
+                            background: config ? `linear-gradient(135deg, ${config.primaryColor}, ${config.secondaryColor})` : 'linear-gradient(135deg, #7c3aed, #ec4899)',
+                            border: 'none'
+                          }}
                         >
                           Return to Home
                         </Button>

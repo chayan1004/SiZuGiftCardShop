@@ -144,6 +144,51 @@ This is a full-stack gift card management application built with a modern tech s
 - June 29, 2025. Phase 6: Mobile-First Merchant Login Enhancement - completely rebuilt merchant login page with mobile-first responsive design including adaptive containers, touch-friendly inputs, responsive typography, mobile-optimized spacing, and enhanced navigation
 - June 30, 2025. Prompt 4: Branded Public Gift Card Storefront - implemented complete public-facing gift card purchase system at /giftcard-store with Square Web Payments SDK integration, real-time merchant validation, business pricing tiers, secure payment processing, automated gift card generation, and comprehensive database tracking
 
+## Prompt 4: Branded Public Gift Card Storefront (June 30, 2025)
+
+### Complete Square API Integration
+- **Public Storefront**: Beautiful, branded gift card purchase page at `/giftcard-store` route
+- **Square Web Payments SDK**: 100% branded inline payment form (no redirects)
+- **Real-time Payment Processing**: Secure Square API integration with payment tokenization
+- **Automated Gift Card Generation**: Creates real Square gift cards upon successful payment
+- **Database Tracking**: New `public_giftcard_orders` table for order management
+
+### Frontend Features
+- **Amount Selection**: Predefined amounts ($25-$250) plus custom amount input
+- **Merchant Validation**: Real-time merchant ID validation with business pricing
+- **Form Validation**: Comprehensive Zod-based validation with error handling
+- **Payment Integration**: Square Web Payments SDK with secure tokenization
+- **Success Handling**: Animated success messages and form reset
+
+### Backend Implementation
+- **API Endpoints**: 
+  - `GET /api/public/validate-merchant/:merchantId` - Merchant validation
+  - `POST /api/public/checkout` - Secure payment processing
+- **Square Integration**: Full Square Payments API and Gift Cards API integration
+- **Security**: Payment tokens validated, no fake payments possible
+- **Database**: Order tracking with status updates (pending → completed/failed)
+
+### Business Logic
+- **Merchant Pricing**: Business discounts applied when valid merchant ID entered
+- **Payment Flow**: Token → Payment → Gift Card → Database → Email notification
+- **Error Handling**: Comprehensive error management with proper status codes
+- **Logging**: Detailed transaction logging for admin monitoring
+
+### Database Schema
+```sql
+CREATE TABLE public_giftcard_orders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  recipient_email TEXT NOT NULL,
+  merchant_id TEXT,
+  amount INTEGER NOT NULL,
+  message TEXT,
+  status TEXT NOT NULL DEFAULT 'pending',
+  square_payment_id TEXT,
+  gift_card_gan TEXT,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
 ## Recent Production Enhancements
 
 ### Phase IX: Complete Mobile-First Merchant Interface (June 29, 2025)

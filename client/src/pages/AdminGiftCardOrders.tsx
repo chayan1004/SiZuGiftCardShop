@@ -631,7 +631,7 @@ export default function AdminGiftCardOrders() {
                           </div>
                         </TableCell>
                       </TableRow>
-                    ))
+                        ))
                       )}
                     </TableBody>
                   </Table>

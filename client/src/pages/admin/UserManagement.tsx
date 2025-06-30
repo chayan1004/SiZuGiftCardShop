@@ -155,48 +155,101 @@ export default function MerchantManagement() {
             <div className="flex items-center justify-center h-64">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div>
             </div>
+          ) : filteredMerchants.length === 0 ? (
+            <div className="text-center py-8 text-gray-400">
+              No merchants found matching your criteria
+            </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-white/20 hover:bg-white/5">
-                    <TableHead className="text-gray-300">Business Name</TableHead>
-                    <TableHead className="text-gray-300">Email</TableHead>
-                    <TableHead className="text-gray-300">Square ID</TableHead>
-                    <TableHead className="text-gray-300">Status</TableHead>
-                    <TableHead className="text-gray-300">Gift Cards</TableHead>
-                    <TableHead className="text-gray-300">Total Sales</TableHead>
-                    <TableHead className="text-gray-300">Created</TableHead>
-                    <TableHead className="text-gray-300">Last Login</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredMerchants.map((merchant) => (
-                    <TableRow key={merchant.id} className="border-white/20 hover:bg-white/5">
-                      <TableCell className="font-medium text-white">{merchant.businessName}</TableCell>
-                      <TableCell className="text-gray-300">{merchant.email}</TableCell>
-                      <TableCell className="font-mono text-sm text-gray-400">{merchant.squareId}</TableCell>
-                      <TableCell>
+            <>
+              {/* Mobile Cards - xs to md */}
+              <div className="grid gap-4 xs:grid-cols-1 sm:grid-cols-2 md:hidden">
+                {filteredMerchants.map((merchant) => (
+                  <Card key={merchant.id} className="bg-white/5 border-white/10 p-4">
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-gray-400 uppercase tracking-wider">Business Name</p>
+                          <p className="text-white font-semibold truncate">{merchant.businessName}</p>
+                        </div>
                         <Badge className={merchant.isEmailVerified ? 'bg-green-500/20 text-green-300 border-green-400/30' : 'bg-yellow-500/20 text-yellow-300 border-yellow-400/30'}>
                           {merchant.isEmailVerified ? 'Verified' : 'Pending'}
                         </Badge>
-                      </TableCell>
-                      <TableCell className="text-gray-300">{merchant.activeGiftCards}</TableCell>
-                      <TableCell className="text-gray-300">${merchant.totalSales.toFixed(2)}</TableCell>
-                      <TableCell className="text-gray-400">{new Date(merchant.createdAt).toLocaleDateString()}</TableCell>
-                      <TableCell className="text-gray-400">
-                        {merchant.lastLogin ? new Date(merchant.lastLogin).toLocaleDateString() : 'Never'}
-                      </TableCell>
+                      </div>
+                      
+                      <div>
+                        <p className="text-xs text-gray-400 uppercase tracking-wider">Email</p>
+                        <p className="text-white text-sm break-all">{merchant.email}</p>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <p className="text-xs text-gray-400 uppercase tracking-wider">Gift Cards</p>
+                          <p className="text-white font-semibold">{merchant.activeGiftCards}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400 uppercase tracking-wider">Total Sales</p>
+                          <p className="text-white font-semibold">${merchant.totalSales.toFixed(2)}</p>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <p className="text-xs text-gray-400 uppercase tracking-wider">Square ID</p>
+                        <p className="text-white font-mono text-sm">{merchant.squareId.substring(0, 16)}...</p>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <p className="text-xs text-gray-400 uppercase tracking-wider">Created</p>
+                          <p className="text-white text-sm">{new Date(merchant.createdAt).toLocaleDateString()}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400 uppercase tracking-wider">Last Login</p>
+                          <p className="text-white text-sm">{merchant.lastLogin ? new Date(merchant.lastLogin).toLocaleDateString() : 'Never'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Desktop Table - md and larger */}
+              <div className="hidden md:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-white/20 hover:bg-white/5">
+                      <TableHead className="text-gray-300">Business Name</TableHead>
+                      <TableHead className="text-gray-300">Email</TableHead>
+                      <TableHead className="text-gray-300">Square ID</TableHead>
+                      <TableHead className="text-gray-300">Status</TableHead>
+                      <TableHead className="text-gray-300">Gift Cards</TableHead>
+                      <TableHead className="text-gray-300">Total Sales</TableHead>
+                      <TableHead className="text-gray-300">Created</TableHead>
+                      <TableHead className="text-gray-300">Last Login</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              {filteredMerchants.length === 0 && (
-                <div className="text-center py-8 text-gray-400">
-                  No merchants found matching your criteria
-                </div>
-              )}
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredMerchants.map((merchant) => (
+                      <TableRow key={merchant.id} className="border-white/20 hover:bg-white/5">
+                        <TableCell className="font-medium text-white">{merchant.businessName}</TableCell>
+                        <TableCell className="text-gray-300">{merchant.email}</TableCell>
+                        <TableCell className="font-mono text-sm text-gray-400">{merchant.squareId}</TableCell>
+                        <TableCell>
+                          <Badge className={merchant.isEmailVerified ? 'bg-green-500/20 text-green-300 border-green-400/30' : 'bg-yellow-500/20 text-yellow-300 border-yellow-400/30'}>
+                            {merchant.isEmailVerified ? 'Verified' : 'Pending'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-gray-300">{merchant.activeGiftCards}</TableCell>
+                        <TableCell className="text-gray-300">${merchant.totalSales.toFixed(2)}</TableCell>
+                        <TableCell className="text-gray-400">{new Date(merchant.createdAt).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-gray-400">
+                          {merchant.lastLogin ? new Date(merchant.lastLogin).toLocaleDateString() : 'Never'}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

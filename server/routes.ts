@@ -7625,5 +7625,343 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ===============================
+  // PHYSICAL GIFT CARD SYSTEM API
+  // ===============================
+  
+  // Import the pricing service
+  const { PhysicalCardPricingService } = await import('./services/PhysicalCardPricingService');
+  
+  // Get pricing tiers for physical cards
+  app.get("/api/physical-cards/pricing/:cardType/:customerType", async (req: Request, res: Response) => {
+    try {
+      const { cardType, customerType } = req.params;
+      
+      if (!['plastic', 'metal', 'premium'].includes(cardType)) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Invalid card type. Must be plastic, metal, or premium" 
+        });
+      }
+      
+      if (!['merchant', 'individual'].includes(customerType)) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Invalid customer type. Must be merchant or individual" 
+        });
+      }
+      
+      const pricingTiers = PhysicalCardPricingService.getPricingTiers(
+        cardType as 'plastic' | 'metal' | 'premium', 
+        customerType as 'merchant' | 'individual'
+      );
+      
+      res.json({ success: true, pricingTiers });
+    } catch (error) {
+      console.error('Error fetching pricing tiers:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to fetch pricing tiers" 
+      });
+    }
+  });
+
+  // Calculate pricing for a physical card order
+  app.post("/api/physical-cards/calculate-pricing", async (req: Request, res: Response) => {
+    try {
+      const { cardType, quantity, denomination, customerType, customDesign, shippingMethod } = req.body;
+      
+      const pricing = await PhysicalCardPricingService.calculatePricing({
+        cardType,
+        quantity: parseInt(quantity),
+        denomination: parseInt(denomination),
+        customerType,
+        customDesign: Boolean(customDesign),
+        shippingMethod: shippingMethod || 'standard'
+      });
+      
+      res.json({ success: true, pricing });
+    } catch (error) {
+      console.error('Error calculating pricing:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to calculate pricing" 
+      });
+    }
+  });
+
+  // Create a physical gift card order
+  app.post("/api/physical-cards/order", async (req: Request, res: Response) => {
+    try {
+      const orderData = req.body;
+      
+      // Calculate pricing
+      const pricing = await PhysicalCardPricingService.calculatePricing({
+        cardType: orderData.cardType,
+        quantity: parseInt(orderData.quantity),
+        denomination: parseInt(orderData.denomination),
+        customerType: orderData.customerType,
+        customDesign: Boolean(orderData.customDesign),
+        shippingMethod: orderData.shippingMethod || 'standard'
+      });
+
+      // Create physical gift card order
+      const physicalCard = await storage.createPhysicalGiftCard({
+        cardType: orderData.cardType,
+        cardDesign: orderData.cardDesign || 'default',
+        isCustomDesign: Boolean(orderData.customDesign),
+        customDesignUrl: orderData.customDesignUrl,
+        quantity: parseInt(orderData.quantity),
+        denomination: parseInt(orderData.denomination),
+        squareBasePrice: pricing.squareBasePrice,
+        adminFeePercentage: pricing.adminFeePercentage.toString(),
+        totalCost: pricing.totalOrder,
+        customerType: orderData.customerType,
+        customerId: orderData.customerId,
+        customerEmail: orderData.customerEmail,
+        customerName: orderData.customerName,
+        shippingAddress: orderData.shippingAddress,
+        shippingCity: orderData.shippingCity,
+        shippingState: orderData.shippingState,
+        shippingZip: orderData.shippingZip,
+        shippingCountry: orderData.shippingCountry || 'US',
+        shippingCost: pricing.shippingCost,
+        estimatedDelivery: PhysicalCardPricingService.estimateDeliveryDate(orderData.shippingMethod || 'standard'),
+        notes: orderData.notes
+      });
+
+      // Generate card numbers for activation later
+      for (let i = 0; i < parseInt(orderData.quantity); i++) {
+        const cardNumber = PhysicalCardPricingService.generateCardNumber();
+        await storage.createPhysicalCardActivation({
+          physicalCardId: physicalCard.id,
+          cardNumber,
+          isActive: false
+        });
+      }
+
+      res.json({ 
+        success: true, 
+        order: physicalCard,
+        pricing 
+      });
+    } catch (error) {
+      console.error('Error creating physical card order:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to create order" 
+      });
+    }
+  });
+
+  // Get all physical card orders (admin)
+  app.get("/api/admin/physical-cards", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const orders = await storage.getAllPhysicalGiftCards();
+      res.json({ success: true, orders });
+    } catch (error) {
+      console.error('Error fetching physical card orders:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to fetch orders" 
+      });
+    }
+  });
+
+  // Update physical card order status (admin)
+  app.put("/api/admin/physical-cards/:id/status", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { status, paymentId, trackingNumber, estimatedDelivery } = req.body;
+      
+      let updatedCard;
+      if (trackingNumber) {
+        updatedCard = await storage.updatePhysicalGiftCardTracking(
+          id, 
+          trackingNumber, 
+          estimatedDelivery ? new Date(estimatedDelivery) : undefined
+        );
+      } else {
+        updatedCard = await storage.updatePhysicalGiftCardStatus(id, status, paymentId);
+      }
+      
+      if (!updatedCard) {
+        return res.status(404).json({ 
+          success: false, 
+          message: "Order not found" 
+        });
+      }
+      
+      res.json({ success: true, order: updatedCard });
+    } catch (error) {
+      console.error('Error updating physical card status:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to update order status" 
+      });
+    }
+  });
+
+  // Activate a physical card
+  app.post("/api/physical-cards/activate", async (req: Request, res: Response) => {
+    try {
+      const { cardNumber, activatedBy } = req.body;
+      
+      // Check if card exists and is not already activated
+      const existingActivation = await storage.getPhysicalCardActivationByCardNumber(cardNumber);
+      if (!existingActivation) {
+        return res.status(404).json({ 
+          success: false, 
+          message: "Card number not found" 
+        });
+      }
+      
+      if (existingActivation.isActive) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Card is already activated" 
+        });
+      }
+
+      // TODO: Create Square gift card here
+      // For now, we'll use placeholder values
+      const squareGiftCardId = `sq_giftcard_${Date.now()}`;
+      const gan = `GAN${Math.floor(Math.random() * 1000000000000)}`;
+      
+      const activation = await storage.activatePhysicalCard(
+        cardNumber, 
+        squareGiftCardId, 
+        gan, 
+        activatedBy
+      );
+      
+      res.json({ 
+        success: true, 
+        activation,
+        message: "Card activated successfully" 
+      });
+    } catch (error) {
+      console.error('Error activating physical card:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to activate card" 
+      });
+    }
+  });
+
+  // Check card balance
+  app.post("/api/physical-cards/balance", async (req: Request, res: Response) => {
+    try {
+      const { cardNumber } = req.body;
+      const ipAddress = req.ip || 'unknown';
+      const userAgent = req.get('User-Agent') || 'unknown';
+      
+      const activation = await storage.getPhysicalCardActivationByCardNumber(cardNumber);
+      if (!activation) {
+        return res.status(404).json({ 
+          success: false, 
+          message: "Card not found" 
+        });
+      }
+      
+      if (!activation.isActive) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Card is not activated" 
+        });
+      }
+
+      // Log balance check
+      await storage.createCardBalanceCheck({
+        cardNumber,
+        checkedBy: ipAddress,
+        balance: activation.currentBalance,
+        ipAddress,
+        userAgent
+      });
+      
+      res.json({ 
+        success: true, 
+        balance: activation.currentBalance || 0,
+        cardNumber: cardNumber.slice(-4), // Only show last 4 digits
+        lastUsed: activation.lastUsed
+      });
+    } catch (error) {
+      console.error('Error checking card balance:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to check balance" 
+      });
+    }
+  });
+
+  // Reload card balance
+  app.post("/api/physical-cards/reload", async (req: Request, res: Response) => {
+    try {
+      const { cardNumber, reloadAmount, reloadedBy, customerType } = req.body;
+      
+      const activation = await storage.getPhysicalCardActivationByCardNumber(cardNumber);
+      if (!activation) {
+        return res.status(404).json({ 
+          success: false, 
+          message: "Card not found" 
+        });
+      }
+      
+      if (!activation.isActive) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Card is not activated" 
+        });
+      }
+
+      // Calculate reload pricing
+      const reloadPricing = await PhysicalCardPricingService.calculateReloadPricing(
+        parseInt(reloadAmount), 
+        customerType || 'individual'
+      );
+
+      // Create reload transaction
+      const transaction = await storage.createCardReloadTransaction({
+        cardActivationId: activation.id,
+        reloadAmount: parseInt(reloadAmount),
+        adminFeePercentage: reloadPricing.adminFeePercentage.toString(),
+        totalCharged: reloadPricing.totalCharged,
+        reloadedBy,
+        paymentMethod: 'square', // Default to Square
+        status: 'pending'
+      });
+
+      res.json({ 
+        success: true, 
+        transaction,
+        pricing: reloadPricing,
+        message: "Reload transaction created. Please complete payment." 
+      });
+    } catch (error) {
+      console.error('Error creating reload transaction:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to create reload transaction" 
+      });
+    }
+  });
+
+  // Get customer's physical card orders
+  app.get("/api/physical-cards/customer/:customerId/:customerType", async (req: Request, res: Response) => {
+    try {
+      const { customerId, customerType } = req.params;
+      
+      const orders = await storage.getPhysicalGiftCardsByCustomer(customerId, customerType);
+      res.json({ success: true, orders });
+    } catch (error) {
+      console.error('Error fetching customer orders:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to fetch orders" 
+      });
+    }
+  });
+
   return httpServer;
 }

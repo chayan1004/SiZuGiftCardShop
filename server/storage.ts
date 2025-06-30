@@ -1,5 +1,5 @@
 import { 
-  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, merchantCardDesigns, fraudLogs, autoDefenseRules, cardRedemptions, webhookEvents, webhookDeliveryLogs, webhookRetryQueue, webhookFailureLog, merchantApiKeys, giftCardTransactions, globalSettings, gatewayFeatureToggles, fraudClusters, clusterPatterns, defenseActions, actionRules, defenseHistory, dataProcessingRecords, userConsentRecords, dataSubjectRequests, dataBreachIncidents, privacyImpactAssessments, pciComplianceAssessments, pciSecurityScans, pciSecurityControls, pciIncidentResponses, pciNetworkDiagrams, pciAuditLogs, pricingConfigurations, pricingHistory,
+  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, merchantCardDesigns, fraudLogs, autoDefenseRules, cardRedemptions, webhookEvents, webhookDeliveryLogs, webhookRetryQueue, webhookFailureLog, merchantApiKeys, giftCardTransactions, globalSettings, gatewayFeatureToggles, fraudClusters, clusterPatterns, defenseActions, actionRules, defenseHistory, dataProcessingRecords, userConsentRecords, dataSubjectRequests, dataBreachIncidents, privacyImpactAssessments, pciComplianceAssessments, pciSecurityScans, pciSecurityControls, pciIncidentResponses, pciNetworkDiagrams, pciAuditLogs, pricingConfigurations, pricingHistory, physicalGiftCards, physicalCardActivations, cardReloadTransactions, cardBalanceChecks, customCardDesigns,
   type User, type InsertUser,
   type Merchant, type InsertMerchant, 
   type GiftCard, type InsertGiftCard,
@@ -40,7 +40,12 @@ import {
   type PciNetworkDiagram, type InsertPciNetworkDiagram,
   type PciAuditLog, type InsertPciAuditLog,
   type PricingConfiguration, type InsertPricingConfiguration,
-  type PricingHistory, type InsertPricingHistory
+  type PricingHistory, type InsertPricingHistory,
+  type PhysicalGiftCard, type InsertPhysicalGiftCard,
+  type PhysicalCardActivation, type InsertPhysicalCardActivation,
+  type CardReloadTransaction, type InsertCardReloadTransaction,
+  type CardBalanceCheck, type InsertCardBalanceCheck,
+  type CustomCardDesign, type InsertCustomCardDesign
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, count, sum, and, gte, lte, asc, or, isNull, isNotNull } from "drizzle-orm";
@@ -383,6 +388,38 @@ export interface IStorage {
     profitMarginIndividual: number;
     lastRefresh: string;
   }>;
+  
+  // Physical Gift Card methods
+  createPhysicalGiftCard(card: InsertPhysicalGiftCard): Promise<PhysicalGiftCard>;
+  getPhysicalGiftCard(id: string): Promise<PhysicalGiftCard | undefined>;
+  getPhysicalGiftCardsByCustomer(customerId: string, customerType: string): Promise<PhysicalGiftCard[]>;
+  getAllPhysicalGiftCards(): Promise<PhysicalGiftCard[]>;
+  updatePhysicalGiftCardStatus(id: string, status: string, paymentId?: string): Promise<PhysicalGiftCard | undefined>;
+  updatePhysicalGiftCardTracking(id: string, trackingNumber: string, estimatedDelivery?: Date): Promise<PhysicalGiftCard | undefined>;
+  
+  // Physical Card Activations
+  createPhysicalCardActivation(activation: InsertPhysicalCardActivation): Promise<PhysicalCardActivation>;
+  getPhysicalCardActivation(id: string): Promise<PhysicalCardActivation | undefined>;
+  getPhysicalCardActivationByCardNumber(cardNumber: string): Promise<PhysicalCardActivation | undefined>;
+  activatePhysicalCard(cardNumber: string, squareGiftCardId: string, gan: string, activatedBy: string): Promise<PhysicalCardActivation | undefined>;
+  updateCardBalance(cardNumber: string, newBalance: number): Promise<PhysicalCardActivation | undefined>;
+  
+  // Card Reload Transactions
+  createCardReloadTransaction(transaction: InsertCardReloadTransaction): Promise<CardReloadTransaction>;
+  getCardReloadTransactions(cardActivationId: string): Promise<CardReloadTransaction[]>;
+  updateReloadTransactionStatus(id: string, status: string, paymentId?: string): Promise<CardReloadTransaction | undefined>;
+  
+  // Card Balance Checks
+  createCardBalanceCheck(check: InsertCardBalanceCheck): Promise<CardBalanceCheck>;
+  getCardBalanceChecks(cardNumber: string, limit?: number): Promise<CardBalanceCheck[]>;
+  
+  // Custom Card Designs
+  createCustomCardDesign(design: InsertCustomCardDesign): Promise<CustomCardDesign>;
+  getCustomCardDesign(id: string): Promise<CustomCardDesign | undefined>;
+  getCustomCardDesignsByCustomer(customerId: string, customerType: string): Promise<CustomCardDesign[]>;
+  approveCustomCardDesign(id: string, approvedBy: string): Promise<CustomCardDesign | undefined>;
+  rejectCustomCardDesign(id: string, reason: string): Promise<CustomCardDesign | undefined>;
+  getAllPendingDesigns(): Promise<CustomCardDesign[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3200,6 +3237,236 @@ export class DatabaseStorage implements IStorage {
       profitMarginIndividual: individualBuyRate + Math.abs(individualSellRate),
       lastRefresh: new Date().toISOString()
     };
+  }
+
+  // Physical Gift Card methods
+  async createPhysicalGiftCard(card: InsertPhysicalGiftCard): Promise<PhysicalGiftCard> {
+    const [newCard] = await db
+      .insert(physicalGiftCards)
+      .values(card)
+      .returning();
+    return newCard;
+  }
+
+  async getPhysicalGiftCard(id: string): Promise<PhysicalGiftCard | undefined> {
+    const [card] = await db
+      .select()
+      .from(physicalGiftCards)
+      .where(eq(physicalGiftCards.id, id));
+    return card || undefined;
+  }
+
+  async getPhysicalGiftCardsByCustomer(customerId: string, customerType: string): Promise<PhysicalGiftCard[]> {
+    return await db
+      .select()
+      .from(physicalGiftCards)
+      .where(and(
+        eq(physicalGiftCards.customerId, customerId),
+        eq(physicalGiftCards.customerType, customerType)
+      ))
+      .orderBy(desc(physicalGiftCards.createdAt));
+  }
+
+  async getAllPhysicalGiftCards(): Promise<PhysicalGiftCard[]> {
+    return await db
+      .select()
+      .from(physicalGiftCards)
+      .orderBy(desc(physicalGiftCards.createdAt));
+  }
+
+  async updatePhysicalGiftCardStatus(id: string, status: string, paymentId?: string): Promise<PhysicalGiftCard | undefined> {
+    const updateData: any = { 
+      status, 
+      updatedAt: new Date() 
+    };
+    
+    if (paymentId) {
+      updateData.squarePaymentId = paymentId;
+      updateData.paymentStatus = 'paid';
+    }
+
+    const [updatedCard] = await db
+      .update(physicalGiftCards)
+      .set(updateData)
+      .where(eq(physicalGiftCards.id, id))
+      .returning();
+    return updatedCard || undefined;
+  }
+
+  async updatePhysicalGiftCardTracking(id: string, trackingNumber: string, estimatedDelivery?: Date): Promise<PhysicalGiftCard | undefined> {
+    const [updatedCard] = await db
+      .update(physicalGiftCards)
+      .set({ 
+        trackingNumber,
+        estimatedDelivery,
+        status: 'shipped',
+        updatedAt: new Date()
+      })
+      .where(eq(physicalGiftCards.id, id))
+      .returning();
+    return updatedCard || undefined;
+  }
+
+  // Physical Card Activations
+  async createPhysicalCardActivation(activation: InsertPhysicalCardActivation): Promise<PhysicalCardActivation> {
+    const [newActivation] = await db
+      .insert(physicalCardActivations)
+      .values(activation)
+      .returning();
+    return newActivation;
+  }
+
+  async getPhysicalCardActivation(id: string): Promise<PhysicalCardActivation | undefined> {
+    const [activation] = await db
+      .select()
+      .from(physicalCardActivations)
+      .where(eq(physicalCardActivations.id, id));
+    return activation || undefined;
+  }
+
+  async getPhysicalCardActivationByCardNumber(cardNumber: string): Promise<PhysicalCardActivation | undefined> {
+    const [activation] = await db
+      .select()
+      .from(physicalCardActivations)
+      .where(eq(physicalCardActivations.cardNumber, cardNumber));
+    return activation || undefined;
+  }
+
+  async activatePhysicalCard(cardNumber: string, squareGiftCardId: string, gan: string, activatedBy: string): Promise<PhysicalCardActivation | undefined> {
+    const [updatedActivation] = await db
+      .update(physicalCardActivations)
+      .set({
+        squareGiftCardId,
+        gan,
+        activatedBy,
+        activatedAt: new Date(),
+        isActive: true
+      })
+      .where(eq(physicalCardActivations.cardNumber, cardNumber))
+      .returning();
+    return updatedActivation || undefined;
+  }
+
+  async updateCardBalance(cardNumber: string, newBalance: number): Promise<PhysicalCardActivation | undefined> {
+    const [updatedActivation] = await db
+      .update(physicalCardActivations)
+      .set({
+        currentBalance: newBalance,
+        lastUsed: new Date()
+      })
+      .where(eq(physicalCardActivations.cardNumber, cardNumber))
+      .returning();
+    return updatedActivation || undefined;
+  }
+
+  // Card Reload Transactions
+  async createCardReloadTransaction(transaction: InsertCardReloadTransaction): Promise<CardReloadTransaction> {
+    const [newTransaction] = await db
+      .insert(cardReloadTransactions)
+      .values(transaction)
+      .returning();
+    return newTransaction;
+  }
+
+  async getCardReloadTransactions(cardActivationId: string): Promise<CardReloadTransaction[]> {
+    return await db
+      .select()
+      .from(cardReloadTransactions)
+      .where(eq(cardReloadTransactions.cardActivationId, cardActivationId))
+      .orderBy(desc(cardReloadTransactions.createdAt));
+  }
+
+  async updateReloadTransactionStatus(id: string, status: string, paymentId?: string): Promise<CardReloadTransaction | undefined> {
+    const updateData: any = { status };
+    if (paymentId) {
+      updateData.squarePaymentId = paymentId;
+    }
+
+    const [updatedTransaction] = await db
+      .update(cardReloadTransactions)
+      .set(updateData)
+      .where(eq(cardReloadTransactions.id, id))
+      .returning();
+    return updatedTransaction || undefined;
+  }
+
+  // Card Balance Checks
+  async createCardBalanceCheck(check: InsertCardBalanceCheck): Promise<CardBalanceCheck> {
+    const [newCheck] = await db
+      .insert(cardBalanceChecks)
+      .values(check)
+      .returning();
+    return newCheck;
+  }
+
+  async getCardBalanceChecks(cardNumber: string, limit: number = 10): Promise<CardBalanceCheck[]> {
+    return await db
+      .select()
+      .from(cardBalanceChecks)
+      .where(eq(cardBalanceChecks.cardNumber, cardNumber))
+      .orderBy(desc(cardBalanceChecks.createdAt))
+      .limit(limit);
+  }
+
+  // Custom Card Designs
+  async createCustomCardDesign(design: InsertCustomCardDesign): Promise<CustomCardDesign> {
+    const [newDesign] = await db
+      .insert(customCardDesigns)
+      .values(design)
+      .returning();
+    return newDesign;
+  }
+
+  async getCustomCardDesign(id: string): Promise<CustomCardDesign | undefined> {
+    const [design] = await db
+      .select()
+      .from(customCardDesigns)
+      .where(eq(customCardDesigns.id, id));
+    return design || undefined;
+  }
+
+  async getCustomCardDesignsByCustomer(customerId: string, customerType: string): Promise<CustomCardDesign[]> {
+    return await db
+      .select()
+      .from(customCardDesigns)
+      .where(and(
+        eq(customCardDesigns.customerId, customerId),
+        eq(customCardDesigns.customerType, customerType)
+      ))
+      .orderBy(desc(customCardDesigns.createdAt));
+  }
+
+  async approveCustomCardDesign(id: string, approvedBy: string): Promise<CustomCardDesign | undefined> {
+    const [updatedDesign] = await db
+      .update(customCardDesigns)
+      .set({
+        isApproved: true,
+        approvedBy,
+        approvedAt: new Date()
+      })
+      .where(eq(customCardDesigns.id, id))
+      .returning();
+    return updatedDesign || undefined;
+  }
+
+  async rejectCustomCardDesign(id: string, reason: string): Promise<CustomCardDesign | undefined> {
+    const [updatedDesign] = await db
+      .update(customCardDesigns)
+      .set({
+        isApproved: false,
+        rejectionReason: reason
+      })
+      .where(eq(customCardDesigns.id, id))
+      .returning();
+    return updatedDesign || undefined;
+  }
+
+  async getAllPendingDesigns(): Promise<CustomCardDesign[]> {
+    return await db
+      .select()
+      .from(customCardDesigns)
+      .where(isNull(customCardDesigns.isApproved))
+      .orderBy(desc(customCardDesigns.createdAt));
   }
 }
 

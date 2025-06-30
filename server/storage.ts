@@ -1,5 +1,5 @@
 import { 
-  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, merchantCardDesigns, fraudLogs, autoDefenseRules, cardRedemptions, webhookEvents, webhookDeliveryLogs, webhookRetryQueue, webhookFailureLog, merchantApiKeys, giftCardTransactions, globalSettings, gatewayFeatureToggles, fraudClusters, clusterPatterns,
+  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, merchantCardDesigns, fraudLogs, autoDefenseRules, cardRedemptions, webhookEvents, webhookDeliveryLogs, webhookRetryQueue, webhookFailureLog, merchantApiKeys, giftCardTransactions, globalSettings, gatewayFeatureToggles, fraudClusters, clusterPatterns, defenseActions, actionRules, defenseHistory,
   type User, type InsertUser,
   type Merchant, type InsertMerchant, 
   type GiftCard, type InsertGiftCard,
@@ -24,10 +24,13 @@ import {
   type GlobalSetting, type InsertGlobalSetting,
   type GatewayFeatureToggle, type InsertGatewayFeatureToggle,
   type FraudCluster, type InsertFraudCluster,
-  type ClusterPattern, type InsertClusterPattern
+  type ClusterPattern, type InsertClusterPattern,
+  type DefenseAction, type InsertDefenseAction,
+  type ActionRule, type InsertActionRule,
+  type DefenseHistory, type InsertDefenseHistory
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, sql, count, sum, and, gte, lte, asc } from "drizzle-orm";
+import { eq, desc, sql, count, sum, and, gte, lte, asc, or, isNull, isNotNull } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -2090,6 +2093,129 @@ export class DatabaseStorage implements IStorage {
       recentClusters: recentResult.count,
       patternTypes
     };
+  }
+
+  // Phase 20: AI Defense Actions Storage Methods
+  async getActiveDefenseActions(): Promise<any[]> {
+    return await db
+      .select()
+      .from(defenseActions)
+      .where(eq(defenseActions.isActive, true))
+      .orderBy(desc(defenseActions.createdAt));
+  }
+
+  async getDefenseActionsByType(actionType: string): Promise<any[]> {
+    return await db
+      .select()
+      .from(defenseActions)
+      .where(and(
+        eq(defenseActions.actionType, actionType),
+        eq(defenseActions.isActive, true)
+      ));
+  }
+
+  async isTargetBlocked(targetValue: string, actionType: string): Promise<boolean> {
+    const now = new Date();
+    const activeBlocks = await db
+      .select()
+      .from(defenseActions)
+      .where(and(
+        eq(defenseActions.targetValue, targetValue),
+        eq(defenseActions.actionType, actionType),
+        eq(defenseActions.isActive, true),
+        or(
+          isNull(defenseActions.expiresAt),
+          gte(defenseActions.expiresAt, now)
+        )
+      ))
+      .limit(1);
+
+    return activeBlocks.length > 0;
+  }
+
+  async getActionRules(): Promise<ActionRule[]> {
+    return await db
+      .select()
+      .from(actionRules)
+      .where(eq(actionRules.isActive, true))
+      .orderBy(desc(actionRules.severity));
+  }
+
+  async createActionRule(ruleData: InsertActionRule): Promise<ActionRule> {
+    const [rule] = await db
+      .insert(actionRules)
+      .values(ruleData)
+      .returning();
+    return rule;
+  }
+
+  async updateActionRule(id: string, updates: Partial<InsertActionRule>): Promise<ActionRule> {
+    const [rule] = await db
+      .update(actionRules)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(actionRules.id, id))
+      .returning();
+    return rule;
+  }
+
+  async deleteActionRule(id: string): Promise<boolean> {
+    const result = await db
+      .delete(actionRules)
+      .where(eq(actionRules.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  async getDefenseHistory(limit: number = 100): Promise<any[]> {
+    return await db
+      .select({
+        history: defenseHistory,
+        action: defenseActions,
+        cluster: fraudClusters,
+        rule: actionRules
+      })
+      .from(defenseHistory)
+      .leftJoin(defenseActions, eq(defenseHistory.actionId, defenseActions.id))
+      .leftJoin(fraudClusters, eq(defenseHistory.clusterId, fraudClusters.id))
+      .leftJoin(actionRules, eq(defenseHistory.ruleId, actionRules.id))
+      .orderBy(desc(defenseHistory.createdAt))
+      .limit(limit);
+  }
+
+  async getDefenseStats(): Promise<any> {
+    const [stats] = await db
+      .select({
+        totalActions: count(defenseActions.id),
+        activeActions: sum(sql`CASE WHEN ${defenseActions.isActive} = true THEN 1 ELSE 0 END`),
+        blockedIPs: sum(sql`CASE WHEN ${defenseActions.actionType} = 'block_ip' AND ${defenseActions.isActive} = true THEN 1 ELSE 0 END`),
+        blockedDevices: sum(sql`CASE WHEN ${defenseActions.actionType} = 'block_device' AND ${defenseActions.isActive} = true THEN 1 ELSE 0 END`)
+      })
+      .from(defenseActions);
+
+    const [ruleStats] = await db
+      .select({
+        activeRules: count(actionRules.id)
+      })
+      .from(actionRules)
+      .where(eq(actionRules.isActive, true));
+
+    return {
+      ...stats,
+      activeRules: ruleStats.activeRules
+    };
+  }
+
+  async expireDefenseActions(): Promise<number> {
+    const now = new Date();
+    const result = await db
+      .update(defenseActions)
+      .set({ isActive: false, updatedAt: now })
+      .where(and(
+        eq(defenseActions.isActive, true),
+        isNotNull(defenseActions.expiresAt),
+        sql`${defenseActions.expiresAt} <= ${now}`
+      ));
+
+    return result.rowCount || 0;
   }
 }
 

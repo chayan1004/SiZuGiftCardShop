@@ -2,6 +2,7 @@ import { db } from "../db";
 import { fraudLogs, fraudClusters, clusterPatterns, type FraudCluster, type InsertFraudCluster, type InsertClusterPattern } from "@shared/schema";
 import { eq, gte, sql, desc, and } from "drizzle-orm";
 import { createHash } from "crypto";
+import { ActionRuleEngine } from "./ActionRuleEngine";
 
 interface ThreatPattern {
   id: string;
@@ -26,8 +27,11 @@ export class ThreatClusterEngine {
   private static instance: ThreatClusterEngine;
   private isRunning = false;
   private lastAnalysisTime: Date = new Date(0);
+  private actionRuleEngine: ActionRuleEngine;
 
-  private constructor() {}
+  private constructor() {
+    this.actionRuleEngine = ActionRuleEngine.getInstance();
+  }
 
   static getInstance(): ThreatClusterEngine {
     if (!ThreatClusterEngine.instance) {

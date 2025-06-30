@@ -22,6 +22,15 @@ export const merchants = pgTable("merchants", {
   themeColor: text("theme_color").default("#613791"),
   supportEmail: text("support_email"),
   brandName: text("brand_name"),
+  // GDPR Compliance Fields
+  gdprConsent: boolean("gdpr_consent").default(false),
+  gdprConsentDate: timestamp("gdpr_consent_date"),
+  marketingConsent: boolean("marketing_consent").default(false),
+  dataProcessingConsent: boolean("data_processing_consent").default(false),
+  privacyPolicyAccepted: boolean("privacy_policy_accepted").default(false),
+  privacyPolicyVersion: text("privacy_policy_version"),
+  lastDataExportRequest: timestamp("last_data_export_request"),
+  dataRetentionPeriod: integer("data_retention_period").default(2555), // Days (7 years default)
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -628,3 +637,142 @@ export const insertDefenseHistorySchema = createInsertSchema(defenseHistory).omi
 
 export type DefenseHistory = typeof defenseHistory.$inferSelect;
 export type InsertDefenseHistory = z.infer<typeof insertDefenseHistorySchema>;
+
+// GDPR Compliance Tables
+// Data Processing Records - Article 30 GDPR
+export const dataProcessingRecords = pgTable("data_processing_records", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  merchantId: integer("merchant_id").references(() => merchants.id, { onDelete: "cascade" }),
+  processingPurpose: text("processing_purpose").notNull(), // Contact, Marketing, Analytics, etc.
+  dataCategories: text("data_categories").notNull(), // JSON array of data types
+  legalBasis: text("legal_basis").notNull(), // consent, contract, legitimate_interest
+  retentionPeriod: integer("retention_period").notNull(), // Days
+  thirdPartySharing: boolean("third_party_sharing").default(false),
+  recipients: text("recipients"), // JSON array of third parties
+  crossBorderTransfer: boolean("cross_border_transfer").default(false),
+  transferSafeguards: text("transfer_safeguards"), // adequacy_decision, bcr, scc
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// User Consent Management - Article 7 GDPR
+export const userConsentRecords = pgTable("user_consent_records", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: integer("user_id").references(() => merchants.id, { onDelete: "cascade" }),
+  consentType: text("consent_type").notNull(), // marketing, analytics, cookies, data_processing
+  consentGiven: boolean("consent_given").notNull(),
+  consentDate: timestamp("consent_date").notNull(),
+  consentMethod: text("consent_method").notNull(), // website_form, email_confirmation, api
+  consentVersion: text("consent_version").notNull(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  withdrawalDate: timestamp("withdrawal_date"),
+  withdrawalMethod: text("withdrawal_method"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Data Subject Rights Requests - Article 15-22 GDPR
+export const dataSubjectRequests = pgTable("data_subject_requests", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  requesterId: integer("requester_id").references(() => merchants.id, { onDelete: "cascade" }),
+  requestType: text("request_type").notNull(), // access, portability, rectification, erasure, restriction, objection
+  requestStatus: text("request_status").notNull().default("pending"), // pending, processing, completed, rejected
+  requestDate: timestamp("request_date").defaultNow(),
+  completionDate: timestamp("completion_date"),
+  requestDetails: text("request_details"), // JSON with specific request information
+  verificationStatus: text("verification_status").default("pending"), // pending, verified, rejected
+  verificationMethod: text("verification_method"), // email, phone, document
+  responseData: text("response_data"), // JSON with provided data for access/portability requests
+  rejectionReason: text("rejection_reason"),
+  deadlineDate: timestamp("deadline_date"), // 30 days from request
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Data Breach Incidents - Article 33-34 GDPR
+export const dataBreachIncidents = pgTable("data_breach_incidents", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  incidentReference: text("incident_reference").notNull().unique(),
+  discoveryDate: timestamp("discovery_date").notNull(),
+  incidentDate: timestamp("incident_date").notNull(),
+  breachType: text("breach_type").notNull(), // confidentiality, integrity, availability
+  affectedDataTypes: text("affected_data_types").notNull(), // JSON array
+  affectedRecords: integer("affected_records").notNull(),
+  affectedIndividuals: integer("affected_individuals").notNull(),
+  riskLevel: text("risk_level").notNull(), // low, medium, high
+  containmentMeasures: text("containment_measures"),
+  supervisoryAuthorityNotified: boolean("supervisory_authority_notified").default(false),
+  supervisoryNotificationDate: timestamp("supervisory_notification_date"),
+  individualNotificationRequired: boolean("individual_notification_required").default(false),
+  individualNotificationDate: timestamp("individual_notification_date"),
+  incidentStatus: text("incident_status").default("investigating"), // investigating, contained, resolved
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Privacy Impact Assessments - Article 35 GDPR
+export const privacyImpactAssessments = pgTable("privacy_impact_assessments", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  assessmentTitle: text("assessment_title").notNull(),
+  processingDescription: text("processing_description").notNull(),
+  necessityAssessment: text("necessity_assessment").notNull(),
+  proportionalityAssessment: text("proportionality_assessment").notNull(),
+  risksIdentified: text("risks_identified").notNull(), // JSON array
+  mitigationMeasures: text("mitigation_measures").notNull(), // JSON array
+  residualRisk: text("residual_risk").notNull(), // low, medium, high
+  consultationRequired: boolean("consultation_required").default(false),
+  consultationDate: timestamp("consultation_date"),
+  assessmentStatus: text("assessment_status").default("draft"), // draft, review, approved, rejected
+  assessorName: text("assessor_name").notNull(),
+  reviewDate: timestamp("review_date"),
+  approvalDate: timestamp("approval_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Insert schemas for GDPR tables
+export const insertDataProcessingRecordSchema = createInsertSchema(dataProcessingRecords).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertUserConsentRecordSchema = createInsertSchema(userConsentRecords).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertDataSubjectRequestSchema = createInsertSchema(dataSubjectRequests).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertDataBreachIncidentSchema = createInsertSchema(dataBreachIncidents).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPrivacyImpactAssessmentSchema = createInsertSchema(privacyImpactAssessments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Export types for GDPR tables
+export type DataProcessingRecord = typeof dataProcessingRecords.$inferSelect;
+export type InsertDataProcessingRecord = z.infer<typeof insertDataProcessingRecordSchema>;
+
+export type UserConsentRecord = typeof userConsentRecords.$inferSelect;
+export type InsertUserConsentRecord = z.infer<typeof insertUserConsentRecordSchema>;
+
+export type DataSubjectRequest = typeof dataSubjectRequests.$inferSelect;
+export type InsertDataSubjectRequest = z.infer<typeof insertDataSubjectRequestSchema>;
+
+export type DataBreachIncident = typeof dataBreachIncidents.$inferSelect;
+export type InsertDataBreachIncident = z.infer<typeof insertDataBreachIncidentSchema>;
+
+export type PrivacyImpactAssessment = typeof privacyImpactAssessments.$inferSelect;
+export type InsertPrivacyImpactAssessment = z.infer<typeof insertPrivacyImpactAssessmentSchema>;

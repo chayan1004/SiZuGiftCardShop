@@ -1,5 +1,5 @@
 import { 
-  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, merchantCardDesigns, fraudLogs, autoDefenseRules, cardRedemptions, webhookEvents, webhookDeliveryLogs, webhookRetryQueue, webhookFailureLog, merchantApiKeys, giftCardTransactions, globalSettings, gatewayFeatureToggles, fraudClusters, clusterPatterns, defenseActions, actionRules, defenseHistory,
+  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, merchantCardDesigns, fraudLogs, autoDefenseRules, cardRedemptions, webhookEvents, webhookDeliveryLogs, webhookRetryQueue, webhookFailureLog, merchantApiKeys, giftCardTransactions, globalSettings, gatewayFeatureToggles, fraudClusters, clusterPatterns, defenseActions, actionRules, defenseHistory, dataProcessingRecords, userConsentRecords, dataSubjectRequests, dataBreachIncidents, privacyImpactAssessments,
   type User, type InsertUser,
   type Merchant, type InsertMerchant, 
   type GiftCard, type InsertGiftCard,
@@ -27,7 +27,12 @@ import {
   type ClusterPattern, type InsertClusterPattern,
   type DefenseAction, type InsertDefenseAction,
   type ActionRule, type InsertActionRule,
-  type DefenseHistory, type InsertDefenseHistory
+  type DefenseHistory, type InsertDefenseHistory,
+  type DataProcessingRecord, type InsertDataProcessingRecord,
+  type UserConsentRecord, type InsertUserConsentRecord,
+  type DataSubjectRequest, type InsertDataSubjectRequest,
+  type DataBreachIncident, type InsertDataBreachIncident,
+  type PrivacyImpactAssessment, type InsertPrivacyImpactAssessment
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, count, sum, and, gte, lte, asc, or, isNull, isNotNull } from "drizzle-orm";
@@ -263,6 +268,49 @@ export interface IStorage {
     recentClusters: number;
     patternTypes: Record<string, number>;
   }>;
+
+  // GDPR Compliance Management
+  // Data Processing Records (Article 30 GDPR)
+  createDataProcessingRecord(record: InsertDataProcessingRecord): Promise<DataProcessingRecord>;
+  getDataProcessingRecords(merchantId?: number): Promise<DataProcessingRecord[]>;
+  updateDataProcessingRecord(id: string, updates: Partial<InsertDataProcessingRecord>): Promise<DataProcessingRecord | undefined>;
+  deleteDataProcessingRecord(id: string): Promise<boolean>;
+
+  // User Consent Management (Article 7 GDPR)
+  recordUserConsent(consent: InsertUserConsentRecord): Promise<UserConsentRecord>;
+  getUserConsentRecords(userId: number): Promise<UserConsentRecord[]>;
+  getActiveConsents(userId: number): Promise<UserConsentRecord[]>;
+  withdrawConsent(userId: number, consentType: string, withdrawalMethod: string): Promise<UserConsentRecord | undefined>;
+  updateMerchantGdprConsent(merchantId: number, gdprFields: {
+    gdprConsent?: boolean;
+    marketingConsent?: boolean;
+    dataProcessingConsent?: boolean;
+    privacyPolicyAccepted?: boolean;
+    privacyPolicyVersion?: string;
+  }): Promise<Merchant | undefined>;
+
+  // Data Subject Rights (Articles 15-22 GDPR)
+  createDataSubjectRequest(request: InsertDataSubjectRequest): Promise<DataSubjectRequest>;
+  getDataSubjectRequests(requesterId?: number): Promise<DataSubjectRequest[]>;
+  updateDataSubjectRequest(id: string, updates: Partial<InsertDataSubjectRequest>): Promise<DataSubjectRequest | undefined>;
+  exportUserData(merchantId: number): Promise<{
+    personalData: any;
+    giftCards: any[];
+    transactions: any[];
+    consents: any[];
+    processingRecords: any[];
+  }>;
+  deleteUserData(merchantId: number): Promise<boolean>;
+
+  // Data Breach Management (Articles 33-34 GDPR)
+  createDataBreachIncident(incident: InsertDataBreachIncident): Promise<DataBreachIncident>;
+  getDataBreachIncidents(): Promise<DataBreachIncident[]>;
+  updateDataBreachIncident(id: string, updates: Partial<InsertDataBreachIncident>): Promise<DataBreachIncident | undefined>;
+
+  // Privacy Impact Assessments (Article 35 GDPR)
+  createPrivacyImpactAssessment(assessment: InsertPrivacyImpactAssessment): Promise<PrivacyImpactAssessment>;
+  getPrivacyImpactAssessments(): Promise<PrivacyImpactAssessment[]>;
+  updatePrivacyImpactAssessment(id: string, updates: Partial<InsertPrivacyImpactAssessment>): Promise<PrivacyImpactAssessment | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {

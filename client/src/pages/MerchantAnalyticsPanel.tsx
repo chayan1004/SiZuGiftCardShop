@@ -71,7 +71,15 @@ export default function MerchantAnalyticsPanel() {
   // Fetch analytics data
   const { data: analyticsResponse, isLoading, error } = useQuery({
     queryKey: ['/api/merchant/analytics/giftcards', startDate, endDate],
-    queryFn: () => apiRequest('GET', `/api/merchant/analytics/giftcards?${queryParams.toString()}`),
+    queryFn: async () => {
+      const response = await fetch(`/api/merchant/analytics/giftcards?${queryParams.toString()}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      if (!response.ok) throw new Error('Failed to fetch analytics');
+      return response.json();
+    },
     enabled: !!startDate && !!endDate
   });
 

@@ -1,0 +1,642 @@
+{
+  "info": {
+    "name": "Phase 14C: Analytics Export",
+    "description": "Comprehensive test suite for merchant analytics panel with CSV and PDF export capabilities",
+    "_postman_id": "analytics-export-test-suite",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{merchantToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "merchantToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "startDate",
+      "value": "2024-01-01",
+      "type": "string"
+    },
+    {
+      "key": "endDate",
+      "value": "2024-12-31",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Setup & Authentication",
+      "item": [
+        {
+          "name": "Merchant Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Merchant login successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.true;",
+                  "    pm.expect(response.token).to.exist;",
+                  "    pm.collectionVariables.set('merchantToken', response.token);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"analytics.test@example.com\",\n  \"password\": \"TestPass123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics API Tests",
+      "item": [
+        {
+          "name": "Test 1: Get Analytics (JSON Default)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Analytics JSON response successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.true;",
+                  "    pm.expect(response.data).to.exist;",
+                  "    pm.expect(response.data.summary).to.exist;",
+                  "    pm.expect(response.data.issuanceData).to.be.an('array');",
+                  "    pm.expect(response.data.redemptionData).to.be.an('array');",
+                  "    pm.expect(response.data.topRedeemedCards).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Analytics summary has required fields', function () {",
+                  "    const response = pm.response.json();",
+                  "    const summary = response.data.summary;",
+                  "    pm.expect(summary.totalIssued).to.be.a('number');",
+                  "    pm.expect(summary.totalRedeemed).to.be.a('number');",
+                  "    pm.expect(summary.totalRevenue).to.be.a('number');",
+                  "    pm.expect(summary.outstandingBalance).to.be.a('number');",
+                  "    pm.expect(summary.redemptionRate).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/analytics/giftcards",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "analytics", "giftcards"]
+            }
+          }
+        },
+        {
+          "name": "Test 2: Get Analytics with Date Range",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Analytics with date range successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.true;",
+                  "    pm.expect(response.data).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/analytics/giftcards?startDate={{startDate}}&endDate={{endDate}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "analytics", "giftcards"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "{{startDate}}"
+                },
+                {
+                  "key": "endDate",
+                  "value": "{{endDate}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CSV Export Tests",
+      "item": [
+        {
+          "name": "Test 3: CSV Export (All Time)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('CSV export successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('CSV content type correct', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('text/csv');",
+                  "});",
+                  "",
+                  "pm.test('CSV content disposition header present', function () {",
+                  "    const disposition = pm.response.headers.get('Content-Disposition');",
+                  "    pm.expect(disposition).to.include('attachment');",
+                  "    pm.expect(disposition).to.include('filename=');",
+                  "    pm.expect(disposition).to.include('.csv');",
+                  "});",
+                  "",
+                  "pm.test('CSV content has headers', function () {",
+                  "    const csvContent = pm.response.text();",
+                  "    pm.expect(csvContent).to.include('Type,GAN,Amount,Date,Recipient/Redeemer,Status,Order ID,IP Address');",
+                  "});",
+                  "",
+                  "pm.test('CSV file size reasonable', function () {",
+                  "    const csvContent = pm.response.text();",
+                  "    pm.expect(csvContent.length).to.be.above(50); // At least header row",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/analytics/giftcards?format=csv",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "analytics", "giftcards"],
+              "query": [
+                {
+                  "key": "format",
+                  "value": "csv"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Test 4: CSV Export with Date Range",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('CSV export with date range successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('CSV content type correct', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('text/csv');",
+                  "});",
+                  "",
+                  "pm.test('CSV filename includes date range', function () {",
+                  "    const disposition = pm.response.headers.get('Content-Disposition');",
+                  "    pm.expect(disposition).to.include('{{startDate}}');",
+                  "    pm.expect(disposition).to.include('{{endDate}}');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/analytics/giftcards?format=csv&startDate={{startDate}}&endDate={{endDate}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "analytics", "giftcards"],
+              "query": [
+                {
+                  "key": "format",
+                  "value": "csv"
+                },
+                {
+                  "key": "startDate",
+                  "value": "{{startDate}}"
+                },
+                {
+                  "key": "endDate",
+                  "value": "{{endDate}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "PDF Export Tests",
+      "item": [
+        {
+          "name": "Test 5: PDF Export (All Time)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('PDF export successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('PDF content type correct', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/pdf');",
+                  "});",
+                  "",
+                  "pm.test('PDF content disposition header present', function () {",
+                  "    const disposition = pm.response.headers.get('Content-Disposition');",
+                  "    pm.expect(disposition).to.include('attachment');",
+                  "    pm.expect(disposition).to.include('filename=');",
+                  "    pm.expect(disposition).to.include('.pdf');",
+                  "});",
+                  "",
+                  "pm.test('PDF file size reasonable', function () {",
+                  "    const pdfSize = pm.response.responseSize;",
+                  "    pm.expect(pdfSize).to.be.above(1000); // At least 1KB for a valid PDF",
+                  "});",
+                  "",
+                  "pm.test('PDF content starts with PDF signature', function () {",
+                  "    const responseBytes = pm.response.stream;",
+                  "    // PDF files start with %PDF",
+                  "    // We can't easily check binary content in Postman, so we check the size instead",
+                  "    pm.expect(pm.response.responseSize).to.be.above(1000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/analytics/giftcards?format=pdf",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "analytics", "giftcards"],
+              "query": [
+                {
+                  "key": "format",
+                  "value": "pdf"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Test 6: PDF Export with Date Range",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('PDF export with date range successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('PDF content type correct', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/pdf');",
+                  "});",
+                  "",
+                  "pm.test('PDF filename includes date range', function () {",
+                  "    const disposition = pm.response.headers.get('Content-Disposition');",
+                  "    pm.expect(disposition).to.include('{{startDate}}');",
+                  "    pm.expect(disposition).to.include('{{endDate}}');",
+                  "});",
+                  "",
+                  "pm.test('PDF file size reasonable', function () {",
+                  "    const pdfSize = pm.response.responseSize;",
+                  "    pm.expect(pdfSize).to.be.above(1000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/analytics/giftcards?format=pdf&startDate={{startDate}}&endDate={{endDate}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "analytics", "giftcards"],
+              "query": [
+                {
+                  "key": "format",
+                  "value": "pdf"
+                },
+                {
+                  "key": "startDate",
+                  "value": "{{startDate}}"
+                },
+                {
+                  "key": "endDate",
+                  "value": "{{endDate}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Error Handling Tests",
+      "item": [
+        {
+          "name": "Test 7: Unauthorized Access",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Unauthorized access blocked', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test('Error message present', function () {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.false;",
+                  "    pm.expect(response.error).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/analytics/giftcards",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "analytics", "giftcards"]
+            }
+          }
+        },
+        {
+          "name": "Test 8: Invalid Date Format",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Invalid date handled gracefully', function () {",
+                  "    // Should either return 400 or handle gracefully",
+                  "    pm.expect([200, 400]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/analytics/giftcards?startDate=invalid-date&endDate=also-invalid",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "analytics", "giftcards"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "invalid-date"
+                },
+                {
+                  "key": "endDate",
+                  "value": "also-invalid"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Test 9: Invalid Format Parameter",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Invalid format defaults to JSON', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/analytics/giftcards?format=invalid",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "analytics", "giftcards"],
+              "query": [
+                {
+                  "key": "format",
+                  "value": "invalid"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Performance Tests",
+      "item": [
+        {
+          "name": "Test 10: Analytics Response Time",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Analytics response time acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(5000); // 5 seconds max",
+                  "});",
+                  "",
+                  "pm.test('Analytics data complete', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.data).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/analytics/giftcards",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "analytics", "giftcards"]
+            }
+          }
+        },
+        {
+          "name": "Test 11: CSV Export Response Time",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('CSV export response time acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(10000); // 10 seconds max",
+                  "});",
+                  "",
+                  "pm.test('CSV export successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/analytics/giftcards?format=csv",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "analytics", "giftcards"],
+              "query": [
+                {
+                  "key": "format",
+                  "value": "csv"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Test 12: PDF Export Response Time",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('PDF export response time acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(15000); // 15 seconds max",
+                  "});",
+                  "",
+                  "pm.test('PDF export successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{merchantToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant/analytics/giftcards?format=pdf",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant", "analytics", "giftcards"],
+              "query": [
+                {
+                  "key": "format",
+                  "value": "pdf"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

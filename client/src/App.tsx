@@ -21,6 +21,7 @@ import MerchantRegister from "@/pages/MerchantRegister";
 import MerchantDashboard from "@/pages/MerchantDashboard";
 import MerchantBulkPurchase from "@/pages/MerchantBulkPurchase";
 import MerchantGiftCardAnalytics from "@/pages/MerchantGiftCardAnalytics";
+import MerchantAnalyticsPanel from "@/pages/MerchantAnalyticsPanel";
 import MerchantQRScanner from "@/pages/MerchantQRScanner";
 import MerchantVerify from "@/pages/MerchantVerify";
 import AdminLogin from "@/pages/admin/AdminLogin";
@@ -53,6 +54,11 @@ function Router() {
       <Route path="/merchant-qr-scanner">
         <ProtectedRoute role="merchant">
           <MerchantQRScanner />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/merchant/analytics">
+        <ProtectedRoute role="merchant">
+          <MerchantAnalyticsPanel />
         </ProtectedRoute>
       </Route>
       <Route path="/merchant-verify" component={MerchantVerify} />

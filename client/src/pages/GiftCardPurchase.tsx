@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import LoadingAnimation from '@/components/ui/LoadingAnimation';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || '');
 
@@ -355,10 +356,12 @@ function PurchaseForm({ merchant }: { merchant: MerchantDetails }) {
         style={{ backgroundColor: merchant.themeColor }}
       >
         {isProcessing ? (
-          <div className="flex items-center gap-2">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-            Processing...
-          </div>
+          <LoadingAnimation 
+            size="sm" 
+            variant="minimal" 
+            message="Processing..." 
+            className="text-white"
+          />
         ) : (
           <div className="flex items-center gap-2">
             <ShoppingCart className="h-5 w-5" />
@@ -387,20 +390,12 @@ export default function GiftCardPurchase() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-purple-900 dark:to-indigo-900">
         <div className="container mx-auto px-4 py-8">
-          <div className="max-w-2xl mx-auto">
-            <Card className="animate-pulse">
-              <CardHeader>
-                <div className="h-8 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="h-32 bg-gray-200 rounded"></div>
-                  <div className="h-24 bg-gray-200 rounded"></div>
-                  <div className="h-16 bg-gray-200 rounded"></div>
-                </div>
-              </CardContent>
-            </Card>
+          <div className="max-w-2xl mx-auto flex items-center justify-center min-h-[60vh]">
+            <LoadingAnimation 
+              size="xl" 
+              message="Loading merchant details..." 
+              className="scale-110"
+            />
           </div>
         </div>
       </div>

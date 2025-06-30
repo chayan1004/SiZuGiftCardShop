@@ -540,9 +540,12 @@ export default function MerchantDashboard() {
       
       <CardContent>
         {cardsLoading ? (
-          <div className="text-center py-8 lg:py-12">
-            <div className="animate-spin w-6 h-6 lg:w-8 lg:h-8 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-            <p className="text-[#dd4bae]">Loading gift cards...</p>
+          <div className="flex items-center justify-center py-12">
+            <LoadingAnimation 
+              size="lg" 
+              message="Loading gift cards..." 
+              className="scale-90"
+            />
           </div>
         ) : cardsError ? (
           <div className="text-center py-8 lg:py-12">
@@ -656,9 +659,12 @@ export default function MerchantDashboard() {
       
       <CardContent>
         {ordersLoading ? (
-          <div className="text-center py-8 lg:py-12">
-            <div className="animate-spin w-6 h-6 lg:w-8 lg:h-8 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-            <p className="text-[#dd4bae]">Loading bulk orders...</p>
+          <div className="flex items-center justify-center py-12">
+            <LoadingAnimation 
+              size="lg" 
+              message="Loading bulk orders..." 
+              className="scale-90"
+            />
           </div>
         ) : ordersError ? (
           <div className="text-center py-8 lg:py-12">

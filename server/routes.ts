@@ -3161,5 +3161,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin endpoint for email log tracking
+  app.get("/api/admin/email-log/:orderId", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { orderId } = req.params;
+      const order = await storage.getPublicGiftCardOrderById(orderId);
+      
+      if (!order) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+
+      const emailLog = {
+        orderId: order.id,
+        recipientEmail: order.recipientEmail,
+        emailSent: order.emailSent,
+        emailSentAt: order.emailSentAt,
+        order: {
+          id: order.id,
+          amount: order.amount,
+          status: order.status,
+          giftCardId: order.giftCardId,
+          giftCardGan: order.giftCardGan,
+          giftCardState: order.giftCardState,
+          createdAt: order.createdAt,
+          squarePaymentId: order.squarePaymentId
+        },
+        lastDeliveryResult: order.emailSent ? "success" : "not_sent"
+      };
+
+      res.json(emailLog);
+    } catch (error) {
+      console.error('Error fetching email log:', error);
+      res.status(500).json({ message: "Failed to fetch email log" });
+    }
+  });
+
   return httpServer;
 }

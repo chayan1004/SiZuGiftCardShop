@@ -2941,12 +2941,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { receiptId } = req.params;
       
-      // Enhanced security validation - prevent path traversal
-      if (!receiptId || 
-          !/^receipt_[a-zA-Z0-9_-]+$/.test(receiptId) ||
-          receiptId.includes('..') ||
-          receiptId.includes('/') ||
-          receiptId.includes('\\')) {
+      // Enhanced security validation - strict receipt ID format only
+      if (!receiptId || !/^receipt_test_order_\d+_\d+$/.test(receiptId)) {
         return res.status(400).json({ error: 'Invalid receipt ID format' });
       }
 

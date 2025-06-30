@@ -3194,8 +3194,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Send email using emailService
-      const emailSent = await emailService.sendGiftCardEmail(order);
+      // Send email using emailService with proper format
+      const emailData = {
+        to: order.recipientEmail,
+        gan: order.giftCardGan,
+        amount: order.amount,
+        giftCardId: order.giftCardId,
+        message: order.message || undefined
+      };
+      const emailSent = await emailService.sendGiftCardEmail(emailData);
       
       if (emailSent) {
         // Update resend tracking

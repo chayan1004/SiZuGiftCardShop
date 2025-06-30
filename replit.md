@@ -146,6 +146,7 @@ This is a full-stack gift card management application built with a modern tech s
 - June 30, 2025. Prompt 5: Real Gift Card Generation via Square API - completed secure Square gift card issuance after payment confirmation with proper error handling, database tracking, and comprehensive logging
 - June 30, 2025. Prompt 6: Email Delivery System - implemented Mailgun API integration with SMTP fallback, branded HTML email templates, duplicate prevention, delivery tracking, and admin monitoring endpoints
 - June 30, 2025. Prompt 7: Admin Dashboard for Public Gift Card Orders - created comprehensive admin interface at /admin/giftcard-orders with real-time data display, advanced filtering, status badges, and secure access controls
+- June 30, 2025. Prompt 8: Resend Email + Admin Recovery Panel - implemented comprehensive email recovery system with resend functionality, manual failure marking, tracking counters, and admin action buttons
 
 ## Prompt 4: Branded Public Gift Card Storefront (June 30, 2025)
 
@@ -264,6 +265,44 @@ CREATE TABLE public_giftcard_orders (
 - **Backend Middleware**: requireAdmin protection on API endpoints
 - **Token Validation**: Secure admin token verification
 - **Role-Based UI**: Admin interface completely separated from merchant views
+
+## Prompt 8: Resend Email + Admin Recovery Panel (June 30, 2025)
+
+### Database Schema Extensions
+- **Email Tracking Fields**: Added `email_resend_count` (integer, default 0), `email_last_resend_at` (timestamp), and `manually_marked_failed` (boolean, default false)
+- **Schema Migration**: Successfully pushed via `npm run db:push` with proper field defaults
+- **Data Integrity**: Maintains complete audit trail of all email delivery attempts
+
+### Backend API Implementation
+- **Storage Methods**: Added `markEmailAsResent()` and `markOrderAsFailed()` to IStorage interface and DatabaseStorage
+- **Resend Endpoint**: `POST /api/admin/giftcard-orders/:orderId/resend-email` with admin authentication
+- **Mark Failed Endpoint**: `POST /api/admin/giftcard-orders/:orderId/mark-failed` with confirmation workflow
+- **Email Service Integration**: Proper data formatting for emailService.sendGiftCardEmail() calls
+
+### Admin Recovery Panel Features
+- **Resend Email Button**: Available for issued orders with gift card data, includes loading states
+- **Mark as Failed Button**: Manual failure marking with confirmation dialog and database updates
+- **Action Tracking**: Visual indicators showing resend count and last resend timestamps
+- **Smart Filtering**: Enhanced filters for email status and manual failure tracking
+- **Real-time Updates**: Automatic data refresh after successful admin actions
+
+### Error Handling & Validation
+- **Order State Validation**: Ensures only issued orders with gift card data can trigger email resends
+- **Confirmation Dialogs**: JavaScript confirm() for destructive actions like marking orders failed
+- **Toast Notifications**: Success/error feedback for all admin actions with descriptive messages
+- **Loading States**: Button-specific loading indicators preventing double-clicks during operations
+
+### Security & Logging
+- **Admin-Only Access**: All recovery endpoints protected with requireAdmin middleware
+- **Action Logging**: Console logs for all admin recovery actions with order IDs and timestamps
+- **Database Atomicity**: Proper transaction handling for resend count increments and status updates
+- **Non-Destructive Operations**: Email resends don't affect original order data integrity
+
+### Frontend User Experience
+- **Conditional Buttons**: Smart button visibility based on order status and previous actions
+- **Visual Feedback**: Color-coded action buttons (blue for resend, red for mark failed)
+- **Responsive Design**: Mobile-optimized action buttons with proper touch targets
+- **Data Refresh**: Automatic cache invalidation ensuring fresh data display post-actions
 
 ## Recent Production Enhancements
 

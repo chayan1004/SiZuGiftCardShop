@@ -8,10 +8,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Gift, Gamepad2, Pizza, PartyPopper, Briefcase, Heart, Star, Calendar, Filter, DollarSign, Download } from 'lucide-react';
+import { Search, Gift, Gamepad2, Pizza, PartyPopper, Briefcase, Heart, Star, Calendar, Filter, DollarSign, Download, Menu, X, ShoppingBag, Sparkles, Zap, Shield, Utensils, Users, Plane, Store } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { Card3DDesign } from '@/components/ui/3d-card-designs';
+import { motion, AnimatePresence } from 'framer-motion';
+import Navigation from '@/components/Navigation';
 
 interface PublicGiftCard {
   id: string;
@@ -40,21 +42,121 @@ interface PurchaseFormData {
 }
 
 const categories = [
-  { id: 'all', name: 'All Categories', icon: Filter },
-  { id: 'Gaming', name: '🎮 Gaming', icon: Gamepad2 },
-  { id: 'Food', name: '🍕 Food & Dining', icon: Pizza },
-  { id: 'Event Gifts', name: '🎁 Event Gifts', icon: PartyPopper },
-  { id: 'Productivity', name: '💼 Productivity', icon: Briefcase },
-  { id: 'Wellness', name: '💄 Wellness & Beauty', icon: Heart },
+  { 
+    id: 'all', 
+    name: 'All Categories', 
+    icon: Filter, 
+    gradient: 'from-slate-400 to-slate-600',
+    description: 'Browse everything'
+  },
+  { 
+    id: 'Gaming & Entertainment', 
+    name: 'Gaming & Entertainment', 
+    icon: Gamepad2, 
+    gradient: 'from-purple-500 to-pink-500',
+    description: 'Games & entertainment'
+  },
+  { 
+    id: 'Food & Dining', 
+    name: 'Food & Dining', 
+    icon: Utensils, 
+    gradient: 'from-orange-500 to-red-500',
+    description: 'Restaurants & food'
+  },
+  { 
+    id: 'Events & Celebrations', 
+    name: 'Events & Celebrations', 
+    icon: PartyPopper, 
+    gradient: 'from-yellow-500 to-orange-500',
+    description: 'Special occasions'
+  },
+  { 
+    id: 'Tech & Productivity', 
+    name: 'Tech & Productivity', 
+    icon: Briefcase, 
+    gradient: 'from-blue-500 to-cyan-500',
+    description: 'Technology & work'
+  },
+  { 
+    id: 'Health & Wellness', 
+    name: 'Health & Wellness', 
+    icon: Heart, 
+    gradient: 'from-green-500 to-emerald-500',
+    description: 'Health & beauty'
+  },
+  { 
+    id: 'Shopping & Retail', 
+    name: 'Shopping & Retail', 
+    icon: ShoppingBag, 
+    gradient: 'from-pink-500 to-rose-500',
+    description: 'Shopping & fashion'
+  },
+  { 
+    id: 'Travel & Experiences', 
+    name: 'Travel & Experiences', 
+    icon: Plane, 
+    gradient: 'from-indigo-500 to-purple-500',
+    description: 'Travel & adventures'
+  },
 ];
 
 const occasions = [
-  { id: 'all', name: 'All Occasions', icon: Calendar },
-  { id: 'Christmas', name: '🎄 Christmas', color: 'bg-red-500' },
-  { id: 'Birthday', name: '🎂 Birthdays', color: 'bg-pink-500' },
-  { id: 'Graduation', name: '🎓 Graduation', color: 'bg-blue-500' },
-  { id: 'Valentine', name: '❤️ Valentine\'s', color: 'bg-red-600' },
-  { id: 'Anniversary', name: '💍 Anniversary', color: 'bg-purple-500' },
+  { 
+    id: 'all', 
+    name: 'All Occasions', 
+    icon: Calendar, 
+    gradient: 'from-slate-400 to-slate-600',
+    description: 'Perfect for any time'
+  },
+  { 
+    id: 'Christmas', 
+    name: 'Christmas', 
+    icon: Gift, 
+    gradient: 'from-red-500 to-green-500',
+    description: 'Holiday season magic'
+  },
+  { 
+    id: 'Birthday', 
+    name: 'Birthdays', 
+    icon: PartyPopper, 
+    gradient: 'from-pink-500 to-purple-500',
+    description: 'Celebrate another year'
+  },
+  { 
+    id: 'Graduation', 
+    name: 'Graduation', 
+    icon: Star, 
+    gradient: 'from-blue-500 to-indigo-500',
+    description: 'Academic achievements'
+  },
+  { 
+    id: 'Valentine', 
+    name: 'Valentine\'s Day', 
+    icon: Heart, 
+    gradient: 'from-red-600 to-pink-500',
+    description: 'Show your love'
+  },
+  { 
+    id: 'Anniversary', 
+    name: 'Anniversary', 
+    icon: Sparkles, 
+    gradient: 'from-purple-500 to-pink-600',
+    description: 'Milestone moments'
+  },
+  { 
+    id: 'Thank You', 
+    name: 'Thank You', 
+    icon: Heart, 
+    gradient: 'from-emerald-500 to-teal-500',
+    description: 'Express gratitude'
+  },
+  { 
+    id: 'Congratulations', 
+    name: 'Congratulations', 
+    icon: Zap, 
+    gradient: 'from-yellow-500 to-orange-500',
+    description: 'Celebrate success'
+  },
 ];
 
 const themes = [
@@ -70,6 +172,8 @@ export default function PublicGiftCardStore() {
   const [occasionFilter, setOccasionFilter] = useState('all');
   const [selectedCard, setSelectedCard] = useState<PublicGiftCard | null>(null);
   const [showBuyModal, setShowBuyModal] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [formData, setFormData] = useState<PurchaseFormData>({
     senderName: '',
     senderEmail: '',
@@ -172,273 +276,442 @@ export default function PublicGiftCardStore() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50 dark:from-gray-900 dark:via-purple-900/20 dark:to-indigo-900/20">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
-            SiZu Gift Card Store
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Discover the perfect gift cards for every occasion. Browse by category, filter by special occasions, and give the gift of choice.
-          </p>
+      {/* Navigation Header */}
+      <Navigation onOpenPurchaseModal={() => setShowBuyModal(true)} />
+      
+      {/* Mobile Header Bar */}
+      <div className="sticky top-0 z-40 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-purple-200/50 dark:border-purple-800/50 lg:hidden">
+        <div className="flex items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-3">
+            <Gift className="h-6 w-6 text-purple-600" />
+            <h1 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              Gift Cards
+            </h1>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowFilters(!showFilters)}
+            className="lg:hidden"
+          >
+            <Filter className="h-4 w-4" />
+            Filters
+          </Button>
         </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-6 lg:py-12">
+        {/* Desktop Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-8 lg:mb-12 hidden lg:block"
+        >
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="p-3 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg">
+              <Gift className="h-8 w-8" />
+            </div>
+            <h1 className="text-4xl lg:text-6xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 bg-clip-text text-transparent">
+              Gift Card Store
+            </h1>
+          </div>
+          <p className="text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            Discover premium gift cards from trusted merchants. Perfect for any occasion, designed to create memorable experiences.
+          </p>
+        </motion.div>
 
         {/* Search and Filters */}
-        <div className="max-w-4xl mx-auto mb-8">
-          <div className="relative mb-6">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className={`max-w-5xl mx-auto mb-8 lg:mb-12 ${showFilters || !isMobileMenuOpen ? 'block' : 'hidden lg:block'}`}
+        >
+          {/* Search Bar */}
+          <div className="relative mb-6 lg:mb-8">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
             <Input
               placeholder="Search gift cards, merchants, or occasions..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 h-12 text-lg"
+              className="pl-12 h-12 lg:h-14 text-base lg:text-lg rounded-2xl border-2 border-purple-200/50 dark:border-purple-800/50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm focus:border-purple-400 dark:focus:border-purple-600 transition-all duration-300"
             />
           </div>
 
-          {/* Category Filter */}
-          <div className="mb-6">
-            <Label className="text-sm font-medium mb-3 block">Categories</Label>
-            <div className="flex flex-wrap gap-2">
-              {categories.map((category) => (
-                <Button
+          {/* Category Section */}
+          <div className="mb-6 lg:mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 text-white">
+                <Store className="h-4 w-4" />
+              </div>
+              <h2 className="text-lg lg:text-xl font-semibold text-gray-900 dark:text-white">Browse Categories</h2>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+              {categories.map((category, index) => (
+                <motion.div
                   key={category.id}
-                  variant={categoryFilter === category.id ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setCategoryFilter(category.id)}
-                  className="flex items-center gap-2"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.05 }}
                 >
-                  <category.icon className="h-4 w-4" />
-                  {category.name}
-                </Button>
+                  <Button
+                    variant={categoryFilter === category.id ? "default" : "outline"}
+                    onClick={() => setCategoryFilter(category.id)}
+                    className={`w-full h-auto p-4 rounded-xl border-2 transition-all duration-300 ${
+                      categoryFilter === category.id
+                        ? `bg-gradient-to-br ${category.gradient} text-white border-transparent shadow-lg transform scale-105`
+                        : 'border-purple-200/50 dark:border-purple-800/50 hover:border-purple-400 dark:hover:border-purple-600 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm hover:shadow-md'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center gap-2 text-center">
+                      <category.icon className="h-5 w-5 lg:h-6 lg:w-6" />
+                      <div>
+                        <div className="text-xs lg:text-sm font-medium">{category.name}</div>
+                        <div className="text-xs opacity-75">{category.description}</div>
+                      </div>
+                    </div>
+                  </Button>
+                </motion.div>
               ))}
             </div>
           </div>
 
-          {/* Occasion Filter */}
-          <div className="mb-6">
-            <Label className="text-sm font-medium mb-3 block">Special Occasions</Label>
-            <div className="flex flex-wrap gap-2">
-              {occasions.map((occasion) => (
-                <Button
+          {/* Occasions Section */}
+          <div className="mb-6 lg:mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-pink-500 to-purple-500 text-white">
+                <Sparkles className="h-4 w-4" />
+              </div>
+              <h2 className="text-lg lg:text-xl font-semibold text-gray-900 dark:text-white">Special Occasions</h2>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+              {occasions.map((occasion, index) => (
+                <motion.div
                   key={occasion.id}
-                  variant={occasionFilter === occasion.id ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setOccasionFilter(occasion.id)}
-                  className="flex items-center gap-2"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.3 + index * 0.05 }}
                 >
-                  <Calendar className="h-4 w-4" />
-                  {occasion.name}
-                </Button>
+                  <Button
+                    variant={occasionFilter === occasion.id ? "default" : "outline"}
+                    onClick={() => setOccasionFilter(occasion.id)}
+                    className={`w-full h-auto p-4 rounded-xl border-2 transition-all duration-300 ${
+                      occasionFilter === occasion.id
+                        ? `bg-gradient-to-br ${occasion.gradient} text-white border-transparent shadow-lg transform scale-105`
+                        : 'border-pink-200/50 dark:border-pink-800/50 hover:border-pink-400 dark:hover:border-pink-600 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm hover:shadow-md'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center gap-2 text-center">
+                      <occasion.icon className="h-5 w-5 lg:h-6 lg:w-6" />
+                      <div>
+                        <div className="text-xs lg:text-sm font-medium">{occasion.name}</div>
+                        <div className="text-xs opacity-75">{occasion.description}</div>
+                      </div>
+                    </div>
+                  </Button>
+                </motion.div>
               ))}
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Gift Cards Grid */}
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {[...Array(6)].map((_, i) => (
-              <Card key={i} className="h-80 animate-pulse">
-                <div className="h-full bg-muted rounded-lg" />
-              </Card>
-            ))}
-          </div>
-        ) : filteredCards.length === 0 ? (
-          <div className="text-center py-12">
-            <Gift className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">No gift cards found</h3>
-            <p className="text-muted-foreground">Try adjusting your search or filters</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {filteredCards.map((card: PublicGiftCard) => (
-              <Card key={card.id} className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                <CardHeader className="pb-3">
-                  <div className="mb-4">
-                    <Card3DDesign 
-                      category={card.giftCategory}
-                      amount={card.amount}
-                      merchantName={card.merchantName}
-                      className="h-32"
-                    />
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="max-w-7xl mx-auto"
+        >
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
+              {[...Array(8)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.1 }}
+                  className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-2xl border border-purple-200/50 dark:border-purple-800/50 p-6 animate-pulse"
+                >
+                  <div className="h-32 bg-gradient-to-br from-purple-200 to-pink-200 dark:from-purple-800 to-pink-800 rounded-xl mb-4" />
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded mb-4 w-3/4" />
+                  <div className="h-10 bg-purple-200 dark:bg-purple-800 rounded-lg" />
+                </motion.div>
+              ))}
+            </div>
+          ) : filteredCards.length === 0 ? (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center py-16 lg:py-24"
+            >
+              <div className="p-6 rounded-2xl bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 to-pink-900/30 border border-purple-200/50 dark:border-purple-800/50 backdrop-blur-sm inline-block mb-6">
+                <Gift className="h-12 w-12 lg:h-16 lg:w-16 text-purple-600 dark:text-purple-400 mx-auto" />
+              </div>
+              <h3 className="text-xl lg:text-2xl font-semibold mb-3 text-gray-900 dark:text-white">No gift cards found</h3>
+              <p className="text-muted-foreground text-base lg:text-lg max-w-md mx-auto">Try adjusting your search or filters to discover more gift cards</p>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setSearchTerm('');
+                  setCategoryFilter('all');
+                  setOccasionFilter('all');
+                }}
+                className="mt-6"
+              >
+                Clear All Filters
+              </Button>
+            </motion.div>
+          ) : (
+            <>
+              {/* Results Header */}
+              <div className="flex items-center justify-between mb-6 lg:mb-8">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 text-white">
+                    <ShoppingBag className="h-4 w-4" />
                   </div>
-                  
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg">{card.merchantName}</CardTitle>
-                      <CardDescription>{card.description}</CardDescription>
-                    </div>
-                    {card.occasionTag && (
-                      <Badge variant="secondary" className="ml-2">
-                        {occasions.find(o => o.id === card.occasionTag)?.name || card.occasionTag}
-                      </Badge>
-                    )}
+                  <div>
+                    <h2 className="text-lg lg:text-xl font-semibold text-gray-900 dark:text-white">
+                      {filteredCards.length} Gift Card{filteredCards.length !== 1 ? 's' : ''} Available
+                    </h2>
+                    <p className="text-sm text-muted-foreground">Premium cards from verified merchants</p>
                   </div>
-                </CardHeader>
+                </div>
+              </div>
 
-                <CardContent>
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">${(card.amount / 100).toFixed(2)}</span>
-                    </div>
-                    <Badge variant="outline">
-                      {categories.find(c => c.id === card.giftCategory)?.name || card.giftCategory}
-                    </Badge>
-                  </div>
-
-                  <Dialog open={showBuyModal && selectedCard?.id === card.id} onOpenChange={(open) => {
-                    setShowBuyModal(open);
-                    if (open) setSelectedCard(card);
-                  }}>
-                    <DialogTrigger asChild>
-                      <Button className="w-full" onClick={() => setSelectedCard(card)}>
-                        <Gift className="h-4 w-4 mr-2" />
-                        Buy Gift Card
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl">
-                      <DialogHeader>
-                        <DialogTitle>Purchase Gift Card</DialogTitle>
-                      </DialogHeader>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Form */}
-                        <div className="space-y-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="senderName">Your Name *</Label>
-                            <Input
-                              id="senderName"
-                              value={formData.senderName}
-                              onChange={(e) => setFormData(prev => ({ ...prev, senderName: e.target.value }))}
-                              placeholder="John Doe"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="senderEmail">Your Email *</Label>
-                            <Input
-                              id="senderEmail"
-                              type="email"
-                              value={formData.senderEmail}
-                              onChange={(e) => setFormData(prev => ({ ...prev, senderEmail: e.target.value }))}
-                              placeholder="john@example.com"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="recipientEmail">Recipient Email *</Label>
-                            <Input
-                              id="recipientEmail"
-                              type="email"
-                              value={formData.recipientEmail}
-                              onChange={(e) => setFormData(prev => ({ ...prev, recipientEmail: e.target.value }))}
-                              placeholder="recipient@example.com"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="recipientName">Recipient Name</Label>
-                            <Input
-                              id="recipientName"
-                              value={formData.recipientName}
-                              onChange={(e) => setFormData(prev => ({ ...prev, recipientName: e.target.value }))}
-                              placeholder="Jane Smith"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="amount">Amount</Label>
-                            <Select
-                              value={formData.amount.toString()}
-                              onValueChange={(value) => setFormData(prev => ({ ...prev, amount: parseInt(value) }))}
-                            >
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="2500">$25.00</SelectItem>
-                                <SelectItem value="5000">$50.00</SelectItem>
-                                <SelectItem value="10000">$100.00</SelectItem>
-                                <SelectItem value="15000">$150.00</SelectItem>
-                                <SelectItem value="25000">$250.00</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="message">Personal Message</Label>
-                            <Textarea
-                              id="message"
-                              value={formData.message}
-                              onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
-                              placeholder="Happy Birthday! Hope you enjoy this gift card."
-                              rows={3}
-                            />
-                          </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
+                {filteredCards.map((card: PublicGiftCard, index) => (
+                  <motion.div
+                    key={card.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="group"
+                  >
+                    <Card className="h-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-2 border-purple-200/50 dark:border-purple-800/50 hover:border-purple-400 dark:hover:border-purple-600 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 rounded-2xl overflow-hidden">
+                      <CardHeader className="pb-3 p-4 lg:p-6">
+                        <div className="mb-4 relative overflow-hidden rounded-xl">
+                          <Card3DDesign 
+                            category={card.giftCategory}
+                            amount={card.amount}
+                            merchantName={card.merchantName}
+                            className="h-28 lg:h-32 transition-transform duration-300 group-hover:scale-105"
+                          />
+                          {card.occasionTag && (
+                            <div className="absolute top-2 right-2">
+                              <Badge 
+                                variant="secondary" 
+                                className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm text-xs border border-purple-200/50 dark:border-purple-800/50"
+                              >
+                                {occasions.find(o => o.id === card.occasionTag)?.name || card.occasionTag}
+                              </Badge>
+                            </div>
+                          )}
                         </div>
+                        
+                        <div className="space-y-2">
+                          <CardTitle className="text-base lg:text-lg font-semibold text-gray-900 dark:text-white line-clamp-1">
+                            {card.merchantName}
+                          </CardTitle>
+                          <CardDescription className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                            {card.description || 'Premium gift card perfect for any occasion'}
+                          </CardDescription>
+                        </div>
+                      </CardHeader>
 
-                        {/* Preview */}
-                        <div className="space-y-4">
-                          <div className="space-y-2">
-                            <Label>Gift Card Preview</Label>
-                            <div className={`h-48 rounded-lg ${getThemePreview(card.cardDesignTheme)} flex flex-col items-center justify-center text-white relative overflow-hidden`}>
-                              <div className="absolute inset-0 bg-black/20" />
-                              <div className="relative text-center p-4">
-                                <Gift className="h-8 w-8 mx-auto mb-2" />
-                                <div className="text-lg font-bold">{card.merchantName}</div>
-                                <div className="text-2xl font-bold mt-2">${(formData.amount / 100).toFixed(2)}</div>
-                                {formData.message && (
-                                  <div className="text-xs mt-2 opacity-90 max-w-32 truncate">
-                                    "{formData.message}"
-                                  </div>
-                                )}
-                              </div>
+                      <CardContent className="p-4 lg:p-6 pt-0">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-2">
+                            <div className="p-1.5 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 text-white">
+                              <DollarSign className="h-3 w-3" />
                             </div>
+                            <span className="font-semibold text-lg text-gray-900 dark:text-white">
+                              ${(card.amount / 100).toFixed(2)}
+                            </span>
                           </div>
-
-                          <div className="space-y-2">
-                            <Label>Order Summary</Label>
-                            <div className="bg-muted p-4 rounded-lg space-y-2">
-                              <div className="flex justify-between">
-                                <span>Gift Card Value:</span>
-                                <span className="font-medium">${(formData.amount / 100).toFixed(2)}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>Processing Fee:</span>
-                                <span className="font-medium">$0.00</span>
-                              </div>
-                              <div className="border-t pt-2 flex justify-between font-bold">
-                                <span>Total:</span>
-                                <span>${(formData.amount / 100).toFixed(2)}</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <Button 
-                            onClick={handlePurchase} 
-                            disabled={purchaseMutation.isPending}
-                            className="w-full"
-                            size="lg"
+                          <Badge 
+                            variant="outline" 
+                            className="text-xs bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 border-purple-200/50 dark:border-purple-800/50"
                           >
-                            {purchaseMutation.isPending ? (
-                              "Processing..."
-                            ) : (
-                              <>
-                                <Gift className="h-4 w-4 mr-2" />
-                                Complete Purchase
-                              </>
-                            )}
-                          </Button>
+                            {categories.find(c => c.id === card.giftCategory)?.name || card.giftCategory}
+                          </Badge>
                         </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+
+                        <Dialog open={showBuyModal && selectedCard?.id === card.id} onOpenChange={(open) => {
+                          setShowBuyModal(open);
+                          if (open) setSelectedCard(card);
+                        }}>
+                          <DialogTrigger asChild>
+                            <Button 
+                              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-none shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105" 
+                              onClick={() => setSelectedCard(card)}
+                              size="lg"
+                            >
+                              <Gift className="h-4 w-4 mr-2" />
+                              Buy Gift Card
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                            <DialogHeader>
+                              <DialogTitle className="text-xl font-semibold text-gray-900 dark:text-white">
+                                Purchase Gift Card - {selectedCard?.merchantName}
+                              </DialogTitle>
+                            </DialogHeader>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                              {/* Form */}
+                              <div className="space-y-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor="senderName" className="text-sm font-medium text-gray-700 dark:text-gray-300">Your Name *</Label>
+                                  <Input
+                                    id="senderName"
+                                    value={formData.senderName}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, senderName: e.target.value }))}
+                                    placeholder="John Doe"
+                                    className="border-2 border-purple-200/50 dark:border-purple-800/50 focus:border-purple-400 dark:focus:border-purple-600"
+                                  />
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label htmlFor="senderEmail" className="text-sm font-medium text-gray-700 dark:text-gray-300">Your Email *</Label>
+                                  <Input
+                                    id="senderEmail"
+                                    type="email"
+                                    value={formData.senderEmail}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, senderEmail: e.target.value }))}
+                                    placeholder="john@example.com"
+                                    className="border-2 border-purple-200/50 dark:border-purple-800/50 focus:border-purple-400 dark:focus:border-purple-600"
+                                  />
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label htmlFor="recipientEmail" className="text-sm font-medium text-gray-700 dark:text-gray-300">Recipient Email *</Label>
+                                  <Input
+                                    id="recipientEmail"
+                                    type="email"
+                                    value={formData.recipientEmail}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, recipientEmail: e.target.value }))}
+                                    placeholder="recipient@example.com"
+                                    className="border-2 border-purple-200/50 dark:border-purple-800/50 focus:border-purple-400 dark:focus:border-purple-600"
+                                  />
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label htmlFor="recipientName" className="text-sm font-medium text-gray-700 dark:text-gray-300">Recipient Name</Label>
+                                  <Input
+                                    id="recipientName"
+                                    value={formData.recipientName}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, recipientName: e.target.value }))}
+                                    placeholder="Jane Smith"
+                                    className="border-2 border-purple-200/50 dark:border-purple-800/50 focus:border-purple-400 dark:focus:border-purple-600"
+                                  />
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label htmlFor="amount" className="text-sm font-medium text-gray-700 dark:text-gray-300">Amount</Label>
+                                  <Select
+                                    value={formData.amount.toString()}
+                                    onValueChange={(value) => setFormData(prev => ({ ...prev, amount: parseInt(value) }))}
+                                  >
+                                    <SelectTrigger className="border-2 border-purple-200/50 dark:border-purple-800/50 focus:border-purple-400 dark:focus:border-purple-600">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="2500">$25.00</SelectItem>
+                                      <SelectItem value="5000">$50.00</SelectItem>
+                                      <SelectItem value="10000">$100.00</SelectItem>
+                                      <SelectItem value="15000">$150.00</SelectItem>
+                                      <SelectItem value="25000">$250.00</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label htmlFor="message" className="text-sm font-medium text-gray-700 dark:text-gray-300">Personal Message</Label>
+                                  <Textarea
+                                    id="message"
+                                    value={formData.message}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
+                                    placeholder="Happy Birthday! Hope you enjoy this gift card."
+                                    rows={3}
+                                    className="border-2 border-purple-200/50 dark:border-purple-800/50 focus:border-purple-400 dark:focus:border-purple-600"
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Preview */}
+                              <div className="space-y-4">
+                                <div className="space-y-2">
+                                  <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Gift Card Preview</Label>
+                                  <div className="relative">
+                                    <Card3DDesign 
+                                      category={selectedCard?.giftCategory || 'general'}
+                                      amount={formData.amount}
+                                      merchantName={selectedCard?.merchantName || ''}
+                                      className="h-48 lg:h-56"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent rounded-xl flex flex-col justify-end p-4 text-white">
+                                      <div className="text-center">
+                                        <div className="text-lg lg:text-xl font-bold">{selectedCard?.merchantName}</div>
+                                        <div className="text-2xl lg:text-3xl font-bold mt-1">${(formData.amount / 100).toFixed(2)}</div>
+                                        {formData.message && (
+                                          <div className="text-xs lg:text-sm mt-2 opacity-90 max-w-full line-clamp-2">
+                                            "{formData.message}"
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                  <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Order Summary</Label>
+                                  <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 p-4 rounded-xl border border-purple-200/50 dark:border-purple-800/50 space-y-3">
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-gray-600 dark:text-gray-400">Gift Card Value:</span>
+                                      <span className="font-semibold text-gray-900 dark:text-white">${(formData.amount / 100).toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-gray-600 dark:text-gray-400">Processing Fee:</span>
+                                      <span className="font-semibold text-green-600 dark:text-green-400">$0.00</span>
+                                    </div>
+                                    <div className="border-t border-purple-200/50 dark:border-purple-800/50 pt-3 flex justify-between items-center">
+                                      <span className="font-bold text-gray-900 dark:text-white">Total:</span>
+                                      <span className="font-bold text-xl text-purple-600 dark:text-purple-400">${(formData.amount / 100).toFixed(2)}</span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <Button 
+                                  onClick={handlePurchase} 
+                                  disabled={purchaseMutation.isPending}
+                                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-none shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                                  size="lg"
+                                >
+                                  {purchaseMutation.isPending ? (
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                      Processing...
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <Gift className="h-4 w-4 mr-2" />
+                                      Complete Purchase
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            </>
+          )}
+        </motion.div>
       </div>
     </div>
   );

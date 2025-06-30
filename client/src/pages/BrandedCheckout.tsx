@@ -62,37 +62,54 @@ interface CheckoutPageProps {
   customization?: any;
 }
 
-// Premium animated background component
-const CheckoutBackground = () => (
-  <div className="fixed inset-0 -z-10">
-    <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-indigo-900 to-black" />
-    
-    {/* Animated particles */}
-    {[...Array(20)].map((_, i) => (
-      <motion.div
-        key={i}
-        className="absolute w-2 h-2 bg-purple-400/30 rounded-full"
+// Dynamic background based on configuration
+const CheckoutBackground = ({ config }: { config?: any }) => {
+  const primaryColor = config?.primaryColor || '#7c3aed';
+  const secondaryColor = config?.secondaryColor || '#ec4899';
+  const backgroundColor = config?.backgroundColor || '#0f0a19';
+  
+  return (
+    <div className="fixed inset-0 -z-10">
+      <div 
+        className="absolute inset-0"
         style={{
-          left: `${Math.random() * 100}%`,
-          top: `${Math.random() * 100}%`,
-        }}
-        animate={{
-          y: [0, -20, 0],
-          opacity: [0.3, 0.8, 0.3],
-        }}
-        transition={{
-          duration: 3 + Math.random() * 2,
-          repeat: Infinity,
-          delay: Math.random() * 2,
+          background: `linear-gradient(to bottom right, ${primaryColor}cc, ${secondaryColor}80, ${backgroundColor})`
         }}
       />
-    ))}
-    
-    {/* Gradient overlays */}
-    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-    <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-transparent to-pink-500/10" />
-  </div>
-);
+      
+      {/* Animated particles with dynamic colors */}
+      {config?.animation === 'enhanced' && [...Array(20)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute w-2 h-2 rounded-full"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+            backgroundColor: `${primaryColor}40`
+          }}
+          animate={{
+            y: [0, -20, 0],
+            opacity: [0.3, 0.8, 0.3],
+          }}
+          transition={{
+            duration: 3 + Math.random() * 2,
+            repeat: Infinity,
+            delay: Math.random() * 2,
+          }}
+        />
+      ))}
+      
+      {/* Gradient overlays */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+      <div 
+        className="absolute inset-0"
+        style={{
+          background: `linear-gradient(to right, ${primaryColor}10, transparent, ${secondaryColor}10)`
+        }}
+      />
+    </div>
+  );
+};
 
 // Secure badge component
 const SecurityBadges = () => (
@@ -233,9 +250,14 @@ export default function BrandedCheckout() {
     );
   }
 
+  const brandName = checkoutConfig?.brandName || "SiZu GiftCard";
+  const primaryColor = checkoutConfig?.primaryColor || "#7c3aed";
+  const secondaryColor = checkoutConfig?.secondaryColor || "#ec4899";
+  const textColor = checkoutConfig?.textColor || "#ffffff";
+
   return (
     <>
-      <CheckoutBackground />
+      <CheckoutBackground config={checkoutConfig} />
       
       <div className="min-h-screen py-8 px-4 relative">
         <div className="max-w-4xl mx-auto">
@@ -249,14 +271,37 @@ export default function BrandedCheckout() {
               whileHover={{ scale: 1.05 }}
               className="inline-flex items-center space-x-3 mb-4"
             >
-              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
-                <Gift className="w-7 h-7 text-white" />
-              </div>
+              {checkoutConfig?.brandLogo ? (
+                <div className="w-12 h-12 rounded-full overflow-hidden">
+                  <img 
+                    src={checkoutConfig.brandLogo} 
+                    alt={brandName}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div 
+                  className="w-12 h-12 rounded-full flex items-center justify-center"
+                  style={{
+                    background: `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`
+                  }}
+                >
+                  <Gift className="w-7 h-7 text-white" />
+                </div>
+              )}
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
-                  {checkoutConfig?.brandName || 'SiZu GiftCard'}
+                <h1 
+                  className="text-3xl font-bold bg-clip-text text-transparent"
+                  style={{
+                    background: `linear-gradient(to right, ${primaryColor}, ${secondaryColor}, ${checkoutConfig?.accentColor || '#3b82f6'})`,
+                    WebkitBackgroundClip: 'text'
+                  }}
+                >
+                  {brandName}
                 </h1>
-                <p className="text-sm text-gray-400">Secure Checkout</p>
+                <p className="text-sm" style={{ color: `${textColor}80` }}>
+                  {checkoutConfig?.tagline || 'Secure Checkout'}
+                </p>
               </div>
             </motion.div>
             

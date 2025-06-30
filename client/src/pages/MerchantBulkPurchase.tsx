@@ -103,7 +103,7 @@ export default function MerchantBulkPurchase() {
     enabled: !!merchantToken,
   });
 
-  const pricingTiers = pricingTiersResponse?.tiers || [];
+  const pricingTiers = (pricingTiersResponse as any)?.tiers || [];
 
   // Fetch merchant branding
   const { data: brandingResponse } = useQuery({
@@ -111,7 +111,7 @@ export default function MerchantBulkPurchase() {
     enabled: !!merchantToken,
   });
 
-  const branding = brandingResponse?.branding;
+  const branding = (brandingResponse as any)?.branding;
 
   // Calculate pricing based on quantity tiers
   const getCurrentTier = () => {

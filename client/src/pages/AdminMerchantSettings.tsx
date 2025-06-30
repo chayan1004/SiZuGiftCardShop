@@ -61,7 +61,7 @@ export default function AdminMerchantSettings() {
     }
   });
 
-  const merchants: Merchant[] = merchantsResponse?.merchants || [];
+  const merchants: Merchant[] = (merchantsResponse as any)?.merchants || [];
 
   // Filter merchants based on search term
   const filteredMerchants = merchants.filter(merchant =>
@@ -92,8 +92,8 @@ export default function AdminMerchantSettings() {
   });
 
   const selectedMerchant = merchants.find(m => m.id === selectedMerchantId);
-  const branding: MerchantBranding | null = brandingResponse?.branding || null;
-  const pricingTiers: PricingTier[] = pricingResponse?.tiers || [];
+  const branding: MerchantBranding | null = (brandingResponse as any)?.branding || null;
+  const pricingTiers: PricingTier[] = (pricingResponse as any)?.tiers || [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -219,7 +219,7 @@ export default function AdminMerchantSettings() {
 
                     <TabsContent value="branding" className="mt-6">
                       <MerchantBrandingForm
-                        merchantId={selectedMerchantId}
+                        merchantId={selectedMerchantId || 0}
                         branding={branding}
                         isLoading={brandingLoading}
                       />
@@ -227,7 +227,7 @@ export default function AdminMerchantSettings() {
 
                     <TabsContent value="pricing" className="mt-6">
                       <PricingTierEditor
-                        merchantId={selectedMerchantId}
+                        merchantId={selectedMerchantId || 0}
                         tiers={pricingTiers}
                         isLoading={pricingLoading}
                       />

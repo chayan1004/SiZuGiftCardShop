@@ -112,7 +112,7 @@ export default function AdminGiftCardAnalytics() {
     recentRedemptions: []
   };
 
-  const merchants = merchantsResponse?.merchants || [];
+  const merchants = (merchantsResponse as any)?.merchants || [];
 
   // Auto-refresh every 30 seconds
   useEffect(() => {

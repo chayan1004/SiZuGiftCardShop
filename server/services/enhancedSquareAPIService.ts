@@ -5,17 +5,27 @@ import fetch, { RequestInit } from 'node-fetch';
 
 /**
  * Enhanced Square API Service - Production Ready Implementation
- * Based on comprehensive analysis of Square Gift Cards API documentation:
+ * Following Official Square Gift Cards API Documentation:
+ * - Sell Gift Cards: https://developer.squareup.com/docs/gift-cards/sell-gift-cards
+ * - Reload Gift Cards: https://developer.squareup.com/docs/gift-cards/reload-gift-cards
+ * - Redeem Gift Cards: https://developer.squareup.com/docs/gift-cards/redeem-gift-cards
+ * - Retrieve Gift Cards: https://developer.squareup.com/docs/gift-cards/retrieve-gift-cards-and-activities
+ * - Manage Gift Cards: https://developer.squareup.com/docs/gift-cards/manage-gift-cards-on-file
+ * - Webhooks: https://developer.squareup.com/docs/gift-cards/webhooks
  * 
- * Key Features Implemented:
+ * Production Features Following Square Best Practices:
  * 1. Complete Gift Cards API coverage with all endpoints
- * 2. Gift Card Activities API integration
- * 3. Webhook handling for real-time updates
- * 4. Proper error handling and retry logic
- * 5. Idempotency key management
+ * 2. Gift Card Activities API integration with proper activity types
+ * 3. Webhook handling for real-time updates (gift_card.created, gift_card.updated, gift_card_activity.created)
+ * 4. Proper error handling and retry logic with exponential backoff
+ * 5. Idempotency key management for all operations
  * 6. Comprehensive validation and type safety
  * 7. Activity tracking and audit logging
  * 8. Balance management with real-time sync
+ * 9. Cash App Pay integration via Payment Links API
+ * 10. Orders API integration for gift card sales
+ * 11. Customer linking and management for gift cards
+ * 12. Proper webhook signature verification using HMAC
  */
 
 interface GiftCardRequest {

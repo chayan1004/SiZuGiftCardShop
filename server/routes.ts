@@ -4436,11 +4436,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Branded checkout with Square payment links (Cash App Pay support)
+  // Following Square's best practices: https://developer.squareup.com/docs/gift-cards/sell-gift-cards
   app.post("/api/branded-checkout", async (req: Request, res: Response) => {
     try {
       const { recipientEmail, amount, currency = 'USD', recipientName, senderName, giftMessage } = req.body;
 
-      // Validate input data
+      // Validate input data following Square guidelines
       if (!recipientEmail || !amount || amount < 500 || amount > 50000) {
         return res.status(400).json({
           success: false,
@@ -4459,9 +4460,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       const order = await storage.createPublicGiftCardOrder(orderData);
-      console.log(`📦 Created order ${order.id} for $${amount/100}`);
+      console.log(`📦 Created order ${order.id} for $${amount/100} following Square gift card sale workflow`);
 
       // Create Square payment link with Cash App Pay support
+      // Following: https://developer.squareup.com/docs/gift-cards/walkthrough-1
       const paymentLinkResult = await enhancedSquareAPIService.createPaymentLink({
         amount: amount / 100, // Convert from cents to dollars
         currency: currency,
@@ -4500,7 +4502,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
         orderId: order.id,
         paymentUrl: paymentLinkResult.checkoutUrl,
-        message: "Payment link created successfully"
+        message: "Payment link created successfully with Cash App Pay support"
       });
 
     } catch (error: any) {

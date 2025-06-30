@@ -473,7 +473,7 @@ export default function BrandedCheckout() {
                           onClick={() => setStep('payment')}
                           className="w-full text-white font-semibold transition-all duration-200"
                           style={{
-                            background: config ? `linear-gradient(135deg, ${config.primaryColor}, ${config.secondaryColor})` : 'linear-gradient(135deg, #7c3aed, #ec4899)',
+                            background: checkoutConfig?.primaryColor ? `linear-gradient(135deg, ${checkoutConfig.primaryColor}, ${checkoutConfig.secondaryColor})` : 'linear-gradient(135deg, #7c3aed, #ec4899)',
                             border: 'none'
                           }}
                         >
@@ -494,7 +494,7 @@ export default function BrandedCheckout() {
                         <div className="space-y-3">
                           <Label className="text-white font-semibold">Select Payment Method</Label>
                           <div className="grid grid-cols-2 gap-3">
-                            {config?.acceptedPaymentMethods?.creditCard && (
+                            {checkoutConfig?.acceptedPaymentMethods?.creditCard && (
                               <Button
                                 type="button"
                                 variant={selectedPaymentMethod === 'creditCard' ? 'default' : 'outline'}

@@ -267,7 +267,7 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .delete(merchantPricingTiers)
       .where(eq(merchantPricingTiers.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
   }
 
   // Merchant Branding methods

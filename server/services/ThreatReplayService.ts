@@ -108,12 +108,12 @@ export class ThreatReplayService {
       const report: ThreatReplayReport = {
         fraudLogId: fraudLog.id,
         originalAttempt: {
-          gan: fraudLog.gan,
+          gan: fraudLog.gan || '',
           ip: fraudLog.ipAddress,
           userAgent: fraudLog.userAgent || 'unknown',
           merchantId: fraudLog.merchantId || undefined,
           reason: fraudLog.reason,
-          timestamp: fraudLog.createdAt
+          timestamp: fraudLog.createdAt || new Date()
         },
         replayResult: {
           blocked,
@@ -137,12 +137,12 @@ export class ThreatReplayService {
       return {
         fraudLogId: fraudLog.id,
         originalAttempt: {
-          gan: fraudLog.gan,
+          gan: fraudLog.gan || '',
           ip: fraudLog.ipAddress,
           userAgent: fraudLog.userAgent || 'unknown',
           merchantId: fraudLog.merchantId || undefined,
           reason: fraudLog.reason,
-          timestamp: fraudLog.createdAt
+          timestamp: fraudLog.createdAt || new Date()
         },
         replayResult: {
           blocked: false,

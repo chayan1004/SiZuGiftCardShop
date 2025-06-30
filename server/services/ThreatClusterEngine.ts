@@ -455,25 +455,13 @@ export class ThreatClusterEngine {
   /**
    * Emit real-time cluster alert via Socket.IO
    */
-  private emitClusterAlert(cluster: any, threatCount: number): void {
+  private async emitClusterAlert(cluster: any, threatCount: number): Promise<void> {
     try {
-      // Import Socket.IO instance and emit
-      const { getSocketIO } = require('../index');
-      const io = getSocketIO();
+      // Temporarily disabled to prevent ES module conflicts
+      console.log(`🚨 Cluster alert (disabled): ${cluster.label} - ${threatCount} threats, score: ${cluster.score}`);
       
-      if (io) {
-        io.emit('new-fraud-cluster', {
-          clusterId: cluster.id,
-          title: cluster.label,
-          severity: cluster.severity,
-          score: parseFloat(cluster.score),
-          matchedThreatCount: threatCount,
-          timestamp: new Date().toISOString(),
-          patternType: cluster.patternType,
-        });
-        
-        console.log(`📡 Emitted cluster alert: ${cluster.label}`);
-      }
+      // TODO: Re-enable Socket.IO cluster alerts after fixing ES module integration
+      // The current import causes "getSocketIO is not a function" errors
     } catch (error) {
       console.error('❌ Failed to emit cluster alert:', error);
     }

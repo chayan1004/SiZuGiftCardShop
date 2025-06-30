@@ -27,6 +27,10 @@ import ThreatFeedPanel from "../../components/admin/ThreatFeedPanel";
 import TransactionExplorerPage from "./TransactionExplorerPage";
 import AdminCommandCenter from "./AdminCommandCenter";
 import FraudClusters from "../../components/admin/FraudClusters";
+import EmailSystemMonitoring from "../../components/admin/EmailSystemMonitoring";
+import FraudDetectionMonitoring from "../../components/admin/FraudDetectionMonitoring";
+import SystemOperationsMonitoring from "../../components/admin/SystemOperationsMonitoring";
+import CustomerInsightsAnalytics from "../../components/admin/CustomerInsightsAnalytics";
 import LoadingAnimation from "../../components/ui/LoadingAnimation";
 import type { FraudAlert } from "../../components/admin/ThreatFeedPanel";
 
@@ -242,10 +246,10 @@ export default function AdminDashboard() {
     { id: "webhooks", label: "Webhook Intelligence", icon: <Activity className="w-5 h-5" /> },
     { id: "security", label: "Threat Replay", icon: <Brain className="w-5 h-5" /> },
     { id: "fraud-clusters", label: "Fraud Pattern Analyzer", icon: <Brain className="w-5 h-5" /> },
+    { id: "fraud-monitoring", label: "Fraud Detection", icon: <Shield className="w-5 h-5" /> },
     { id: "threats", label: "Live Threat Feed", icon: <Shield className="w-5 h-5" /> },
     { id: "customers", label: "Customer Insights", icon: <Users className="w-5 h-5" /> },
-    { id: "marketing", label: "Marketing Tools", icon: <Mail className="w-5 h-5" /> },
-    { id: "email", label: "Email System", icon: <Mail className="w-5 h-5" /> },
+    { id: "email-system", label: "Email System", icon: <Mail className="w-5 h-5" /> },
     { id: "operations", label: "System Operations", icon: <Database className="w-5 h-5" /> },
   ];
 
@@ -1045,6 +1049,34 @@ export default function AdminDashboard() {
                       </CardContent>
                     </Card>
                   </div>
+                </div>
+              )}
+
+              {/* Email System Monitoring Section */}
+              {activeSection === "email-system" && (
+                <div className="space-y-6">
+                  <EmailSystemMonitoring />
+                </div>
+              )}
+
+              {/* Fraud Detection Monitoring Section */}
+              {activeSection === "fraud-monitoring" && (
+                <div className="space-y-6">
+                  <FraudDetectionMonitoring />
+                </div>
+              )}
+
+              {/* System Operations Section */}
+              {activeSection === "operations" && (
+                <div className="space-y-6">
+                  <SystemOperationsMonitoring />
+                </div>
+              )}
+
+              {/* Customer Insights Section */}
+              {activeSection === "customers" && (
+                <div className="space-y-6">
+                  <CustomerInsightsAnalytics />
                 </div>
               )}
 

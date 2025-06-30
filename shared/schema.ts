@@ -1024,3 +1024,129 @@ export type InsertPricingConfiguration = z.infer<typeof insertPricingConfigurati
 
 export type PricingHistory = typeof pricingHistory.$inferSelect;
 export type InsertPricingHistory = z.infer<typeof insertPricingHistorySchema>;
+
+// Physical Gift Card System
+export const physicalGiftCards = pgTable("physical_gift_cards", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  cardType: text("card_type").notNull(), // 'plastic', 'metal', 'premium'
+  cardDesign: text("card_design"), // Template or custom design ID
+  isCustomDesign: boolean("is_custom_design").default(false),
+  customDesignUrl: text("custom_design_url"), // URL to uploaded design
+  quantity: integer("quantity").notNull(),
+  denomination: integer("denomination").notNull(), // Amount in cents
+  squareBasePrice: integer("square_base_price").notNull(), // Square's cost in cents
+  adminFeePercentage: decimal("admin_fee_percentage", { precision: 5, scale: 2 }).notNull(), // Your fee %
+  totalCost: integer("total_cost").notNull(), // Final cost including fees
+  customerType: text("customer_type").notNull(), // 'merchant', 'individual'
+  customerId: text("customer_id"), // Merchant ID or customer ID
+  customerEmail: text("customer_email").notNull(),
+  customerName: text("customer_name").notNull(),
+  shippingAddress: text("shipping_address").notNull(),
+  shippingCity: text("shipping_city").notNull(),
+  shippingState: text("shipping_state").notNull(),
+  shippingZip: text("shipping_zip").notNull(),
+  shippingCountry: text("shipping_country").default("US"),
+  status: text("status").notNull().default("pending"), // pending, processing, printed, shipped, delivered
+  paymentStatus: text("payment_status").notNull().default("pending"), // pending, paid, failed
+  squareOrderId: text("square_order_id"),
+  squarePaymentId: text("square_payment_id"),
+  printJobId: text("print_job_id"), // For tracking with printing service
+  trackingNumber: text("tracking_number"),
+  shippingCost: integer("shipping_cost").default(0),
+  estimatedDelivery: timestamp("estimated_delivery"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const physicalCardActivations = pgTable("physical_card_activations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  physicalCardId: uuid("physical_card_id").notNull(),
+  cardNumber: text("card_number").notNull().unique(), // Printed card number
+  squareGiftCardId: text("square_gift_card_id").unique(), // Created when activated
+  gan: text("gan").unique(), // Gift card account number
+  activatedBy: text("activated_by"), // Customer who activated
+  activatedAt: timestamp("activated_at"),
+  currentBalance: integer("current_balance"), // Balance in cents
+  isActive: boolean("is_active").default(false),
+  lastUsed: timestamp("last_used"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const cardReloadTransactions = pgTable("card_reload_transactions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  cardActivationId: uuid("card_activation_id").notNull(),
+  reloadAmount: integer("reload_amount").notNull(), // Amount added in cents
+  adminFeePercentage: decimal("admin_fee_percentage", { precision: 5, scale: 2 }).notNull(),
+  totalCharged: integer("total_charged").notNull(), // Amount charged including fee
+  reloadedBy: text("reloaded_by").notNull(), // Customer email/ID
+  paymentMethod: text("payment_method").notNull(), // 'square', 'stripe', etc
+  squarePaymentId: text("square_payment_id"),
+  status: text("status").notNull().default("pending"), // pending, completed, failed
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const cardBalanceChecks = pgTable("card_balance_checks", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  cardNumber: text("card_number").notNull(),
+  checkedBy: text("checked_by"), // IP or customer ID
+  balance: integer("balance"), // Balance at time of check
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const customCardDesigns = pgTable("custom_card_designs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  customerId: text("customer_id").notNull(),
+  customerType: text("customer_type").notNull(), // 'merchant', 'individual'
+  designName: text("design_name").notNull(),
+  designUrl: text("design_url").notNull(), // URL to uploaded design file
+  designType: text("design_type").notNull(), // 'image', 'template'
+  isApproved: boolean("is_approved").default(false),
+  approvedBy: text("approved_by"), // Admin who approved
+  approvedAt: timestamp("approved_at"),
+  rejectionReason: text("rejection_reason"),
+  designSpecs: text("design_specs"), // JSON with design specifications
+  printCost: integer("print_cost"), // Additional cost for custom design
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Insert schemas
+export const insertPhysicalGiftCardSchema = createInsertSchema(physicalGiftCards).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPhysicalCardActivationSchema = createInsertSchema(physicalCardActivations).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertCardReloadTransactionSchema = createInsertSchema(cardReloadTransactions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertCardBalanceCheckSchema = createInsertSchema(cardBalanceChecks).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertCustomCardDesignSchema = createInsertSchema(customCardDesigns).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Types
+export type PhysicalGiftCard = typeof physicalGiftCards.$inferSelect;
+export type InsertPhysicalGiftCard = z.infer<typeof insertPhysicalGiftCardSchema>;
+export type PhysicalCardActivation = typeof physicalCardActivations.$inferSelect;
+export type InsertPhysicalCardActivation = z.infer<typeof insertPhysicalCardActivationSchema>;
+export type CardReloadTransaction = typeof cardReloadTransactions.$inferSelect;
+export type InsertCardReloadTransaction = z.infer<typeof insertCardReloadTransactionSchema>;
+export type CardBalanceCheck = typeof cardBalanceChecks.$inferSelect;
+export type InsertCardBalanceCheck = z.infer<typeof insertCardBalanceCheckSchema>;
+export type CustomCardDesign = typeof customCardDesigns.$inferSelect;
+export type InsertCustomCardDesign = z.infer<typeof insertCustomCardDesignSchema>;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -48,27 +48,30 @@ export default function PricingManagement() {
     }
   });
 
-  const config: PricingConfig = (pricingData as any)?.config ? {
-    id: (pricingData as any).config.id || 'default',
-    basePrice: parseFloat((pricingData as any).config.basePrice) || 100,
-    merchantBuyRate: parseFloat((pricingData as any).config.merchantBuyRate) || 5,
-    merchantSellRate: parseFloat((pricingData as any).config.merchantSellRate) || -3,
-    individualBuyRate: parseFloat((pricingData as any).config.individualBuyRate) || 8,
-    individualSellRate: parseFloat((pricingData as any).config.individualSellRate) || -5,
-    lastUpdated: (pricingData as any).config.updatedAt || new Date().toISOString(),
-    updatedBy: (pricingData as any).config.updatedBy || 'admin',
-    isActive: (pricingData as any).config.isActive || true
-  } : {
-    id: 'default',
-    basePrice: 100,
-    merchantBuyRate: 5,
-    merchantSellRate: -3,
-    individualBuyRate: 8,
-    individualSellRate: -5,
-    lastUpdated: new Date().toISOString(),
-    updatedBy: 'admin',
-    isActive: true
-  };
+  // Memoize config to prevent infinite re-renders
+  const config: PricingConfig = useMemo(() => {
+    return (pricingData as any)?.config ? {
+      id: (pricingData as any).config.id || 'default',
+      basePrice: parseFloat((pricingData as any).config.basePrice) || 100,
+      merchantBuyRate: parseFloat((pricingData as any).config.merchantBuyRate) || 5,
+      merchantSellRate: parseFloat((pricingData as any).config.merchantSellRate) || -3,
+      individualBuyRate: parseFloat((pricingData as any).config.individualBuyRate) || 8,
+      individualSellRate: parseFloat((pricingData as any).config.individualSellRate) || -5,
+      lastUpdated: (pricingData as any).config.updatedAt || new Date().toISOString(),
+      updatedBy: (pricingData as any).config.updatedBy || 'admin',
+      isActive: (pricingData as any).config.isActive || true
+    } : {
+      id: 'default',
+      basePrice: 100,
+      merchantBuyRate: 5,
+      merchantSellRate: -3,
+      individualBuyRate: 8,
+      individualSellRate: -5,
+      lastUpdated: new Date().toISOString(),
+      updatedBy: 'admin',
+      isActive: true
+    };
+  }, [pricingData]);
 
   // Fetch live calculated pricing
   const { data: livePricingData, isLoading: liveLoading, refetch: refetchLive } = useQuery({
@@ -81,25 +84,28 @@ export default function PricingManagement() {
     }
   });
 
-  const livePricing: LivePricing = (livePricingData as any)?.pricing ? {
-    squareBasePrice: (livePricingData as any).pricing.squareBasePrice || config.basePrice,
-    merchantBuyPrice: (livePricingData as any).pricing.merchantBuyPrice || config.basePrice * (1 + config.merchantBuyRate / 100),
-    merchantSellPrice: (livePricingData as any).pricing.merchantSellPrice || config.basePrice * (1 + config.merchantSellRate / 100),
-    individualBuyPrice: (livePricingData as any).pricing.individualBuyPrice || config.basePrice * (1 + config.individualBuyRate / 100),
-    individualSellPrice: (livePricingData as any).pricing.individualSellPrice || config.basePrice * (1 + config.individualSellRate / 100),
-    profitMarginMerchant: (livePricingData as any).pricing.profitMarginMerchant || (config.merchantBuyRate + Math.abs(config.merchantSellRate)),
-    profitMarginIndividual: (livePricingData as any).pricing.profitMarginIndividual || (config.individualBuyRate + Math.abs(config.individualSellRate)),
-    lastRefresh: (livePricingData as any).pricing.lastRefresh || new Date().toISOString()
-  } : {
-    squareBasePrice: config.basePrice,
-    merchantBuyPrice: config.basePrice * (1 + config.merchantBuyRate / 100),
-    merchantSellPrice: config.basePrice * (1 + config.merchantSellRate / 100),
-    individualBuyPrice: config.basePrice * (1 + config.individualBuyRate / 100),
-    individualSellPrice: config.basePrice * (1 + config.individualSellRate / 100),
-    profitMarginMerchant: config.merchantBuyRate + Math.abs(config.merchantSellRate),
-    profitMarginIndividual: config.individualBuyRate + Math.abs(config.individualSellRate),
-    lastRefresh: new Date().toISOString()
-  };
+  // Memoize live pricing to prevent infinite re-renders
+  const livePricing: LivePricing = useMemo(() => {
+    return (livePricingData as any)?.pricing ? {
+      squareBasePrice: (livePricingData as any).pricing.squareBasePrice || config.basePrice,
+      merchantBuyPrice: (livePricingData as any).pricing.merchantBuyPrice || config.basePrice * (1 + config.merchantBuyRate / 100),
+      merchantSellPrice: (livePricingData as any).pricing.merchantSellPrice || config.basePrice * (1 + config.merchantSellRate / 100),
+      individualBuyPrice: (livePricingData as any).pricing.individualBuyPrice || config.basePrice * (1 + config.individualBuyRate / 100),
+      individualSellPrice: (livePricingData as any).pricing.individualSellPrice || config.basePrice * (1 + config.individualSellRate / 100),
+      profitMarginMerchant: (livePricingData as any).pricing.profitMarginMerchant || (config.merchantBuyRate + Math.abs(config.merchantSellRate)),
+      profitMarginIndividual: (livePricingData as any).pricing.profitMarginIndividual || (config.individualBuyRate + Math.abs(config.individualSellRate)),
+      lastRefresh: (livePricingData as any).pricing.lastRefresh || new Date().toISOString()
+    } : {
+      squareBasePrice: config.basePrice,
+      merchantBuyPrice: config.basePrice * (1 + config.merchantBuyRate / 100),
+      merchantSellPrice: config.basePrice * (1 + config.merchantSellRate / 100),
+      individualBuyPrice: config.basePrice * (1 + config.individualBuyRate / 100),
+      individualSellPrice: config.basePrice * (1 + config.individualSellRate / 100),
+      profitMarginMerchant: config.merchantBuyRate + Math.abs(config.merchantSellRate),
+      profitMarginIndividual: config.individualBuyRate + Math.abs(config.individualSellRate),
+      lastRefresh: new Date().toISOString()
+    };
+  }, [livePricingData, config]);
 
   // Update pricing configuration
   const updatePricingMutation = useMutation({

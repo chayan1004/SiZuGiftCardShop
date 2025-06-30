@@ -1,76 +1,70 @@
-import { useEffect, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
+import { useEffect, useRef, useState } from 'react';
 
-interface UseSocketOptions {
-  autoConnect?: boolean;
-  adminToken?: string | null;
+export interface FraudAlert {
+  id: string;
+  timestamp: string;
+  type: string;
+  severity: string;
+  message: string;
+  ip: string;
 }
 
-export function useSocket(options: UseSocketOptions = {}) {
-  const [socket, setSocket] = useState<Socket | null>(null);
+export function useSocket() {
   const [isConnected, setIsConnected] = useState(false);
-  const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [fraudAlerts, setFraudAlerts] = useState<FraudAlert[]>([]);
+  const socketRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    if (!options.autoConnect) return;
+    // Determine WebSocket URL based on current location
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
 
-    const socketInstance = io(window.location.origin, {
-      auth: {
-        token: options.adminToken || localStorage.getItem('adminToken') || ''
-      },
-      transports: ['websocket', 'polling']
-    });
+    try {
+      const socket = new WebSocket(wsUrl);
+      socketRef.current = socket;
 
-    socketInstance.on('connect', () => {
-      console.log('Socket.IO connected');
-      setIsConnected(true);
-      setConnectionError(null);
-    });
+      socket.onopen = () => {
+        console.log('WebSocket connected');
+        setIsConnected(true);
+      };
 
-    socketInstance.on('disconnect', () => {
-      console.log('Socket.IO disconnected');
+      socket.onclose = () => {
+        console.log('WebSocket disconnected');
+        setIsConnected(false);
+      };
+
+      socket.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        setIsConnected(false);
+      };
+
+      socket.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          if (data.type === 'fraud_alert') {
+            setFraudAlerts(prev => [data, ...prev.slice(0, 49)]); // Keep last 50 alerts
+          }
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
+        }
+      };
+
+    } catch (error) {
+      console.error('Failed to create WebSocket connection:', error);
       setIsConnected(false);
-    });
-
-    socketInstance.on('connect_error', (error) => {
-      console.error('Socket.IO connection error:', error);
-      setConnectionError(error.message);
-      setIsConnected(false);
-    });
-
-    setSocket(socketInstance);
+    }
 
     return () => {
-      socketInstance.disconnect();
+      if (socketRef.current) {
+        socketRef.current.close();
+      }
     };
-  }, [options.autoConnect, options.adminToken]);
-
-  const emit = (event: string, data?: any) => {
-    if (socket) {
-      socket.emit(event, data);
-    }
-  };
-
-  const on = (event: string, callback: (...args: any[]) => void) => {
-    if (socket) {
-      socket.on(event, callback);
-      return () => socket.off(event, callback);
-    }
-    return () => {};
-  };
-
-  const off = (event: string, callback?: (...args: any[]) => void) => {
-    if (socket) {
-      socket.off(event, callback);
-    }
-  };
+  }, []);
 
   return {
-    socket,
     isConnected,
-    connectionError,
-    emit,
-    on,
-    off
+    fraudAlerts,
+    clearAlerts: () => setFraudAlerts([])
   };
 }

@@ -502,3 +502,43 @@ export const insertGatewayFeatureToggleSchema = createInsertSchema(gatewayFeatur
 
 export type GatewayFeatureToggle = typeof gatewayFeatureToggles.$inferSelect;
 export type InsertGatewayFeatureToggle = z.infer<typeof insertGatewayFeatureToggleSchema>;
+
+// Phase 19: Fraud Clusters Schema
+export const fraudClusters = pgTable("fraud_clusters", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  label: text("label").notNull(), // e.g., "Replay Attack", "IP Spoofing", "Rapid Redemptions"
+  score: numeric("score", { precision: 5, scale: 2 }).notNull(), // risk score (0.00-99.99)
+  severity: integer("severity").notNull().default(1), // 1-5 severity level
+  threatCount: integer("threat_count").notNull().default(0), // Number of threats in cluster
+  patternType: text("pattern_type").notNull(), // IP, device_fingerprint, velocity, etc.
+  metadata: text("metadata"), // JSON string with cluster details
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertFraudClusterSchema = createInsertSchema(fraudClusters).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type FraudCluster = typeof fraudClusters.$inferSelect;
+export type InsertFraudCluster = z.infer<typeof insertFraudClusterSchema>;
+
+// Phase 19: Cluster Patterns Schema
+export const clusterPatterns = pgTable("cluster_patterns", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  clusterId: uuid("cluster_id").notNull().references(() => fraudClusters.id, { onDelete: "cascade" }),
+  fraudLogId: uuid("fraud_log_id").notNull().references(() => fraudLogs.id, { onDelete: "cascade" }),
+  metadata: text("metadata"), // JSON string with pattern-specific data (device, IP, timing, etc.)
+  similarity: numeric("similarity", { precision: 5, scale: 2 }), // Similarity score to cluster center
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertClusterPatternSchema = createInsertSchema(clusterPatterns).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type ClusterPattern = typeof clusterPatterns.$inferSelect;
+export type InsertClusterPattern = z.infer<typeof insertClusterPatternSchema>;

@@ -1,5 +1,5 @@
 import { 
-  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, merchantCardDesigns, fraudLogs, autoDefenseRules, cardRedemptions, webhookEvents, webhookDeliveryLogs, webhookRetryQueue, webhookFailureLog, merchantApiKeys, giftCardTransactions, globalSettings, gatewayFeatureToggles,
+  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, merchantCardDesigns, fraudLogs, autoDefenseRules, cardRedemptions, webhookEvents, webhookDeliveryLogs, webhookRetryQueue, webhookFailureLog, merchantApiKeys, giftCardTransactions, globalSettings, gatewayFeatureToggles, fraudClusters, clusterPatterns,
   type User, type InsertUser,
   type Merchant, type InsertMerchant, 
   type GiftCard, type InsertGiftCard,
@@ -22,7 +22,9 @@ import {
   type MerchantApiKey, type InsertMerchantApiKey,
   type GiftCardTransaction, type InsertGiftCardTransaction,
   type GlobalSetting, type InsertGlobalSetting,
-  type GatewayFeatureToggle, type InsertGatewayFeatureToggle
+  type GatewayFeatureToggle, type InsertGatewayFeatureToggle,
+  type FraudCluster, type InsertFraudCluster,
+  type ClusterPattern, type InsertClusterPattern
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, count, sum, and, gte, lte, asc } from "drizzle-orm";
@@ -243,6 +245,20 @@ export interface IStorage {
   getGatewayFeatures(): Promise<GatewayFeatureToggle[]>;
   getGatewayFeature(gatewayName: string, feature: string): Promise<GatewayFeatureToggle | undefined>;
   updateGatewayFeature(gatewayName: string, feature: string, enabled: boolean): Promise<GatewayFeatureToggle>;
+
+  // Phase 19: Fraud Cluster Management
+  getFraudClusters(limit?: number): Promise<FraudCluster[]>;
+  getFraudClusterById(id: string): Promise<FraudCluster | undefined>;
+  getClusterPatterns(clusterId: string): Promise<ClusterPattern[]>;
+  createFraudCluster(cluster: InsertFraudCluster): Promise<FraudCluster>;
+  addClusterPattern(pattern: InsertClusterPattern): Promise<ClusterPattern>;
+  getFraudClusterStats(): Promise<{
+    totalClusters: number;
+    activeClusters: number;
+    avgSeverity: number;
+    recentClusters: number;
+    patternTypes: Record<string, number>;
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1984,6 +2000,96 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return created;
     }
+  }
+
+  // Phase 19: Fraud Cluster Management Implementation
+  async getFraudClusters(limit: number = 50): Promise<FraudCluster[]> {
+    return await db
+      .select()
+      .from(fraudClusters)
+      .orderBy(desc(fraudClusters.createdAt))
+      .limit(limit);
+  }
+
+  async getFraudClusterById(id: string): Promise<FraudCluster | undefined> {
+    const [cluster] = await db
+      .select()
+      .from(fraudClusters)
+      .where(eq(fraudClusters.id, id));
+    return cluster || undefined;
+  }
+
+  async getClusterPatterns(clusterId: string): Promise<ClusterPattern[]> {
+    return await db
+      .select()
+      .from(clusterPatterns)
+      .where(eq(clusterPatterns.clusterId, clusterId))
+      .orderBy(desc(clusterPatterns.createdAt));
+  }
+
+  async createFraudCluster(cluster: InsertFraudCluster): Promise<FraudCluster> {
+    const [newCluster] = await db
+      .insert(fraudClusters)
+      .values(cluster)
+      .returning();
+    return newCluster;
+  }
+
+  async addClusterPattern(pattern: InsertClusterPattern): Promise<ClusterPattern> {
+    const [newPattern] = await db
+      .insert(clusterPatterns)
+      .values(pattern)
+      .returning();
+    return newPattern;
+  }
+
+  async getFraudClusterStats(): Promise<{
+    totalClusters: number;
+    activeClusters: number;
+    avgSeverity: number;
+    recentClusters: number;
+    patternTypes: Record<string, number>;
+  }> {
+    // Total clusters
+    const [totalResult] = await db
+      .select({ count: count() })
+      .from(fraudClusters);
+
+    // Recent clusters (last 24 hours)
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const [recentResult] = await db
+      .select({ count: count() })
+      .from(fraudClusters)
+      .where(gte(fraudClusters.createdAt, oneDayAgo));
+
+    // Pattern types distribution
+    const patternTypeResults = await db
+      .select({
+        patternType: fraudClusters.patternType,
+        count: count()
+      })
+      .from(fraudClusters)
+      .groupBy(fraudClusters.patternType);
+
+    // Average severity
+    const [avgSeverityResult] = await db
+      .select({
+        avg: sql<number>`AVG(${fraudClusters.severity})::numeric`
+      })
+      .from(fraudClusters);
+
+    const patternTypes: Record<string, number> = {};
+    patternTypeResults.forEach(result => {
+      patternTypes[result.patternType] = result.count;
+    });
+
+    return {
+      totalClusters: totalResult.count,
+      activeClusters: totalResult.count, // All clusters are considered active
+      avgSeverity: parseFloat(avgSeverityResult.avg?.toString() || '0'),
+      recentClusters: recentResult.count,
+      patternTypes
+    };
   }
 }
 

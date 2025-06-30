@@ -390,6 +390,29 @@ function AdminWebhookFailures() {
                       </p>
                     </div>
                     <div className="flex gap-2">
+                      {/* Phase 16B: Inspect Button */}
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button
+                            onClick={() => setSelectedFailureId(failure.id)}
+                            size="sm"
+                            variant="outline"
+                            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0"
+                          >
+                            <Eye className="w-4 h-4 mr-1" />
+                            Inspect
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle>Webhook Failure Analysis - {failure.deliveryId}</DialogTitle>
+                          </DialogHeader>
+                          {failure && selectedFailureId === failure.id && (
+                            <ReplayViewer failure={failure as WebhookFailureDetails} />
+                          )}
+                        </DialogContent>
+                      </Dialog>
+
                       {!failure.resolved && (
                         <>
                           <Button

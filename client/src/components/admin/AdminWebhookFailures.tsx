@@ -4,7 +4,11 @@ import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, RefreshCw, CheckCircle, Clock, AlertTriangle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AlertCircle, RefreshCw, CheckCircle, Clock, AlertTriangle, Eye, Play, Code, Server } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface WebhookFailure {
@@ -12,6 +16,26 @@ interface WebhookFailure {
   deliveryId: string;
   statusCode?: number;
   errorMessage?: string;
+  failedAt: string;
+  resolved: boolean;
+  manualRetryCount?: number;
+  lastManualRetryStatus?: string;
+  replayedAt?: string;
+}
+
+interface WebhookFailureDetails {
+  id: string;
+  deliveryId: string;
+  statusCode?: number;
+  errorMessage?: string;
+  requestHeaders?: any;
+  requestBody?: string;
+  responseHeaders?: any;
+  responseBody?: string;
+  responseStatus?: number;
+  manualRetryCount: number;
+  lastManualRetryStatus?: string;
+  replayedAt?: string;
   failedAt: string;
   resolved: boolean;
 }
@@ -29,6 +53,7 @@ function AdminWebhookFailures() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'failures' | 'queue'>('failures');
+  const [selectedFailureId, setSelectedFailureId] = useState<string | null>(null);
 
   // Fetch webhook failures
   const { data: failuresData, isLoading: failuresLoading } = useQuery({
@@ -64,6 +89,32 @@ function AdminWebhookFailures() {
     },
   });
 
+  // Phase 16B: Webhook replay mutation
+  const replayMutation = useMutation({
+    mutationFn: async (failureId: string) => {
+      const response = await apiRequest("POST", `/api/admin/webhook-replay/${failureId}`);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: data.success ? "Webhook Replayed Successfully" : "Webhook Replay Failed",
+        description: data.message,
+        variant: data.success ? "default" : "destructive",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/webhook-failures'] });
+      if (selectedFailureId) {
+        queryClient.invalidateQueries({ queryKey: ["/api/admin/webhook-failures", selectedFailureId] });
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Replay Failed",
+        description: error.message || "Failed to replay webhook",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Resolve failure mutation
   const resolveFailureMutation = useMutation({
     mutationFn: async (failureId: string) => {
@@ -86,8 +137,15 @@ function AdminWebhookFailures() {
     },
   });
 
+  // Phase 16B: Get detailed failure context
+  const { data: failureDetails } = useQuery({
+    queryKey: ["/api/admin/webhook-failures", selectedFailureId],
+    enabled: !!selectedFailureId,
+  });
+
   const failures = (failuresData as any)?.failures || [];
   const queue = (queueData as any)?.queue || { totalPending: 0, retries: [] };
+  const failure = (failureDetails as any)?.failure;
 
   const getStatusBadge = (statusCode?: number) => {
     if (!statusCode) return <Badge variant="destructive">Unknown</Badge>;
@@ -99,6 +157,97 @@ function AdminWebhookFailures() {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString();
   };
+
+  // Phase 16B: Replay Viewer Component
+  const ReplayViewer = ({ failure }: { failure: WebhookFailureDetails }) => (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <h4 className="font-semibold mb-2 flex items-center">
+            <Server className="w-4 h-4 mr-2" />
+            Request Details
+          </h4>
+          <div className="space-y-2">
+            <div>
+              <Badge variant="outline">Headers</Badge>
+              <ScrollArea className="h-32 w-full border rounded mt-1">
+                <pre className="p-2 text-xs">
+                  {failure.requestHeaders ? JSON.stringify(failure.requestHeaders, null, 2) : 'No headers recorded'}
+                </pre>
+              </ScrollArea>
+            </div>
+            <div>
+              <Badge variant="outline">Body</Badge>
+              <ScrollArea className="h-32 w-full border rounded mt-1">
+                <pre className="p-2 text-xs">
+                  {failure.requestBody || 'No body recorded'}
+                </pre>
+              </ScrollArea>
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <h4 className="font-semibold mb-2 flex items-center">
+            <Code className="w-4 h-4 mr-2" />
+            Response Details
+          </h4>
+          <div className="space-y-2">
+            <div>
+              <Badge variant="outline">Status: {failure.responseStatus || 'Unknown'}</Badge>
+              <Badge variant="outline" className="ml-2">Headers</Badge>
+              <ScrollArea className="h-32 w-full border rounded mt-1">
+                <pre className="p-2 text-xs">
+                  {failure.responseHeaders ? JSON.stringify(failure.responseHeaders, null, 2) : 'No headers recorded'}
+                </pre>
+              </ScrollArea>
+            </div>
+            <div>
+              <Badge variant="outline">Body</Badge>
+              <ScrollArea className="h-32 w-full border rounded mt-1">
+                <pre className="p-2 text-xs">
+                  {failure.responseBody || 'No response body recorded'}
+                </pre>
+              </ScrollArea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <Separator />
+
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <div className="text-sm text-muted-foreground">
+            Manual Retry Count: {failure.manualRetryCount}
+          </div>
+          {failure.lastManualRetryStatus && (
+            <div className="text-sm">
+              Last Status: <Badge variant="outline">{failure.lastManualRetryStatus}</Badge>
+            </div>
+          )}
+          {failure.replayedAt && (
+            <div className="text-sm text-muted-foreground">
+              Last Replayed: {new Date(failure.replayedAt).toLocaleString()}
+            </div>
+          )}
+        </div>
+        
+        <Button
+          onClick={() => replayMutation.mutate(failure.id)}
+          disabled={replayMutation.isPending}
+          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+        >
+          {replayMutation.isPending ? (
+            <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+          ) : (
+            <Play className="w-4 h-4 mr-2" />
+          )}
+          {replayMutation.isPending ? 'Replaying...' : 'Replay Webhook'}
+        </Button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-6">

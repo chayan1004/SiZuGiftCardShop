@@ -1,8 +1,9 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import fs from 'fs/promises';
 import path from 'path';
-import { PublicGiftCardOrder } from '@shared/schema';
+import { PublicGiftCardOrder, MerchantBranding } from '@shared/schema';
 import { QRCodeUtil } from '../utils/QRCodeUtil';
+import { storage } from '../storage';
 
 export interface ReceiptGenerationResult {
   success: boolean;
@@ -21,9 +22,28 @@ export class ReceiptService {
     }
   }
 
+  private static hexToRgb(hex: string): { r: number; g: number; b: number } {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+      r: parseInt(result[1], 16) / 255,
+      g: parseInt(result[2], 16) / 255,
+      b: parseInt(result[3], 16) / 255
+    } : { r: 0.38, g: 0.22, b: 0.57 }; // Default purple
+  }
+
   static async generatePDFReceipt(order: PublicGiftCardOrder): Promise<ReceiptGenerationResult> {
     try {
       await this.ensureReceiptsDirectory();
+
+      // Fetch merchant branding if merchant ID is provided
+      let branding: MerchantBranding | null = null;
+      if (order.merchantId) {
+        // Find merchant by merchant ID (string) and get their branding
+        const merchant = await storage.getMerchantBySquareId(order.merchantId);
+        if (merchant) {
+          branding = await storage.getMerchantBranding(merchant.id) || null;
+        }
+      }
 
       // Create PDF document
       const pdfDoc = await PDFDocument.create();
@@ -34,15 +54,18 @@ export class ReceiptService {
       const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
       const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-      // Colors
-      const primaryColor = rgb(0.38, 0.22, 0.57); // Purple
+      // Colors - use merchant branding if available
+      const themeColor = branding?.themeColor || '#6366f1';
+      const colorValues = this.hexToRgb(themeColor);
+      const primaryColor = rgb(colorValues.r, colorValues.g, colorValues.b);
       const textColor = rgb(0.2, 0.2, 0.2);
       const grayColor = rgb(0.6, 0.6, 0.6);
 
       let yPosition = height - 80;
 
-      // Header
-      page.drawText('SiZu Gift Card Receipt', {
+      // Header with merchant branding
+      const headerText = branding?.tagline || 'SiZu Gift Card Receipt';
+      page.drawText(headerText, {
         x: 50,
         y: yPosition,
         size: 24,

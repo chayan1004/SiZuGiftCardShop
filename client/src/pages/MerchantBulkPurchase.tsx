@@ -17,10 +17,22 @@ import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
 interface PricingTier {
-  name: string;
+  id: number;
+  merchantId: number;
   minQuantity: number;
-  maxQuantity: number;
-  discountPercentage: number;
+  pricePerUnit: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface MerchantBranding {
+  id: number;
+  merchantId: number;
+  logoUrl: string | null;
+  themeColor: string;
+  tagline: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 interface BulkOrderRequest {
@@ -85,27 +97,35 @@ export default function MerchantBulkPurchase() {
     return null;
   }
 
-  // Pricing tiers as specified in requirements
-  const pricingTiers = [
-    { minQuantity: 1, maxQuantity: 9, unitPrice: 25.00, name: "Starter", discountPercentage: 0 },
-    { minQuantity: 10, maxQuantity: 49, unitPrice: 22.00, name: "Small Business", discountPercentage: 12 },
-    { minQuantity: 50, maxQuantity: 99, unitPrice: 20.00, name: "Growing Business", discountPercentage: 20 },
-    { minQuantity: 100, maxQuantity: Infinity, unitPrice: 18.00, name: "Enterprise", discountPercentage: 28 }
-  ];
-  
-  const tiersLoading = false;
+  // Fetch real pricing tiers from database
+  const { data: pricingTiersResponse, isLoading: tiersLoading } = useQuery({
+    queryKey: ['/api/merchant/pricing-tiers'],
+    enabled: !!merchantToken,
+  });
+
+  const pricingTiers = pricingTiersResponse?.tiers || [];
+
+  // Fetch merchant branding
+  const { data: brandingResponse } = useQuery({
+    queryKey: ['/api/merchant/branding'],
+    enabled: !!merchantToken,
+  });
+
+  const branding = brandingResponse?.branding;
 
   // Calculate pricing based on quantity tiers
   const getCurrentTier = () => {
-    return pricingTiers.find((tier) => 
-      quantity >= tier.minQuantity && quantity <= tier.maxQuantity
-    ) || pricingTiers[0];
+    if (pricingTiers.length === 0) return null;
+    
+    // Find the highest tier that the quantity qualifies for
+    const sortedTiers = [...pricingTiers].sort((a, b) => b.minQuantity - a.minQuantity);
+    return sortedTiers.find((tier) => quantity >= tier.minQuantity) || pricingTiers[0];
   };
 
   const currentTier = getCurrentTier();
-  const currentUnitPrice = currentTier.unitPrice;
+  const currentUnitPrice = currentTier ? currentTier.pricePerUnit / 100 : 25.00; // Convert cents to dollars
   const totalPrice = quantity * currentUnitPrice;
-  const basePrice = 25.00; // Original price for savings calculation
+  const basePrice = 25.00; // Base price for savings calculation
   const savings = quantity * (basePrice - currentUnitPrice);
 
   // Create bulk order mutation using apiRequest utility
@@ -292,42 +312,59 @@ export default function MerchantBulkPurchase() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
-            {pricingTiers.map((tier: PricingTier, index: number) => (
-              <motion.div
-                key={tier.name}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className={`p-3 lg:p-4 rounded-lg border transition-all ${
-                  currentTier?.name === tier.name
-                    ? 'bg-green-500/20 border-green-500/50 shadow-lg shadow-green-500/25'
-                    : 'bg-white/5 border-white/20 hover:bg-white/10'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-white font-semibold text-sm lg:text-base">{tier.name}</h3>
-                  {tier.discountPercentage > 0 && (
-                    <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
-                      {tier.discountPercentage}% OFF
-                    </Badge>
+            {pricingTiers.map((tier: PricingTier, index: number) => {
+              const tierName = `Tier ${index + 1}`;
+              const unitPrice = tier.pricePerUnit / 100;
+              const discountPercentage = Math.round(((25 - unitPrice) / 25) * 100);
+              
+              return (
+                <motion.div
+                  key={tier.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className={`p-3 lg:p-4 rounded-lg border transition-all ${
+                    currentTier?.id === tier.id
+                      ? 'bg-green-500/20 border-green-500/50 shadow-lg shadow-green-500/25'
+                      : 'bg-white/5 border-white/20 hover:bg-white/10'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-white font-semibold text-sm lg:text-base">{tierName}</h3>
+                    {discountPercentage > 0 && (
+                      <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
+                        {discountPercentage}% OFF
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-[#dd4bae] text-xs lg:text-sm">
+                    {tier.minQuantity}+ cards • ${unitPrice.toFixed(2)} each
+                  </p>
+                  {currentTier?.id === tier.id && (
+                    <p className="text-green-400 text-xs mt-1">✓ Current selection</p>
                   )}
-                </div>
-                <p className="text-[#dd4bae] text-xs lg:text-sm">
-                  {tier.minQuantity} - {tier.maxQuantity === 999999 ? '∞' : tier.maxQuantity} cards
-                </p>
-                {currentTier?.name === tier.name && (
-                  <p className="text-green-400 text-xs mt-1">✓ Current selection</p>
-                )}
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </CardContent>
     </Card>
   );
 
+  // Apply merchant branding theme
+  const themeColor = branding?.themeColor || '#6366f1';
+  const dynamicStyles = {
+    '--brand-color': themeColor,
+    '--brand-color-light': `${themeColor}20`,
+    '--brand-color-border': `${themeColor}50`,
+  } as React.CSSProperties;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-900 via-black to-emerald-900">
+    <div 
+      className="min-h-screen bg-gradient-to-br from-green-900 via-black to-emerald-900"
+      style={dynamicStyles}
+    >
       <MobileNavigation />
       
       {/* Main Content */}

@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 
 // Validation schema
@@ -48,6 +49,7 @@ export default function GiftCardStore() {
   const [merchantValid, setMerchantValid] = useState<boolean | null>(null);
   const [merchantValidating, setMerchantValidating] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [merchantBranding, setMerchantBranding] = useState<any>(null);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 

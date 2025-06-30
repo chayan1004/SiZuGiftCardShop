@@ -3741,7 +3741,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Using Square SDK for proper type safety
-        const { Client, Environment } = require('square');
+        const { Client } = await import('square');
         const client = new Client({
           accessToken: process.env.SQUARE_ACCESS_TOKEN,
           environment: process.env.SQUARE_ENVIRONMENT === 'production' 

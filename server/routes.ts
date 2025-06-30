@@ -3161,6 +3161,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin endpoint for public gift card orders
+  app.get("/api/admin/giftcard-orders", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const orders = await storage.getAllPublicGiftCardOrders();
+      res.json(orders);
+    } catch (error) {
+      console.error('Error fetching public gift card orders:', error);
+      res.status(500).json({ message: "Failed to fetch gift card orders" });
+    }
+  });
+
   // Admin endpoint for email log tracking
   app.get("/api/admin/email-log/:orderId", requireAdmin, async (req: Request, res: Response) => {
     try {

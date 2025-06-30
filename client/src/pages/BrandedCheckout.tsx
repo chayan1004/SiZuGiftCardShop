@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useLocation, useRoute } from 'wouter';
+import { useLocation, useRoute, Link } from 'wouter';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -574,6 +574,13 @@ export default function BrandedCheckout() {
 
           {/* Security badges */}
           <SecurityBadges />
+
+          {/* Admin Configuration Link */}
+          <div className="mt-12 text-center">
+            <Link to="/admin" className="text-sm text-gray-400 hover:text-white transition-colors">
+              Admin: Configure Checkout Branding
+            </Link>
+          </div>
         </div>
       </div>
     </>

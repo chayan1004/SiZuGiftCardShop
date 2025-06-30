@@ -6470,6 +6470,477 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ===== GDPR COMPLIANCE API ENDPOINTS =====
+
+  // Data Processing Records (Article 30 GDPR)
+  app.get("/api/admin/gdpr/data-processing-records", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { merchantId } = req.query;
+      const records = await storage.getDataProcessingRecords(merchantId ? Number(merchantId) : undefined);
+      
+      res.json({
+        success: true,
+        records,
+        total: records.length,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('GDPR: Error fetching data processing records:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch data processing records"
+      });
+    }
+  });
+
+  app.post("/api/admin/gdpr/data-processing-records", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const recordData = req.body;
+      const record = await storage.createDataProcessingRecord(recordData);
+      
+      console.log(`GDPR: Created data processing record for merchant ${recordData.merchantId}`);
+      
+      res.json({
+        success: true,
+        record,
+        message: "Data processing record created successfully"
+      });
+    } catch (error) {
+      console.error('GDPR: Error creating data processing record:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to create data processing record"
+      });
+    }
+  });
+
+  // User Consent Management (Article 7 GDPR)
+  app.post("/api/gdpr/consent", async (req: Request, res: Response) => {
+    try {
+      const consentData = {
+        ...req.body,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+        consentDate: new Date()
+      };
+      
+      const consent = await storage.recordUserConsent(consentData);
+      
+      console.log(`GDPR: Recorded consent for user ${consentData.userId}, type: ${consentData.consentType}`);
+      
+      res.json({
+        success: true,
+        consent,
+        message: "Consent recorded successfully"
+      });
+    } catch (error) {
+      console.error('GDPR: Error recording consent:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to record consent"
+      });
+    }
+  });
+
+  app.get("/api/merchant/gdpr/consents", requireMerchant, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const merchantId = req.user?.merchantId;
+      if (!merchantId) {
+        return res.status(401).json({
+          success: false,
+          error: "Merchant authentication required"
+        });
+      }
+
+      // Get merchant ID from database
+      const merchant = await storage.getMerchantBySquareId(merchantId);
+      if (!merchant) {
+        return res.status(404).json({
+          success: false,
+          error: "Merchant not found"
+        });
+      }
+
+      const consents = await storage.getUserConsentRecords(merchant.id);
+      
+      res.json({
+        success: true,
+        consents,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('GDPR: Error fetching consent records:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch consent records"
+      });
+    }
+  });
+
+  app.post("/api/merchant/gdpr/withdraw-consent", requireMerchant, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const { consentType, withdrawalMethod = 'api' } = req.body;
+      const merchantId = req.user?.merchantId;
+      
+      if (!merchantId || !consentType) {
+        return res.status(400).json({
+          success: false,
+          error: "Merchant ID and consent type are required"
+        });
+      }
+
+      const merchant = await storage.getMerchantBySquareId(merchantId);
+      if (!merchant) {
+        return res.status(404).json({
+          success: false,
+          error: "Merchant not found"
+        });
+      }
+
+      const updatedConsent = await storage.withdrawConsent(merchant.id, consentType, withdrawalMethod);
+      
+      console.log(`GDPR: Withdrew consent for merchant ${merchant.id}, type: ${consentType}`);
+      
+      res.json({
+        success: true,
+        consent: updatedConsent,
+        message: "Consent withdrawn successfully"
+      });
+    } catch (error) {
+      console.error('GDPR: Error withdrawing consent:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to withdraw consent"
+      });
+    }
+  });
+
+  // Data Subject Rights (Articles 15-22 GDPR)
+  app.post("/api/merchant/gdpr/request-data", requireMerchant, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const { requestType, requestDetails } = req.body;
+      const merchantId = req.user?.merchantId;
+      
+      if (!merchantId || !requestType) {
+        return res.status(400).json({
+          success: false,
+          error: "Merchant ID and request type are required"
+        });
+      }
+
+      const merchant = await storage.getMerchantBySquareId(merchantId);
+      if (!merchant) {
+        return res.status(404).json({
+          success: false,
+          error: "Merchant not found"
+        });
+      }
+
+      const request = await storage.createDataSubjectRequest({
+        requesterId: merchant.id,
+        requestType,
+        requestDetails: JSON.stringify(requestDetails || {}),
+        verificationStatus: 'verified' // Auto-verify for authenticated merchant requests
+      });
+      
+      console.log(`GDPR: Created data subject request for merchant ${merchant.id}, type: ${requestType}`);
+      
+      res.json({
+        success: true,
+        request,
+        message: "Data subject request created successfully",
+        deadlineDate: request.deadlineDate
+      });
+    } catch (error) {
+      console.error('GDPR: Error creating data subject request:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to create data subject request"
+      });
+    }
+  });
+
+  app.get("/api/merchant/gdpr/export-data", requireMerchant, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const merchantId = req.user?.merchantId;
+      if (!merchantId) {
+        return res.status(401).json({
+          success: false,
+          error: "Merchant authentication required"
+        });
+      }
+
+      const merchant = await storage.getMerchantBySquareId(merchantId);
+      if (!merchant) {
+        return res.status(404).json({
+          success: false,
+          error: "Merchant not found"
+        });
+      }
+
+      const exportedData = await storage.exportUserData(merchant.id);
+      
+      // Update merchant's last data export request timestamp
+      await storage.updateMerchantGdprConsent(merchant.id, {
+        // Note: We need to add this field to the schema if we want to track last export
+      });
+      
+      console.log(`GDPR: Exported data for merchant ${merchant.id}`);
+      
+      res.json({
+        success: true,
+        data: exportedData,
+        exportedAt: new Date().toISOString(),
+        message: "Data exported successfully"
+      });
+    } catch (error) {
+      console.error('GDPR: Error exporting user data:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to export user data"
+      });
+    }
+  });
+
+  app.delete("/api/merchant/gdpr/delete-data", requireMerchant, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const { confirmDeletion } = req.body;
+      const merchantId = req.user?.merchantId;
+      
+      if (!merchantId || !confirmDeletion) {
+        return res.status(400).json({
+          success: false,
+          error: "Merchant ID and deletion confirmation are required"
+        });
+      }
+
+      const merchant = await storage.getMerchantBySquareId(merchantId);
+      if (!merchant) {
+        return res.status(404).json({
+          success: false,
+          error: "Merchant not found"
+        });
+      }
+
+      const deleted = await storage.deleteUserData(merchant.id);
+      
+      if (deleted) {
+        console.log(`GDPR: Deleted all data for merchant ${merchant.id}`);
+        
+        res.json({
+          success: true,
+          message: "All user data deleted successfully",
+          deletedAt: new Date().toISOString()
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          error: "Failed to delete user data"
+        });
+      }
+    } catch (error) {
+      console.error('GDPR: Error deleting user data:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to delete user data"
+      });
+    }
+  });
+
+  // Admin GDPR Management
+  app.get("/api/admin/gdpr/data-subject-requests", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { requesterId, status } = req.query;
+      const requests = await storage.getDataSubjectRequests(requesterId ? Number(requesterId) : undefined);
+      
+      let filteredRequests = requests;
+      if (status) {
+        filteredRequests = requests.filter(req => req.requestStatus === status);
+      }
+      
+      res.json({
+        success: true,
+        requests: filteredRequests,
+        total: filteredRequests.length,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('GDPR: Error fetching data subject requests:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch data subject requests"
+      });
+    }
+  });
+
+  app.put("/api/admin/gdpr/data-subject-requests/:id", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      
+      if (updates.requestStatus === 'completed') {
+        updates.completionDate = new Date();
+      }
+      
+      const updatedRequest = await storage.updateDataSubjectRequest(id, updates);
+      
+      console.log(`GDPR: Updated data subject request ${id}, status: ${updates.requestStatus}`);
+      
+      res.json({
+        success: true,
+        request: updatedRequest,
+        message: "Data subject request updated successfully"
+      });
+    } catch (error) {
+      console.error('GDPR: Error updating data subject request:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to update data subject request"
+      });
+    }
+  });
+
+  // Data Breach Management (Articles 33-34 GDPR)
+  app.post("/api/admin/gdpr/data-breach", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const incidentData = {
+        ...req.body,
+        incidentReference: `BREACH-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
+      };
+      
+      const incident = await storage.createDataBreachIncident(incidentData);
+      
+      console.log(`GDPR: Created data breach incident ${incident.incidentReference}`);
+      
+      res.json({
+        success: true,
+        incident,
+        message: "Data breach incident recorded successfully"
+      });
+    } catch (error) {
+      console.error('GDPR: Error creating data breach incident:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to create data breach incident"
+      });
+    }
+  });
+
+  app.get("/api/admin/gdpr/data-breaches", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const incidents = await storage.getDataBreachIncidents();
+      
+      res.json({
+        success: true,
+        incidents,
+        total: incidents.length,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('GDPR: Error fetching data breach incidents:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch data breach incidents"
+      });
+    }
+  });
+
+  // Privacy Impact Assessments (Article 35 GDPR)
+  app.post("/api/admin/gdpr/privacy-impact-assessment", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const assessmentData = req.body;
+      const assessment = await storage.createPrivacyImpactAssessment(assessmentData);
+      
+      console.log(`GDPR: Created privacy impact assessment: ${assessment.assessmentTitle}`);
+      
+      res.json({
+        success: true,
+        assessment,
+        message: "Privacy impact assessment created successfully"
+      });
+    } catch (error) {
+      console.error('GDPR: Error creating privacy impact assessment:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to create privacy impact assessment"
+      });
+    }
+  });
+
+  app.get("/api/admin/gdpr/privacy-impact-assessments", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const assessments = await storage.getPrivacyImpactAssessments();
+      
+      res.json({
+        success: true,
+        assessments,
+        total: assessments.length,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('GDPR: Error fetching privacy impact assessments:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch privacy impact assessments"
+      });
+    }
+  });
+
+  // GDPR Compliance Dashboard Data
+  app.get("/api/admin/gdpr/compliance-overview", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const dataProcessingRecords = await storage.getDataProcessingRecords();
+      const dataSubjectRequests = await storage.getDataSubjectRequests();
+      const dataBreaches = await storage.getDataBreachIncidents();
+      const privacyAssessments = await storage.getPrivacyImpactAssessments();
+      
+      const overview = {
+        dataProcessing: {
+          total: dataProcessingRecords.length,
+          byLegalBasis: dataProcessingRecords.reduce((acc, record) => {
+            acc[record.legalBasis] = (acc[record.legalBasis] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>)
+        },
+        dataSubjectRequests: {
+          total: dataSubjectRequests.length,
+          pending: dataSubjectRequests.filter(req => req.requestStatus === 'pending').length,
+          processing: dataSubjectRequests.filter(req => req.requestStatus === 'processing').length,
+          completed: dataSubjectRequests.filter(req => req.requestStatus === 'completed').length,
+          rejected: dataSubjectRequests.filter(req => req.requestStatus === 'rejected').length,
+          overdue: dataSubjectRequests.filter(req => 
+            req.deadlineDate && new Date(req.deadlineDate) < new Date() && req.requestStatus !== 'completed'
+          ).length
+        },
+        dataBreaches: {
+          total: dataBreaches.length,
+          highRisk: dataBreaches.filter(incident => incident.riskLevel === 'high').length,
+          mediumRisk: dataBreaches.filter(incident => incident.riskLevel === 'medium').length,
+          lowRisk: dataBreaches.filter(incident => incident.riskLevel === 'low').length,
+          resolved: dataBreaches.filter(incident => incident.incidentStatus === 'resolved').length
+        },
+        privacyAssessments: {
+          total: privacyAssessments.length,
+          draft: privacyAssessments.filter(assessment => assessment.assessmentStatus === 'draft').length,
+          approved: privacyAssessments.filter(assessment => assessment.assessmentStatus === 'approved').length,
+          highRisk: privacyAssessments.filter(assessment => assessment.residualRisk === 'high').length
+        }
+      };
+      
+      res.json({
+        success: true,
+        overview,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('GDPR: Error fetching compliance overview:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch GDPR compliance overview"
+      });
+    }
+  });
+
   // Initialize Socket.IO for real-time transaction monitoring
   const io = new SocketServer(httpServer, {
     cors: {

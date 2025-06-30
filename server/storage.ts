@@ -2519,6 +2519,249 @@ export class DatabaseStorage implements IStorage {
       })
       .where(eq(publicGiftCardOrders.id, orderId));
   }
+
+  // GDPR Compliance Implementation
+  // Data Processing Records (Article 30 GDPR)
+  async createDataProcessingRecord(record: InsertDataProcessingRecord): Promise<DataProcessingRecord> {
+    const [created] = await db
+      .insert(dataProcessingRecords)
+      .values(record)
+      .returning();
+    return created;
+  }
+
+  async getDataProcessingRecords(merchantId?: number): Promise<DataProcessingRecord[]> {
+    if (merchantId) {
+      return await db.select().from(dataProcessingRecords)
+        .where(eq(dataProcessingRecords.merchantId, merchantId))
+        .orderBy(desc(dataProcessingRecords.createdAt));
+    }
+    return await db.select().from(dataProcessingRecords)
+      .orderBy(desc(dataProcessingRecords.createdAt));
+  }
+
+  async updateDataProcessingRecord(id: string, updates: Partial<InsertDataProcessingRecord>): Promise<DataProcessingRecord | undefined> {
+    const [updated] = await db
+      .update(dataProcessingRecords)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(dataProcessingRecords.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteDataProcessingRecord(id: string): Promise<boolean> {
+    const result = await db
+      .delete(dataProcessingRecords)
+      .where(eq(dataProcessingRecords.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // User Consent Management (Article 7 GDPR)
+  async recordUserConsent(consent: InsertUserConsentRecord): Promise<UserConsentRecord> {
+    const [created] = await db
+      .insert(userConsentRecords)
+      .values(consent)
+      .returning();
+    return created;
+  }
+
+  async getUserConsentRecords(userId: number): Promise<UserConsentRecord[]> {
+    return await db.select().from(userConsentRecords)
+      .where(eq(userConsentRecords.userId, userId))
+      .orderBy(desc(userConsentRecords.createdAt));
+  }
+
+  async getActiveConsents(userId: number): Promise<UserConsentRecord[]> {
+    return await db.select().from(userConsentRecords)
+      .where(and(
+        eq(userConsentRecords.userId, userId),
+        eq(userConsentRecords.isActive, true),
+        eq(userConsentRecords.consentGiven, true),
+        isNull(userConsentRecords.withdrawalDate)
+      ))
+      .orderBy(desc(userConsentRecords.createdAt));
+  }
+
+  async withdrawConsent(userId: number, consentType: string, withdrawalMethod: string): Promise<UserConsentRecord | undefined> {
+    const [updated] = await db
+      .update(userConsentRecords)
+      .set({
+        withdrawalDate: new Date(),
+        withdrawalMethod,
+        isActive: false
+      })
+      .where(and(
+        eq(userConsentRecords.userId, userId),
+        eq(userConsentRecords.consentType, consentType),
+        eq(userConsentRecords.isActive, true)
+      ))
+      .returning();
+    return updated || undefined;
+  }
+
+  async updateMerchantGdprConsent(merchantId: number, gdprFields: {
+    gdprConsent?: boolean;
+    marketingConsent?: boolean;
+    dataProcessingConsent?: boolean;
+    privacyPolicyAccepted?: boolean;
+    privacyPolicyVersion?: string;
+  }): Promise<Merchant | undefined> {
+    const updateData: any = { ...gdprFields };
+    
+    if (gdprFields.gdprConsent) {
+      updateData.gdprConsentDate = new Date();
+    }
+
+    const [updated] = await db
+      .update(merchants)
+      .set(updateData)
+      .where(eq(merchants.id, merchantId))
+      .returning();
+    return updated || undefined;
+  }
+
+  // Data Subject Rights (Articles 15-22 GDPR)
+  async createDataSubjectRequest(request: InsertDataSubjectRequest): Promise<DataSubjectRequest> {
+    const requestData = {
+      ...request,
+      deadlineDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
+    };
+
+    const [created] = await db
+      .insert(dataSubjectRequests)
+      .values(requestData)
+      .returning();
+    return created;
+  }
+
+  async getDataSubjectRequests(requesterId?: number): Promise<DataSubjectRequest[]> {
+    if (requesterId) {
+      return await db.select().from(dataSubjectRequests)
+        .where(eq(dataSubjectRequests.requesterId, requesterId))
+        .orderBy(desc(dataSubjectRequests.createdAt));
+    }
+    return await db.select().from(dataSubjectRequests)
+      .orderBy(desc(dataSubjectRequests.createdAt));
+  }
+
+  async updateDataSubjectRequest(id: string, updates: Partial<InsertDataSubjectRequest>): Promise<DataSubjectRequest | undefined> {
+    const [updated] = await db
+      .update(dataSubjectRequests)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(dataSubjectRequests.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async exportUserData(merchantId: number): Promise<{
+    personalData: any;
+    giftCards: any[];
+    transactions: any[];
+    consents: any[];
+    processingRecords: any[];
+  }> {
+    // Get merchant personal data
+    const [merchant] = await db.select().from(merchants).where(eq(merchants.id, merchantId));
+    
+    // Get gift cards
+    const merchantGiftCardsData = await db.select().from(giftCards)
+      .where(eq(giftCards.merchantId, merchant?.merchantId || ''));
+
+    // Get transactions
+    const transactionsData = await db.select().from(giftCardTransactions)
+      .where(eq(giftCardTransactions.merchantId, merchant?.merchantId || ''));
+
+    // Get consent records
+    const consentsData = await db.select().from(userConsentRecords)
+      .where(eq(userConsentRecords.userId, merchantId));
+
+    // Get processing records
+    const processingData = await db.select().from(dataProcessingRecords)
+      .where(eq(dataProcessingRecords.merchantId, merchantId));
+
+    return {
+      personalData: {
+        id: merchant?.id,
+        businessName: merchant?.businessName,
+        email: merchant?.email,
+        createdAt: merchant?.createdAt,
+        gdprConsent: merchant?.gdprConsent,
+        marketingConsent: merchant?.marketingConsent,
+        dataProcessingConsent: merchant?.dataProcessingConsent
+      },
+      giftCards: merchantGiftCardsData,
+      transactions: transactionsData,
+      consents: consentsData,
+      processingRecords: processingData
+    };
+  }
+
+  async deleteUserData(merchantId: number): Promise<boolean> {
+    try {
+      // First, get the merchant to get the square ID
+      const [merchant] = await db.select().from(merchants).where(eq(merchants.id, merchantId));
+      if (!merchant) return false;
+
+      // Delete related data in correct order (to handle foreign key constraints)
+      await db.delete(userConsentRecords).where(eq(userConsentRecords.userId, merchantId));
+      await db.delete(dataProcessingRecords).where(eq(dataProcessingRecords.merchantId, merchantId));
+      await db.delete(dataSubjectRequests).where(eq(dataSubjectRequests.requesterId, merchantId));
+      await db.delete(giftCards).where(eq(giftCards.merchantId, merchant.merchantId));
+      await db.delete(giftCardTransactions).where(eq(giftCardTransactions.merchantId, merchant.merchantId));
+      await db.delete(merchants).where(eq(merchants.id, merchantId));
+
+      return true;
+    } catch (error) {
+      console.error('Error deleting user data:', error);
+      return false;
+    }
+  }
+
+  // Data Breach Management (Articles 33-34 GDPR)
+  async createDataBreachIncident(incident: InsertDataBreachIncident): Promise<DataBreachIncident> {
+    const [created] = await db
+      .insert(dataBreachIncidents)
+      .values(incident)
+      .returning();
+    return created;
+  }
+
+  async getDataBreachIncidents(): Promise<DataBreachIncident[]> {
+    return await db.select().from(dataBreachIncidents)
+      .orderBy(desc(dataBreachIncidents.createdAt));
+  }
+
+  async updateDataBreachIncident(id: string, updates: Partial<InsertDataBreachIncident>): Promise<DataBreachIncident | undefined> {
+    const [updated] = await db
+      .update(dataBreachIncidents)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(dataBreachIncidents.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  // Privacy Impact Assessments (Article 35 GDPR)
+  async createPrivacyImpactAssessment(assessment: InsertPrivacyImpactAssessment): Promise<PrivacyImpactAssessment> {
+    const [created] = await db
+      .insert(privacyImpactAssessments)
+      .values(assessment)
+      .returning();
+    return created;
+  }
+
+  async getPrivacyImpactAssessments(): Promise<PrivacyImpactAssessment[]> {
+    return await db.select().from(privacyImpactAssessments)
+      .orderBy(desc(privacyImpactAssessments.createdAt));
+  }
+
+  async updatePrivacyImpactAssessment(id: string, updates: Partial<InsertPrivacyImpactAssessment>): Promise<PrivacyImpactAssessment | undefined> {
+    const [updated] = await db
+      .update(privacyImpactAssessments)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(privacyImpactAssessments.id, id))
+      .returning();
+    return updated || undefined;
+  }
 }
 
 export const storage = new DatabaseStorage();

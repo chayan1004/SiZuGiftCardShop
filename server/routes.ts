@@ -19,6 +19,7 @@ import { squareWebhookHandler } from './webhooks/squareWebhookHandler';
 import { FraudDetectionService } from './services/FraudDetectionService';
 import { ThreatReplayService } from './services/ThreatReplayService';
 import { AutoDefenseEngine } from './services/AutoDefenseEngine';
+import { FraudSocketService, calculateThreatSeverity } from './services/FraudSocketService';
 import { requireAdmin, requireMerchant, requireMerchantAuth, checkMerchantStatus } from './middleware/authMiddleware';
 import { AuthService } from './services/authService';
 import { generateGiftCardQR, generateGiftCardBarcode } from '../utils/qrGenerator';
@@ -47,6 +48,10 @@ function getTimeAgo(date: Date): string {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const server = createServer(app);
+  
+  // Initialize WebSocket fraud detection service
+  const fraudSocketService = FraudSocketService.getInstance(server);
+  console.log('FraudSocketService initialized and ready for real-time threat alerts');
 
   // SECURITY: Block demo login immediately - highest priority route
   app.post("/api/merchant/demo-login", async (req: Request, res: Response) => {

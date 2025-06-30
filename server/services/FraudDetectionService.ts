@@ -1,6 +1,7 @@
 import { storage } from "../storage";
 import { Request } from "express";
 import type { InsertFraudLog } from "@shared/schema";
+import { FraudSocketService, calculateThreatSeverity } from "./FraudSocketService";
 
 export interface FraudCheckResult {
   isBlocked: boolean;

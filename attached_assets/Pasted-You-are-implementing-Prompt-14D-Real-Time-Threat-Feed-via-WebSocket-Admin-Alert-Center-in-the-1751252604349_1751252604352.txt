@@ -1,0 +1,50 @@
+You are implementing **Prompt 14D: Real-Time Threat Feed via WebSocket + Admin Alert Center** in the SiZu Gift Card Shop system.
+
+🧩 CONTEXT:
+- Backend uses Express + Node.js
+- WebSocket server already exists via `socket.io`
+- Fraud detection logs are stored in `fraud_logs` or streamed live via service functions
+- Admin dashboard is at `/client/src/pages/admin/AdminDashboard.tsx`
+
+🎯 OBJECTIVE:
+Create a **real-time fraud threat feed panel** in the admin dashboard that:
+1. Subscribes to `fraud-alert` or `threat-event` channel via Socket.IO
+2. Displays each incoming threat log in a live feed view
+3. Highlights severity (low, medium, high) with badges or tags
+4. Shows real-time timestamps, IPs, violation types (rate limit, fingerprint, redemption fraud, etc.)
+5. Allows scrolling/search of past threat entries
+6. Hooks into the backend's fraud detection layer — no mock data
+
+📦 BACKEND:
+- Create `FraudSocketService.ts` in `server/services/`
+- Emit events like this:  
+  `io.to("admin").emit("fraud-alert", { severity: "high", ip, type: "rate-limit", message, timestamp })`
+- Ensure server initializes `FraudSocketService` and ties it into `fraud-detection.ts` or similar logic
+- On rate-limit hit or fake redemption attempt, emit real-time event
+
+💻 FRONTEND:
+- Add `ThreatFeedPanel.tsx` to `client/src/components/admin/`
+- Connect to WebSocket in `AdminDashboard.tsx`
+- Listen for `fraud-alert` and append to a live feed
+- Each feed card must include:
+  - 🛑 Severity badge
+  - 🌐 IP address
+  - 🕒 Timestamp
+  - 🔍 Violation type
+  - 📄 Description/message
+- Optional UX:
+  - Auto-scroll to newest
+  - Scrollable box with `max-h-[400px] overflow-y-auto`
+  - Color-coded borders based on severity (red = high, orange = medium, gray = low)
+
+⚙️ REQUIREMENTS:
+- No mock data
+- Must use live fraud detection service
+- Only admins should receive events (send to `admin` namespace or use token verification)
+- Fully functional, styled, and mobile responsive
+
+✅ DELIVERABLES:
+- Working `FraudSocketService.ts` emitting real-time fraud alerts
+- Frontend WebSocket connection + `ThreatFeedPanel.tsx` rendering
+- `AdminDashboard.tsx` integrates the panel with live updates
+- Production-ready code only — no placeholders or fake events

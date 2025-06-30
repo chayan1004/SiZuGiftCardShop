@@ -439,6 +439,9 @@ export class ThreatClusterEngine {
 
       console.log(`✅ Created cluster: ${cluster.label} (${cluster.patterns.length} threats, score: ${cluster.score.toFixed(2)})`);
 
+      // Phase 20: Trigger AI-Powered Defense Actions
+      await this.actionRuleEngine.evaluateCluster(newCluster);
+
       // Emit real-time update via Socket.IO
       this.emitClusterAlert(newCluster, cluster.patterns.length);
 

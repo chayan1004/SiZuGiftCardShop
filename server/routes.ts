@@ -3133,6 +3133,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Phase 20: AI-Powered Defense Actions API Endpoints
+
+  // GET /api/admin/defense-actions - Get all defense actions (admin only)
+  app.get("/api/admin/defense-actions", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const actions = await storage.getActiveDefenseActions();
+
+      res.json({
+        success: true,
+        actions: actions.map(action => ({
+          id: action.id,
+          name: action.name,
+          actionType: action.actionType,
+          targetValue: action.targetValue,
+          severity: action.severity,
+          isActive: action.isActive,
+          expiresAt: action.expiresAt,
+          triggeredBy: action.triggeredBy,
+          createdAt: action.createdAt,
+          metadata: action.metadata ? JSON.parse(action.metadata) : null
+        }))
+      });
+    } catch (error) {
+      console.error('Get defense actions error:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch defense actions"
+      });
+    }
+  });
+
+  // GET /api/admin/action-rules - Get all action rules (admin only)
+  app.get("/api/admin/action-rules", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const rules = await storage.getActionRules();
+
+      res.json({
+        success: true,
+        rules: rules.map(rule => ({
+          id: rule.id,
+          name: rule.name,
+          condition: rule.condition ? JSON.parse(rule.condition) : null,
+          actionType: rule.actionType,
+          severity: rule.severity,
+          isActive: rule.isActive,
+          triggerCount: rule.triggerCount,
+          lastTriggered: rule.lastTriggered,
+          createdAt: rule.createdAt,
+          metadata: rule.metadata ? JSON.parse(rule.metadata) : null
+        }))
+      });
+    } catch (error) {
+      console.error('Get action rules error:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch action rules"
+      });
+    }
+  });
+
+  // GET /api/admin/defense-stats - Get defense statistics (admin only)
+  app.get("/api/admin/defense-stats", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const stats = await storage.getDefenseStats();
+
+      res.json({
+        success: true,
+        stats: {
+          totalActions: parseInt(stats.totalActions) || 0,
+          activeActions: parseInt(stats.activeActions) || 0,
+          blockedIPs: parseInt(stats.blockedIPs) || 0,
+          blockedDevices: parseInt(stats.blockedDevices) || 0,
+          activeRules: parseInt(stats.activeRules) || 0
+        }
+      });
+    } catch (error) {
+      console.error('Get defense stats error:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch defense statistics"
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   // Phase III-B: Promo Codes API
   app.post("/api/promos", requireAdmin, async (req: Request, res: Response) => {

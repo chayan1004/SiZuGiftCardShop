@@ -75,6 +75,16 @@ app.use((req, res, next) => {
     retryEngine.start();
     log(`WebhookRetryEngine started with intelligent retry processing`);
     
+    // Phase 20: Initialize ActionRuleEngine with default rules
+    try {
+      const { ActionRuleEngine } = await import('./services/ActionRuleEngine.js');
+      const actionEngine = ActionRuleEngine.getInstance();
+      await actionEngine.createDefaultRules();
+      log(`🛡️ ActionRuleEngine initialized with default defense rules`);
+    } catch (error) {
+      console.error('❌ Failed to initialize ActionRuleEngine:', error);
+    }
+
     // Start the ThreatClusterEngine for Phase 19
     try {
       const { default: ThreatClusterEngine } = await import('./services/ThreatClusterEngine.js');

@@ -114,8 +114,8 @@ export default function FraudClusters() {
     },
   });
 
-  const clusters: FraudCluster[] = clustersData?.clusters || [];
-  const stats: ClusterStats = clustersData?.stats || {
+  const clusters: FraudCluster[] = (clustersData as any)?.clusters || [];
+  const stats: ClusterStats = (clustersData as any)?.stats || {
     totalClusters: 0,
     activeClusters: 0,
     avgSeverity: 0,
@@ -123,7 +123,7 @@ export default function FraudClusters() {
     patternTypes: {}
   };
 
-  const status = statusData?.status || {
+  const status = (statusData as any)?.status || {
     engineRunning: false,
     lastAnalysis: null,
     totalClusters: 0,
@@ -337,11 +337,11 @@ export default function FraudClusters() {
                                   <p className="text-sm font-medium text-gray-400">Risk Score</p>
                                   <div className="flex items-center gap-2">
                                     <Progress 
-                                      value={parseFloat(clusterDetails.score) * 10} 
+                                      value={parseFloat((clusterDetails as any).score) * 10} 
                                       className="flex-1 h-2"
                                     />
                                     <span className="text-sm text-white">
-                                      {parseFloat(clusterDetails.score).toFixed(1)}/10
+                                      {parseFloat((clusterDetails as any).score).toFixed(1)}/10
                                     </span>
                                   </div>
                                 </div>
@@ -361,35 +361,35 @@ export default function FraudClusters() {
                               
                               <div className="space-y-4">
                                 <h4 className="font-medium text-white">Pattern Details</h4>
-                                {clusterDetails.cluster.metadata && (
+                                {clusterDetails.metadata && (
                                   <div className="grid grid-cols-3 gap-4 text-sm">
                                     <div>
                                       <p className="text-gray-400">Threat Types</p>
                                       <p className="text-white">
-                                        {clusterDetails.cluster.metadata.threatTypes?.join(', ') || 'Mixed'}
+                                        {clusterDetails.metadata.threatTypes?.join(', ') || 'Mixed'}
                                       </p>
                                     </div>
                                     <div>
                                       <p className="text-gray-400">Unique IPs</p>
-                                      <p className="text-white">{clusterDetails.cluster.metadata.uniqueIPs || 0}</p>
+                                      <p className="text-white">{clusterDetails.metadata.uniqueIPs || 0}</p>
                                     </div>
                                     <div>
                                       <p className="text-gray-400">Time Window</p>
                                       <p className="text-white">
-                                        {Math.round((clusterDetails.cluster.metadata.timeSpan || 0) / 1000)}s
+                                        {Math.round((clusterDetails.metadata?.timeSpan || 0) / 1000)}s
                                       </p>
                                     </div>
                                   </div>
                                 )}
                               </div>
 
-                              {clusterDetails.cluster.patterns && clusterDetails.cluster.patterns.length > 0 && (
+                              {clusterDetails.patterns && clusterDetails.patterns.length > 0 && (
                                 <div className="space-y-4">
                                   <h4 className="font-medium text-white">
-                                    Associated Patterns ({clusterDetails.cluster.patterns.length})
+                                    Associated Patterns ({clusterDetails.patterns.length})
                                   </h4>
                                   <div className="max-h-48 overflow-y-auto space-y-2">
-                                    {clusterDetails.cluster.patterns.map((pattern: ClusterPattern, index: number) => {
+                                    {clusterDetails.patterns.map((pattern: ClusterPattern, index: number) => {
                                       const patternMeta = pattern.metadata ? JSON.parse(pattern.metadata) : {};
                                       return (
                                         <div 

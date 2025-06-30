@@ -5044,16 +5044,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get pricing for the card type and quantity
       const pricingService = await import('./services/PhysicalCardPricingService.js');
-      const pricing = await pricingService.PhysicalCardPricingService.calculatePricing(
-        customerData.cardType || 'plastic',
-        customerData.quantity || 1,
-        customerData.expeditedShipping || false
-      );
+      const pricingOptions = {
+        cardType: customerData.cardType || 'plastic' as 'plastic' | 'metal' | 'premium',
+        quantity: customerData.quantity || 1,
+        denomination: 5000, // $50 default denomination
+        customerType: 'individual' as 'merchant' | 'individual',
+        customDesign: !!(customerData.customText || customerData.customImage || customerData.selectedEmoji),
+        shippingMethod: customerData.expeditedShipping ? 'expedited' : 'standard' as 'standard' | 'expedited' | 'overnight'
+      };
+      const pricing = await pricingService.PhysicalCardPricingService.calculatePricing(pricingOptions);
 
       // Create Square hosted checkout session
       const squarePaymentService = await import('./services/enhancedSquareAPIService.js');
       const checkoutData = {
-        amount: pricing.total,
+        amount: pricing.totalOrder,
         currency: 'USD',
         redirectUrl: `${process.env.REPLIT_DOMAIN || 'https://sizu-giftcardshop.replit.app'}/physical-cards/success`,
         note: `Physical Gift Card Order - ${customerData.quantity}x ${customerData.cardType} cards`,
@@ -5097,11 +5101,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         selectedEmoji: customerData.selectedEmoji || '',
         themeColor: customerData.themeColor || '#7c3aed',
         status: 'pending',
-        totalAmount: pricing.total,
+        totalAmount: pricing.totalOrder,
         squareCheckoutId: checkoutSession.checkoutId
       };
 
-      const order = await storage.createPhysicalCardOrder(orderData);
+      const order = await storage.createPhysicalGiftCard(orderData);
 
       res.json({
         success: true,

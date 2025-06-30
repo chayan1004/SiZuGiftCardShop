@@ -536,6 +536,101 @@ class EnhancedSquareAPIService {
   }
 
   /**
+   * Create hosted checkout session for Square payments
+   */
+  async createHostedCheckout(checkoutData: {
+    amount: number;
+    currency: string;
+    redirectUrl: string;
+    note?: string;
+    prePopulatedData?: {
+      buyerEmail?: string;
+      buyerPhoneNumber?: string;
+      buyerAddress?: {
+        firstName?: string;
+        lastName?: string;
+        addressLine1?: string;
+        locality?: string;
+        administrativeDistrictLevel1?: string;
+        postalCode?: string;
+        country?: string;
+      };
+    };
+  }): Promise<{
+    success: boolean;
+    checkoutUrl?: string;
+    checkoutId?: string;
+    error?: string;
+  }> {
+    try {
+      const idempotencyKey = crypto.randomUUID();
+      
+      const requestBody = {
+        idempotency_key: idempotencyKey,
+        checkout_options: {
+          accepted_payment_methods: {
+            apple_pay: true,
+            google_pay: true,
+            afterpay_clearpay: true,
+            cash_app_pay: true
+          },
+          allow_tipping: false,
+          custom_fields: [],
+          subscription_plan_id: null,
+          redirect_url: checkoutData.redirectUrl,
+          merchant_support_email: 'support@sizu-giftcard.com'
+        },
+        order: {
+          location_id: this.locationId,
+          order: {
+            location_id: this.locationId,
+            line_items: [
+              {
+                quantity: "1",
+                item_type: "ITEM",
+                base_price_money: {
+                  amount: checkoutData.amount,
+                  currency: checkoutData.currency || 'USD'
+                },
+                name: "Physical Gift Card",
+                note: checkoutData.note || "Custom physical gift card order"
+              }
+            ]
+          }
+        },
+        payment_note: checkoutData.note,
+        pre_populated_data: checkoutData.prePopulatedData ? {
+          buyer_email: checkoutData.prePopulatedData.buyerEmail,
+          buyer_phone_number: checkoutData.prePopulatedData.buyerPhoneNumber,
+          buyer_address: checkoutData.prePopulatedData.buyerAddress
+        } : undefined
+      };
+
+      const response = await this.makeSquareRequest('/v2/online-checkout/payment-links', 'POST', requestBody);
+
+      if (response.payment_link) {
+        return {
+          success: true,
+          checkoutUrl: response.payment_link.url,
+          checkoutId: response.payment_link.id
+        };
+      }
+
+      return {
+        success: false,
+        error: 'Failed to create checkout session'
+      };
+
+    } catch (error) {
+      console.error('Create hosted checkout error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to create checkout session'
+      };
+    }
+  }
+
+  /**
    * Webhook signature verification for secure webhook handling
    */
   verifyWebhookSignature(body: string, signature: string, url: string): boolean {

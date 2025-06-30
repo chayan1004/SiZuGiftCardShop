@@ -103,6 +103,11 @@ export interface IStorage {
   getAllPublicGiftCardOrders(): Promise<PublicGiftCardOrder[]>;
   validateMerchantById(merchantId: string): Promise<boolean>;
   
+  // Physical Gift Card Order methods
+  createPhysicalCardOrder(order: InsertPhysicalGiftCard): Promise<PhysicalGiftCard>;
+  getPhysicalCardOrders(): Promise<PhysicalGiftCard[]>;
+  updatePhysicalCardOrderStatus(orderId: string, status: string): Promise<PhysicalGiftCard | undefined>;
+  
   // Gift Card methods
   getGiftCard(id: number): Promise<GiftCard | undefined>;
   getGiftCardByGan(gan: string): Promise<GiftCard | undefined>;

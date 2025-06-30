@@ -8063,5 +8063,161 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ================================
+  // CHECKOUT CONFIGURATION API ROUTES
+  // ================================
+
+  // Get checkout configuration (public endpoint)
+  app.get("/api/admin/checkout-config", async (req: Request, res: Response) => {
+    try {
+      const config = await storage.getCheckoutConfiguration();
+      
+      if (!config) {
+        // Return default configuration if none exists
+        const defaultConfig = {
+          brandName: "SiZu GiftCard",
+          primaryColor: "#7c3aed",
+          secondaryColor: "#ec4899", 
+          accentColor: "#3b82f6",
+          backgroundColor: "#0f0a19",
+          textColor: "#ffffff",
+          layout: "multi-step",
+          theme: "dark",
+          animation: "enhanced",
+          acceptedPaymentMethods: JSON.stringify({
+            creditCard: true,
+            debitCard: true,
+            applePay: true,
+            googlePay: true,
+            paypal: false,
+            bankTransfer: false
+          }),
+          requireCVV: true,
+          requireBillingAddress: true,
+          enableSavePayment: true,
+          enableGuestCheckout: true,
+          sessionTimeout: 30,
+          enableAnalytics: true,
+          enableA11y: true,
+          enablePWA: false
+        };
+        res.json(defaultConfig);
+      } else {
+        // Parse JSON fields before sending
+        const configResponse = {
+          ...config,
+          acceptedPaymentMethods: JSON.parse(config.acceptedPaymentMethods)
+        };
+        res.json(configResponse);
+      }
+    } catch (error) {
+      console.error('Error fetching checkout configuration:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to fetch configuration" 
+      });
+    }
+  });
+
+  // Save/Update checkout configuration (admin only)
+  app.post("/api/admin/checkout-config", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const configData = req.body;
+      
+      // Stringify JSON fields
+      if (configData.acceptedPaymentMethods && typeof configData.acceptedPaymentMethods === 'object') {
+        configData.acceptedPaymentMethods = JSON.stringify(configData.acceptedPaymentMethods);
+      }
+      
+      const config = await storage.updateCheckoutConfiguration(configData);
+      
+      if (!config) {
+        return res.status(500).json({
+          success: false,
+          message: "Failed to save configuration"
+        });
+      }
+      
+      // Parse JSON fields before sending response
+      const configResponse = {
+        ...config,
+        acceptedPaymentMethods: JSON.parse(config.acceptedPaymentMethods)
+      };
+      
+      res.json({ 
+        success: true, 
+        config: configResponse,
+        message: "Configuration saved successfully"
+      });
+    } catch (error) {
+      console.error('Error saving checkout configuration:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to save configuration" 
+      });
+    }
+  });
+
+  // ================================
+  // BRANDED CHECKOUT API ROUTES
+  // ================================
+
+  // Get order details for checkout
+  app.get("/api/checkout/order/:orderId", async (req: Request, res: Response) => {
+    try {
+      const { orderId } = req.params;
+      
+      // This would typically fetch order details from database
+      // For now, return a mock order for testing
+      const order = {
+        id: orderId,
+        productName: "SiZu Gift Card",
+        amount: 50.00,
+        quantity: 1,
+        total: 50.00,
+        status: "pending"
+      };
+      
+      res.json(order);
+    } catch (error) {
+      console.error('Error fetching order:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to fetch order details" 
+      });
+    }
+  });
+
+  // Process payment for checkout
+  app.post("/api/checkout/process-payment", async (req: Request, res: Response) => {
+    try {
+      const paymentData = req.body;
+      
+      // Here you would integrate with your payment processor
+      // For now, simulate successful payment
+      console.log('Processing payment:', {
+        orderId: paymentData.orderId,
+        amount: paymentData.orderData?.total || 50.00,
+        email: paymentData.email
+      });
+      
+      // Simulate payment processing
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      res.json({ 
+        success: true, 
+        message: "Payment processed successfully",
+        transactionId: `txn_${Date.now()}`,
+        orderId: paymentData.orderId
+      });
+    } catch (error) {
+      console.error('Error processing payment:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Payment processing failed" 
+      });
+    }
+  });
+
   return httpServer;
 }

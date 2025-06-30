@@ -426,6 +426,11 @@ export interface IStorage {
   approveCustomCardDesign(id: string, approvedBy: string): Promise<CustomCardDesign | undefined>;
   rejectCustomCardDesign(id: string, reason: string): Promise<CustomCardDesign | undefined>;
   getAllPendingDesigns(): Promise<CustomCardDesign[]>;
+  
+  // Checkout Configuration
+  getCheckoutConfiguration(): Promise<CheckoutConfiguration | undefined>;
+  createCheckoutConfiguration(config: InsertCheckoutConfiguration): Promise<CheckoutConfiguration>;
+  updateCheckoutConfiguration(config: Partial<InsertCheckoutConfiguration>): Promise<CheckoutConfiguration | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3473,6 +3478,52 @@ export class DatabaseStorage implements IStorage {
       .from(customCardDesigns)
       .where(isNull(customCardDesigns.isApproved))
       .orderBy(desc(customCardDesigns.createdAt));
+  }
+
+  // Checkout Configuration
+  async getCheckoutConfiguration(): Promise<CheckoutConfiguration | undefined> {
+    const [config] = await db
+      .select()
+      .from(checkoutConfigurations)
+      .where(eq(checkoutConfigurations.isActive, true))
+      .orderBy(desc(checkoutConfigurations.createdAt))
+      .limit(1);
+    return config || undefined;
+  }
+
+  async createCheckoutConfiguration(config: InsertCheckoutConfiguration): Promise<CheckoutConfiguration> {
+    // Deactivate any existing configurations
+    await db
+      .update(checkoutConfigurations)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(checkoutConfigurations.isActive, true));
+
+    const [newConfig] = await db
+      .insert(checkoutConfigurations)
+      .values(config)
+      .returning();
+    return newConfig;
+  }
+
+  async updateCheckoutConfiguration(config: Partial<InsertCheckoutConfiguration>): Promise<CheckoutConfiguration | undefined> {
+    // Find the active configuration
+    const [activeConfig] = await db
+      .select()
+      .from(checkoutConfigurations)
+      .where(eq(checkoutConfigurations.isActive, true))
+      .limit(1);
+
+    if (!activeConfig) {
+      // No active config exists, create a new one
+      return this.createCheckoutConfiguration(config as InsertCheckoutConfiguration);
+    }
+
+    const [updatedConfig] = await db
+      .update(checkoutConfigurations)
+      .set({ ...config, updatedAt: new Date() })
+      .where(eq(checkoutConfigurations.id, activeConfig.id))
+      .returning();
+    return updatedConfig || undefined;
   }
 }
 

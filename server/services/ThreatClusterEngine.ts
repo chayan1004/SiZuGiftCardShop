@@ -100,13 +100,13 @@ export class ThreatClusterEngine {
         userAgent: fraudLogs.userAgent,
         deviceFingerprint: fraudLogs.deviceFingerprint,
         merchantId: fraudLogs.merchantId,
-        timestamp: fraudLogs.timestamp,
+        timestamp: fraudLogs.createdAt,
         threatType: fraudLogs.threatType,
         metadata: fraudLogs.metadata,
       })
       .from(fraudLogs)
-      .where(gte(fraudLogs.timestamp, this.lastAnalysisTime))
-      .orderBy(desc(fraudLogs.timestamp))
+      .where(gte(fraudLogs.createdAt, this.lastAnalysisTime))
+      .orderBy(desc(fraudLogs.createdAt))
       .limit(1000); // Limit to prevent memory issues
 
     return results.map(result => ({

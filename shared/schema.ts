@@ -542,3 +542,71 @@ export const insertClusterPatternSchema = createInsertSchema(clusterPatterns).om
 
 export type ClusterPattern = typeof clusterPatterns.$inferSelect;
 export type InsertClusterPattern = z.infer<typeof insertClusterPatternSchema>;
+
+// Phase 20: AI Defense Actions Schema
+export const defenseActions = pgTable("defense_actions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: text("name").notNull(), // e.g., "IP Block", "Rate Limit", "Step-up Auth"
+  actionType: text("action_type").notNull(), // block_ip, block_device, rate_limit, alert, quarantine
+  triggeredBy: text("triggered_by").notNull(), // cluster_id, manual, threshold
+  targetValue: text("target_value"), // IP address, device fingerprint, etc.
+  severity: integer("severity").notNull().default(1), // 1-5 action severity
+  isActive: boolean("is_active").notNull().default(true),
+  expiresAt: timestamp("expires_at"), // Auto-expire time for temporary blocks
+  metadata: text("metadata"), // JSON with action-specific config
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertDefenseActionSchema = createInsertSchema(defenseActions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type DefenseAction = typeof defenseActions.$inferSelect;
+export type InsertDefenseAction = z.infer<typeof insertDefenseActionSchema>;
+
+// Phase 20: Action Rules Schema
+export const actionRules = pgTable("action_rules", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: text("name").notNull(), // e.g., "High Risk IP Auto-Block"
+  condition: text("condition").notNull(), // JSON condition logic
+  actionType: text("action_type").notNull(), // block_ip, block_device, alert, etc.
+  severity: integer("severity").notNull().default(3), // 1-5 rule severity
+  isActive: boolean("is_active").notNull().default(true),
+  triggerCount: integer("trigger_count").notNull().default(0), // How many times triggered
+  lastTriggered: timestamp("last_triggered"),
+  metadata: text("metadata"), // JSON with rule-specific config
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertActionRuleSchema = createInsertSchema(actionRules).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type ActionRule = typeof actionRules.$inferSelect;
+export type InsertActionRule = z.infer<typeof insertActionRuleSchema>;
+
+// Phase 20: Defense History Schema
+export const defenseHistory = pgTable("defense_history", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  actionId: uuid("action_id").notNull().references(() => defenseActions.id, { onDelete: "cascade" }),
+  clusterId: uuid("cluster_id").references(() => fraudClusters.id, { onDelete: "set null" }),
+  ruleId: uuid("rule_id").references(() => actionRules.id, { onDelete: "set null" }),
+  result: text("result").notNull(), // success, failed, partial
+  impactMetrics: text("impact_metrics"), // JSON with metrics (threats_blocked, false_positives, etc.)
+  duration: integer("duration"), // Action duration in seconds
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertDefenseHistorySchema = createInsertSchema(defenseHistory).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type DefenseHistory = typeof defenseHistory.$inferSelect;
+export type InsertDefenseHistory = z.infer<typeof insertDefenseHistorySchema>;

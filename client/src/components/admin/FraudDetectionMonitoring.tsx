@@ -87,13 +87,13 @@ export default function FraudDetectionMonitoring() {
     return variants[severity as keyof typeof variants] || variants.low;
   };
 
-  const filteredLogs = fraudLogs.filter(log => {
+  const filteredLogs = (fraudLogs?.fraudLogs || []).filter((log: any) => {
     const matchesSeverity = filterSeverity === "all" || log.severity === filterSeverity;
     const matchesSearch = searchTerm === "" || 
-      log.ipAddress.includes(searchTerm) ||
-      log.merchantId.includes(searchTerm) ||
-      log.giftCardGan.includes(searchTerm) ||
-      log.failureReason.toLowerCase().includes(searchTerm.toLowerCase());
+      log.ipAddress?.includes(searchTerm) ||
+      log.merchantId?.includes(searchTerm) ||
+      log.giftCardGan?.includes(searchTerm) ||
+      log.failureReason?.toLowerCase().includes(searchTerm.toLowerCase());
     
     return matchesSeverity && matchesSearch;
   });

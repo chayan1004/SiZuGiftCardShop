@@ -141,7 +141,7 @@ export default function EmailSystemMonitoring() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">
-              {emailMetrics?.overview.totalSent?.toLocaleString() || 0}
+              {emailMetrics?.overview?.totalSent?.toLocaleString() || '0'}
             </div>
             <p className="text-sm text-gray-400">All time emails</p>
           </CardContent>
@@ -156,10 +156,10 @@ export default function EmailSystemMonitoring() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">
-              {emailMetrics?.overview.deliveryRate?.toFixed(1) || 0}%
+              {emailMetrics?.overview?.deliveryRate?.toFixed(1) || '0'}%
             </div>
             <Progress 
-              value={emailMetrics?.overview.deliveryRate || 0} 
+              value={emailMetrics?.overview?.deliveryRate || 0} 
               className="mt-2 bg-white/10"
             />
           </CardContent>
@@ -173,8 +173,8 @@ export default function EmailSystemMonitoring() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <Badge className={getReputationBadge(emailMetrics?.overview.reputation || 'fair')}>
-              {emailMetrics?.overview.reputation || 'Unknown'}
+            <Badge className={getReputationBadge(emailMetrics?.overview?.reputation || 'fair')}>
+              {emailMetrics?.overview?.reputation || 'Unknown'}
             </Badge>
             <p className="text-sm text-gray-400 mt-2">Sender reputation</p>
           </CardContent>
@@ -189,10 +189,10 @@ export default function EmailSystemMonitoring() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">
-              {emailMetrics?.volumeStatus.dailySent || 0}/{emailMetrics?.volumeStatus.currentLimit || 0}
+              {emailMetrics?.volumeStatus?.dailySent || 0}/{emailMetrics?.volumeStatus?.currentLimit || 0}
             </div>
             <Progress 
-              value={((emailMetrics?.volumeStatus.dailySent || 0) / (emailMetrics?.volumeStatus.currentLimit || 1)) * 100} 
+              value={((emailMetrics?.volumeStatus?.dailySent || 0) / (emailMetrics?.volumeStatus?.currentLimit || 1)) * 100} 
               className="mt-2 bg-white/10"
             />
           </CardContent>

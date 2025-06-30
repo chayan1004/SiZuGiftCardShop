@@ -325,3 +325,46 @@ export const insertCardRedemptionSchema = createInsertSchema(cardRedemptions).om
 
 export type CardRedemption = typeof cardRedemptions.$inferSelect;
 export type InsertCardRedemption = z.infer<typeof insertCardRedemptionSchema>;
+
+// Webhook Events Schema - Multi-Event System
+export const webhookEvents = pgTable("webhook_events", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  merchantId: text("merchant_id").notNull(),
+  eventType: text("event_type").notNull(), // gift_card_issued, gift_card_redeemed, gift_card_refunded
+  url: text("url").notNull(),
+  enabled: boolean("enabled").default(true),
+  secret: text("secret").notNull(), // Per-webhook secret for HMAC signing
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertWebhookEventSchema = createInsertSchema(webhookEvents).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type WebhookEvent = typeof webhookEvents.$inferSelect;
+export type InsertWebhookEvent = z.infer<typeof insertWebhookEventSchema>;
+
+// Enhanced Webhook Delivery Logs
+export const webhookDeliveryLogs = pgTable("webhook_delivery_logs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  merchantId: text("merchant_id").notNull(),
+  webhookEventId: uuid("webhook_event_id"), // Reference to webhook_events table
+  webhookUrl: text("webhook_url").notNull(),
+  eventType: text("event_type").notNull(),
+  payload: text("payload").notNull(),
+  statusCode: integer("status_code"),
+  responseTime: integer("response_time_ms"),
+  success: boolean("success").notNull(),
+  errorMessage: text("error_message"),
+  retryCount: integer("retry_count").default(0),
+  deliveredAt: timestamp("delivered_at").defaultNow(),
+});
+
+export const insertWebhookDeliveryLogSchema = createInsertSchema(webhookDeliveryLogs).omit({
+  id: true,
+  deliveredAt: true,
+});
+
+export type WebhookDeliveryLog = typeof webhookDeliveryLogs.$inferSelect;
+export type InsertWebhookDeliveryLog = z.infer<typeof insertWebhookDeliveryLogSchema>;

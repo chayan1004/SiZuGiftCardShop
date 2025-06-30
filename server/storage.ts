@@ -1,5 +1,5 @@
 import { 
-  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, merchantCardDesigns, fraudLogs, autoDefenseRules, cardRedemptions, webhook_delivery_logs,
+  users, merchants, giftCards, giftCardActivities, promoCodes, promoUsage, merchantGiftCards, merchant_bulk_orders, publicGiftCardOrders, merchantPricingTiers, merchantBranding, merchantCardDesigns, fraudLogs, autoDefenseRules, cardRedemptions, webhookEvents, webhookDeliveryLogs,
   type User, type InsertUser,
   type Merchant, type InsertMerchant, 
   type GiftCard, type InsertGiftCard,
@@ -14,7 +14,9 @@ import {
   type MerchantCardDesign, type InsertMerchantCardDesign,
   type FraudLog, type InsertFraudLog,
   type AutoDefenseRule, type InsertAutoDefenseRule,
-  type CardRedemption, type InsertCardRedemption
+  type CardRedemption, type InsertCardRedemption,
+  type WebhookEvent, type InsertWebhookEvent,
+  type WebhookDeliveryLog, type InsertWebhookDeliveryLog
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, count, sum, and, gte } from "drizzle-orm";
@@ -200,7 +202,18 @@ export interface IStorage {
   createMerchantCardDesign(design: InsertMerchantCardDesign): Promise<MerchantCardDesign>;
   updateMerchantCardDesign(merchantId: number, design: Partial<InsertMerchantCardDesign>): Promise<MerchantCardDesign | undefined>;
 
-  // Webhook delivery logging
+  // Webhook Event methods
+  createWebhookEvent(webhookEvent: InsertWebhookEvent): Promise<WebhookEvent>;
+  getWebhookEventsByMerchant(merchantId: string): Promise<WebhookEvent[]>;
+  getWebhookEventsByMerchantAndType(merchantId: string, eventType: string): Promise<WebhookEvent[]>;
+  updateWebhookEvent(id: string, updates: Partial<InsertWebhookEvent>): Promise<WebhookEvent | undefined>;
+  deleteWebhookEvent(id: string): Promise<boolean>;
+  
+  // Webhook Delivery Log methods
+  createWebhookDeliveryLog(log: InsertWebhookDeliveryLog): Promise<WebhookDeliveryLog>;
+  getWebhookDeliveryLogsByMerchant(merchantId: string, limit?: number): Promise<WebhookDeliveryLog[]>;
+
+  // Legacy webhook delivery logging (for backward compatibility)
   logWebhookDelivery(log: {
     merchantId: string;
     cardId: string;
@@ -1340,11 +1353,13 @@ export class DatabaseStorage implements IStorage {
     payload: string;
   }): Promise<void> {
     try {
-      await db.insert(webhook_delivery_logs).values({
+      await db.insert(webhookDeliveryLogs).values({
         merchantId: log.merchantId,
-        cardId: log.cardId,
-        amount: log.amount,
-        status: log.status,
+        webhookUrl: '', // Legacy support
+        eventType: 'gift_card_redeemed',
+        payload: log.payload,
+        statusCode: log.status === 'success' ? 200 : 500,
+        success: log.status === 'success',
         errorMessage: log.errorMessage,
         responseTimeMs: log.responseTimeMs,
         payload: log.payload

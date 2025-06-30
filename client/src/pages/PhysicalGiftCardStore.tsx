@@ -42,10 +42,20 @@ const physicalCardOrderSchema = z.object({
 type PhysicalCardOrderForm = z.infer<typeof physicalCardOrderSchema>;
 
 // Premium Physical Card Preview Component
-const PhysicalCardPreview = ({ cardType, customDesign, themeColor }: { 
+const PhysicalCardPreview = ({ 
+  cardType, 
+  customDesign, 
+  themeColor, 
+  customImage,
+  customText,
+  selectedEmoji 
+}: { 
   cardType: 'plastic' | 'metal' | 'premium', 
   customDesign: boolean,
-  themeColor: string 
+  themeColor: string,
+  customImage?: string,
+  customText?: string,
+  selectedEmoji?: string
 }) => {
   const cardStyles = {
     plastic: {
@@ -97,7 +107,7 @@ const PhysicalCardPreview = ({ cardType, customDesign, themeColor }: {
         
         <div className="relative z-10 h-full flex flex-col justify-between">
           <div className="flex justify-between items-start">
-            <div>
+            <div className="flex-1">
               <motion.h3 
                 initial={{ x: -20, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
@@ -114,16 +124,62 @@ const PhysicalCardPreview = ({ cardType, customDesign, themeColor }: {
               >
                 {style.material}
               </motion.p>
+              
+              {/* Custom Text Display */}
+              {customText && (
+                <motion.p
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="text-xs mt-1 opacity-90 italic"
+                >
+                  "{customText}"
+                </motion.p>
+              )}
             </div>
-            <motion.div
-              animate={{ rotate: [0, 10, -10, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
-              {cardType === 'premium' ? <Crown className="w-8 h-8" /> : 
-               cardType === 'metal' ? <Diamond className="w-8 h-8" /> : 
-               <Gift className="w-8 h-8" />}
-            </motion.div>
+            
+            <div className="flex flex-col items-end space-y-2">
+              {/* Emoji Display - Top Right */}
+              {selectedEmoji && (
+                <motion.div
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ delay: 0.3, type: "spring" }}
+                  className="text-2xl"
+                >
+                  {selectedEmoji}
+                </motion.div>
+              )}
+              
+              {/* Card Type Icon */}
+              <motion.div
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                {cardType === 'premium' ? <Crown className="w-6 h-6" /> : 
+                 cardType === 'metal' ? <Diamond className="w-6 h-6" /> : 
+                 <Gift className="w-6 h-6" />}
+              </motion.div>
+            </div>
           </div>
+          
+          {/* Custom Image Display */}
+          {customImage && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.5 }}
+              className="absolute inset-0 flex items-center justify-center"
+            >
+              <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white/30 bg-white/10 backdrop-blur-sm">
+                <img 
+                  src={customImage} 
+                  alt="Custom design" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </motion.div>
+          )}
           
           <div>
             <motion.div 
@@ -240,6 +296,16 @@ export default function PhysicalGiftCardStore() {
   const [themeColor, setThemeColor] = useState('#7c3aed');
   const [customDesign, setCustomDesign] = useState(false);
   const [previewMode, setPreviewMode] = useState(true);
+  const [customImage, setCustomImage] = useState<string>('');
+  const [customText, setCustomText] = useState<string>('');
+  const [selectedEmoji, setSelectedEmoji] = useState<string>('');
+
+  // Popular emoji options for gift cards
+  const emojiOptions = [
+    '🎁', '🎉', '💝', '🎊', '✨', '💫', '🌟', '⭐', 
+    '🎈', '🎀', '💖', '💕', '🎂', '🍰', '🥳', '😊',
+    '😍', '🤗', '👏', '🎯', '🔥', '💯', '🚀', '🎪'
+  ];
 
   const form = useForm<PhysicalCardOrderForm>({
     resolver: zodResolver(physicalCardOrderSchema),
@@ -482,6 +548,9 @@ export default function PhysicalGiftCardStore() {
                   cardType={selectedCardType}
                   customDesign={customDesign}
                   themeColor={themeColor}
+                  customImage={customImage}
+                  customText={customText}
+                  selectedEmoji={selectedEmoji}
                 />
                 
                 {/* Customization Controls */}
@@ -499,6 +568,101 @@ export default function PhysicalGiftCardStore() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6">
+                      {/* Image Upload Section */}
+                      <div className="space-y-3">
+                        <Label className="text-white text-sm font-medium flex items-center gap-2">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          Custom Image
+                        </Label>
+                        <div className="space-y-2">
+                          <Input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onload = (event) => {
+                                  setCustomImage(event.target?.result as string);
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                            className="bg-white/10 border-white/20 text-white file:bg-purple-600 file:text-white file:border-0 file:rounded-md file:px-3 file:py-1"
+                          />
+                          {customImage && (
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded border border-white/20 overflow-hidden">
+                                <img src={customImage} alt="Preview" className="w-full h-full object-cover" />
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setCustomImage('')}
+                                className="text-red-400 hover:text-red-300 h-6 px-2"
+                              >
+                                Remove
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Custom Text Section */}
+                      <div className="space-y-3">
+                        <Label className="text-white text-sm font-medium flex items-center gap-2">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                          Custom Message
+                        </Label>
+                        <Input
+                          placeholder="Happy Birthday! 🎉"
+                          value={customText}
+                          onChange={(e) => setCustomText(e.target.value)}
+                          className="bg-white/10 border-white/20 text-white placeholder-gray-400"
+                          maxLength={50}
+                        />
+                        <p className="text-xs text-gray-400">{customText.length}/50 characters</p>
+                      </div>
+
+                      {/* Emoji Selection */}
+                      <div className="space-y-3">
+                        <Label className="text-white text-sm font-medium flex items-center gap-2">
+                          <span className="text-lg">😊</span>
+                          Choose Emoji (Top Right)
+                        </Label>
+                        <div className="grid grid-cols-8 gap-2 max-h-32 overflow-y-auto">
+                          {emojiOptions.map((emoji, index) => (
+                            <motion.button
+                              key={index}
+                              whileHover={{ scale: 1.2 }}
+                              whileTap={{ scale: 0.9 }}
+                              onClick={() => setSelectedEmoji(selectedEmoji === emoji ? '' : emoji)}
+                              className={`w-8 h-8 rounded-lg border transition-all ${
+                                selectedEmoji === emoji 
+                                  ? 'border-purple-400 bg-purple-500/30' 
+                                  : 'border-white/20 hover:border-white/40'
+                              } flex items-center justify-center text-lg`}
+                            >
+                              {emoji}
+                            </motion.button>
+                          ))}
+                        </div>
+                        {selectedEmoji && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setSelectedEmoji('')}
+                            className="text-red-400 hover:text-red-300 w-full h-8"
+                          >
+                            Clear Emoji
+                          </Button>
+                        )}
+                      </div>
+
                       {/* Theme Color Picker */}
                       <div className="space-y-3">
                         <Label className="text-white text-sm font-medium">Theme Color</Label>

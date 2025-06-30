@@ -3858,11 +3858,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
               try {
                 const currentOrder = await storage.getPublicGiftCardOrderById(order.id);
                 if (currentOrder && !currentOrder.pdfReceiptUrl) {
-                  const receiptResult = await ReceiptService.generateReceiptPDF(currentOrder);
+                  const receiptResult = await ReceiptService.generateReceiptPDF({
+                  ...currentOrder,
+                  orderId: currentOrder.id,
+                  purchaseDate: currentOrder.createdAt || new Date()
+                });
                   
-                  if (receiptResult.success && receiptResult.url) {
-                    await storage.updateReceiptUrl(order.id, receiptResult.url, new Date());
-                    console.log(`✅ PDF receipt generated: ${receiptResult.url}`);
+                  if (receiptResult.success && receiptResult.filePath) {
+                    await storage.updateReceiptUrl(order.id, receiptResult.filePath, new Date());
+                    console.log(`✅ PDF receipt generated: ${receiptResult.filePath}`);
                   } else {
                     console.error(`❌ Failed to generate PDF receipt: ${receiptResult.error}`);
                   }

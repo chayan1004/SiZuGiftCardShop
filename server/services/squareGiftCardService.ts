@@ -202,16 +202,18 @@ export class SquareGiftCardService {
       const responseData = await response.json();
       
       if (!response.ok) {
+        const errorData = responseData as { errors?: Array<{ detail?: string }> };
         return {
           success: false,
-          error: `Square API error: ${responseData.errors?.[0]?.detail || 'Gift card activation failed'}`
+          error: `Square API error: ${errorData.errors?.[0]?.detail || 'Gift card activation failed'}`
         };
       }
 
-      if (responseData.gift_card_activity) {
+      const data = responseData as { gift_card_activity?: any };
+      if (data.gift_card_activity) {
         return {
           success: true,
-          activity: responseData.gift_card_activity
+          activity: data.gift_card_activity
         };
       }
 
@@ -247,14 +249,16 @@ export class SquareGiftCardService {
       const responseData = await response.json();
 
       if (!response.ok) {
+        const errorData = responseData as { errors?: Array<{ detail?: string }> };
         return {
           isValid: false,
-          error: `Square API error: ${responseData.errors?.[0]?.detail || 'Gift card validation failed'}`
+          error: `Square API error: ${errorData.errors?.[0]?.detail || 'Gift card validation failed'}`
         };
       }
 
-      if (responseData.gift_card) {
-        const giftCard = responseData.gift_card;
+      const data = responseData as { gift_card?: any };
+      if (data.gift_card) {
+        const giftCard = data.gift_card;
         const balance = giftCard.balance_money?.amount ? Number(giftCard.balance_money.amount) : 0;
         
         return {
@@ -319,14 +323,16 @@ export class SquareGiftCardService {
       const responseData = await response.json();
       
       if (!response.ok) {
+        const errorData = responseData as { errors?: Array<{ detail?: string }> };
         return {
           success: false,
-          error: `Square API error: ${responseData.errors?.[0]?.detail || 'Gift card redemption failed'}`
+          error: `Square API error: ${errorData.errors?.[0]?.detail || 'Gift card redemption failed'}`
         };
       }
 
-      if (responseData.gift_card_activity) {
-        const activity = responseData.gift_card_activity;
+      const data = responseData as { gift_card_activity?: any };
+      if (data.gift_card_activity) {
+        const activity = data.gift_card_activity;
         const newBalance = activity.gift_card_balance_money?.amount ? Number(activity.gift_card_balance_money.amount) : 0;
         
         return {
@@ -372,14 +378,16 @@ export class SquareGiftCardService {
       const responseData = await response.json();
 
       if (!response.ok) {
+        const errorData = responseData as { errors?: Array<{ detail?: string }> };
         return {
           success: false,
-          error: `Square API error: ${responseData.errors?.[0]?.detail || 'Failed to get gift card activities'}`
+          error: `Square API error: ${errorData.errors?.[0]?.detail || 'Failed to get gift card activities'}`
         };
       }
 
-      if (responseData.gift_card_activities) {
-        const activities = responseData.gift_card_activities.map((activity: SquareGiftCardActivity) => ({
+      const data = responseData as { gift_card_activities?: any[] };
+      if (data.gift_card_activities) {
+        const activities = data.gift_card_activities.map((activity: SquareGiftCardActivity) => ({
           id: activity.id || '',
           type: activity.type || '',
           amount: activity.activate_activity_details?.amount_money?.amount ? 
@@ -451,14 +459,16 @@ export class SquareGiftCardService {
       const responseData = await response.json();
       
       if (!response.ok) {
+        const errorData = responseData as { errors?: Array<{ detail?: string }> };
         return {
           success: false,
-          error: `Square API error: ${responseData.errors?.[0]?.detail || 'Gift card load failed'}`
+          error: `Square API error: ${errorData.errors?.[0]?.detail || 'Gift card load failed'}`
         };
       }
 
-      if (responseData.gift_card_activity) {
-        const activity = responseData.gift_card_activity;
+      const data = responseData as { gift_card_activity?: any };
+      if (data.gift_card_activity) {
+        const activity = data.gift_card_activity;
         const newBalance = activity.gift_card_balance_money?.amount ? Number(activity.gift_card_balance_money.amount) : 0;
         
         return {

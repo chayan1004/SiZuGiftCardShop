@@ -137,7 +137,16 @@ export interface IStorage {
   getAutoDefenseRules(): Promise<AutoDefenseRule[]>;
   getAutoDefenseRulesByType(type: string): Promise<AutoDefenseRule[]>;
   updateAutoDefenseRuleHitCount(id: string): Promise<AutoDefenseRule | undefined>;
-  deactivateAutoDefenseRule(id: string): Promise<AutoDefenseRule | undefined>;  
+  deactivateAutoDefenseRule(id: string): Promise<AutoDefenseRule | undefined>;
+
+  // Card Redemptions methods
+  createCardRedemption(redemption: InsertCardRedemption): Promise<CardRedemption>;
+  getCardRedemptions(merchantId?: string): Promise<CardRedemption[]>;
+  validateGiftCardForRedemption(gan: string, merchantId: string): Promise<{
+    valid: boolean;
+    card?: GiftCard;
+    error?: string;
+  }>;  
   checkAutoDefenseRule(type: string, value: string): Promise<AutoDefenseRule | undefined>;
 
   // Promo Code methods
@@ -989,6 +998,97 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return design || undefined;
+  }
+
+  // Card Redemptions methods implementation
+  async createCardRedemption(redemption: InsertCardRedemption): Promise<CardRedemption> {
+    const [newRedemption] = await db
+      .insert(cardRedemptions)
+      .values(redemption)
+      .returning();
+    return newRedemption;
+  }
+
+  async getCardRedemptions(merchantId?: string): Promise<CardRedemption[]> {
+    if (merchantId) {
+      return await db
+        .select()
+        .from(cardRedemptions)
+        .where(eq(cardRedemptions.merchantId, merchantId))
+        .orderBy(desc(cardRedemptions.createdAt));
+    }
+    return await db
+      .select()
+      .from(cardRedemptions)
+      .orderBy(desc(cardRedemptions.createdAt));
+  }
+
+  async validateGiftCardForRedemption(gan: string, merchantId: string): Promise<{
+    valid: boolean;
+    card?: GiftCard;
+    error?: string;
+  }> {
+    try {
+      // Find the gift card by GAN
+      const [card] = await db
+        .select()
+        .from(giftCards)
+        .where(eq(giftCards.gan, gan));
+
+      if (!card) {
+        return {
+          valid: false,
+          error: 'Gift card not found'
+        };
+      }
+
+      // Check if card is already redeemed
+      if (card.redeemed) {
+        return {
+          valid: false,
+          card,
+          error: 'Gift card has already been redeemed'
+        };
+      }
+
+      // Check if card is active
+      if (card.status !== 'ACTIVE') {
+        return {
+          valid: false,
+          card,
+          error: 'Gift card is not active'
+        };
+      }
+
+      // Check if card has balance
+      if (card.balance <= 0) {
+        return {
+          valid: false,
+          card,
+          error: 'Gift card has no remaining balance'
+        };
+      }
+
+      // Check if card is expired (if expiration date is set)
+      if (card.expiresAt && new Date() > card.expiresAt) {
+        return {
+          valid: false,
+          card,
+          error: 'Gift card has expired'
+        };
+      }
+
+      return {
+        valid: true,
+        card
+      };
+    } catch (error) {
+      console.error('Error validating gift card:', error);
+      return {
+        valid: false,
+        error: 'Database error during validation'
+      };
+    }
   }
 }
 

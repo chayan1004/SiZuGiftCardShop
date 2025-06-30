@@ -285,3 +285,28 @@ export const insertAutoDefenseRuleSchema = createInsertSchema(autoDefenseRules).
 
 export type AutoDefenseRule = typeof autoDefenseRules.$inferSelect;
 export type InsertAutoDefenseRule = z.infer<typeof insertAutoDefenseRuleSchema>;
+
+// Card Redemptions Schema
+export const cardRedemptions = pgTable("card_redemptions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  cardId: integer("card_id").notNull(),
+  merchantId: text("merchant_id").notNull(),
+  giftCardGan: text("gift_card_gan").notNull(),
+  amount: integer("amount").notNull(), // Amount redeemed in cents
+  ipAddress: text("ip_address"),
+  deviceFingerprint: text("device_fingerprint"),
+  userAgent: text("user_agent"),
+  success: boolean("success").notNull(),
+  failureReason: text("failure_reason"),
+  redeemedAt: timestamp("redeemed_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const insertCardRedemptionSchema = createInsertSchema(cardRedemptions).omit({
+  id: true,
+  createdAt: true,
+  redeemedAt: true,
+});
+
+export type CardRedemption = typeof cardRedemptions.$inferSelect;
+export type InsertCardRedemption = z.infer<typeof insertCardRedemptionSchema>;

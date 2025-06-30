@@ -101,7 +101,7 @@ export default function AdminDashboard() {
     conversionRate: "0%"
   }, isLoading: metricsLoading, error: metricsError } = useQuery<DashboardMetrics>({
     queryKey: ["/api/admin/metrics"],
-    refetchInterval: 10000, // Refresh every 10 seconds for real-time data
+    refetchInterval: 60000, // Refresh every 60 seconds
     meta: {
       headers: {
         'x-admin-token': localStorage.getItem('adminToken') || ''
@@ -112,7 +112,7 @@ export default function AdminDashboard() {
   // Fetch weekly revenue data
   const { data: weeklyRevenue = [] } = useQuery<WeeklyRevenue[]>({
     queryKey: ["/api/admin/weekly-revenue"],
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: 300000, // Refresh every 5 minutes
     meta: {
       headers: {
         'x-admin-token': localStorage.getItem('adminToken') || ''
@@ -129,7 +129,7 @@ export default function AdminDashboard() {
   // Fetch recent activity
   const { data: recentActivity = [] } = useQuery<RecentActivity[]>({
     queryKey: ["/api/admin/recent-activity"],
-    refetchInterval: 15000, // More frequent for activity feed
+    refetchInterval: 120000, // Refresh every 2 minutes
     meta: {
       headers: {
         'x-admin-token': localStorage.getItem('adminToken') || ''
@@ -140,7 +140,7 @@ export default function AdminDashboard() {
   // Fetch email delivery metrics
   const { data: emailMetrics = {} } = useQuery<any>({
     queryKey: ["/api/admin/email/delivery-metrics"],
-    refetchInterval: 60000, // Refresh every minute
+    refetchInterval: 300000, // Refresh every 5 minutes
     meta: {
       headers: {
         'x-admin-token': localStorage.getItem('adminToken') || ''
@@ -170,14 +170,7 @@ export default function AdminDashboard() {
     }
   });
 
-  // Auto-refresh data every 10 seconds for real-time updates
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // This will trigger refetch for all queries
-    }, 10000);
-
-    return () => clearInterval(interval);
-  }, []);
+  // Removed auto-refresh to prevent flickering
 
   // WebSocket connection for real-time fraud alerts
   useEffect(() => {

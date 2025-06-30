@@ -4435,6 +4435,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Branded checkout with Square payment links (Cash App Pay support)
+  app.post("/api/branded-checkout", async (req: Request, res: Response) => {
+    try {
+      const { recipientEmail, amount, currency = 'USD', recipientName, senderName, giftMessage } = req.body;
+
+      // Validate input data
+      if (!recipientEmail || !amount || amount < 500 || amount > 50000) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid input data. Amount must be between $5.00 and $500.00"
+        });
+      }
+
+      // Create order record first (pending status)
+      const orderData = {
+        recipientEmail,
+        recipientName: recipientName || 'Recipient',
+        senderName: senderName || 'Anonymous',
+        amount,
+        message: giftMessage || '',
+        status: 'pending' as const
+      };
+
+      const order = await storage.createPublicGiftCardOrder(orderData);
+      console.log(`📦 Created order ${order.id} for $${amount/100}`);
+
+      // Create Square payment link with Cash App Pay support
+      const paymentLinkResult = await enhancedSquareAPIService.createPaymentLink({
+        amount: amount / 100, // Convert from cents to dollars
+        currency: currency,
+        redirectUrl: `${process.env.FRONTEND_URL || 'https://sizugiftcardshop.replit.app'}/giftcard-store/success/${order.id}`,
+        acceptedPaymentMethods: {
+          applePay: true,
+          googlePay: true,
+          cashApp: true,
+          creditCard: true,
+          debitCard: true
+        },
+        merchantSupportEmail: 'support@sizugiftcard.com',
+        itemName: `SiZu Gift Card - $${amount/100}`,
+        itemDescription: giftMessage || 'Digital Gift Card Purchase'
+      });
+
+      if (!paymentLinkResult.success) {
+        // Update order status to failed
+        await storage.updatePublicGiftCardOrderStatus(order.id, 'failed');
+        
+        return res.status(400).json({
+          success: false,
+          message: paymentLinkResult.error || "Payment link creation failed"
+        });
+      }
+
+      console.log(`💳 Square payment link created: ${paymentLinkResult.checkoutUrl}`);
+
+      // Update order with payment link info
+      await storage.updatePublicGiftCardOrder(order.id, {
+        squarePaymentId: paymentLinkResult.checkoutId,
+        status: 'payment_pending'
+      });
+
+      res.json({
+        success: true,
+        orderId: order.id,
+        paymentUrl: paymentLinkResult.checkoutUrl,
+        message: "Payment link created successfully"
+      });
+
+    } catch (error: any) {
+      console.error('Branded checkout error:', error);
+      res.status(500).json({
+        success: false,
+        message: "An error occurred while creating payment link"
+      });
+    }
+  });
+
   // Public order details endpoint for success page
   app.get("/api/public/order/:orderId", async (req: Request, res: Response) => {
     try {

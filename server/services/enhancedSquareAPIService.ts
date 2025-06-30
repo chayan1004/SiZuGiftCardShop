@@ -568,8 +568,6 @@ class EnhancedSquareAPIService {
         token: process.env.SQUARE_ACCESS_TOKEN || "EAAAlxqLNvlPZ0CtBPELxpPe6Hjq9--DfFPA45gVsXFnhmR4pyHhvqHc79HFaPMn"
       });
 
-      const { Currency } = await import('square');
-      
       const result = await client.checkout.paymentLinks.create({
         idempotencyKey: crypto.randomUUID(),
         checkoutOptions: {
@@ -591,7 +589,7 @@ class EnhancedSquareAPIService {
               quantity: "1",
               basePriceMoney: {
                 amount: BigInt(paymentData.amount * 100), // Convert to cents
-                currency: Currency.USD
+                currency: 'USD'
               },
               name: paymentData.itemName || "SiZu Gift Card",
               note: paymentData.itemDescription || "Digital Gift Card Purchase"

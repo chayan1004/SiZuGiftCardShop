@@ -4214,7 +4214,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const paymentLinkResult = await enhancedSquareAPIService.createPaymentLink({
           amount: amount, // Amount in cents
           currency: 'USD',
-          redirectUrl: `${process.env.FRONTEND_URL || 'https://sizugiftcardshop.replit.app'}/giftcard-store/success/${order.id}`,
+          redirectUrl: `${process.env.FRONTEND_URL || 'https://checkout.sizugiftcard.com'}/giftcard-store/success/${order.id}`,
           acceptedPaymentMethods: {
             applePay: true,
             googlePay: true,
@@ -4467,7 +4467,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const paymentLinkResult = await enhancedSquareAPIService.createPaymentLink({
         amount: amount / 100, // Convert from cents to dollars
         currency: currency,
-        redirectUrl: `${process.env.FRONTEND_URL || 'https://sizugiftcardshop.replit.app'}/giftcard-store/success/${order.id}`,
+        redirectUrl: `${process.env.FRONTEND_URL || 'https://checkout.sizugiftcard.com'}/giftcard-store/success/${order.id}`,
         acceptedPaymentMethods: {
           applePay: true,
           googlePay: true,

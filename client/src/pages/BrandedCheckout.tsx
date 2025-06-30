@@ -270,13 +270,10 @@ export default function BrandedCheckout() {
   };
 
   useEffect(() => {
-    if (config) {
-      setCheckoutConfig(config);
-    }
     if (order) {
       setOrderData(order);
     }
-  }, [config, order]);
+  }, [order]);
 
   if (configLoading || orderLoading) {
     return (
@@ -654,6 +651,8 @@ export default function BrandedCheckout() {
                             {processPaymentMutation.isPending ? 'Processing...' : 'Complete Payment'}
                           </Button>
                         </div>
+                          </div>
+                        )}
                       </motion.div>
                     )}
 

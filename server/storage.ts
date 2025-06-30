@@ -14,7 +14,7 @@ import {
   type FraudLog, type InsertFraudLog
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, sql, count, sum, and } from "drizzle-orm";
+import { eq, desc, sql, count, sum, and, gte } from "drizzle-orm";
 
 export interface IStorage {
   // User methods

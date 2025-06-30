@@ -16,6 +16,7 @@ import { domainAuthentication } from './services/domainAuthentication';
 import { pdfReceiptService } from './services/pdfReceiptService';
 import { ReceiptService } from './services/ReceiptService';
 import { squareWebhookHandler } from './webhooks/squareWebhookHandler';
+import { FraudDetectionService } from './services/FraudDetectionService';
 import { requireAdmin, requireMerchant, requireMerchantAuth, checkMerchantStatus } from './middleware/authMiddleware';
 import { AuthService } from './services/authService';
 import { generateGiftCardQR, generateGiftCardBarcode } from '../utils/qrGenerator';
@@ -2792,6 +2793,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin Fraud Detection Monitoring Endpoints
+  app.get("/api/admin/fraud-logs", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { limit = 50 } = req.query;
+      const fraudLogs = await FraudDetectionService.getRecentFraudLogs(Number(limit));
+      
+      res.json({
+        success: true,
+        fraudLogs,
+        total: fraudLogs.length
+      });
+    } catch (error) {
+      console.error('Error fetching fraud logs:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch fraud logs"
+      });
+    }
+  });
+
+  app.get("/api/admin/fraud-statistics", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const statistics = await FraudDetectionService.getFraudStatistics();
+      
+      res.json({
+        success: true,
+        statistics
+      });
+    } catch (error) {
+      console.error('Error fetching fraud statistics:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch fraud statistics"
+      });
+    }
+  });
+
+  // Fraud alert webhook endpoint for external integrations
+  app.post("/api/webhooks/fraud-alert", async (req: Request, res: Response) => {
+    try {
+      const { gan, ip, reason, merchantId, timestamp } = req.body;
+      
+      // Log the webhook alert for admin monitoring
+      console.log(`Fraud Alert Webhook: ${reason} - GAN: ${gan}, IP: ${ip}, Merchant: ${merchantId}, Time: ${timestamp}`);
+      
+      // You can integrate with external security systems here
+      // Example: Send to Slack, Discord, email alerts, etc.
+      
+      res.json({
+        success: true,
+        message: "Fraud alert processed"
+      });
+    } catch (error) {
+      console.error('Error processing fraud alert webhook:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to process fraud alert"
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   // Phase III-B: Promo Codes API
   app.post("/api/promos", requireAdmin, async (req: Request, res: Response) => {
@@ -3644,7 +3706,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Gift Card Redemption Endpoint
+  // Gift Card Redemption Endpoint with Fraud Detection Layer
   app.post("/api/gift-cards/redeem", async (req: Request, res: Response) => {
     try {
       const { code, redeemedBy, amount } = req.body;
@@ -3656,14 +3718,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Step 1: Run comprehensive fraud detection checks
+      const fraudCheck = await FraudDetectionService.checkRedemptionFraud(
+        req, 
+        code,
+        req.body.merchantId // Optional merchant ID for rate limiting
+      );
+
+      if (fraudCheck.isBlocked) {
+        return res.status(429).json({
+          success: false,
+          error: fraudCheck.reason || "Redemption blocked due to suspicious activity",
+          riskLevel: fraudCheck.riskLevel
+        });
+      }
+
+      // Step 2: Validate gift card exists and get details
       const giftCard = await storage.getGiftCardByCode(code);
       if (!giftCard) {
+        // Log invalid code attempt for fraud tracking
+        await FraudDetectionService.logRedemptionFailure(req, code, req.body.merchantId, "invalid_code");
         return res.status(404).json({ 
           success: false, 
           error: "Gift card not found" 
         });
       }
 
+      // Step 3: Check if already redeemed (fraud detection already handled this)
       if (giftCard.redeemed) {
         return res.status(400).json({ 
           success: false, 
@@ -3671,22 +3752,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Step 4: Validate gift card status
       if (giftCard.status !== 'ACTIVE') {
+        await FraudDetectionService.logRedemptionFailure(req, code, req.body.merchantId, "inactive_card");
         return res.status(400).json({ 
           success: false, 
           error: "Gift card is not active" 
         });
       }
 
+      // Step 5: Process legitimate redemption
       const updatedCard = await storage.redeemGiftCard(code, redeemedBy, amount);
       
       res.json({
         success: true,
         message: "Gift card redeemed successfully",
-        giftCard: updatedCard
+        giftCard: updatedCard,
+        amount: updatedCard?.lastRedemptionAmount || amount
       });
     } catch (error) {
       console.error('Error redeeming gift card:', error);
+      
+      // Log system failure for fraud monitoring
+      await FraudDetectionService.logRedemptionFailure(
+        req, 
+        req.body.code || "unknown", 
+        req.body.merchantId, 
+        "system_error"
+      );
+      
       res.status(500).json({
         success: false,
         error: "Failed to redeem gift card"

@@ -92,6 +92,38 @@ export interface IStorage {
       recipientEmail?: string;
     }>;
   }>;
+
+  // Merchant-specific analytics for CSV/PDF export
+  getGiftCardAnalyticsForMerchant(merchantId: string, filters?: { startDate?: Date; endDate?: Date }): Promise<{
+    summary: {
+      totalIssued: number;
+      totalRedeemed: number;
+      totalRevenue: number;
+      outstandingBalance: number;
+      redemptionRate: number;
+    };
+    issuanceData: Array<{
+      gan: string;
+      amount: number;
+      issuedDate: Date;
+      recipientEmail?: string;
+      status: string;
+      orderId?: string;
+    }>;
+    redemptionData: Array<{
+      gan: string;
+      amount: number;
+      redeemedBy: string;
+      redeemedAt: Date;
+      ipAddress?: string;
+      deviceFingerprint?: string;
+    }>;
+    topRedeemedCards: Array<{
+      gan: string;
+      totalRedeemed: number;
+      redemptionCount: number;
+    }>;
+  }>;
   
   // Gift Card Activity methods
   getGiftCardActivities(giftCardId: number): Promise<GiftCardActivity[]>;
@@ -1088,6 +1120,169 @@ export class DatabaseStorage implements IStorage {
       return {
         valid: false,
         error: 'Database error during validation'
+      };
+    }
+  }
+
+  async getGiftCardAnalyticsForMerchant(merchantId: string, filters?: { startDate?: Date; endDate?: Date }): Promise<{
+    summary: {
+      totalIssued: number;
+      totalRedeemed: number;
+      totalRevenue: number;
+      outstandingBalance: number;
+      redemptionRate: number;
+    };
+    issuanceData: Array<{
+      gan: string;
+      amount: number;
+      issuedDate: Date;
+      recipientEmail?: string;
+      status: string;
+      orderId?: string;
+    }>;
+    redemptionData: Array<{
+      gan: string;
+      amount: number;
+      redeemedBy: string;
+      redeemedAt: Date;
+      ipAddress?: string;
+      deviceFingerprint?: string;
+    }>;
+    topRedeemedCards: Array<{
+      gan: string;
+      totalRedeemed: number;
+      redemptionCount: number;
+    }>;
+  }> {
+    try {
+      const whereConditions: any[] = [];
+      
+      // Filter by merchant
+      whereConditions.push(eq(publicGiftCardOrders.merchantId, merchantId));
+      
+      // Add date filters if provided
+      if (filters?.startDate) {
+        whereConditions.push(gte(publicGiftCardOrders.createdAt, filters.startDate));
+      }
+      if (filters?.endDate) {
+        whereConditions.push(sql`${publicGiftCardOrders.createdAt} <= ${filters.endDate}`);
+      }
+
+      // Get all issued gift cards for this merchant
+      const issuedCards = await db
+        .select({
+          gan: publicGiftCardOrders.giftCardGan,
+          amount: publicGiftCardOrders.amount,
+          issuedDate: publicGiftCardOrders.createdAt,
+          recipientEmail: publicGiftCardOrders.recipientEmail,
+          status: publicGiftCardOrders.status,
+          orderId: publicGiftCardOrders.id
+        })
+        .from(publicGiftCardOrders)
+        .where(and(...whereConditions))
+        .orderBy(desc(publicGiftCardOrders.createdAt));
+
+      // Get redemption data for merchant's cards
+      const redemptionWhereConditions: any[] = [eq(cardRedemptions.merchantId, merchantId)];
+      if (filters?.startDate) {
+        redemptionWhereConditions.push(gte(cardRedemptions.createdAt, filters.startDate));
+      }
+      if (filters?.endDate) {
+        redemptionWhereConditions.push(sql`${cardRedemptions.createdAt} <= ${filters.endDate}`);
+      }
+
+      const redemptions = await db
+        .select({
+          gan: cardRedemptions.giftCardGan,
+          amount: cardRedemptions.amount,
+          redeemedBy: sql<string>`COALESCE(${cardRedemptions.deviceFingerprint}, 'Anonymous')`,
+          redeemedAt: cardRedemptions.createdAt,
+          ipAddress: cardRedemptions.ipAddress,
+          deviceFingerprint: cardRedemptions.deviceFingerprint
+        })
+        .from(cardRedemptions)
+        .where(and(
+          ...redemptionWhereConditions,
+          eq(cardRedemptions.success, true)
+        ))
+        .orderBy(desc(cardRedemptions.createdAt));
+
+      // Calculate summary statistics
+      const totalIssued = issuedCards.length;
+      const totalRedeemed = redemptions.length;
+      const totalRevenue = issuedCards
+        .filter(card => card.status === 'issued')
+        .reduce((sum, card) => sum + card.amount, 0);
+      
+      const redeemedRevenue = redemptions.reduce((sum, redemption) => sum + redemption.amount, 0);
+      const outstandingBalance = totalRevenue - redeemedRevenue;
+      const redemptionRate = totalIssued > 0 ? (totalRedeemed / totalIssued) * 100 : 0;
+
+      // Get top redeemed cards (last 30 days)
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      const topRedeemedCards = await db
+        .select({
+          gan: cardRedemptions.giftCardGan,
+          totalRedeemed: sum(cardRedemptions.amount).mapWith(Number),
+          redemptionCount: count(cardRedemptions.id).mapWith(Number)
+        })
+        .from(cardRedemptions)
+        .where(and(
+          eq(cardRedemptions.merchantId, merchantId),
+          eq(cardRedemptions.success, true),
+          gte(cardRedemptions.createdAt, thirtyDaysAgo)
+        ))
+        .groupBy(cardRedemptions.giftCardGan)
+        .orderBy(desc(sum(cardRedemptions.amount)))
+        .limit(10);
+
+      return {
+        summary: {
+          totalIssued,
+          totalRedeemed,
+          totalRevenue,
+          outstandingBalance,
+          redemptionRate: Math.round(redemptionRate * 100) / 100
+        },
+        issuanceData: issuedCards
+          .filter(card => card.issuedDate !== null)
+          .map(card => ({
+            gan: card.gan || 'N/A',
+            amount: card.amount,
+            issuedDate: card.issuedDate!,
+            recipientEmail: card.recipientEmail,
+            status: card.status,
+            orderId: card.orderId
+          })),
+        redemptionData: redemptions
+          .filter(redemption => redemption.redeemedAt !== null)
+          .map(redemption => ({
+            gan: redemption.gan,
+            amount: redemption.amount,
+            redeemedBy: redemption.redeemedBy,
+            redeemedAt: redemption.redeemedAt!,
+            ipAddress: redemption.ipAddress || undefined,
+            deviceFingerprint: redemption.deviceFingerprint || undefined
+          })),
+        topRedeemedCards: topRedeemedCards.map(card => ({
+          gan: card.gan || 'N/A',
+          totalRedeemed: card.totalRedeemed || 0,
+          redemptionCount: card.redemptionCount || 0
+        }))
+      };
+    } catch (error) {
+      console.error('Error getting merchant analytics:', error);
+      return {
+        summary: {
+          totalIssued: 0,
+          totalRedeemed: 0,
+          totalRevenue: 0,
+          outstandingBalance: 0,
+          redemptionRate: 0
+        },
+        issuanceData: [],
+        redemptionData: [],
+        topRedeemedCards: []
       };
     }
   }

@@ -4031,6 +4031,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Merchant Gift Card Analytics
+  // Merchant Analytics Export Endpoint
+  app.get("/api/merchant/analytics/giftcards", requireMerchant, async (req: Request, res: Response) => {
+    try {
+      const merchantId = (req as any).merchant.merchantId;
+      const { startDate, endDate, format } = req.query;
+      
+      // Parse date filters
+      const filters: { startDate?: Date; endDate?: Date } = {};
+      if (startDate && typeof startDate === 'string') {
+        filters.startDate = new Date(startDate);
+      }
+      if (endDate && typeof endDate === 'string') {
+        filters.endDate = new Date(endDate);
+      }
+
+      if (format === 'csv') {
+        // Generate CSV export
+        const { AnalyticsService } = await import('./services/AnalyticsService.js');
+        const csvData = await AnalyticsService.generateCSV(merchantId, filters);
+        
+        const dateRange = startDate && endDate ? 
+          `_${startDate}_to_${endDate}` : 
+          `_${new Date().toISOString().split('T')[0]}`;
+        
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename="giftcard_analytics${dateRange}.csv"`);
+        res.send(csvData);
+        return;
+      }
+
+      if (format === 'pdf') {
+        // Generate PDF export
+        const { AnalyticsService } = await import('./services/AnalyticsService.js');
+        const pdfBuffer = await AnalyticsService.generatePDF(merchantId, filters);
+        
+        const dateRange = startDate && endDate ? 
+          `_${startDate}_to_${endDate}` : 
+          `_${new Date().toISOString().split('T')[0]}`;
+        
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="giftcard_analytics${dateRange}.pdf"`);
+        res.send(Buffer.from(pdfBuffer));
+        return;
+      }
+
+      // Default JSON response for UI
+      const analytics = await storage.getGiftCardAnalyticsForMerchant(merchantId, filters);
+      res.json({
+        success: true,
+        data: analytics
+      });
+    } catch (error) {
+      console.error('Error generating merchant analytics:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to generate analytics report'
+      });
+    }
+  });
+
   app.get("/api/merchant/gift-card-analytics", requireMerchant, async (req: Request, res: Response) => {
     try {
       const merchantId = (req as any).merchant?.merchantId || (req as any).merchantId;

@@ -629,7 +629,51 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
+  async getRecentTransactions(merchantId: string, limit = 10): Promise<Array<{
+    type: string;
+    amount: number;
+    email?: string;
+    gan?: string;
+    createdAt: Date;
+  }>> {
+    const merchantCards = await this.getGiftCardsByMerchant(merchantId);
+    const transactions: Array<{
+      type: string;
+      amount: number;
+      email?: string;
+      gan?: string;
+      createdAt: Date;
+    }> = [];
 
+    // Add gift card purchases
+    merchantCards.forEach(card => {
+      transactions.push({
+        type: 'PURCHASE',
+        amount: card.amount,
+        email: card.recipientEmail || undefined,
+        gan: card.gan,
+        createdAt: card.createdAt || new Date()
+      });
+    });
+
+    // Add redemptions from activities
+    const allActivities = await db.select().from(giftCardActivities);
+    allActivities.forEach(activity => {
+      const card = merchantCards.find(c => c.id === activity.giftCardId);
+      if (card && activity.type === 'REDEEM') {
+        transactions.push({
+          type: 'REDEEM',
+          amount: activity.amount,
+          gan: card.gan,
+          createdAt: activity.createdAt || new Date()
+        });
+      }
+    });
+
+    return transactions
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .slice(0, limit);
+  }
 
   async getAllMerchants(): Promise<Merchant[]> {
     return await db.select().from(merchants);

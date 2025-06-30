@@ -25,10 +25,56 @@ export interface GiftCardActivity {
   description?: string;
 }
 
+// Zod schemas for Square API response validation
+const SquareGiftCardSchema = z.object({
+  id: z.string(),
+  gan: z.string(),
+  state: z.string(),
+  type: z.string().optional(),
+  balance_money: z.object({
+    amount: z.number(),
+    currency: z.string()
+  }).optional(),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional()
+});
+
+const SquareGiftCardResponseSchema = z.object({
+  gift_card: SquareGiftCardSchema.optional()
+});
+
+const SquareGiftCardActivitySchema = z.object({
+  id: z.string(),
+  type: z.string(),
+  location_id: z.string().optional(),
+  created_at: z.string().optional(),
+  gift_card_id: z.string().optional(),
+  gift_card_gan: z.string().optional(),
+  gift_card_balance_money: z.object({
+    amount: z.number(),
+    currency: z.string()
+  }).optional()
+});
+
+const SquareGiftCardActivityResponseSchema = z.object({
+  gift_card_activity: SquareGiftCardActivitySchema.optional()
+});
+
+const SquareGiftCardActivitiesResponseSchema = z.object({
+  gift_card_activities: z.array(SquareGiftCardActivitySchema).optional()
+});
+
 export interface SquareGiftCard {
   id: string;
   gan: string;
   state: string;
+  type?: string;
+  balance_money?: {
+    amount: number;
+    currency: string;
+  };
+  created_at?: string;
+  updated_at?: string;
   balance_money?: {
     amount: number;
     currency: string;
@@ -126,9 +172,9 @@ export class SquareGiftCardService {
         };
       }
 
-      const data = responseData as { gift_card?: any };
-      if (data.gift_card) {
-        const giftCard = data.gift_card;
+      const validated = SquareGiftCardResponseSchema.parse(responseData);
+      if (validated.gift_card) {
+        const giftCard = validated.gift_card;
         
         // Activate the gift card with the specified amount
         const activationResult = await this.activateGiftCard(
@@ -210,11 +256,11 @@ export class SquareGiftCardService {
         };
       }
 
-      const data = responseData as { gift_card_activity?: any };
-      if (data.gift_card_activity) {
+      const validated = SquareGiftCardActivityResponseSchema.parse(responseData);
+      if (validated.gift_card_activity) {
         return {
           success: true,
-          activity: data.gift_card_activity
+          activity: validated.gift_card_activity
         };
       }
 

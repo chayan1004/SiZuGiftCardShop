@@ -36,7 +36,7 @@ import GDPRComplianceDashboard from "../../components/admin/GDPRComplianceDashbo
 import PCIDSSComplianceDashboard from "../../components/admin/PCIDSSComplianceDashboard";
 import PricingManagement from "../../components/admin/PricingManagement";
 import AdminCheckoutConfig from "../../components/admin/AdminCheckoutConfig";
-import AdminRefundsDisputes from "./AdminRefundsDisputes";
+import AdminRefundsDisputesFixed from "./AdminRefundsDisputesFixed";
 import type { FraudAlert } from "../../components/admin/ThreatFeedPanel";
 
 interface DashboardMetrics {
@@ -778,7 +778,7 @@ export default function AdminDashboard() {
                     <p className="text-gray-300">Comprehensive refund processing and dispute resolution center</p>
                   </div>
                   
-                  <AdminRefundsDisputes />
+                  <AdminRefundsDisputesFixed />
                 </div>
               )}
 

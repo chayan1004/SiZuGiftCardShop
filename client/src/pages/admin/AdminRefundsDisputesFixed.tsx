@@ -76,8 +76,8 @@ interface DisputeAnalytics {
 export default function AdminRefundsDisputesFixed() {
   const [activeTab, setActiveTab] = useState('refunds');
   const [filters, setFilters] = useState({
-    status: '',
-    state: '',
+    status: 'all',
+    state: 'all',
     dateFrom: '',
     dateTo: ''
   });
@@ -92,7 +92,7 @@ export default function AdminRefundsDisputesFixed() {
       try {
         const params = new URLSearchParams();
         Object.entries(filters).forEach(([key, value]) => {
-          if (value) params.append(key, value);
+          if (value && value !== 'all') params.append(key, value);
         });
         const response = await apiRequest('GET', `/api/admin/refunds?${params.toString()}`);
         const data = await response.json();
@@ -111,7 +111,7 @@ export default function AdminRefundsDisputesFixed() {
       try {
         const params = new URLSearchParams();
         Object.entries(filters).forEach(([key, value]) => {
-          if (value) params.append(key, value);
+          if (value && value !== 'all') params.append(key, value);
         });
         const response = await apiRequest('GET', `/api/admin/disputes?${params.toString()}`);
         const data = await response.json();
@@ -327,7 +327,7 @@ export default function AdminRefundsDisputesFixed() {
                       <SelectValue placeholder="All statuses" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All statuses</SelectItem>
+                      <SelectItem value="all">All statuses</SelectItem>
                       <SelectItem value="pending">Pending</SelectItem>
                       <SelectItem value="approved">Approved</SelectItem>
                       <SelectItem value="completed">Completed</SelectItem>
@@ -343,7 +343,7 @@ export default function AdminRefundsDisputesFixed() {
                       <SelectValue placeholder="All states" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All states</SelectItem>
+                      <SelectItem value="all">All states</SelectItem>
                       <SelectItem value="inquiry_evidence_required">Evidence Required</SelectItem>
                       <SelectItem value="inquiry_processing">Processing</SelectItem>
                       <SelectItem value="chargeback">Chargeback</SelectItem>

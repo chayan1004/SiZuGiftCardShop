@@ -98,42 +98,54 @@ export default function AdminRefundsDisputes() {
   // Fetch refunds
   const { data: refunds = [], isLoading: refundsLoading } = useQuery({
     queryKey: ['/api/admin/refunds', filters],
-    queryFn: () => {
+    queryFn: async () => {
       const params = new URLSearchParams();
       Object.entries(filters).forEach(([key, value]) => {
         if (value) params.append(key, value);
       });
-      return apiRequest(`/api/admin/refunds?${params.toString()}`);
+      const response = await apiRequest('GET', `/api/admin/refunds?${params.toString()}`);
+      const data = await response.json();
+      return data.refunds || [];
     }
   });
 
   // Fetch disputes
   const { data: disputes = [], isLoading: disputesLoading } = useQuery({
     queryKey: ['/api/admin/disputes', filters],
-    queryFn: () => {
+    queryFn: async () => {
       const params = new URLSearchParams();
       Object.entries(filters).forEach(([key, value]) => {
         if (value) params.append(key, value);
       });
-      return apiRequest(`/api/admin/disputes?${params.toString()}`);
+      const response = await apiRequest('GET', `/api/admin/disputes?${params.toString()}`);
+      const data = await response.json();
+      return data.disputes || [];
     }
   });
 
   // Fetch refund analytics
   const { data: refundAnalytics } = useQuery<RefundAnalytics>({
     queryKey: ['/api/admin/refunds/analytics'],
-    queryFn: () => apiRequest('/api/admin/refunds/analytics')
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/admin/refunds/analytics');
+      const data = await response.json();
+      return data.analytics;
+    }
   });
 
   // Fetch dispute analytics
   const { data: disputeAnalytics } = useQuery<DisputeAnalytics>({
     queryKey: ['/api/admin/disputes/analytics'],
-    queryFn: () => apiRequest('/api/admin/disputes/analytics')
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/admin/disputes/analytics');
+      const data = await response.json();
+      return data.analytics;
+    }
   });
 
   // Create refund mutation
   const createRefundMutation = useMutation({
-    mutationFn: (data: any) => apiRequest('/api/admin/refunds', 'POST', data),
+    mutationFn: (data: any) => apiRequest('POST', '/api/admin/refunds', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/refunds'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/refunds/analytics'] });
@@ -154,7 +166,7 @@ export default function AdminRefundsDisputes() {
 
   // Accept dispute mutation
   const acceptDisputeMutation = useMutation({
-    mutationFn: (disputeId: string) => apiRequest(`/api/admin/disputes/${disputeId}/accept`, 'POST'),
+    mutationFn: (disputeId: string) => apiRequest('POST', `/api/admin/disputes/${disputeId}/accept`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/disputes'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/disputes/analytics'] });
